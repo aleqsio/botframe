@@ -1,6 +1,14 @@
 :root {
 	color-scheme: light dark;
 	--stage-background: #f2f2f2;
+	--bar-background: rgb(44 43 54 / 0.8);
+	--bar-border: rgb(255 255 255 / 0.1);
+	--bar-shadow: 0 12px 32px rgb(20 19 27 / 0.24), 0 2px 6px rgb(20 19 27 / 0.18);
+	--bar-icon: rgb(255 255 255 / 0.6);
+	--bar-icon-selected: #ffffff;
+	--bar-hover: rgb(255 255 255 / 0.08);
+	--bar-selected: rgb(255 255 255 / 0.16);
+	--bar-focus: rgb(138 168 255 / 0.9);
 }
 
 * {
@@ -41,4 +49,68 @@ body {
 
 .layer:active {
 	cursor: grabbing;
+}
+
+.floating-bar {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 6px;
+	border: 1px solid var(--bar-border);
+	border-radius: 18px;
+	background: var(--bar-background);
+	backdrop-filter: blur(10px) saturate(140%);
+	-webkit-backdrop-filter: blur(10px) saturate(140%);
+	box-shadow: var(--bar-shadow);
+}
+
+.tool-button {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: 0;
+	border-radius: 12px;
+	background-color: transparent;
+	color: var(--bar-icon);
+	cursor: default;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease;
+}
+
+.tool-button:hover {
+	background-color: var(--bar-hover);
+	color: var(--bar-icon-selected);
+}
+
+.tool-button[data-pressed] {
+	background-color: var(--bar-selected);
+	color: var(--bar-icon-selected);
+}
+
+.tool-button:focus-visible {
+	outline: 2px solid var(--bar-focus);
+	outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tool-button {
+		transition: none;
+	}
+}
+
+.icon {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
