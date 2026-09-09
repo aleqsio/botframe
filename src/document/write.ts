@@ -1,6 +1,9 @@
 import type { LoroMap } from "loro-crdt";
 
-export function writeVariant(bag: LoroMap, variant: { kind: string }): void {
+export function writeVariant<T extends { kind: string }>(
+	bag: LoroMap,
+	variant: "unsupported" extends T["kind"] ? never : T,
+): void {
 	const { kind, ...fields } = variant;
 	bag.set("kind", kind);
 	const values = bag.ensureMergeableMap(kind);
