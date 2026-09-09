@@ -5,8 +5,10 @@ import type { LayerId } from "../document/layer";
 
 interface DragState {
 	pointerId: number;
-	grabX: number;
-	grabY: number;
+	originX: number;
+	originY: number;
+	pointerX: number;
+	pointerY: number;
 	x: number;
 	y: number;
 	frame: number;
@@ -30,8 +32,10 @@ export function useLayerDrag(doc: DesignDocument, id: LayerId): DragHandlers {
 		event.currentTarget.setPointerCapture(event.pointerId);
 		drag.current = {
 			pointerId: event.pointerId,
-			grabX: event.clientX - layer.x,
-			grabY: event.clientY - layer.y,
+			originX: layer.x,
+			originY: layer.y,
+			pointerX: event.clientX,
+			pointerY: event.clientY,
 			x: layer.x,
 			y: layer.y,
 			frame: 0,
@@ -43,8 +47,8 @@ export function useLayerDrag(doc: DesignDocument, id: LayerId): DragHandlers {
 		if (state === null || state.pointerId !== event.pointerId) {
 			return;
 		}
-		state.x = event.clientX - state.grabX;
-		state.y = event.clientY - state.grabY;
+		state.x = state.originX + (event.clientX - state.pointerX);
+		state.y = state.originY + (event.clientY - state.pointerY);
 		if (state.frame !== 0) {
 			return;
 		}

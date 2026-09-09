@@ -1,6 +1,15 @@
 :root {
 	color-scheme: light dark;
 	--stage-background: #f2f2f2;
+	--title-bar: 36px;
+	--canvas-inset: 6px;
+	--layers-width: 200px;
+	--properties-width: 232px;
+	--panel-text: light-dark(rgb(0 0 0 / 0.85), rgb(255 255 255 / 0.92));
+	--panel-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.55));
+	--panel-hover: light-dark(rgb(0 0 0 / 0.06), rgb(255 255 255 / 0.1));
+	--panel-selected: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.18));
+	--canvas-radius: 10px;
 	--bar-background: rgb(44 43 54 / 0.8);
 	--bar-border: rgb(255 255 255 / 0.1);
 	--bar-shadow: 0 12px 32px rgb(20 19 27 / 0.24), 0 2px 6px rgb(20 19 27 / 0.18);
@@ -18,15 +27,14 @@
 
 html,
 body,
-#root,
-#stage {
+#root {
 	height: 100%;
 	width: 100%;
 }
 
 body {
 	overflow: hidden;
-	background: var(--stage-background);
+	background: transparent;
 	font:
 		13px system-ui,
 		sans-serif;
@@ -34,8 +42,24 @@ body {
 	-webkit-user-select: none;
 }
 
+#title-bar {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: var(--title-bar);
+	-webkit-app-region: drag;
+}
+
 #stage {
-	position: relative;
+	position: absolute;
+	top: var(--title-bar);
+	right: var(--properties-width);
+	bottom: var(--canvas-inset);
+	left: var(--layers-width);
+	background: var(--stage-background);
+	border-radius: var(--canvas-radius);
+	overflow: hidden;
 }
 
 .layer {
@@ -113,4 +137,125 @@ body {
 	stroke-width: 1.5;
 	stroke-linecap: round;
 	stroke-linejoin: round;
+}
+
+.panel {
+	position: absolute;
+	top: var(--title-bar);
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 10px 8px;
+	color: var(--panel-text);
+	overflow-y: auto;
+}
+
+#layers {
+	left: 0;
+	width: var(--layers-width);
+}
+
+#properties {
+	right: 0;
+	width: var(--properties-width);
+}
+
+.panel-title {
+	margin: 0 0 2px 8px;
+	color: var(--panel-label);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.layer-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.layer-row {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	width: 100%;
+	padding: 5px 8px;
+	border: 0;
+	border-radius: 6px;
+	background-color: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: default;
+}
+
+.layer-row:hover {
+	background-color: var(--panel-hover);
+}
+
+.layer-row[aria-pressed="true"] {
+	background-color: var(--panel-selected);
+}
+
+.layer-glyph {
+	flex: none;
+	width: 11px;
+	height: 11px;
+	border: 1.5px solid var(--panel-label);
+}
+
+.layer-glyph-artboard {
+	border-style: dashed;
+	border-radius: 2px;
+}
+
+.layer-glyph-rectangle {
+	border-radius: 3px;
+	background-color: var(--panel-label);
+}
+
+.property-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 4px;
+	margin: 0;
+}
+
+.property-field {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 5px 8px;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+}
+
+.property-field dt {
+	color: var(--panel-label);
+	font-size: 11px;
+}
+
+.property-field dd {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.panel-action {
+	margin-top: 2px;
+	padding: 6px 8px;
+	border: 0;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+	color: inherit;
+	font: inherit;
+	cursor: default;
+}
+
+.panel-action:hover {
+	background-color: var(--panel-selected);
 }
