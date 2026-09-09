@@ -1,7 +1,8 @@
 @AGENTS.md
 
-Claude Code specifics
+# Claude Code
 
-- Hooks in `.claude/settings.json` format and lint every edited file and run typecheck plus lint before a turn ends. A hook failure is a blocker, not a warning.
-- Use `/poteto-mode` for any task that changes more than one file. Use `/ponytail-review` and `/code-review high` on the diff before you open a PR.
-- Subagents for code use `subagent_type: poteto-agent`.
+- The hooks in `.claude/settings.json` format and lint each changed file. They also run the typecheck and the lint before the turn ends. A hook failure stops the work.
+- Use `/poteto-mode` for a task that changes more than one file.
+- Run `/ponytail-review` and `/code-review high` on the difference before you open a pull request.
+- Give `subagent_type: poteto-agent` to each subagent that writes code.
