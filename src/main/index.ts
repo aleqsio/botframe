@@ -7,7 +7,10 @@ function createWindow(): void {
 		height: 800,
 		show: false,
 		titleBarStyle: "hiddenInset",
-		backgroundColor: "#f2f2f2",
+		trafficLightPosition: { x: 11, y: 11 },
+		backgroundColor: "#00000000",
+		vibrancy: "under-window",
+		visualEffectState: "active",
 		webPreferences: {
 			contextIsolation: true,
 			nodeIntegration: false,
