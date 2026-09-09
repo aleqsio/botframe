@@ -1,24 +1,25 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
+import type { Slot } from "../state/slot";
+import { useSlot } from "../state/useSlot";
 import { FloatingBar } from "./FloatingBar";
 import { ToolButton } from "./ToolButton";
-import { DEFAULT_TOOL, TOOLS } from "./tools";
+import { TOOLS } from "./tools";
 import type { ToolId } from "./tools";
 
-export function ToolBar(): ReactElement {
-	const [activeTool, setActiveTool] = useState<ToolId>(DEFAULT_TOOL);
+export function ToolBar({ tool }: { tool: Slot<ToolId> }): ReactElement {
+	const activeTool = useSlot(tool);
 
 	return (
 		<FloatingBar label="Tools">
-			{TOOLS.map((tool) => (
+			{TOOLS.map((definition) => (
 				<ToolButton
-					icon={tool.icon}
-					key={tool.id}
-					label={tool.label}
+					icon={definition.icon}
+					key={definition.id}
+					label={definition.label}
 					onPress={() => {
-						setActiveTool(tool.id);
+						tool.set(definition.id);
 					}}
-					pressed={activeTool === tool.id}
+					pressed={activeTool === definition.id}
 				/>
 			))}
 		</FloatingBar>
