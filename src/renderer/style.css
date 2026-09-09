@@ -1,0 +1,43 @@
+:root {
+	color-scheme: light dark;
+	--stage-background: #f2f2f2;
+}
+
+* {
+	margin: 0;
+	box-sizing: border-box;
+}
+
+html,
+body,
+#stage {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	overflow: hidden;
+	background: var(--stage-background);
+	font:
+		13px system-ui,
+		sans-serif;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+#stage {
+	position: relative;
+}
+
+.layer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	cursor: grab;
+	touch-action: none;
+	will-change: transform;
+}
+
+.layer:active {
+	cursor: grabbing;
+}

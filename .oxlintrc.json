@@ -176,5 +176,13 @@
 			}
 		}
 	],
-	"ignorePatterns": ["dist", "coverage", "reports", "node_modules"]
+	"ignorePatterns": [
+		"dist",
+		"out",
+		"coverage",
+		"reports",
+		"test-results",
+		"playwright-report",
+		"node_modules"
+	]
 }

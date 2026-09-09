@@ -1,7 +1,10 @@
 node_modules/
 dist/
+out/
 coverage/
 reports/
+test-results/
+playwright-report/
 .stryker-tmp/
 *.log
 .DS_Store

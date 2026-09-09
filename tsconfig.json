@@ -2,10 +2,9 @@
 	"compilerOptions": {
 		"target": "ES2024",
 		"lib": ["ES2024", "DOM", "DOM.Iterable"],
-		"module": "ESNext",
-		"moduleResolution": "bundler",
+		"module": "Preserve",
 		"jsx": "react-jsx",
-		"types": [],
+		"types": ["node"],
 		"strict": true,
 		"noUncheckedIndexedAccess": true,
 		"exactOptionalPropertyTypes": true,
@@ -18,5 +17,5 @@
 		"skipLibCheck": true,
 		"noEmit": true
 	},
-	"include": ["src", "vitest.config.ts"]
+	"include": ["src", "e2e", "vitest.config.ts", "electron.vite.config.ts", "playwright.config.ts"]
 }

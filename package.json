@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
+	"main": "out/main/index.js",
 	"scripts": {
 		"prepare": "lefthook install",
 		"format": "oxfmt",
@@ -12,9 +13,19 @@
 		"test": "vitest run",
 		"knip": "knip",
 		"jscpd": "jscpd src",
-		"check": "bun run format:check && bun run lint && bun run typecheck && bun run knip && bun run jscpd && bun run test"
+		"check": "bun run format:check && bun run lint && bun run typecheck && bun run knip && bun run jscpd && bun run test",
+		"dev": "electron-vite dev",
+		"build": "electron-vite build",
+		"start": "electron-vite preview",
+		"test:e2e": "electron-vite build && playwright test"
+	},
+	"dependencies": {
+		"loro-crdt": "1.16.0"
 	},
 	"devDependencies": {
+		"@playwright/test": "1.63.0",
+		"electron": "44.3.0",
+		"electron-vite": "6.0.0-beta.1",
 		"eslint-plugin-react-hooks": "7.1.1",
 		"eslint-plugin-react-you-might-not-need-an-effect": "1.0.2",
 		"jscpd": "5.2.0",
@@ -25,6 +36,7 @@
 		"oxlint-plugin-complexity": "2.1.8",
 		"oxlint-tsgolint": "7.0.2001",
 		"typescript": "7.0.2",
+		"vite": "8.2.2",
 		"vitest": "5.0.0"
 	},
 	"engines": {
@@ -33,6 +45,8 @@
 	},
 	"packageManager": "bun@1.3.14",
 	"trustedDependencies": [
+		"electron",
+		"esbuild",
 		"lefthook"
 	]
 }

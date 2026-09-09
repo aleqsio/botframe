@@ -4,7 +4,7 @@ Goal: an open-source, desktop, web-based design tool with no slop. STACK.md hold
 
 ## 0. Decisions that block the rest
 
-- [x] D1. Stack. Resolved in STACK.md: real DOM document view inside HTML-in-Canvas, WebGPU effects with WebGL2 fallback, Electron shell on pinned Chromium, React panels, Loro CRDT, Node or Bun sync server, headless Chromium for export. Tauri is rejected because WKWebView cannot expose HTML-in-Canvas.
+- [x] D1. Stack. Resolved in STACK.md: real DOM document view, Electron shell on pinned Chromium, React panels, a CRDT document, headless Chromium for export. Shader effects on HTML-in-Canvas are a future section, not v1. Files are the primary store, Loro is the CRDT. The sync backend is open.
 - [x] D2. TypeScript major. TS 7.0.2, pinned. 7.1 is not released (beta 2026-11-06, RC 2026-11-20 per the iteration plan). Bump to 7.1 when stable. Do not run `typescript@next` nightlies in the repo. Only typescript-eslint needed 7.1, and D3 drops it.
 - [x] D3. Linter engine. oxlint 1.82 with `typeAware: true` (oxlint-tsgolint 7.0.x, runs on TS 7.0) and oxfmt 0.67 for formatting. No ESLint, no Prettier. Cyclomatic and cognitive complexity come from `oxlint-plugin-complexity` through the oxlint JS plugin API, which is alpha. eslint-plugin-sonarjs was rejected: it depends on `typescript <6.1`, which bun's flat node_modules cannot satisfy next to TS 7.
 - [x] D4. Primary agent host for pstack: Claude Code. Consequences: `/setup-pstack` writes `~/.cursor/rules/pstack-models.mdc`, which Claude Code never loads. After running it, mirror the role lines into `~/.claude/CLAUDE.md`. Model values available to the Agent tool here are `fable`, `opus`, `sonnet`, `haiku`, and `inherit-parent`. Multi-model panels (interrogate, arena, how critics) lose grok and gpt and become mixes of those four. `poteto-agent` exists as a Claude Code subagent. The verification generator writes `.cursor/skills/verify-<app>/`, so symlink or move it to `.claude/skills/`. Verify by typing `/poteto-mode` in a Claude Code chat; the skills are user-invocable only.
@@ -52,7 +52,7 @@ Rules to enforce as errors:
 - [ ] Playwright for end-to-end, using its Electron launcher for the desktop target and Chromium with the `canvas-draw-element` flag for the web target. Not installed yet; add with the first STACK.md prototype.
 - [ ] Stryker 10 mutation testing on PR diffs, reported but not blocking.
 - [ ] Performance budget checks in CI for the STACK.md section 3 targets: warm launch, drag latency at 500 layers, layer panel at 10 000 nodes. Measured from process creation with Chromium tracing, reported on every PR, blocking once a baseline exists.
-- [ ] STACK.md section 5 assumptions get one prototype each before any feature work. Ponytail-review and poteto-mode prototype playbook apply; prototypes are deleted, not promoted.
+- [ ] STACK.md section 5 assumptions get one prototype each before any feature work. Section 7 prerequisites wait until the effects pipeline is scheduled. Ponytail-review and poteto-mode prototype playbook apply; prototypes are deleted, not promoted.
 - [ ] Project verification skill from pstack `/create-verification-skill`: launch, doctor, drive one feature, capture evidence, clean up. Agents must prove behavior against the running app, not against "it compiles".
 
 ## 6. AI review on GitHub

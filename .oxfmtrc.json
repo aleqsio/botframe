@@ -3,5 +3,14 @@
 	"useTabs": true,
 	"printWidth": 100,
 	"singleQuote": false,
-	"ignorePatterns": ["dist", "coverage", "reports", "pnpm-lock.yaml", "*.md"]
+	"ignorePatterns": [
+		"dist",
+		"out",
+		"coverage",
+		"reports",
+		"test-results",
+		"playwright-report",
+		"bun.lock",
+		"*.md"
+	]
 }

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-An open-source design tool for the desktop. The document view is real DOM inside HTML-in-Canvas, effects run on WebGPU, the shell is Electron, the document is a Loro CRDT. STACK.md holds the architecture and the performance targets. TOOLING.md holds the tooling plan and the open items.
+An open-source design tool for the desktop. The document view is real DOM, the shell is Electron, the document is a Loro CRDT saved as a `.botframe` file. STACK.md holds the architecture and the performance targets. TOOLING.md holds the tooling plan and the open items.
 
 ## Commands
 
@@ -13,7 +13,7 @@ An open-source design tool for the desktop. The document view is real DOM inside
 
 - `src/document/` is the document model. Pure TypeScript. No React, no Electron, no DOM.
 - `src/renderer/` is the editor UI. React panels and the document view.
-- `src/workers/` runs CRDT sync, export, and the shader pipeline off the main thread.
+- `src/workers/` runs CRDT sync and export off the main thread.
 - `src/main/` and `src/preload/` are the Electron processes. The preload stays small.
 - `.dependency-cruiser.cjs` enforces these boundaries. Do not add an exception; move the code.
 
