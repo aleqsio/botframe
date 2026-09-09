@@ -20,6 +20,7 @@
 		"test:e2e": "electron-vite build && playwright test"
 	},
 	"dependencies": {
+		"@base-ui-components/react": "1.0.0-rc.0",
 		"loro-crdt": "1.16.0",
 		"react": "19.2.8",
 		"react-dom": "19.2.8"
