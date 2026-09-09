@@ -1,0 +1,10 @@
+{
+	"threshold": 0,
+	"minTokens": 50,
+	"minLines": 5,
+	"format": ["typescript", "tsx"],
+	"ignore": ["**/*.test.ts", "**/*.test.tsx"],
+	"reporters": ["consoleFull"],
+	"exitCode": 1,
+	"gitignore": true
+}

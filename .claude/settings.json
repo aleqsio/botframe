@@ -1,0 +1,28 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Edit|Write",
+				"hooks": [
+					{
+						"type": "command",
+						"timeout": 60,
+						"command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.ts|*.tsx|*.js|*.mjs|*.cjs|*.json) bunx oxfmt \"$f\" >/dev/null 2>&1 ;; esac; case \"$f\" in *.ts|*.tsx|*.js|*.mjs|*.cjs) out=$(bunx oxlint \"$f\" 2>&1) || { echo \"$out\" >&2; exit 2; } ;; esac; exit 0"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"matcher": "",
+				"hooks": [
+					{
+						"type": "command",
+						"timeout": 120,
+						"command": "if [ \"$(jq -r '.stop_hook_active')\" = \"true\" ]; then exit 0; fi; out=$(bun run typecheck 2>&1 && bun run lint 2>&1) || { echo \"Typecheck or lint failed. Fix before stopping:\" >&2; echo \"$out\" | tail -40 >&2; exit 2; }; exit 0"
+					}
+				]
+			}
+		]
+	}
+}

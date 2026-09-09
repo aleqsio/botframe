@@ -1,0 +1,180 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"options": {
+		"typeAware": true
+	},
+	"plugins": ["typescript", "oxc", "unicorn", "import", "promise", "react", "jsx-a11y", "vitest"],
+	"jsPlugins": [
+		{
+			"name": "react-compiler",
+			"specifier": "eslint-plugin-react-hooks"
+		},
+		{
+			"name": "no-effect",
+			"specifier": "eslint-plugin-react-you-might-not-need-an-effect"
+		},
+		"oxlint-plugin-complexity"
+	],
+	"categories": {
+		"correctness": "error",
+		"suspicious": "error",
+		"perf": "error",
+		"pedantic": "warn"
+	},
+	"rules": {
+		"complexity/complexity": [
+			"error",
+			{
+				"cyclomatic": 10,
+				"cognitive": 15
+			}
+		],
+		"typescript/prefer-readonly-parameter-types": "off",
+		"eslint/max-depth": ["error", 3],
+		"eslint/max-params": ["error", 4],
+		"eslint/max-lines-per-function": [
+			"error",
+			{
+				"max": 60,
+				"skipBlankLines": true,
+				"skipComments": true
+			}
+		],
+		"eslint/max-lines": [
+			"error",
+			{
+				"max": 400,
+				"skipBlankLines": true,
+				"skipComments": true
+			}
+		],
+		"eslint/max-nested-callbacks": ["error", 3],
+		"eslint/no-console": "error",
+		"eslint/no-warning-comments": [
+			"error",
+			{
+				"terms": ["todo", "fixme", "hack", "xxx"],
+				"location": "anywhere"
+			}
+		],
+		"typescript/no-explicit-any": "error",
+		"typescript/no-non-null-assertion": "error",
+		"typescript/consistent-type-imports": "error",
+		"typescript/explicit-module-boundary-types": "error",
+		"typescript/switch-exhaustiveness-check": "error",
+		"typescript/no-floating-promises": "error",
+		"typescript/no-misused-promises": "error",
+		"typescript/no-unnecessary-condition": "error",
+		"typescript/strict-boolean-expressions": "error",
+		"typescript/no-unsafe-assignment": "error",
+		"typescript/no-unsafe-call": "error",
+		"typescript/no-unsafe-member-access": "error",
+		"typescript/no-unsafe-return": "error",
+		"typescript/no-unsafe-argument": "error",
+		"import/no-cycle": "error",
+		"unicorn/no-null": "off",
+		"react-hooks/rules-of-hooks": "error",
+		"react-hooks/exhaustive-deps": "error",
+		"react-compiler/set-state-in-effect": "error",
+		"react-compiler/set-state-in-render": "error",
+		"react-compiler/no-deriving-state-in-effects": "error",
+		"react-compiler/purity": "error",
+		"react-compiler/refs": "error",
+		"react-compiler/immutability": "error",
+		"react-compiler/static-components": "error",
+		"react-compiler/use-memo": "error",
+		"react-compiler/error-boundaries": "error",
+		"react-compiler/globals": "error",
+		"react-compiler/preserve-manual-memoization": "error",
+		"react-compiler/component-hook-factories": "error",
+		"no-effect/no-derived-state": "error",
+		"no-effect/no-chain-state-updates": "error",
+		"no-effect/no-event-handler": "error",
+		"no-effect/no-adjust-state-on-prop-change": "error",
+		"no-effect/no-reset-all-state-on-prop-change": "error",
+		"no-effect/no-pass-live-state-to-parent": "error",
+		"no-effect/no-pass-data-to-parent": "error",
+		"no-effect/no-external-store-subscription": "error",
+		"no-effect/no-initialize-state": "error"
+	},
+	"overrides": [
+		{
+			"files": ["src/document/**"],
+			"rules": {
+				"eslint/no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["react", "react-dom", "react/*", "react-dom/*"],
+								"message": "The document model is pure. No React."
+							},
+							{
+								"group": ["electron", "electron/*"],
+								"message": "The document model is pure. No Electron."
+							},
+							{
+								"group": ["node:*"],
+								"message": "The document model runs in Chromium. No Node modules."
+							},
+							{
+								"group": ["**/renderer/**", "**/main/**", "**/preload/**", "**/workers/**"],
+								"message": "The document model does not import the processes that host it."
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"files": ["src/renderer/**", "src/workers/**"],
+			"rules": {
+				"eslint/no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["node:*", "electron", "electron/*"],
+								"message": "Renderer and worker code runs in Chromium. Talk to main through the preload bridge."
+							},
+							{
+								"group": ["**/main/**", "**/preload/**"],
+								"message": "Renderer code does not import main or preload."
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"files": ["src/main/**", "src/preload/**"],
+			"rules": {
+				"eslint/no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["react", "react-dom", "react/*", "react-dom/*"],
+								"message": "No React in Electron processes."
+							},
+							{
+								"group": ["**/renderer/**", "**/workers/**"],
+								"message": "Main and preload do not import renderer code."
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"files": ["**/*.test.ts", "**/*.test.tsx"],
+			"rules": {
+				"eslint/max-lines-per-function": "off",
+				"eslint/max-nested-callbacks": "off",
+				"vitest/no-focused-tests": "error",
+				"vitest/no-disabled-tests": "error"
+			}
+		}
+	],
+	"ignorePatterns": ["dist", "coverage", "reports", "node_modules"]
+}
