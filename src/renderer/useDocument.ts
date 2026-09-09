@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { DesignDocument, Layer, LayerId } from "../document/document";
+import type { DesignDocument } from "../document/document";
+import type { Layer, LayerId } from "../document/layer";
 
 export function useLayerIds(doc: DesignDocument): LayerId[] {
 	return useSyncExternalStore(

@@ -1,30 +1,25 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroMap, LoroTree, TreeID } from "loro-crdt";
-
-export type LayerId = TreeID;
+import type { LoroMap, LoroTree } from "loro-crdt";
+import type { Geometry, Layer, LayerId } from "./layer";
+import { readNumber, readString, readVariant } from "./read";
+import { writeVariant } from "./write";
 
 export type Unsubscribe = () => void;
 
-export interface Layer {
-	id: LayerId;
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	fill: string;
-}
-
 const LAYERS = "layers";
+const GEOMETRY = "geometry";
 
-function readNumber(data: LoroMap, key: string, fallback: number): number {
-	const value = data.get(key);
-	return typeof value === "number" ? value : fallback;
-}
-
-function readString(data: LoroMap, key: string, fallback: string): string {
-	const value = data.get(key);
-	return typeof value === "string" ? value : fallback;
-}
+const GEOMETRY_READERS: Readonly<
+	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
+> = {
+	rectangle: (fields) => ({
+		kind: "rectangle",
+		cornerRadius: readNumber(fields, "cornerRadius", 0),
+		cornerSmoothing: readNumber(fields, "cornerSmoothing", 0),
+	}),
+	ellipse: () => ({ kind: "ellipse" }),
+	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
+};
 
 export class DesignDocument {
 	readonly #doc: LoroDoc;
@@ -54,6 +49,8 @@ export class DesignDocument {
 		node.data.set("width", 240);
 		node.data.set("height", 160);
 		node.data.set("fill", "#000000");
+		const rectangle: Geometry = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 };
+		writeVariant(node.data.ensureMergeableMap(GEOMETRY), rectangle);
 		doc.commit({ message: "create rectangle" });
 		return new DesignDocument(doc);
 	}
@@ -87,6 +84,9 @@ export class DesignDocument {
 			width: readNumber(node.data, "width", 0),
 			height: readNumber(node.data, "height", 0),
 			fill: readString(node.data, "fill", "#000000"),
+			geometry: readVariant<Geometry>(node.data.get(GEOMETRY), GEOMETRY_READERS, {
+				kind: "unsupported",
+			}),
 		};
 		this.#layers.set(id, layer);
 		return layer;

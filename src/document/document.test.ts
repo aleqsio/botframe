@@ -1,7 +1,9 @@
 import { LoroDoc } from "loro-crdt";
+import type { LoroMap } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
-import type { LayerId } from "./document";
+import type { LayerId } from "./layer";
+import { readString } from "./read";
 
 function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -9,6 +11,14 @@ function firstId(doc: DesignDocument): LayerId {
 		throw new Error("document has no layers");
 	}
 	return id;
+}
+
+function geometryBag(doc: LoroDoc, id: LayerId): LoroMap {
+	const node = doc.getTree("layers").getNodeByID(id);
+	if (node === undefined) {
+		throw new Error("layer is missing");
+	}
+	return node.data.ensureMergeableMap("geometry");
 }
 
 describe("DesignDocument", () => {
@@ -21,6 +31,7 @@ describe("DesignDocument", () => {
 			width: 240,
 			height: 160,
 			fill: "#000000",
+			geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 },
 		});
 	});
 
@@ -121,5 +132,53 @@ describe("DesignDocument", () => {
 		doc.move(id, 640, 480);
 		doc.commit("move layer");
 		expect(DesignDocument.open(doc.snapshot()).layer(id)).toMatchObject({ x: 640, y: 480 });
+	});
+
+	it("keeps the corner radius when a peer changes the kind to an ellipse", async () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		doc.subscribeLayer(id, vi.fn<() => void>());
+
+		const peer = new LoroDoc();
+		peer.setPeerId(99);
+		peer.import(doc.snapshot());
+		const bag = geometryBag(peer, id);
+		bag.ensureMergeableMap("rectangle").set("cornerRadius", 24);
+		bag.set("kind", "ellipse");
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+		await vi.waitFor(() => {
+			expect(doc.layer(id)).toMatchObject({ geometry: { kind: "ellipse" } });
+		});
+
+		bag.set("kind", "rectangle");
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+		await vi.waitFor(() => {
+			expect(doc.layer(id)).toMatchObject({ geometry: { kind: "rectangle", cornerRadius: 24 } });
+		});
+	});
+
+	it("reads a geometry that a newer build wrote as unsupported, and keeps it through a snapshot round trip", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		const peer = new LoroDoc();
+		peer.setPeerId(77);
+		peer.import(doc.snapshot());
+		const bag = geometryBag(peer, id);
+		bag.set("kind", "shader");
+		bag.ensureMergeableMap("shader").set("source", "noise");
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+
+		expect(DesignDocument.open(doc.snapshot()).layer(id)).toMatchObject({
+			geometry: { kind: "unsupported" },
+		});
+		const roundTrip = new LoroDoc();
+		roundTrip.import(doc.snapshot());
+		expect(readString(geometryBag(roundTrip, id).ensureMergeableMap("shader"), "source", "")).toBe(
+			"noise",
+		);
 	});
 });
