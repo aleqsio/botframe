@@ -11,8 +11,8 @@ An open-source design tool for the desktop. The document view is real DOM, the s
 
 ## Layout
 
-- `src/document/` is the document model. Pure TypeScript. No React, no Electron, no DOM.
-- `src/renderer/` is the editor UI. React panels and the document view.
+- `src/document/` is the document model. `DesignDocument` owns the Loro document and exposes one subscription per layer. Pure TypeScript. No React, no Electron, no DOM.
+- `src/renderer/` is the editor UI. React components read the document through `useSyncExternalStore`, one subscription per layer. Never copy document state into React state.
 - `src/workers/` runs CRDT sync and export off the main thread.
 - `src/main/` and `src/preload/` are the Electron processes. The preload stays small.
 - `.dependency-cruiser.cjs` enforces these boundaries. Do not add an exception; move the code.

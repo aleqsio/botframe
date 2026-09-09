@@ -40,9 +40,22 @@ Panels and UI
 - Layer tree and asset panels are virtualized.
 
 State
-- Jotai 3. One atom per node and per inspected property. A moving layer updates the inspector's coordinate field and nothing else. React never renders on pointer move.
-- Hot state during drag lives outside React: refs written from the pointer handler, applied in one `requestAnimationFrame` loop, committed to the document on pointer up.
-- Rejected: MobX 7 (observer conflicts with the compiler), Legend-State (same), Preact signals (same), a hand-written signals library like tldraw's (more code to own for the same result).
+- The Loro document is the store. There is no second copy of document state in React, and no state library holds it. `DesignDocument` wraps the `LoroDoc` and exposes reads, writes, and one subscription per layer.
+- React binds with `useSyncExternalStore`, one subscription per layer node. Loro's container subscriptions are genuinely per-node: editing one layer notifies that layer's subscriber and no other. Structure changes and property changes are separate, told apart by the event's `diff.type`, which is `tree` for create and move and `map` for properties.
+- `DesignDocument` caches one snapshot object per layer so `getSnapshot` returns a stable reference. The cache entry is dropped when that layer changes, never on unrelated edits.
+- Local staged writes notify subscribers directly, so the canvas follows the pointer without a commit per frame. The commit on pointer up closes one change in the log.
+- Drag state during a gesture lives in a ref and is applied in one `requestAnimationFrame` loop. One layer component re-renders per frame during a drag. If that ever costs too much, the escape hatch is a direct transform write on the element ref, with React re-rendering only on commit. Measure before taking it.
+- UI-local state that is not in the document (active tool, zoom, panel sizes) has no library yet. Add Jotai 3 when there is more than one such value, not before.
+- Rejected: MobX 7 (observer conflicts with the compiler), Legend-State (same), Preact signals (same), a hand-written signals library like tldraw's, and holding document state in any store outside Loro.
+
+Multiplayer and presence
+Not built yet. This is the design the current code is shaped for, with the Loro primitives it rests on verified against `loro-crdt` 1.16.
+
+- Three channels, kept separate. The document is durable and merges through the CRDT. Presence is ephemeral and expires. Identity comes from auth. Never put presence in the document.
+- Document channel: `doc.subscribeLocalUpdates` yields the bytes for one local change, which go to the relay and reach other peers through `doc.import`. One property change on one layer costs 83 bytes. An imported change fires the same per-layer subscription as a local one, so a remote move re-renders exactly the layer that moved. The event's `by` field is `local`, `import`, or `checkout`, which is what stops a change echoing back to the network.
+- Presence channel: Loro's `EphemeralStore`, keyed by peer, holding cursor, selection, viewport, name, and colour. It has its own encode and apply pair and its own subscription, and entries expire on a timeout, so a peer that drops off vanishes without a goodbye message. Selection belongs here, not in the document: two people selecting different layers is not a conflict to merge.
+- Undo: `UndoManager` is peer-scoped, so undo only reverts this peer's own edits. The limit to know is that undo applies an inverse operation, and that operation still wins by last-write-wins against a concurrent remote edit to the same property. Undoing your own move can therefore overwrite someone else's newer move of the same layer. Decide the product behaviour before shipping multiplayer.
+- Relay requirements stay as in the sync backend note below: store opaque update bytes per document, broadcast them, compact to a snapshot periodically, and never parse the document.
 
 Document and sync
 - Loro (`loro-crdt` 1.16). Movable tree for the layer hierarchy, one map per node for properties, undo from the operation log, `checkout` for version history. Yjs rejected: no move operation, so concurrent reparenting duplicates or loses nodes.
@@ -101,6 +114,10 @@ Workers
 - The renderer CSP needs `'wasm-unsafe-eval'` in `script-src`. Loro is WebAssembly and does not compile without it. This is narrower than `'unsafe-eval'` and does not permit JavaScript `eval`.
 - Loro's WebAssembly binary is 3.2 MB in the renderer bundle. Measure its effect on the 300 ms warm launch target before adding anything else large.
 - Chromium normalises `translate3d(x, y, 0)` to `translate3d(x, y, 0px)` in the style attribute. Assertions on transform strings must expect the normalised form.
+- Vite's dependency optimiser corrupts Loro's WebAssembly startup in dev. The renderer config needs `optimizeDeps: { exclude: ["loro-crdt"] }` or the app fails with a memory error before it paints.
+- electron-vite 6 deep-clones the renderer config and throws on the Babel plugin object. Awaiting the plugin inside the config avoids it. This is beta behaviour and should be retested on each electron-vite release.
+- The renderer entry in `rolldownOptions.input` resolves relative to the renderer `root`, not to the project root.
+- `react/react-in-jsx-scope` is off. It belongs to the legacy JSX transform, and the project uses the automatic runtime.
 
 ## 6. Assumptions to validate first, in order
 

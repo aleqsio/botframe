@@ -95,7 +95,8 @@
 		"no-effect/no-pass-live-state-to-parent": "error",
 		"no-effect/no-pass-data-to-parent": "error",
 		"no-effect/no-external-store-subscription": "error",
-		"no-effect/no-initialize-state": "error"
+		"no-effect/no-initialize-state": "error",
+		"react/react-in-jsx-scope": "off"
 	},
 	"overrides": [
 		{
