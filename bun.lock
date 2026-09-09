@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "aleqsiodesign",
+      "name": "botframe",
       "devDependencies": {
         "eslint-plugin-react-hooks": "7.1.1",
         "eslint-plugin-react-you-might-not-need-an-effect": "1.0.2",
