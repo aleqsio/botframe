@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { DesignDocument, LayerId } from "../document/document";
+import type { DesignDocument } from "../document/document";
+import type { LayerId } from "../document/layer";
 
 interface DragState {
 	pointerId: number;
