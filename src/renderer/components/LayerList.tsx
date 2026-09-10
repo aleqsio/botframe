@@ -6,21 +6,19 @@ import type { UserState } from "../state/userState";
 import { useChildIds, useLayer, useRootIds } from "../useDocument";
 import { isArtboard, layerEntry } from "./layerEntry";
 
-const ROW_PADDING = 8;
-const ROW_INDENT = 14;
-
-interface BranchProps {
+function LayerBranch({
+	doc,
+	ids,
+	user,
+}: {
 	doc: DesignDocument;
 	ids: readonly LayerId[];
-	depth: number;
 	user: UserState;
-}
-
-function LayerBranch({ doc, ids, depth, user }: BranchProps): ReactElement {
+}): ReactElement {
 	return (
 		<ul className="layer-list">
 			{ids.map((id) => (
-				<LayerRow depth={depth} doc={doc} id={id} key={id} user={user} />
+				<LayerRow doc={doc} id={id} key={id} user={user} />
 			))}
 		</ul>
 	);
@@ -29,12 +27,10 @@ function LayerBranch({ doc, ids, depth, user }: BranchProps): ReactElement {
 function LayerRow({
 	doc,
 	id,
-	depth,
 	user,
 }: {
 	doc: DesignDocument;
 	id: LayerId;
-	depth: number;
 	user: UserState;
 }): ReactElement {
 	const layer = useLayer(doc, id);
@@ -50,15 +46,12 @@ function LayerRow({
 				onClick={() => {
 					user.selection.set([id]);
 				}}
-				style={{ paddingLeft: `${ROW_PADDING + depth * ROW_INDENT}px` }}
 				type="button"
 			>
 				<span className={`layer-glyph layer-glyph-${glyph}`} />
 				{layerEntry(layer).label}
 			</button>
-			{childIds.length === 0 ? null : (
-				<LayerBranch depth={depth + 1} doc={doc} ids={childIds} user={user} />
-			)}
+			{childIds.length === 0 ? null : <LayerBranch doc={doc} ids={childIds} user={user} />}
 		</li>
 	);
 }
@@ -69,7 +62,7 @@ export function LayerList({ doc, user }: { doc: DesignDocument; user: UserState 
 	return (
 		<aside className="panel" id="layers">
 			<h2 className="panel-title">Layers</h2>
-			<LayerBranch depth={0} doc={doc} ids={ids} user={user} />
+			<LayerBranch doc={doc} ids={ids} user={user} />
 		</aside>
 	);
 }

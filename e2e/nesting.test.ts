@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { at, launchApp, stageOrigin } from "./support";
+import { at, openStage } from "./support";
 
 interface Point {
 	x: number;
@@ -18,13 +18,6 @@ const OVER_THE_EDGE: Drag = { from: { x: 180, y: 120 }, to: { x: 300, y: 240 } }
 const MOVE_ARTBOARD: Drag = { from: { x: 220, y: 60 }, to: { x: 270, y: 110 } };
 const OUTSIDE_THE_CLIP = { x: 270, y: 210 };
 const OVER_THE_ARTBOARD = { x: 200, y: 150 };
-
-async function openStage() {
-	const { app, window } = await launchApp();
-	const layers = window.locator(".layer");
-	await expect(layers).toHaveCount(1);
-	return { app, layers, origin: await stageOrigin(window), window };
-}
 
 async function dragOn(window: Page, origin: Point, drag: Drag): Promise<void> {
 	await window.mouse.move(at(origin, drag.from).x, at(origin, drag.from).y);
@@ -63,8 +56,7 @@ test("a draw inside an artboard puts the new layer in the artboard", async () =>
 	expect(await boxOf(window.locator(".selection"))).toEqual(at(origin, INSIDE.from));
 
 	await expect(rows).toHaveText(["Rectangle", "Artboard 1", "Rectangle 2"]);
-	await expect(rows.nth(1)).toHaveCSS("padding-left", "8px");
-	await expect(rows.nth(2)).toHaveCSS("padding-left", "22px");
+	expect((await boxOf(rows.nth(2))).x - (await boxOf(rows.nth(1))).x).toBe(14);
 
 	await rows.nth(1).click();
 	await expect(artboard).toHaveAttribute("data-selected", "");

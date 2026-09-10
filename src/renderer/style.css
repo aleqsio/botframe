@@ -296,6 +296,10 @@ body {
 	list-style: none;
 }
 
+.layer-list .layer-list {
+	padding-left: 14px;
+}
+
 .layer-row {
 	display: flex;
 	align-items: center;

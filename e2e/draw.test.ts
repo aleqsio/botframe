@@ -1,25 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { at, launchApp, stageOrigin } from "./support";
+import { at, openStage } from "./support";
 
 const PRESS = { x: 40, y: 40 };
 const RELEASE = { x: 240, y: 180 };
 const TAP = { x: 60, y: 220 };
 
 type Point = { x: number; y: number };
-
-async function openStage() {
-	const { app, window } = await launchApp();
-	const layers = window.locator(".layer");
-	await expect(layers).toHaveCount(1);
-	return {
-		app,
-		layers,
-		origin: await stageOrigin(window),
-		stage: window.locator("#stage"),
-		window,
-	};
-}
 
 async function dragOnStage(window: Page, origin: Point, press: Point, release: Point) {
 	await window.mouse.move(at(origin, press).x, at(origin, press).y);
