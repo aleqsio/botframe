@@ -1,5 +1,6 @@
-import { _electron as electron, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import type { JSHandle, Locator, Page } from "@playwright/test";
+import { launchApp, stageOrigin } from "./support";
 
 const LAYER = { x: 420, y: 260, width: 240, height: 160 };
 const PRESS = { x: 60, y: 60 };
@@ -20,13 +21,6 @@ interface PageZoom {
 	devicePixelRatio: number;
 	visualScale: number | null;
 	innerWidth: number;
-}
-
-function stageOrigin(window: Page): Promise<{ x: number; y: number }> {
-	return window.locator("#stage").evaluate((element) => {
-		const box = element.getBoundingClientRect();
-		return { x: box.left, y: box.top };
-	});
 }
 
 function pageZoom(window: Page): Promise<PageZoom> {
@@ -64,8 +58,7 @@ function watchViewport(window: Page): Promise<JSHandle<string[]>> {
 }
 
 test("the hand tool moves the canvas and leaves the layers alone", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 	const bar = window.locator(".floating-bar");
 
@@ -106,8 +99,7 @@ test("the hand tool moves the canvas and leaves the layers alone", async () => {
 });
 
 test("a wheel with the control key scales the canvas about the pointer", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 	const bar = window.locator(".floating-bar");
 
@@ -139,8 +131,7 @@ test("a wheel with the control key scales the canvas about the pointer", async (
 });
 
 test("a layer drag stays correct after the canvas moves and scales", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 	const bar = window.locator(".floating-bar");
 

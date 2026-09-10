@@ -1,24 +1,21 @@
-import { _electron as electron, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { at, launchApp, stageOrigin } from "./support";
 
 const CENTER = { x: 540, y: 340 };
 const START = /translate3d\(420px, 260px, 0px\)/u;
 
 test("the keyboard moves, turns and scales the selected layer by an exact step", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 
 	await expect(layer).toBeVisible();
 	await expect(layer).toHaveAttribute("style", START);
-	const origin = await window.locator("#stage").evaluate((element) => {
-		const box = element.getBoundingClientRect();
-		return { x: box.left, y: box.top };
-	});
+	const origin = await stageOrigin(window);
 
 	await window.keyboard.press("ArrowRight");
 	await expect(layer).toHaveAttribute("style", START);
 
-	await window.mouse.move(origin.x + CENTER.x, origin.y + CENTER.y);
+	await window.mouse.move(at(origin, CENTER).x, at(origin, CENTER).y);
 	await window.mouse.down();
 	await window.mouse.up();
 	await expect(layer).toHaveAttribute("data-selected", "");
@@ -40,9 +37,9 @@ test("the keyboard moves, turns and scales the selected layer by an exact step",
 	await expect(layer).toHaveAttribute("style", /width: 252px/u);
 	await expect(layer).toHaveAttribute("style", /height: 168px/u);
 
-	await window.mouse.move(origin.x + CENTER.x, origin.y + CENTER.y);
+	await window.mouse.move(at(origin, CENTER).x, at(origin, CENTER).y);
 	await window.mouse.down();
-	await window.mouse.move(origin.x + CENTER.x + 30, origin.y + CENTER.y, { steps: 4 });
+	await window.mouse.move(at(origin, CENTER).x + 30, at(origin, CENTER).y, { steps: 4 });
 	const held = await layer.getAttribute("style");
 	await window.keyboard.press("ArrowRight");
 	expect(await layer.getAttribute("style")).toBe(held);
