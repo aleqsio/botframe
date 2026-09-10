@@ -18,4 +18,5 @@ export class UserState {
 	readonly menu = new Slot<LayerMenu | null>(null);
 	readonly zone = new Slot<ZoneKey | null>(null);
 	readonly dragging = new Slot<boolean>(false);
+	readonly drawing = new Slot<LayerId | null>(null);
 }
