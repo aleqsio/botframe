@@ -4,7 +4,7 @@ import type { Layer } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { NumberField, PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { fieldsOf, isHexColor, swappedBox } from "./layerFields";
+import { fieldsOf, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
 function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
@@ -86,7 +86,7 @@ export function LayerProperties({
 			<PropertyField
 				label="Fill"
 				onCommit={(text) => {
-					if (!isHexColor(text)) {
+					if (!CSS.supports("color", text)) {
 						return;
 					}
 					doc.setFill(layer.id, text);

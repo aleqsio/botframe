@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
 import type { Layer } from "../../document/layer";
-import { LAYER_FIELDS, fieldsOf, formatNumber, isHexColor, swappedBox } from "./layerFields";
+import { LAYER_FIELDS, fieldsOf, formatNumber, swappedBox } from "./layerFields";
 import type { LayerField } from "./layerFields";
 
 function layerOf(doc: DesignDocument): Layer {
@@ -106,21 +106,6 @@ describe("swappedBox", () => {
 			width: 160,
 			height: 240,
 		});
-	});
-});
-
-describe("isHexColor", () => {
-	it("accepts a color of three or six hexadecimal digits", () => {
-		expect(isHexColor("#ffffff")).toBe(true);
-		expect(isHexColor("#D9D9D9")).toBe(true);
-		expect(isHexColor("#fff")).toBe(true);
-	});
-
-	it("refuses text that CSS cannot paint", () => {
-		expect(isHexColor("")).toBe(false);
-		expect(isHexColor("notacolor")).toBe(false);
-		expect(isHexColor("#ff")).toBe(false);
-		expect(isHexColor("#gggggg")).toBe(false);
 	});
 });
 

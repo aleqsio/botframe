@@ -7,8 +7,6 @@ import { MIN_LAYER_SIZE } from "../input/transform";
 const DECIMALS = 100;
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
-const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/iu;
-
 function clampSize(value: number): number {
 	return Math.max(value, MIN_LAYER_SIZE);
 }
@@ -101,10 +99,6 @@ export function fieldsOf(layer: Layer): readonly LayerField[] {
 
 export function swappedBox(layer: Layer): Rect {
 	return { x: layer.x, y: layer.y, width: layer.height, height: layer.width };
-}
-
-export function isHexColor(text: string): boolean {
-	return HEX_COLOR.test(text);
 }
 
 export function formatNumber(value: number): string {
