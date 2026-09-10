@@ -344,25 +344,82 @@ body {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 4px;
-	margin: 0;
 }
 
-.property-field {
+.property-field,
+.property-select {
 	display: flex;
-	align-items: baseline;
+	align-items: center;
 	gap: 6px;
 	padding: 5px 8px;
 	border-radius: 6px;
 	background-color: var(--panel-hover);
 }
 
-.property-field dt {
+.property-label {
+	flex: none;
 	color: var(--panel-label);
 	font-size: 11px;
 }
 
-.property-field dd {
-	margin: 0;
+.property-input,
+.property-select select {
+	width: 100%;
+	min-width: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	outline: none;
+}
+
+.property-switch {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 5px 8px;
+	border-radius: 6px;
+	color: var(--panel-label);
+	font-size: 11px;
+}
+
+.preset-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.preset-summary {
+	padding: 5px 8px;
+	color: var(--panel-label);
+	font-size: 11px;
+	font-weight: 600;
+	cursor: default;
+}
+
+.preset-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 8px;
+	border: 0;
+	border-radius: 6px;
+	background-color: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: default;
+}
+
+.preset-row:hover {
+	background-color: var(--panel-hover);
+}
+
+.preset-size {
+	color: var(--panel-label);
 	font-variant-numeric: tabular-nums;
 }
 

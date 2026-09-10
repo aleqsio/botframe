@@ -8,6 +8,8 @@ export type Geometry =
 	| { kind: "path"; d: string }
 	| { kind: "unsupported" };
 
+export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;
+
 export type Rect = {
 	x: number;
 	y: number;

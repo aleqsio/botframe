@@ -8,6 +8,10 @@ import { toolFor } from "./toolKey";
 
 const CANCEL_KEY = "Escape";
 
+function isTyping(target: EventTarget | null): boolean {
+	return target instanceof HTMLInputElement || target instanceof HTMLSelectElement;
+}
+
 function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
 	const command = commandFor(stroke);
 	const [id] = user.selection.get();
@@ -39,7 +43,7 @@ function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): 
 export function useKeyInput(doc: DesignDocument, user: UserState): void {
 	useEffect(() => {
 		function onKeyDown(event: KeyboardEvent): void {
-			if (event.defaultPrevented) {
+			if (event.defaultPrevented || isTyping(event.target)) {
 				return;
 			}
 			if (handleStroke(doc, user, event)) {
