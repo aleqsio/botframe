@@ -7,6 +7,7 @@ import { writeVariant } from "./write";
 export type Unsubscribe = () => void;
 
 const LAYERS = "layers";
+const NO_IDS: LayerId[] = [];
 const GEOMETRY = "geometry";
 
 const SEED_RECTANGLE: LayerFields = {
@@ -50,7 +51,9 @@ export class DesignDocument {
 	readonly #listeners = new Map<LayerId, Set<() => void>>();
 	readonly #nodeSubscriptions = new Map<LayerId, Unsubscribe>();
 	readonly #structureListeners = new Set<() => void>();
+	readonly #children = new Map<LayerId, LayerId[]>();
 	#ids: LayerId[] | null = null;
+	#roots: LayerId[] | null = null;
 
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
@@ -81,6 +84,26 @@ export class DesignDocument {
 		return this.#ids;
 	}
 
+	rootIds(): LayerId[] {
+		this.#roots ??= this.#tree()
+			.roots()
+			.map((node) => node.id);
+		return this.#roots;
+	}
+
+	childIds(parent: LayerId): LayerId[] {
+		const cached = this.#children.get(parent);
+		if (cached !== undefined) {
+			return cached;
+		}
+		const ids =
+			this.#liveNode(parent)
+				?.children()
+				?.map((node) => node.id) ?? NO_IDS;
+		this.#children.set(parent, ids);
+		return ids;
+	}
+
 	layer(id: LayerId): Layer | null {
 		const cached = this.#layers.get(id);
 		if (cached !== undefined) {
@@ -103,13 +126,14 @@ export class DesignDocument {
 			}),
 			name: readString(node.data, "name", ""),
 			clip: readBoolean(node.data, "clip", false),
+			parent: node.parent()?.id ?? null,
 		};
 		this.#layers.set(id, layer);
 		return layer;
 	}
 
-	createLayer(fields: LayerFields): LayerId {
-		const node = this.#tree().createNode();
+	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
+		const node = this.#tree().createNode(parent ?? undefined);
 		writeFields(node.data, fields);
 		this.#notifyStructure();
 		return node.id;
@@ -117,7 +141,6 @@ export class DesignDocument {
 
 	deleteLayer(id: LayerId): void {
 		this.#tree().delete(id);
-		this.#layers.delete(id);
 		this.#notifyStructure();
 	}
 
@@ -184,6 +207,9 @@ export class DesignDocument {
 
 	#notifyStructure(): void {
 		this.#ids = null;
+		this.#roots = null;
+		this.#children.clear();
+		this.#layers.clear();
 		for (const listener of this.#structureListeners) {
 			listener();
 		}

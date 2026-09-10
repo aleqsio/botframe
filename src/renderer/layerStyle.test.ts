@@ -14,6 +14,7 @@ function layerWith(geometry: Geometry): Layer {
 		geometry,
 		name: "",
 		clip: false,
+		parent: null,
 	};
 }
 

@@ -26,6 +26,7 @@ function layerAt(rotation: number): Layer {
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
 		name: "",
 		clip: false,
+		parent: null,
 	};
 }
 
