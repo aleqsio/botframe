@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { layerChain, toParentPoint } from "./layerSpace";
+import { containsPoint, layerChain, toParentPoint } from "./layerSpace";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {
@@ -60,5 +60,26 @@ describe("toParentPoint", () => {
 
 	it("takes the point through each layer of the chain", () => {
 		expect(toParentPoint([FLAT, CHILD], { x: 250, y: 230 })).toEqual({ x: 50, y: 30 });
+	});
+});
+
+describe("containsPoint", () => {
+	it("holds a point inside the box", () => {
+		expect(containsPoint(FLAT, { x: 150, y: 130 })).toBe(true);
+	});
+
+	it("refuses a point outside the box on each axis", () => {
+		expect(containsPoint(FLAT, { x: 350, y: 130 })).toBe(false);
+		expect(containsPoint(FLAT, { x: 150, y: 260 })).toBe(false);
+	});
+
+	it("holds a point on the edge of the box", () => {
+		expect(containsPoint(FLAT, { x: 100, y: 100 })).toBe(true);
+		expect(containsPoint(FLAT, { x: 300, y: 200 })).toBe(true);
+	});
+
+	it("turns the point against the angle of the layer", () => {
+		expect(containsPoint(TURNED, { x: 290, y: 150 })).toBe(false);
+		expect(containsPoint(TURNED, { x: 200, y: 240 })).toBe(true);
 	});
 });

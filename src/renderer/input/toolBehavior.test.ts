@@ -20,6 +20,7 @@ const SE_CORNER = { x: 660, y: 420 };
 const GROWN_SE = { x: 700, y: 460 };
 const SE_REACH = { x: 678, y: 438 };
 const E_SIDE = { x: 660, y: 340 };
+const EMPTY = { x: 300, y: 200 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_ZONE = { mode: "resize", handle: "se" };
@@ -103,7 +104,7 @@ describe("the behavior of each tool", () => {
 		tapAt(behaviorFor("select"), target, CENTER);
 		expect(target.user.selection.get()).toEqual([id]);
 
-		tapAt(behaviorFor("select"), { ...target, layerIds: [] }, CENTER);
+		tapAt(behaviorFor("select"), { ...target, layerIds: [] }, EMPTY);
 		expect(target.user.selection.get()).toEqual([]);
 	});
 
@@ -116,13 +117,27 @@ describe("the behavior of each tool", () => {
 			behaviorFor("select"),
 			{ ...target, layerIds: [] },
 			{
-				press: PRESS,
+				press: EMPTY,
 				release: RELEASE,
 			},
 		);
 
 		expect(target.user.selection.get()).toEqual([]);
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
+	});
+
+	it("holds the selection and moves it when the press finds no layer inside its box", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(behaviorFor("select"), target, CENTER);
+		const clipped = { ...target, layerIds: [] };
+
+		tapAt(behaviorFor("select"), clipped, CENTER);
+		expect(target.user.selection.get()).toEqual([id]);
+
+		dragOver(behaviorFor("select"), clipped, { press: PRESS, release: RELEASE });
+		expect(target.user.selection.get()).toEqual([id]);
+		expect(target.doc.layer(id)).toMatchObject({ x: 520, y: 330 });
 	});
 
 	it("takes the topmost layer under the pointer and leaves the layers below it", () => {
