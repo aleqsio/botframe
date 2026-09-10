@@ -3,11 +3,11 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import { nextLayerName } from "../components/layerEntry";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { Point } from "../state/camera";
+import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { drawnRect, tappedRect } from "./draw";
 import { layerChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
-import { NOTHING_SELECTED } from "./selectBehavior";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 const CANCEL_COMMIT = "cancel draw";

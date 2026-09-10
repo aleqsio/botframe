@@ -6,6 +6,8 @@ import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";
 import { Slot } from "./slot";
 
+export const NOTHING_SELECTED: readonly LayerId[] = [];
+
 export interface Draw {
 	id: LayerId;
 	origin: Point;
@@ -19,7 +21,7 @@ export interface LayerMenu {
 export class UserState {
 	readonly tool = new Slot<ToolId>(DEFAULT_TOOL);
 	readonly camera = new Slot<Camera>(IDENTITY_CAMERA);
-	readonly selection = new Slot<readonly LayerId[]>([]);
+	readonly selection = new Slot<readonly LayerId[]>(NOTHING_SELECTED);
 	readonly menu = new Slot<LayerMenu | null>(null);
 	readonly zone = new Slot<ZoneKey | null>(null);
 	readonly dragging = new Slot<boolean>(false);

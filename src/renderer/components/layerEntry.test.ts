@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { layerEntry, nextLayerName } from "./layerEntry";
+import { isArtboard, layerEntry, nextLayerName } from "./layerEntry";
 
 function rectangle(id: LayerId, fill: string): Layer {
 	return {
@@ -46,6 +46,12 @@ describe("layerEntry", () => {
 
 	it("names a rectangle that holds the artboard flag an artboard", () => {
 		expect(layerEntry(artboard("1@1")).label).toBe("Artboard");
+	});
+
+	it("tells an artboard from a plain rectangle and from a layer that the document lost", () => {
+		expect(isArtboard(artboard("1@1"))).toBe(true);
+		expect(isArtboard(rectangle("2@1", "#000000"))).toBe(false);
+		expect(isArtboard(null)).toBe(false);
 	});
 
 	it("takes the name of the layer over the name of the kind", () => {

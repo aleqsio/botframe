@@ -14,15 +14,16 @@ export interface LayerEntry {
 	swatch: string;
 }
 
+export function isArtboard(layer: Layer | null): boolean {
+	const geometry = layer?.geometry;
+	return geometry?.kind === "rectangle" && geometry.artboard;
+}
+
 function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}
-	const { geometry } = layer;
-	if (geometry.kind === "rectangle" && geometry.artboard) {
-		return ARTBOARD_LABEL;
-	}
-	return GEOMETRY_LABELS[geometry.kind];
+	return isArtboard(layer) ? ARTBOARD_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
 }
 
 export function layerEntry(layer: Layer | null): LayerEntry {

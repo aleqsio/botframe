@@ -1,5 +1,6 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
@@ -8,8 +9,6 @@ import { layerChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
-
-export const NOTHING_SELECTED: readonly LayerId[] = [];
 
 type Action =
 	| { kind: "move"; id: LayerId; offset: Point }
@@ -49,6 +48,10 @@ function aimAt(target: PointerTarget, canvas: Point): Aim | null {
 	const chain = parentChain(target, layer);
 	const point = toParentPoint(chain, canvas);
 	return { layer, chain, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
+}
+
+function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
+	return aimAt(target, canvas)?.zone ?? null;
 }
 
 function handleDrag(aim: Aim | null): Drag | null {
@@ -112,10 +115,10 @@ export function createSelectBehavior(): ToolBehavior {
 
 	return {
 		hover(target, point) {
-			return aimAt(target, point.canvas)?.zone ?? null;
+			return zoneUnder(target, point.canvas);
 		},
 		tap(target, point) {
-			if (aimAt(target, point.canvas)?.zone == null) {
+			if (zoneUnder(target, point.canvas) === null) {
 				select(target.user, target.layerIds[0] ?? null);
 			}
 		},
