@@ -23,7 +23,9 @@ function layerAt(rotation: number): Layer {
 		height: 100,
 		rotation,
 		fill: "#000000",
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		name: "",
+		clip: false,
 	};
 }
 

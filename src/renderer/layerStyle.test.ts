@@ -3,7 +3,18 @@ import type { Geometry, Layer } from "../document/layer";
 import { layerStyle } from "./layerStyle";
 
 function layerWith(geometry: Geometry): Layer {
-	return { id: "1@1", x: 10, y: 20, width: 30, height: 40, rotation: 0, fill: "#123456", geometry };
+	return {
+		id: "1@1",
+		x: 10,
+		y: 20,
+		width: 30,
+		height: 40,
+		rotation: 0,
+		fill: "#123456",
+		geometry,
+		name: "",
+		clip: false,
+	};
 }
 
 describe("layerStyle", () => {
@@ -26,13 +37,13 @@ describe("layerStyle", () => {
 
 	it("draws a rectangle with its corner radius and leaves the corner shape unset when smoothing is zero", () => {
 		const square = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 }),
+			layerWith({ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false }),
 		);
 		expect(square.borderRadius).toBe("0px");
 		expect(square.cornerShape).toBeUndefined();
 
 		const rounded = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0 }),
+			layerWith({ kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0, artboard: false }),
 		);
 		expect(rounded.borderRadius).toBe("12px");
 		expect(rounded.cornerShape).toBeUndefined();
@@ -40,7 +51,7 @@ describe("layerStyle", () => {
 
 	it("draws a squircle with a superellipse corner shape when smoothing is above zero", () => {
 		const style = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 16, cornerSmoothing: 0.5 }),
+			layerWith({ kind: "rectangle", cornerRadius: 16, cornerSmoothing: 0.5, artboard: false }),
 		);
 		expect(style).toMatchObject({ borderRadius: "16px", cornerShape: "superellipse(3.5)" });
 	});

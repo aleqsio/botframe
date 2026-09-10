@@ -11,7 +11,9 @@ function rectangle(id: LayerId, fill: string): Layer {
 		height: 160,
 		rotation: 0,
 		fill,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		name: "",
+		clip: false,
 	};
 }
 

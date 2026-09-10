@@ -3,7 +3,7 @@ import type { TreeID } from "loro-crdt";
 export type LayerId = TreeID;
 
 export type Geometry =
-	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number }
+	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; artboard: boolean }
 	| { kind: "ellipse" }
 	| { kind: "path"; d: string }
 	| { kind: "unsupported" };
@@ -20,4 +20,13 @@ export interface Layer extends Rect {
 	rotation: number;
 	fill: string;
 	geometry: Geometry;
+	name: string;
+	clip: boolean;
+}
+
+export interface LayerFields extends Rect {
+	fill: string;
+	name: string;
+	clip: boolean;
+	geometry: Exclude<Geometry, { kind: "unsupported" }>;
 }
