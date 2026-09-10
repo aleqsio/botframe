@@ -56,6 +56,12 @@ describe("layerStyle", () => {
 		expect(style).toMatchObject({ borderRadius: "16px", cornerShape: "superellipse(3.5)" });
 	});
 
+	it("hides what a layer with a clip holds outside its box", () => {
+		const layer = layerWith({ kind: "ellipse" });
+		expect(layerStyle(layer).overflow).toBeUndefined();
+		expect(layerStyle({ ...layer, clip: true }).overflow).toBe("hidden");
+	});
+
 	it("draws an ellipse as a full border radius", () => {
 		expect(layerStyle(layerWith({ kind: "ellipse" }))).toMatchObject({ borderRadius: "50%" });
 	});

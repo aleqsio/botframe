@@ -43,6 +43,7 @@ export function layerStyle(layer: Layer): CSSProperties {
 		width: `${layer.width}px`,
 		height: `${layer.height}px`,
 		background: layer.fill,
+		overflow: layer.clip ? "hidden" : undefined,
 		...geometryStyle(layer.geometry),
 	};
 }
