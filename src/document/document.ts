@@ -1,6 +1,6 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroMap, LoroTree } from "loro-crdt";
-import type { Geometry, Layer, LayerId } from "./layer";
+import type { Geometry, Layer, LayerId, Rect } from "./layer";
 import { readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
@@ -83,6 +83,7 @@ export class DesignDocument {
 			y: readNumber(node.data, "y", 0),
 			width: readNumber(node.data, "width", 0),
 			height: readNumber(node.data, "height", 0),
+			rotation: readNumber(node.data, "rotation", 0),
 			fill: readString(node.data, "fill", "#000000"),
 			geometry: readVariant<Geometry>(node.data.get(GEOMETRY), GEOMETRY_READERS, {
 				kind: "unsupported",
@@ -111,13 +112,15 @@ export class DesignDocument {
 	}
 
 	move(id: LayerId, x: number, y: number): void {
-		const node = this.#tree().getNodeByID(id);
-		if (node === undefined) {
-			return;
-		}
-		node.data.set("x", x);
-		node.data.set("y", y);
-		this.#invalidate(id);
+		this.#write(id, { x, y });
+	}
+
+	resize(id: LayerId, rect: Rect): void {
+		this.#write(id, rect);
+	}
+
+	rotate(id: LayerId, rotation: number): void {
+		this.#write(id, { rotation });
 	}
 
 	commit(message: string): void {
@@ -138,6 +141,17 @@ export class DesignDocument {
 
 	changeCount(): number {
 		return this.#doc.exportJsonUpdates().changes.length;
+	}
+
+	#write(id: LayerId, fields: Readonly<Record<string, number>>): void {
+		const node = this.#tree().getNodeByID(id);
+		if (node === undefined) {
+			return;
+		}
+		for (const [key, value] of Object.entries(fields)) {
+			node.data.set(key, value);
+		}
+		this.#invalidate(id);
 	}
 
 	#tree(): LoroTree {

@@ -19,6 +19,11 @@
 	--bar-selected: rgb(255 255 255 / 0.16);
 	--bar-focus: rgb(138 168 255 / 0.9);
 	--selection: #0d99ff;
+	--handle-fill: #ffffff;
+	--rotate-cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
 }
 
 * {
@@ -96,6 +101,74 @@ body {
 
 .layer[data-selected] {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
+}
+
+.selection {
+	--handle: calc(var(--handle-size) / var(--zoom));
+
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	will-change: transform;
+}
+
+.selection-handle {
+	position: absolute;
+	width: var(--handle);
+	height: var(--handle);
+	margin: calc(var(--handle) / -2);
+	border: calc(1.5px / var(--zoom)) solid var(--selection);
+	border-radius: calc(2px / var(--zoom));
+	background: var(--handle-fill);
+}
+
+.selection-handle[data-corner="nw"] {
+	top: 0;
+	left: 0;
+}
+
+.selection-handle[data-corner="ne"] {
+	top: 0;
+	left: 100%;
+}
+
+.selection-handle[data-corner="se"] {
+	top: 100%;
+	left: 100%;
+}
+
+.selection-handle[data-corner="sw"] {
+	top: 100%;
+	left: 0;
+}
+
+#stage[data-zone="resize-nw"],
+#stage[data-zone="resize-se"] {
+	cursor: nwse-resize;
+}
+
+#stage[data-zone="resize-ne"],
+#stage[data-zone="resize-sw"] {
+	cursor: nesw-resize;
+}
+
+#stage[data-zone="resize-n"],
+#stage[data-zone="resize-s"] {
+	cursor: ns-resize;
+}
+
+#stage[data-zone="resize-e"],
+#stage[data-zone="resize-w"] {
+	cursor: ew-resize;
+}
+
+#stage[data-zone^="rotate-"] {
+	cursor: var(--rotate-cursor);
+}
+
+#stage[data-zone] .layer {
+	cursor: inherit;
 }
 
 .floating-bar {

@@ -13,7 +13,7 @@ export type Gesture =
 	| { kind: "dragStart"; origin: Point; point: Point }
 	| { kind: "dragMove"; point: Point }
 	| { kind: "dragEnd"; point: Point }
-	| { kind: "tap" }
+	| { kind: "tap"; point: Point }
 	| { kind: "pinch"; center: Point; pan: Point; scale: number };
 
 export interface PointerDown {
@@ -151,7 +151,8 @@ export class GestureRecognizer {
 		if (pointer === null) {
 			return null;
 		}
-		return pointer.dragging ? { kind: "dragEnd", point: pointOf(sample) } : { kind: "tap" };
+		const point = pointOf(sample);
+		return pointer.dragging ? { kind: "dragEnd", point } : { kind: "tap", point };
 	}
 
 	cancel(sample: PointerSample): Gesture | null {

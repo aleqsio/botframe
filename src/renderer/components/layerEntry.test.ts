@@ -9,6 +9,7 @@ function rectangle(id: LayerId, fill: string): Layer {
 		y: 0,
 		width: 240,
 		height: 160,
+		rotation: 0,
 		fill,
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 },
 	};

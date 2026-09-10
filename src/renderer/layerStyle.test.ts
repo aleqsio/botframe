@@ -3,7 +3,7 @@ import type { Geometry, Layer } from "../document/layer";
 import { layerStyle } from "./layerStyle";
 
 function layerWith(geometry: Geometry): Layer {
-	return { id: "1@1", x: 10, y: 20, width: 30, height: 40, fill: "#123456", geometry };
+	return { id: "1@1", x: 10, y: 20, width: 30, height: 40, rotation: 0, fill: "#123456", geometry };
 }
 
 describe("layerStyle", () => {
@@ -14,6 +14,14 @@ describe("layerStyle", () => {
 			height: "40px",
 			background: "#123456",
 		});
+	});
+
+	it("turns the layer around its own center only when it holds an angle", () => {
+		const flat = layerWith({ kind: "ellipse" });
+		expect(layerStyle(flat).transform).toBe("translate3d(10px, 20px, 0)");
+		expect(layerStyle({ ...flat, rotation: 30 }).transform).toBe(
+			"translate3d(10px, 20px, 0) rotate(30deg)",
+		);
 	});
 
 	it("draws a rectangle with its corner radius and leaves the corner shape unset when smoothing is zero", () => {

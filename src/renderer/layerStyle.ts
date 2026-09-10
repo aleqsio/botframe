@@ -32,9 +32,14 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 	return {};
 }
 
+export function layerTransform(layer: Layer): string {
+	const place = `translate3d(${layer.x}px, ${layer.y}px, 0)`;
+	return layer.rotation === 0 ? place : `${place} rotate(${layer.rotation}deg)`;
+}
+
 export function layerStyle(layer: Layer): CSSProperties {
 	return {
-		transform: `translate3d(${layer.x}px, ${layer.y}px, 0)`,
+		transform: layerTransform(layer),
 		width: `${layer.width}px`,
 		height: `${layer.height}px`,
 		background: layer.fill,

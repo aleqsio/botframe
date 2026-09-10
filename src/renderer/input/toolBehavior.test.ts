@@ -5,12 +5,20 @@ import { TOOLS } from "../components/tools";
 import { IDENTITY_CAMERA, toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
+import { NO_MODIFIERS } from "./modifiers";
+import type { Modifiers } from "./modifiers";
+import type { PointerTarget, ToolBehavior } from "./tool";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
-import type { PointerTarget, ToolBehavior } from "./toolBehavior";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
 const CLIENT = { x: 120, y: 80 };
+const CENTER = { x: 540, y: 340 };
+const SE_CORNER = { x: 660, y: 420 };
+const SE_REACH = { x: 678, y: 438 };
+const E_SIDE = { x: 660, y: 340 };
+const SHIFT: Modifiers = { shift: true, alt: false };
+const ALT: Modifiers = { shift: false, alt: true };
 
 function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -29,16 +37,22 @@ function pointAt(camera: Camera, stage: Point): StagePoint {
 	return { stage, canvas: toCanvasPoint(camera, stage) };
 }
 
-function dragOver(
-	behavior: ToolBehavior,
-	target: PointerTarget,
-	press: Point,
-	release: Point,
-): void {
+function tapAt(behavior: ToolBehavior, target: PointerTarget, stage: Point): void {
+	behavior.tap?.(target, pointAt(target.user.camera.get(), stage));
+}
+
+interface DragSpec {
+	press: Point;
+	release: Point;
+	modifiers?: Modifiers;
+}
+
+function dragOver(behavior: ToolBehavior, target: PointerTarget, spec: DragSpec): void {
 	const camera = target.user.camera.get();
-	behavior.dragStart?.(target, pointAt(camera, press), pointAt(camera, press));
-	behavior.drag?.(target, pointAt(camera, release));
-	behavior.dragEnd?.(target, pointAt(camera, release));
+	const modifiers = spec.modifiers ?? NO_MODIFIERS;
+	behavior.dragStart?.(target, pointAt(camera, spec.press), pointAt(camera, spec.press), modifiers);
+	behavior.drag?.(target, pointAt(camera, spec.release), modifiers);
+	behavior.dragEnd?.(target, pointAt(camera, spec.release), modifiers);
 }
 
 describe("TOOL_BEHAVIORS", () => {
@@ -51,7 +65,7 @@ describe("TOOL_BEHAVIORS", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(TOOL_BEHAVIORS.select(), target, PRESS, RELEASE);
+		dragOver(TOOL_BEHAVIORS.select(), target, { press: PRESS, release: RELEASE });
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 520, y: 330 });
 		expect(target.doc.changeCount()).toBe(changes + 1);
@@ -62,8 +76,8 @@ describe("TOOL_BEHAVIORS", () => {
 		const first = targetOf(true);
 		const second = targetOf(true);
 
-		dragOver(TOOL_BEHAVIORS.select(), first, PRESS, RELEASE);
-		dragOver(TOOL_BEHAVIORS.select(), second, { x: 500, y: 300 }, RELEASE);
+		dragOver(TOOL_BEHAVIORS.select(), first, { press: PRESS, release: RELEASE });
+		dragOver(TOOL_BEHAVIORS.select(), second, { press: { x: 500, y: 300 }, release: RELEASE });
 
 		expect(first.doc.layer(firstId(first.doc))).toMatchObject({ x: 520, y: 330 });
 		expect(second.doc.layer(firstId(second.doc))).toMatchObject({ x: 460, y: 310 });
@@ -73,19 +87,26 @@ describe("TOOL_BEHAVIORS", () => {
 		const target = targetOf(true);
 		const id = firstId(target.doc);
 
-		TOOL_BEHAVIORS.select().tap?.(target);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
 		expect(target.user.selection.get()).toEqual([id]);
 
-		TOOL_BEHAVIORS.select().tap?.({ ...target, layerIds: [] });
+		tapAt(TOOL_BEHAVIORS.select(), { ...target, layerIds: [] }, CENTER);
 		expect(target.user.selection.get()).toEqual([]);
 	});
 
 	it("clears the selection when the drag starts on the empty canvas", () => {
 		const target = targetOf(true);
 		const id = firstId(target.doc);
-		TOOL_BEHAVIORS.select().tap?.(target);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
 
-		dragOver(TOOL_BEHAVIORS.select(), { ...target, layerIds: [] }, PRESS, RELEASE);
+		dragOver(
+			TOOL_BEHAVIORS.select(),
+			{ ...target, layerIds: [] },
+			{
+				press: PRESS,
+				release: RELEASE,
+			},
+		);
 
 		expect(target.user.selection.get()).toEqual([]);
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
@@ -96,7 +117,7 @@ describe("TOOL_BEHAVIORS", () => {
 		const id = firstId(target.doc);
 		const below = "9@9" as LayerId;
 
-		TOOL_BEHAVIORS.select().tap?.({ ...target, layerIds: [id, below] });
+		tapAt(TOOL_BEHAVIORS.select(), { ...target, layerIds: [id, below] }, CENTER);
 
 		expect(target.user.selection.get()).toEqual([id]);
 	});
@@ -132,8 +153,8 @@ describe("TOOL_BEHAVIORS", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, PRESS, RELEASE);
-		TOOL_BEHAVIORS.rectangle().tap?.(target);
+		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: PRESS, release: RELEASE });
+		tapAt(TOOL_BEHAVIORS.rectangle(), target, CENTER);
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
 		expect(target.doc.changeCount()).toBe(changes);
@@ -141,11 +162,111 @@ describe("TOOL_BEHAVIORS", () => {
 	});
 });
 
+describe("the resize and turn handles", () => {
+	it("resizes the selected layer from the corner handle, and keeps the corner across it", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
+		const changes = target.doc.changeCount();
+
+		dragOver(TOOL_BEHAVIORS.select(), target, { press: SE_CORNER, release: { x: 700, y: 460 } });
+
+		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260, width: 280, height: 200 });
+		expect(target.doc.changeCount()).toBe(changes + 1);
+		expect(target.user.selection.get()).toEqual([id]);
+	});
+
+	it("resizes both axes from a side handle with shift, and from the center with alt", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: E_SIDE,
+			release: { x: 720, y: 340 },
+			modifiers: SHIFT,
+		});
+		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 240, width: 300, height: 200 });
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: { x: 720, y: 340 },
+			release: { x: 740, y: 340 },
+			modifiers: ALT,
+		});
+		expect(target.doc.layer(id)).toMatchObject({ x: 400, y: 240, width: 340, height: 200 });
+	});
+
+	it("keeps the selection when the press lands on a handle outside the layer", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
+
+		dragOver(
+			TOOL_BEHAVIORS.select(),
+			{ ...target, layerIds: [] },
+			{ press: { x: 665, y: 425 }, release: { x: 700, y: 460 } },
+		);
+
+		expect(target.user.selection.get()).toEqual([id]);
+		expect(target.doc.layer(id)).toMatchObject({ width: 280, height: 200 });
+	});
+
+	it("keeps the selection when the tap lands on a handle instead of the layer", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
+
+		tapAt(TOOL_BEHAVIORS.select(), { ...target, layerIds: [] }, SE_REACH);
+		expect(target.user.selection.get()).toEqual([id]);
+
+		tapAt(TOOL_BEHAVIORS.select(), { ...target, layerIds: [] }, { x: 665, y: 425 });
+		expect(target.user.selection.get()).toEqual([id]);
+	});
+
+	it("turns the selected layer when the drag starts outside a corner", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(TOOL_BEHAVIORS.select(), target, CENTER);
+		const changes = target.doc.changeCount();
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: SE_REACH,
+			release: { x: 2 * CENTER.x - SE_REACH.x, y: 2 * CENTER.y - SE_REACH.y },
+		});
+
+		expect(target.doc.layer(id)).toMatchObject({ rotation: 180, x: 420, y: 260 });
+		expect(target.doc.changeCount()).toBe(changes + 1);
+	});
+
+	it("answers the hover with the zone under the pointer of the selected layer", () => {
+		const target = targetOf(true);
+		const behavior = TOOL_BEHAVIORS.select();
+		const camera = target.user.camera.get();
+		expect(behavior.hover?.(target, pointAt(camera, SE_CORNER))).toBeNull();
+
+		tapAt(behavior, target, CENTER);
+
+		expect(behavior.hover?.(target, pointAt(camera, SE_CORNER))).toEqual({
+			mode: "resize",
+			handle: "se",
+		});
+		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toEqual({
+			mode: "resize",
+			handle: "e",
+		});
+		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toEqual({
+			mode: "rotate",
+			handle: "se",
+		});
+		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBeNull();
+	});
+});
+
 describe("the hand tool", () => {
 	it("moves the camera by the stage delta of the hand drag", () => {
 		const target = targetOf(true);
 
-		dragOver(TOOL_BEHAVIORS.hand(), target, PRESS, RELEASE);
+		dragOver(TOOL_BEHAVIORS.hand(), target, { press: PRESS, release: RELEASE });
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 1 });
 	});
@@ -155,10 +276,10 @@ describe("the hand tool", () => {
 		const behavior = TOOL_BEHAVIORS.hand();
 		const press = pointAt(IDENTITY_CAMERA, PRESS);
 
-		behavior.dragStart?.(target, press, press);
-		behavior.drag?.(target, pointAt(target.user.camera.get(), { x: 480, y: 300 }));
-		behavior.drag?.(target, pointAt(target.user.camera.get(), { x: 520, y: 330 }));
-		behavior.dragEnd?.(target, pointAt(target.user.camera.get(), RELEASE));
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		behavior.drag?.(target, pointAt(target.user.camera.get(), { x: 480, y: 300 }), NO_MODIFIERS);
+		behavior.drag?.(target, pointAt(target.user.camera.get(), { x: 520, y: 330 }), NO_MODIFIERS);
+		behavior.dragEnd?.(target, pointAt(target.user.camera.get(), RELEASE), NO_MODIFIERS);
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 1 });
 	});
@@ -168,8 +289,8 @@ describe("the hand tool", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(TOOL_BEHAVIORS.hand(), target, PRESS, RELEASE);
-		TOOL_BEHAVIORS.hand().tap?.(target);
+		dragOver(TOOL_BEHAVIORS.hand(), target, { press: PRESS, release: RELEASE });
+		tapAt(TOOL_BEHAVIORS.hand(), target, CENTER);
 
 		expect(TOOL_BEHAVIORS.hand().context).toBeUndefined();
 		expect(target.user.menu.get()).toBeNull();
@@ -180,10 +301,10 @@ describe("the hand tool", () => {
 
 	it("holds the pan of one hand gesture inside that gesture", () => {
 		const target = targetOf(false);
-		dragOver(TOOL_BEHAVIORS.hand(), target, PRESS, RELEASE);
+		dragOver(TOOL_BEHAVIORS.hand(), target, { press: PRESS, release: RELEASE });
 
 		const late = TOOL_BEHAVIORS.hand();
-		late.drag?.(target, pointAt(target.user.camera.get(), { x: 900, y: 900 }));
+		late.drag?.(target, pointAt(target.user.camera.get(), { x: 900, y: 900 }), NO_MODIFIERS);
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 1 });
 	});
@@ -192,7 +313,7 @@ describe("the hand tool", () => {
 		const target = targetOf(false);
 		target.user.camera.set({ x: 0, y: 0, zoom: 2 });
 
-		dragOver(TOOL_BEHAVIORS.hand(), target, PRESS, RELEASE);
+		dragOver(TOOL_BEHAVIORS.hand(), target, { press: PRESS, release: RELEASE });
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 2 });
 	});
