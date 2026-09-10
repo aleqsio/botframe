@@ -124,29 +124,6 @@ describe("DesignDocument", () => {
 		expect(doc.layer(id)).toMatchObject({ x: 777 });
 	});
 
-	it("forgets a parent and its child when a remote peer deletes the parent", async () => {
-		const doc = DesignDocument.create();
-		const parent = doc.createLayer(DRAWN);
-		const child = doc.createLayer(DRAWN, parent);
-		doc.commit("create artboard");
-		expect(doc.layer(parent)).not.toBeNull();
-		expect(doc.layer(child)).not.toBeNull();
-
-		const peer = new LoroDoc();
-		peer.setPeerId(99);
-		peer.import(doc.snapshot());
-		peer.getTree("layers").delete(parent);
-		peer.commit();
-		doc.merge(peer.export({ mode: "update" }));
-
-		await vi.waitFor(() => {
-			expect(doc.layer(parent)).toBeNull();
-			expect(doc.layer(child)).toBeNull();
-		});
-		expect(doc.layerIds()).not.toContain(parent);
-		expect(doc.layerIds()).not.toContain(child);
-	});
-
 	it("stops notifying after unsubscribe", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
@@ -211,6 +188,93 @@ describe("DesignDocument", () => {
 		expect(readString(geometryBag(roundTrip, id).ensureMergeableMap("shader"), "source", "")).toBe(
 			"noise",
 		);
+	});
+});
+
+describe("a remote delete or move", () => {
+	it("forgets a parent and its child when a remote peer deletes the parent", async () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+		doc.commit("create artboard");
+		expect(doc.layer(parent)).not.toBeNull();
+		expect(doc.layer(child)).not.toBeNull();
+
+		const peer = new LoroDoc();
+		peer.setPeerId(99);
+		peer.import(doc.snapshot());
+		peer.getTree("layers").delete(parent);
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+
+		await vi.waitFor(() => {
+			expect(doc.layer(parent)).toBeNull();
+			expect(doc.layer(child)).toBeNull();
+		});
+		expect(doc.layerIds()).not.toContain(parent);
+		expect(doc.layerIds()).not.toContain(child);
+	});
+
+	it("notifies the subscriber of a layer that a remote peer deletes", async () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+		doc.commit("create artboard");
+		const listener = vi.fn<() => void>();
+		doc.subscribeLayer(child, listener);
+
+		const peer = new LoroDoc();
+		peer.setPeerId(99);
+		peer.import(doc.snapshot());
+		peer.getTree("layers").delete(parent);
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+
+		await vi.waitFor(() => {
+			expect(listener).toHaveBeenCalled();
+		});
+	});
+
+	it("reads the new parent of a layer that a remote peer moves and notifies its subscriber", async () => {
+		const doc = DesignDocument.create();
+		const from = doc.createLayer(DRAWN);
+		const to = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, from);
+		doc.commit("create artboard");
+		expect(doc.layer(child)).toMatchObject({ parent: from });
+		const listener = vi.fn<() => void>();
+		doc.subscribeLayer(child, listener);
+
+		const peer = new LoroDoc();
+		peer.setPeerId(99);
+		peer.import(doc.snapshot());
+		peer.getTree("layers").move(child, to);
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+
+		await vi.waitFor(() => {
+			expect(listener).toHaveBeenCalled();
+		});
+		expect(doc.layer(child)).toMatchObject({ parent: to });
+		expect(doc.childIds(from)).toEqual([]);
+		expect(doc.childIds(to)).toEqual([child]);
+	});
+
+	it("deletes nothing and throws nothing for a layer that a peer deleted", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		doc.commit("create artboard");
+		const peer = new LoroDoc();
+		peer.setPeerId(99);
+		peer.import(doc.snapshot());
+		peer.getTree("layers").delete(id);
+		peer.commit();
+		doc.merge(peer.export({ mode: "update" }));
+
+		expect(() => {
+			doc.deleteLayer(id);
+		}).not.toThrow();
+		expect(doc.layerIds()).not.toContain(id);
 	});
 });
 
