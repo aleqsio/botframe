@@ -8,12 +8,16 @@ export type Geometry =
 	| { kind: "path"; d: string }
 	| { kind: "unsupported" };
 
-export interface Layer {
-	id: LayerId;
+export type Rect = {
 	x: number;
 	y: number;
 	width: number;
 	height: number;
+};
+
+export interface Layer extends Rect {
+	id: LayerId;
+	rotation: number;
 	fill: string;
 	geometry: Geometry;
 }

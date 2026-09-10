@@ -42,6 +42,21 @@ describe("DesignDocument", () => {
 		expect(doc.layer(id)).toMatchObject({ x: 11, y: 22 });
 	});
 
+	it("writes the box of a resize and the angle of a rotation", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.resize(id, { x: 10, y: 20, width: 30, height: 40 });
+		doc.rotate(id, 45);
+
+		expect(doc.layer(id)).toMatchObject({ x: 10, y: 20, width: 30, height: 40, rotation: 45 });
+	});
+
+	it("reads a layer that no peer has turned as a layer at zero degrees", () => {
+		const doc = DesignDocument.create();
+		expect(doc.layer(firstId(doc))).toMatchObject({ rotation: 0 });
+	});
+
 	it("records one change per drag, not one per pointer move", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);

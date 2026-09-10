@@ -11,6 +11,8 @@ import type { UserState } from "../state/userState";
 import { GestureRecognizer } from "./gesture";
 import type { Gesture, PointerSample } from "./gesture";
 import { layerIdsUnder } from "./hitTest";
+import { NO_MODIFIERS, modifiersOf } from "./modifiers";
+import type { Modifiers } from "./modifiers";
 import { wheelDelta } from "./wheel";
 
 type StagePointerEvent = ReactPointerEvent<HTMLElement>;
@@ -21,10 +23,16 @@ const PRIMARY_BUTTON = 0;
 const TOUCH_POINTER = "touch";
 
 export interface StageInputHandlers {
-	onDragStart: (origin: StagePoint, point: StagePoint, layerIds: readonly LayerId[]) => void;
-	onDragMove: (point: StagePoint) => void;
-	onDragEnd: (point: StagePoint) => void;
+	onDragStart: (
+		origin: StagePoint,
+		point: StagePoint,
+		layerIds: readonly LayerId[],
+		modifiers: Modifiers,
+	) => void;
+	onDragMove: (point: StagePoint, modifiers: Modifiers) => void;
+	onDragEnd: (point: StagePoint, modifiers: Modifiers) => void;
 	onTap: (layerIds: readonly LayerId[]) => void;
+	onHover: (point: StagePoint) => void;
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
 }
 
@@ -48,6 +56,8 @@ interface StageInput {
 	stageOrigin: Point;
 	layerIds: readonly LayerId[];
 	moves: Map<number, PointerSample>;
+	hover: Point | null;
+	modifiers: Modifiers;
 	wheel: PendingWheel | null;
 	frame: number;
 }
@@ -64,6 +74,8 @@ function createStageInput(): StageInput {
 		stageOrigin: { x: 0, y: 0 },
 		layerIds: [],
 		moves: new Map(),
+		hover: null,
+		modifiers: NO_MODIFIERS,
 		wheel: null,
 		frame: 0,
 	};
@@ -113,15 +125,16 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 				stagePointOf(input, camera, gesture.origin),
 				stagePointOf(input, camera, gesture.point),
 				input.layerIds,
+				input.modifiers,
 			);
 			break;
 		}
 		case "dragMove": {
-			handlers.onDragMove(stagePointOf(input, camera, gesture.point));
+			handlers.onDragMove(stagePointOf(input, camera, gesture.point), input.modifiers);
 			break;
 		}
 		case "dragEnd": {
-			handlers.onDragEnd(stagePointOf(input, camera, gesture.point));
+			handlers.onDragEnd(stagePointOf(input, camera, gesture.point), input.modifiers);
 			break;
 		}
 		case "tap": {
@@ -141,14 +154,19 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 function step(session: StageSession): void {
 	const { input } = session;
 	const wheel = input.wheel;
+	const hover = input.hover;
 	const moves = [...input.moves.values()];
 	input.wheel = null;
+	input.hover = null;
 	input.moves.clear();
 	if (wheel !== null) {
 		moveViewport(session, wheel.at, wheel);
 	}
 	for (const sample of moves) {
 		emit(session, input.recognizer.move(sample));
+	}
+	if (hover !== null) {
+		session.handlers.onHover(stagePointOf(input, session.user.camera.get(), hover));
 	}
 }
 
@@ -194,6 +212,7 @@ function beginGesture(session: StageSession, event: StagePointerEvent): void {
 	}
 	const { input } = session;
 	flush(session);
+	input.modifiers = modifiersOf(event);
 	const down = input.recognizer.down(sampleOf(event));
 	if (!down.taken) {
 		return;
@@ -204,9 +223,23 @@ function beginGesture(session: StageSession, event: StagePointerEvent): void {
 	event.currentTarget.setPointerCapture(event.pointerId);
 }
 
+function trackHover(session: StageSession, event: StagePointerEvent): void {
+	const { input } = session;
+	if (input.recognizer.active()) {
+		return;
+	}
+	if (input.frame === 0) {
+		readStageOrigin(input, event.currentTarget);
+	}
+	input.hover = clientPointOf(event);
+	schedule(session);
+}
+
 function trackMove(session: StageSession, event: StagePointerEvent): void {
 	const { input } = session;
+	input.modifiers = modifiersOf(event);
 	if (!input.recognizer.tracks(event.pointerId)) {
+		trackHover(session, event);
 		return;
 	}
 	input.moves.set(event.pointerId, sampleOf(event));
@@ -228,6 +261,7 @@ function finish(session: StageSession, event: StagePointerEvent, cancelled: bool
 	if (!recognizer.tracks(event.pointerId)) {
 		return;
 	}
+	session.input.modifiers = modifiersOf(event);
 	flush(session);
 	const sample = sampleOf(event);
 	emit(session, cancelled ? recognizer.cancel(sample) : recognizer.up(sample));
