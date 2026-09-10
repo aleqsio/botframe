@@ -1,9 +1,10 @@
-import type { LayerId } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import { parentPointOf } from "./targetSpace";
+import { containsPoint } from "./layerSpace";
+import { parentPointOf, selectedLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 interface Move {
@@ -15,10 +16,29 @@ function select(user: UserState, layerId: LayerId | null): void {
 	user.selection.set(layerId === null ? NOTHING_SELECTED : [layerId]);
 }
 
-function moveUnder(target: PointerTarget, canvas: Point): Move | null {
+function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
+	const layer = selectedLayer(target);
+	if (layer === null || !containsPoint(layer, parentPointOf(target, layer.id, canvas))) {
+		return null;
+	}
+	return layer;
+}
+
+function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
 	const layerId = target.layerIds[0] ?? null;
-	select(target.user, layerId);
-	const layer = layerId === null ? null : target.doc.layer(layerId);
+	if (layerId !== null) {
+		select(target.user, layerId);
+		return target.doc.layer(layerId);
+	}
+	const held = heldSelection(target, canvas);
+	if (held === null) {
+		select(target.user, null);
+	}
+	return held;
+}
+
+function moveUnder(target: PointerTarget, canvas: Point): Move | null {
+	const layer = layerOfPress(target, canvas);
 	if (layer === null) {
 		return null;
 	}
@@ -38,8 +58,8 @@ export function createPickBehavior(): ToolBehavior {
 	}
 
 	return {
-		tap(target) {
-			select(target.user, target.layerIds[0] ?? null);
+		tap(target, point) {
+			layerOfPress(target, point.canvas);
 			return true;
 		},
 		dragStart(target, origin, point) {

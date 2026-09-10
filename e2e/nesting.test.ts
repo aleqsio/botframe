@@ -17,6 +17,8 @@ const INSIDE: Drag = { from: { x: 80, y: 80 }, to: { x: 180, y: 140 } };
 const OVER_THE_EDGE: Drag = { from: { x: 180, y: 120 }, to: { x: 300, y: 240 } };
 const MOVE_ARTBOARD: Drag = { from: { x: 220, y: 60 }, to: { x: 270, y: 110 } };
 const OUTSIDE_THE_CLIP = { x: 270, y: 210 };
+const CLIPPED_DRAG: Drag = { from: OUTSIDE_THE_CLIP, to: { x: 300, y: 230 } };
+const SELECTION_BLUE = "rgb(13, 153, 255)";
 const OVER_THE_ARTBOARD = { x: 200, y: 150 };
 
 async function dragOn(window: Page, origin: Point, drag: Drag): Promise<void> {
@@ -94,10 +96,32 @@ test("an artboard clips the part of a child outside its box", async () => {
 	await expect(child).toHaveCSS("width", "120px");
 
 	await window.mouse.click(at(origin, OUTSIDE_THE_CLIP).x, at(origin, OUTSIDE_THE_CLIP).y);
-	await expect(layers.locator("[data-selected]")).toHaveCount(0);
+	await expect(child).toHaveAttribute("data-selected", "");
+
+	const before = await boxOf(child);
+	await dragOn(window, origin, CLIPPED_DRAG);
+
+	expect(await boxOf(child)).toEqual({ x: before.x + 30, y: before.y + 20 });
+	await expect(child).toHaveAttribute("data-selected", "");
 
 	await window.mouse.click(at(origin, OVER_THE_ARTBOARD).x, at(origin, OVER_THE_ARTBOARD).y);
 	await expect(child).toHaveAttribute("data-selected", "");
+
+	await app.close();
+});
+
+test("the selection border draws outside the clip of the artboard", async () => {
+	const { app, layers, origin, window } = await openStage();
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", OVER_THE_EDGE);
+	const child = layers.nth(1).locator("> .layer");
+	const selection = window.locator(".selection");
+
+	await expect(child).toHaveAttribute("data-selected", "");
+	await expect(child).toHaveCSS("outline-style", "none");
+	await expect(selection).toHaveCSS("outline-style", "solid");
+	await expect(selection).toHaveCSS("outline-color", SELECTION_BLUE);
 
 	await app.close();
 });

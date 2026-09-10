@@ -25,6 +25,12 @@ export function toLayerPoint(layer: Layer, point: Point): Point {
 	return rotatePoint({ x: point.x - center.x, y: point.y - center.y }, -layer.rotation);
 }
 
+export function containsPoint(layer: Layer, point: Point): boolean {
+	const local = toLayerPoint(layer, point);
+	const half = halfSizeOf(layer);
+	return Math.abs(local.x) <= half.x && Math.abs(local.y) <= half.y;
+}
+
 export function angleFrom(center: Point, point: Point): number {
 	return (Math.atan2(point.y - center.y, point.x - center.x) * HALF_TURN) / Math.PI;
 }

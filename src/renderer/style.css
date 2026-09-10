@@ -130,10 +130,6 @@ body {
 	cursor: grabbing;
 }
 
-.layer[data-selected] {
-	outline: calc(2px / var(--zoom)) solid var(--selection);
-}
-
 .selection {
 	--handle: calc(var(--handle-size) / var(--zoom));
 
@@ -141,6 +137,7 @@ body {
 	top: 0;
 	left: 0;
 	pointer-events: none;
+	outline: calc(2px / var(--zoom)) solid var(--selection);
 	transform-origin: 0 0;
 	will-change: transform;
 }
