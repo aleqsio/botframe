@@ -396,3 +396,78 @@ describe("the layer tree", () => {
 		expect(doc.childIds(parent)).toHaveLength(1);
 	});
 });
+
+describe("the field writers", () => {
+	it("writes the name, the clip flag, and the fill", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.rename(id, "Cover");
+		doc.setClip(id, true);
+		doc.setFill(id, "#ff0000");
+
+		expect(doc.layer(id)).toMatchObject({ name: "Cover", clip: true, fill: "#ff0000" });
+	});
+
+	it("writes the corner radius and the corner smoothing of the geometry", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.setGeometry(id, {
+			kind: "rectangle",
+			cornerRadius: 12,
+			cornerSmoothing: 0.6,
+			artboard: true,
+		});
+
+		expect(doc.layer(id)).toMatchObject({
+			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, artboard: true },
+		});
+	});
+
+	it("notifies the layer of a name change and of a geometry change", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		const listener = vi.fn<() => void>();
+		doc.subscribeLayer(id, listener);
+
+		doc.rename(id, "Cover");
+		expect(listener).toHaveBeenCalled();
+
+		listener.mockClear();
+		doc.setGeometry(id, {
+			kind: "rectangle",
+			cornerRadius: 4,
+			cornerSmoothing: 0,
+			artboard: false,
+		});
+		expect(listener).toHaveBeenCalled();
+	});
+
+	it("writes nothing to a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		doc.deleteLayer(id);
+
+		doc.rename(id, "Cover");
+		doc.setClip(id, false);
+		doc.setFill(id, "#ff0000");
+		doc.setGeometry(id, { kind: "ellipse" });
+
+		expect(doc.layer(id)).toBeNull();
+	});
+
+	it("records one change for a name that a person types letter by letter", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		const before = doc.changeCount();
+
+		for (const name of ["C", "Co", "Cov", "Cove", "Cover"]) {
+			doc.rename(id, name);
+		}
+		doc.commit("rename layer");
+
+		expect(doc.changeCount()).toBe(before + 1);
+		expect(doc.layer(id)).toMatchObject({ name: "Cover" });
+	});
+});

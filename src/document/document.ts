@@ -178,6 +178,27 @@ export class DesignDocument {
 		this.#write(id, { rotation });
 	}
 
+	rename(id: LayerId, name: string): void {
+		this.#write(id, { name });
+	}
+
+	setClip(id: LayerId, clip: boolean): void {
+		this.#write(id, { clip });
+	}
+
+	setFill(id: LayerId, fill: string): void {
+		this.#write(id, { fill });
+	}
+
+	setGeometry(id: LayerId, geometry: LayerFields["geometry"]): void {
+		const node = this.#liveNode(id);
+		if (node === null) {
+			return;
+		}
+		writeVariant(node.data.ensureMergeableMap(GEOMETRY), geometry);
+		this.#invalidate(id);
+	}
+
 	commit(message: string): void {
 		this.#doc.commit({ message });
 	}
@@ -198,7 +219,7 @@ export class DesignDocument {
 		return this.#doc.exportJsonUpdates().changes.length;
 	}
 
-	#write(id: LayerId, fields: Readonly<Record<string, number>>): void {
+	#write(id: LayerId, fields: Readonly<Record<string, number | string | boolean>>): void {
 		const node = this.#liveNode(id);
 		if (node === null) {
 			return;
