@@ -5,24 +5,18 @@ import type { UserState } from "../state/userState";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import { layerChain, toParentPoint } from "./layerSpace";
+import { parentChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
 
-type Action =
+type Drag =
 	| { kind: "move"; id: LayerId; offset: Point }
 	| { kind: "resize"; start: Layer; handle: Handle }
 	| { kind: "rotate"; start: Layer; origin: Point };
 
-interface Drag {
-	chain: readonly Layer[];
-	action: Action;
-}
-
 interface Aim {
 	layer: Layer;
-	chain: readonly Layer[];
 	point: Point;
 	zone: Zone | null;
 }
@@ -36,8 +30,8 @@ function selectedLayer(target: PointerTarget): Layer | null {
 	return id === undefined ? null : target.doc.layer(id);
 }
 
-function parentChain(target: PointerTarget, layer: Layer): Layer[] {
-	return layerChain((id) => target.doc.layer(id), layer.parent);
+function chainOf(target: PointerTarget, id: LayerId): Layer[] {
+	return parentChain((layerId) => target.doc.layer(layerId), id);
 }
 
 function aimAt(target: PointerTarget, canvas: Point): Aim | null {
@@ -45,9 +39,8 @@ function aimAt(target: PointerTarget, canvas: Point): Aim | null {
 	if (layer === null) {
 		return null;
 	}
-	const chain = parentChain(target, layer);
-	const point = toParentPoint(chain, canvas);
-	return { layer, chain, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
+	const point = toParentPoint(chainOf(target, layer.id), canvas);
+	return { layer, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
 }
 
 function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
@@ -58,11 +51,11 @@ function handleDrag(aim: Aim | null): Drag | null {
 	if (aim === null || aim.zone === null) {
 		return null;
 	}
-	const { chain, layer, point, zone } = aim;
+	const { layer, point, zone } = aim;
 	if (zone.mode === "rotate") {
-		return { chain, action: { kind: "rotate", start: layer, origin: point } };
+		return { kind: "rotate", start: layer, origin: point };
 	}
-	return { chain, action: { kind: "resize", start: layer, handle: zone.handle } };
+	return { kind: "resize", start: layer, handle: zone.handle };
 }
 
 function moveDrag(target: PointerTarget, canvas: Point): Drag | null {
@@ -72,33 +65,28 @@ function moveDrag(target: PointerTarget, canvas: Point): Drag | null {
 	if (layer === null) {
 		return null;
 	}
-	const chain = parentChain(target, layer);
-	const origin = toParentPoint(chain, canvas);
-	return {
-		chain,
-		action: {
-			kind: "move",
-			id: layer.id,
-			offset: { x: origin.x - layer.x, y: origin.y - layer.y },
-		},
-	};
+	const origin = toParentPoint(chainOf(target, layer.id), canvas);
+	return { kind: "move", id: layer.id, offset: { x: origin.x - layer.x, y: origin.y - layer.y } };
+}
+
+function draggedId(drag: Drag): LayerId {
+	return drag.kind === "move" ? drag.id : drag.start.id;
 }
 
 function applyDrag(target: PointerTarget, drag: Drag, canvas: Point, modifiers: Modifiers): void {
 	const { doc } = target;
-	const { action } = drag;
-	const point = toParentPoint(drag.chain, canvas);
-	switch (action.kind) {
+	const point = toParentPoint(chainOf(target, draggedId(drag)), canvas);
+	switch (drag.kind) {
 		case "move": {
-			doc.move(action.id, point.x - action.offset.x, point.y - action.offset.y);
+			doc.move(drag.id, point.x - drag.offset.x, point.y - drag.offset.y);
 			break;
 		}
 		case "resize": {
-			doc.resize(action.start.id, resizedRect(action.start, action.handle, point, modifiers));
+			doc.resize(drag.start.id, resizedRect(drag.start, drag.handle, point, modifiers));
 			break;
 		}
 		case "rotate": {
-			doc.rotate(action.start.id, rotatedDegrees(action.start, action.origin, point, modifiers));
+			doc.rotate(drag.start.id, rotatedDegrees(drag.start, drag.origin, point, modifiers));
 			break;
 		}
 	}
@@ -136,7 +124,7 @@ export function createSelectBehavior(): ToolBehavior {
 			}
 			apply(target, point.canvas, modifiers);
 			current = null;
-			target.doc.commit(COMMIT_MESSAGES[drag.action.kind]);
+			target.doc.commit(COMMIT_MESSAGES[drag.kind]);
 		},
 		context(target, client) {
 			const { layerIds } = target;

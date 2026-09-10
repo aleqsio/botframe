@@ -98,6 +98,21 @@ describe("the draw tools", () => {
 		expect(drawnLayer(target)).toMatchObject({ parent, x: 20, y: 20, width: 100, height: 100 });
 	});
 
+	it("holds the box in the space of the parent when the parent moves during the draw", () => {
+		const target = targetOf(true);
+		const parent = firstId(target.doc);
+		const behavior = TOOL_BEHAVIORS.rectangle();
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, PRESS);
+
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		target.doc.move(parent, 400, 240);
+		behavior.drag?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
+		behavior.dragEnd?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
+
+		expect(drawnLayer(target)).toMatchObject({ x: 20, y: 20, width: 80, height: 70 });
+	});
+
 	it("draws inside a turned parent in the space of that parent", () => {
 		const target = targetOf(true);
 		const parent = firstId(target.doc);

@@ -48,6 +48,10 @@ export function layerChain(read: ReadLayer, id: LayerId | null): Layer[] {
 	return chain.toReversed();
 }
 
+export function parentChain(read: ReadLayer, id: LayerId): Layer[] {
+	return layerChain(read, read(id)?.parent ?? null);
+}
+
 function intoLayer(layer: Layer, point: Point): Point {
 	const local = toLayerPoint(layer, point);
 	const half = halfSizeOf(layer);

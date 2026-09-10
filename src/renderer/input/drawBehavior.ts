@@ -6,7 +6,7 @@ import type { Point } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { drawnRect, tappedRect } from "./draw";
-import { layerChain, toParentPoint } from "./layerSpace";
+import { layerChain, parentChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
@@ -25,6 +25,15 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 
 function chainUnder(target: PointerTarget): Layer[] {
 	return layerChain((id) => target.doc.layer(id), target.layerIds[0] ?? null);
+}
+
+function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
+	const draw = target.user.draw.get();
+	if (draw === null) {
+		return;
+	}
+	const chain = parentChain((id) => target.doc.layer(id), draw.id);
+	target.doc.resize(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
 }
 
 function parentOf(chain: readonly Layer[]): LayerId | null {
@@ -74,40 +83,29 @@ export function cancelDraw(doc: DesignDocument, user: UserState): void {
 }
 
 export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
-	return () => {
-		let chain: readonly Layer[] = [];
-
-		function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
-			const draw = target.user.draw.get();
-			if (draw !== null) {
-				target.doc.resize(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
+	return () => ({
+		dragStart(target, start, point, modifiers) {
+			const chain = chainUnder(target);
+			const origin = toParentPoint(chain, start.canvas);
+			const corner = toParentPoint(chain, point.canvas);
+			const id = startLayer(target, preset, drawnRect(origin, corner, modifiers), chain);
+			target.user.draw.set({ id, origin });
+		},
+		drag(target, point, modifiers) {
+			stretch(target, point.canvas, modifiers);
+		},
+		dragEnd(target, point, modifiers) {
+			if (target.user.draw.get() === null) {
+				return;
 			}
-		}
-
-		return {
-			dragStart(target, start, point, modifiers) {
-				chain = chainUnder(target);
-				const origin = toParentPoint(chain, start.canvas);
-				const corner = toParentPoint(chain, point.canvas);
-				const id = startLayer(target, preset, drawnRect(origin, corner, modifiers), chain);
-				target.user.draw.set({ id, origin });
-			},
-			drag(target, point, modifiers) {
-				stretch(target, point.canvas, modifiers);
-			},
-			dragEnd(target, point, modifiers) {
-				if (target.user.draw.get() === null) {
-					return;
-				}
-				stretch(target, point.canvas, modifiers);
-				target.user.draw.set(null);
-				endGesture(target, preset);
-			},
-			tap(target, point) {
-				const under = chainUnder(target);
-				startLayer(target, preset, tappedRect(toParentPoint(under, point.canvas)), under);
-				endGesture(target, preset);
-			},
-		};
-	};
+			stretch(target, point.canvas, modifiers);
+			target.user.draw.set(null);
+			endGesture(target, preset);
+		},
+		tap(target, point) {
+			const under = chainUnder(target);
+			startLayer(target, preset, tappedRect(toParentPoint(under, point.canvas)), under);
+			endGesture(target, preset);
+		},
+	});
 }
