@@ -22,6 +22,7 @@ export function Stage({ doc, user }: { doc: DesignDocument; user: UserState }): 
 				))}
 				<SelectionOverlay doc={doc} selection={user.selection} />
 			</Viewport>
+			<div id="stage-shadow" />
 		</main>
 	);
 }

@@ -1,6 +1,8 @@
 :root {
 	color-scheme: light dark;
 	--stage-background: #f2f2f2;
+	--app-tint: transparent;
+	--stage-shadow: none;
 	--title-bar: 36px;
 	--canvas-inset: 6px;
 	--layers-width: 200px;
@@ -57,6 +59,13 @@ body {
 	-webkit-app-region: drag;
 }
 
+#app-tint {
+	position: fixed;
+	inset: 0;
+	background: var(--app-tint);
+	pointer-events: none;
+}
+
 #stage {
 	position: absolute;
 	top: var(--title-bar);
@@ -67,6 +76,14 @@ body {
 	border-radius: var(--canvas-radius);
 	overflow: hidden;
 	touch-action: none;
+}
+
+#stage-shadow {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: var(--stage-shadow);
+	pointer-events: none;
 }
 
 #viewport {
@@ -388,4 +405,107 @@ body {
 	height: 12px;
 	border: 1px solid var(--bar-border);
 	border-radius: 3px;
+}
+
+.appearance-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.appearance-presets {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 4px;
+}
+
+.appearance-preset {
+	padding: 5px 2px;
+	border: 0;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+	color: inherit;
+	font: inherit;
+	font-size: 11px;
+	cursor: default;
+}
+
+.appearance-preset:hover {
+	background-color: var(--panel-selected);
+}
+
+.appearance-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 8px;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+}
+
+.appearance-row label,
+.appearance-label {
+	flex: 1;
+	color: var(--panel-label);
+	font-size: 11px;
+}
+
+.appearance-row input[type="color"] {
+	flex: none;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: default;
+}
+
+.appearance-row input[type="range"] {
+	flex: none;
+	width: 80px;
+}
+
+.appearance-value {
+	flex: none;
+	min-width: 48px;
+	color: var(--panel-label);
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.appearance-chip {
+	flex: none;
+	padding: 3px 6px;
+	border: 0;
+	border-radius: 5px;
+	background-color: var(--panel-selected);
+	color: inherit;
+	font: inherit;
+	font-size: 11px;
+	cursor: default;
+}
+
+.appearance-widths {
+	display: flex;
+	flex: none;
+	gap: 2px;
+}
+
+.appearance-width {
+	width: 34px;
+	padding: 3px 0;
+	border: 0;
+	border-radius: 5px;
+	background-color: var(--panel-hover);
+	color: var(--panel-label);
+	font: inherit;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	cursor: default;
+}
+
+.appearance-width[aria-pressed="true"] {
+	background-color: var(--panel-selected);
+	color: var(--panel-text);
 }
