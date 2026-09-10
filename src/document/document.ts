@@ -1,5 +1,5 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
+import type { LoroEventBatch, LoroMap, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
@@ -42,6 +42,14 @@ function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readon
 	return sameIds(cached, next) ? cached : next;
 }
 
+function treeItems(event: LoroEventBatch): TreeDiffItem[] {
+	return event.events.flatMap((entry) => (entry.diff.type === "tree" ? entry.diff.diff : []));
+}
+
+function childIdsOf(node: LoroTreeNode): readonly LayerId[] {
+	return node.children()?.map((child) => child.id) ?? NO_IDS;
+}
+
 function writePatch(data: LoroMap, patch: LayerPatch): void {
 	const { geometry, ...fields } = patch;
 	for (const [key, value] of Object.entries(fields)) {
@@ -65,9 +73,14 @@ export class DesignDocument {
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
 		this.#doc.subscribe((event) => {
-			if (event.events.some((entry) => entry.diff.type === "tree")) {
-				this.#notifyStructure();
+			const items = treeItems(event);
+			if (items.length === 0) {
+				return;
 			}
+			if (event.by !== "local") {
+				this.#dropStale(items);
+			}
+			this.#notifyStructure();
 		});
 	}
 
@@ -101,7 +114,11 @@ export class DesignDocument {
 		if (cached !== undefined) {
 			return cached;
 		}
-		const ids = this.#readChildren(parent);
+		const node = this.#liveNode(parent);
+		if (node === null) {
+			return NO_IDS;
+		}
+		const ids = childIdsOf(node);
 		this.#children.set(parent, ids);
 		return ids;
 	}
@@ -142,8 +159,11 @@ export class DesignDocument {
 	}
 
 	deleteLayer(id: LayerId): void {
-		this.#forget(id);
+		if (this.#liveNode(id) === null) {
+			return;
+		}
 		this.#tree().delete(id);
+		this.#forget(id);
 		this.#notifyStructure();
 	}
 
@@ -197,9 +217,7 @@ export class DesignDocument {
 	#notifyStructure(): void {
 		this.#ids = null;
 		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#readRoots());
-		for (const [parent, cached] of this.#children) {
-			this.#children.set(parent, refreshed(cached, this.#readChildren(parent)));
-		}
+		this.#refreshChildren();
 		for (const listener of this.#structureListeners) {
 			listener();
 		}
@@ -211,19 +229,41 @@ export class DesignDocument {
 			.map((node) => node.id);
 	}
 
-	#readChildren(parent: LayerId): readonly LayerId[] {
-		return (
-			this.#liveNode(parent)
-				?.children()
-				?.map((node) => node.id) ?? NO_IDS
-		);
+	#refreshChildren(): void {
+		for (const [parent, cached] of this.#children) {
+			const node = this.#liveNode(parent);
+			if (node === null) {
+				this.#children.delete(parent);
+			} else {
+				this.#children.set(parent, refreshed(cached, childIdsOf(node)));
+			}
+		}
+	}
+
+	#dropStale(items: readonly TreeDiffItem[]): void {
+		for (const item of items) {
+			if (item.action === "delete") {
+				this.#forget(item.target);
+			} else {
+				this.#invalidate(item.target);
+			}
+		}
 	}
 
 	#forget(id: LayerId): void {
-		for (const child of this.childIds(id)) {
-			this.#forget(child);
+		this.#forgetNode(this.#tree().getNodeByID(id));
+	}
+
+	#forgetNode(node: LoroTreeNode | undefined): void {
+		if (node === undefined) {
+			return;
 		}
-		this.#layers.delete(id);
+		for (const child of node.children() ?? []) {
+			this.#forgetNode(child);
+		}
+		const id = node.id;
+		this.#invalidate(id);
+		this.#children.delete(id);
 	}
 
 	#tree(): LoroTree {
