@@ -84,7 +84,7 @@ body {
 }
 
 #stage[data-tool="select"] .layer {
-	cursor: grab;
+	cursor: default;
 }
 
 #stage[data-tool="select"] .layer:active {
