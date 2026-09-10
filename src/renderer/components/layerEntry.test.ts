@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { layerEntry } from "./layerEntry";
+import { layerEntry, nextLayerName } from "./layerEntry";
 
 function rectangle(id: LayerId, fill: string): Layer {
 	return {
@@ -11,7 +11,17 @@ function rectangle(id: LayerId, fill: string): Layer {
 		height: 160,
 		rotation: 0,
 		fill,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		name: "",
+		clip: false,
+	};
+}
+
+function artboard(id: LayerId): Layer {
+	return {
+		...rectangle(id, "#ffffff"),
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		clip: true,
 	};
 }
 
@@ -33,7 +43,37 @@ describe("layerEntry", () => {
 		expect(layerEntry({ ...layer, geometry: { kind: "path", d: "M0 0" } }).label).toBe("Path");
 	});
 
+	it("names a rectangle that holds the artboard flag an artboard", () => {
+		expect(layerEntry(artboard("1@1")).label).toBe("Artboard");
+	});
+
+	it("takes the name of the layer over the name of the kind", () => {
+		const layer = rectangle("1@1", "#000000");
+
+		expect(layerEntry({ ...layer, name: "Header" }).label).toBe("Header");
+		expect(layerEntry({ ...artboard("2@1"), name: "Phone" }).label).toBe("Phone");
+	});
+
 	it("gives a plain entry for a layer that the document lost", () => {
 		expect(layerEntry(null)).toEqual({ label: "Layer", swatch: "transparent" });
+	});
+});
+
+describe("nextLayerName", () => {
+	it("counts the layers of that kind and adds one", () => {
+		const layers = [rectangle("1@1", "#000000"), artboard("2@1"), rectangle("3@1", "#d9d9d9")];
+
+		expect(nextLayerName("Rectangle", layers)).toBe("Rectangle 3");
+		expect(nextLayerName("Artboard", layers)).toBe("Artboard 2");
+	});
+
+	it("counts a layer that a person renamed by its kind", () => {
+		const layers = [{ ...rectangle("1@1", "#000000"), name: "Header" }];
+
+		expect(nextLayerName("Rectangle", layers)).toBe("Rectangle 2");
+	});
+
+	it("starts at one in an empty document", () => {
+		expect(nextLayerName("Artboard", [])).toBe("Artboard 1");
 	});
 });

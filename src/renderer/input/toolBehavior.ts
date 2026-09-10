@@ -2,8 +2,24 @@ import type { ToolId } from "../components/tools";
 import { moveCamera } from "../state/camera";
 import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
+import { createDrawBehavior } from "./drawBehavior";
+import type { DrawPreset } from "./drawBehavior";
 import { createSelectBehavior } from "./selectBehavior";
 import type { ToolBehavior } from "./tool";
+
+const ARTBOARD: DrawPreset = {
+	label: "Artboard",
+	fill: "#ffffff",
+	clip: true,
+	artboard: true,
+};
+
+const RECTANGLE: DrawPreset = {
+	label: "Rectangle",
+	fill: "#d9d9d9",
+	clip: false,
+	artboard: false,
+};
 
 function createHandBehavior(): ToolBehavior {
 	let held: Point | null = null;
@@ -38,8 +54,8 @@ function noPointerBehavior(): ToolBehavior {
 
 export const TOOL_BEHAVIORS: Readonly<Record<ToolId, () => ToolBehavior>> = {
 	select: createSelectBehavior,
-	frame: noPointerBehavior,
-	rectangle: noPointerBehavior,
+	artboard: createDrawBehavior(ARTBOARD),
+	rectangle: createDrawBehavior(RECTANGLE),
 	ellipse: noPointerBehavior,
 	text: noPointerBehavior,
 	image: noPointerBehavior,

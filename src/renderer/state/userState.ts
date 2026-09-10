@@ -6,6 +6,11 @@ import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";
 import { Slot } from "./slot";
 
+export interface Draw {
+	id: LayerId;
+	origin: Point;
+}
+
 export interface LayerMenu {
 	client: Point;
 	layerIds: readonly LayerId[];
@@ -18,4 +23,5 @@ export class UserState {
 	readonly menu = new Slot<LayerMenu | null>(null);
 	readonly zone = new Slot<ZoneKey | null>(null);
 	readonly dragging = new Slot<boolean>(false);
+	readonly draw = new Slot<Draw | null>(null);
 }

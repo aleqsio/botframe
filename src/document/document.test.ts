@@ -2,8 +2,19 @@ import { LoroDoc } from "loro-crdt";
 import type { LoroMap } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
-import type { LayerId } from "./layer";
+import type { LayerFields, LayerId } from "./layer";
 import { readString } from "./read";
+
+const DRAWN: LayerFields = {
+	x: 12,
+	y: 34,
+	width: 56,
+	height: 78,
+	fill: "#ffffff",
+	name: "Artboard 1",
+	clip: true,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+};
 
 function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -195,5 +206,102 @@ describe("DesignDocument", () => {
 		expect(readString(geometryBag(roundTrip, id).ensureMergeableMap("shader"), "source", "")).toBe(
 			"noise",
 		);
+	});
+});
+
+describe("the layer writer", () => {
+	it("reads a layer that an older build wrote with no name, no clip, and no artboard flag", () => {
+		const source = new LoroDoc();
+		const node = source.getTree("layers").createNode();
+		node.data.set("x", 10);
+		node.data.set("y", 20);
+		node.data.set("width", 30);
+		node.data.set("height", 40);
+		node.data.set("fill", "#123456");
+		node.data.ensureMergeableMap("geometry").set("kind", "rectangle");
+		source.commit();
+
+		const doc = DesignDocument.open(source.export({ mode: "snapshot" }));
+
+		expect(doc.layer(node.id)).toMatchObject({
+			name: "",
+			clip: false,
+			geometry: { kind: "rectangle", artboard: false },
+		});
+	});
+
+	it("creates a layer that reads back with each field", () => {
+		const doc = DesignDocument.create();
+
+		const id = doc.createLayer(DRAWN);
+
+		expect(doc.layerIds()).toContain(id);
+		expect(doc.layer(id)).toMatchObject({ id, rotation: 0, ...DRAWN });
+	});
+
+	it("records the create and each resize of one draw as one change", () => {
+		const doc = DesignDocument.create();
+		const before = doc.changeCount();
+
+		const id = doc.createLayer(DRAWN);
+		for (let step = 1; step <= 200; step += 1) {
+			doc.resize(id, { x: 0, y: 0, width: step, height: step });
+		}
+		doc.commit("create artboard");
+
+		expect(doc.changeCount()).toBe(before + 1);
+		expect(doc.layer(id)).toMatchObject({ width: 200, height: 200 });
+	});
+
+	it("deletes a layer and drops it from the layer ids", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+
+		doc.deleteLayer(id);
+
+		expect(doc.layerIds()).not.toContain(id);
+		expect(doc.layer(id)).toBeNull();
+	});
+
+	it("writes nothing to a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		doc.deleteLayer(id);
+
+		doc.resize(id, { x: 0, y: 0, width: 10, height: 10 });
+
+		expect(doc.layer(id)).toBeNull();
+	});
+
+	it("notifies a subscriber of a live layer and none of a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const live = doc.createLayer(DRAWN);
+		const gone = doc.createLayer(DRAWN);
+		doc.deleteLayer(gone);
+		const liveListener = vi.fn<() => void>();
+		const goneListener = vi.fn<() => void>();
+		doc.subscribeLayer(live, liveListener);
+		doc.subscribeLayer(gone, goneListener);
+
+		doc.resize(live, { x: 0, y: 0, width: 10, height: 10 });
+		doc.resize(gone, { x: 0, y: 0, width: 10, height: 10 });
+
+		expect(doc.layer(live)).toMatchObject({ width: 10, height: 10 });
+		expect(doc.layer(gone)).toBeNull();
+		expect(liveListener).toHaveBeenCalled();
+		expect(goneListener).not.toHaveBeenCalled();
+	});
+
+	it("notifies the layer list on a create and on a delete", () => {
+		const doc = DesignDocument.create();
+		const structure = vi.fn<() => void>();
+		doc.subscribeStructure(structure);
+
+		const id = doc.createLayer(DRAWN);
+		expect(structure).toHaveBeenCalled();
+
+		structure.mockClear();
+		doc.deleteLayer(id);
+		expect(structure).toHaveBeenCalled();
 	});
 });

@@ -9,6 +9,11 @@ export function readNumber(data: LoroMap | null, key: string, fallback: number):
 	return typeof value === "number" ? value : fallback;
 }
 
+export function readBoolean(data: LoroMap | null, key: string, fallback: boolean): boolean {
+	const value = data?.get(key);
+	return typeof value === "boolean" ? value : fallback;
+}
+
 export function readString(data: LoroMap | null, key: string, fallback: string): string {
 	const value = data?.get(key);
 	return typeof value === "string" ? value : fallback;

@@ -1,13 +1,24 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroMap, LoroTree } from "loro-crdt";
-import type { Geometry, Layer, LayerId, Rect } from "./layer";
-import { readNumber, readString, readVariant } from "./read";
+import type { LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
+import type { Geometry, Layer, LayerFields, LayerId, Rect } from "./layer";
+import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
 export type Unsubscribe = () => void;
 
 const LAYERS = "layers";
 const GEOMETRY = "geometry";
+
+const SEED_RECTANGLE: LayerFields = {
+	x: 420,
+	y: 260,
+	width: 240,
+	height: 160,
+	fill: "#000000",
+	name: "",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
 
 const GEOMETRY_READERS: Readonly<
 	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
@@ -16,10 +27,22 @@ const GEOMETRY_READERS: Readonly<
 		kind: "rectangle",
 		cornerRadius: readNumber(fields, "cornerRadius", 0),
 		cornerSmoothing: readNumber(fields, "cornerSmoothing", 0),
+		artboard: readBoolean(fields, "artboard", false),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
 };
+
+function writeFields(data: LoroMap, fields: LayerFields): void {
+	data.set("x", fields.x);
+	data.set("y", fields.y);
+	data.set("width", fields.width);
+	data.set("height", fields.height);
+	data.set("fill", fields.fill);
+	data.set("name", fields.name);
+	data.set("clip", fields.clip);
+	writeVariant(data.ensureMergeableMap(GEOMETRY), fields.geometry);
+}
 
 export class DesignDocument {
 	readonly #doc: LoroDoc;
@@ -33,26 +56,16 @@ export class DesignDocument {
 		this.#doc = doc;
 		this.#doc.subscribe((event) => {
 			if (event.events.some((entry) => entry.diff.type === "tree")) {
-				this.#ids = null;
-				for (const listener of this.#structureListeners) {
-					listener();
-				}
+				this.#notifyStructure();
 			}
 		});
 	}
 
 	static create(): DesignDocument {
-		const doc = new LoroDoc();
-		const node = doc.getTree(LAYERS).createNode();
-		node.data.set("x", 420);
-		node.data.set("y", 260);
-		node.data.set("width", 240);
-		node.data.set("height", 160);
-		node.data.set("fill", "#000000");
-		const rectangle: Geometry = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0 };
-		writeVariant(node.data.ensureMergeableMap(GEOMETRY), rectangle);
-		doc.commit({ message: "create rectangle" });
-		return new DesignDocument(doc);
+		const document = new DesignDocument(new LoroDoc());
+		document.createLayer(SEED_RECTANGLE);
+		document.commit("create rectangle");
+		return document;
 	}
 
 	static open(snapshot: Uint8Array): DesignDocument {
@@ -73,8 +86,8 @@ export class DesignDocument {
 		if (cached !== undefined) {
 			return cached;
 		}
-		const node = this.#tree().getNodeByID(id);
-		if (node === undefined) {
+		const node = this.#liveNode(id);
+		if (node === null) {
 			return null;
 		}
 		const layer: Layer = {
@@ -88,9 +101,24 @@ export class DesignDocument {
 			geometry: readVariant<Geometry>(node.data.get(GEOMETRY), GEOMETRY_READERS, {
 				kind: "unsupported",
 			}),
+			name: readString(node.data, "name", ""),
+			clip: readBoolean(node.data, "clip", false),
 		};
 		this.#layers.set(id, layer);
 		return layer;
+	}
+
+	createLayer(fields: LayerFields): LayerId {
+		const node = this.#tree().createNode();
+		writeFields(node.data, fields);
+		this.#notifyStructure();
+		return node.id;
+	}
+
+	deleteLayer(id: LayerId): void {
+		this.#tree().delete(id);
+		this.#layers.delete(id);
+		this.#notifyStructure();
 	}
 
 	subscribeStructure(listener: () => void): Unsubscribe {
@@ -144,8 +172,8 @@ export class DesignDocument {
 	}
 
 	#write(id: LayerId, fields: Readonly<Record<string, number>>): void {
-		const node = this.#tree().getNodeByID(id);
-		if (node === undefined) {
+		const node = this.#liveNode(id);
+		if (node === null) {
 			return;
 		}
 		for (const [key, value] of Object.entries(fields)) {
@@ -154,15 +182,27 @@ export class DesignDocument {
 		this.#invalidate(id);
 	}
 
+	#notifyStructure(): void {
+		this.#ids = null;
+		for (const listener of this.#structureListeners) {
+			listener();
+		}
+	}
+
 	#tree(): LoroTree {
 		return this.#doc.getTree(LAYERS);
+	}
+
+	#liveNode(id: LayerId): LoroTreeNode | null {
+		const node = this.#tree().getNodeByID(id);
+		return node === undefined || node.isDeleted() ? null : node;
 	}
 
 	#trackLayer(id: LayerId): Set<() => void> {
 		const listeners = new Set<() => void>();
 		this.#listeners.set(id, listeners);
-		const node = this.#tree().getNodeByID(id);
-		if (node !== undefined) {
+		const node = this.#liveNode(id);
+		if (node !== null) {
 			this.#nodeSubscriptions.set(
 				id,
 				node.data.subscribe(() => {

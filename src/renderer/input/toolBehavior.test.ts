@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { LayerId } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import { TOOLS } from "../components/tools";
 import { IDENTITY_CAMERA, toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
+import { cancelDraw } from "./drawBehavior";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
@@ -15,6 +16,8 @@ const RELEASE = { x: 540, y: 350 };
 const CLIENT = { x: 120, y: 80 };
 const CENTER = { x: 540, y: 340 };
 const SE_CORNER = { x: 660, y: 420 };
+const DRAW_PRESS = { x: 40, y: 40 };
+const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_REACH = { x: 678, y: 438 };
 const E_SIDE = { x: 660, y: 340 };
 const SHIFT: Modifiers = { shift: true, alt: false };
@@ -31,6 +34,15 @@ function firstId(doc: DesignDocument): LayerId {
 function targetOf(withLayer: boolean): PointerTarget {
 	const doc = DesignDocument.create();
 	return { doc, user: new UserState(), layerIds: withLayer ? [firstId(doc)] : [] };
+}
+
+function drawnLayer(target: PointerTarget): Layer {
+	const [id] = target.user.selection.get();
+	const layer = id === undefined ? null : target.doc.layer(id);
+	if (layer === null) {
+		throw new Error("no layer is selected");
+	}
+	return layer;
 }
 
 function pointAt(camera: Camera, stage: Point): StagePoint {
@@ -143,7 +155,7 @@ describe("TOOL_BEHAVIORS", () => {
 	it("gives no answer to the secondary press for a tool that draws later", () => {
 		const target = targetOf(true);
 
-		expect(TOOL_BEHAVIORS.rectangle().context).toBeUndefined();
+		expect(TOOL_BEHAVIORS.ellipse().context).toBeUndefined();
 		expect(TOOL_BEHAVIORS.image().context).toBeUndefined();
 		expect(target.user.menu.get()).toBeNull();
 	});
@@ -153,12 +165,91 @@ describe("TOOL_BEHAVIORS", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: PRESS, release: RELEASE });
-		tapAt(TOOL_BEHAVIORS.rectangle(), target, CENTER);
+		dragOver(TOOL_BEHAVIORS.ellipse(), target, { press: PRESS, release: RELEASE });
+		tapAt(TOOL_BEHAVIORS.ellipse(), target, CENTER);
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
 		expect(target.doc.changeCount()).toBe(changes);
 		expect(target.user.selection.get()).toEqual([]);
+	});
+});
+
+describe("the draw tools", () => {
+	it("draws an artboard, selects it, and gives the stage back to the select tool", () => {
+		const target = targetOf(false);
+		const changes = target.doc.changeCount();
+
+		dragOver(TOOL_BEHAVIORS.artboard(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+
+		expect(drawnLayer(target)).toMatchObject({
+			x: 40,
+			y: 40,
+			width: 200,
+			height: 140,
+			fill: "#ffffff",
+			clip: true,
+			name: "Artboard 1",
+			geometry: { kind: "rectangle", artboard: true },
+		});
+		expect(target.doc.layerIds()).toHaveLength(2);
+		expect(target.doc.changeCount()).toBe(changes + 1);
+		expect(target.user.tool.get()).toBe("select");
+		expect(target.user.draw.get()).toBeNull();
+	});
+
+	it("draws a rectangle with the grey fill, no clip, and the next free name", () => {
+		const target = targetOf(false);
+
+		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+
+		expect(drawnLayer(target)).toMatchObject({
+			fill: "#d9d9d9",
+			clip: false,
+			name: "Rectangle 2",
+			geometry: { kind: "rectangle", artboard: false },
+		});
+	});
+
+	it("places a box of the default size where the tap lands", () => {
+		const target = targetOf(false);
+		const changes = target.doc.changeCount();
+
+		tapAt(TOOL_BEHAVIORS.artboard(), target, CENTER);
+
+		expect(drawnLayer(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
+		expect(target.doc.changeCount()).toBe(changes + 1);
+		expect(target.user.tool.get()).toBe("select");
+	});
+
+	it("deletes the layer in progress on a cancel and writes no change on the release", () => {
+		const target = targetOf(false);
+		const behavior = TOOL_BEHAVIORS.artboard();
+		const camera = target.user.camera.get();
+		const changes = target.doc.changeCount();
+		const press = pointAt(camera, DRAW_PRESS);
+
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		behavior.drag?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
+		cancelDraw(target.doc, target.user);
+		behavior.drag?.(target, pointAt(camera, CENTER), NO_MODIFIERS);
+		behavior.dragEnd?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
+
+		expect(target.doc.layerIds()).toHaveLength(1);
+		expect(target.user.selection.get()).toEqual([]);
+		expect(target.user.draw.get()).toBeNull();
+		expect(target.doc.changeCount()).toBe(changes + 1);
+		expect(target.user.tool.get()).toBe("select");
+	});
+
+	it("gives the stage back to the select tool when a cancel finds no draw", () => {
+		const target = targetOf(false);
+		target.user.tool.set("rectangle");
+		const changes = target.doc.changeCount();
+
+		cancelDraw(target.doc, target.user);
+
+		expect(target.user.tool.get()).toBe("select");
+		expect(target.doc.changeCount()).toBe(changes);
 	});
 });
 

@@ -91,6 +91,16 @@ body {
 	cursor: grabbing;
 }
 
+#stage[data-tool="artboard"],
+#stage[data-tool="rectangle"] {
+	cursor: crosshair;
+}
+
+#stage[data-tool="artboard"] .layer,
+#stage[data-tool="rectangle"] .layer {
+	cursor: inherit;
+}
+
 #stage[data-tool="hand"] {
 	cursor: grab;
 }
