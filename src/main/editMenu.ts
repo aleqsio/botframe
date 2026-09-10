@@ -21,6 +21,12 @@ function readItems(value: unknown): EditMenuItem[] {
 	return list.flatMap((entry) => (isEditMenuItem(entry) ? [entry] : []));
 }
 
+function sendCommand(window: BrowserWindow, id: string): void {
+	if (!window.isDestroyed()) {
+		window.webContents.send(EDIT_COMMAND, id);
+	}
+}
+
 function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstructorOptions {
 	return {
 		label: item.label,
@@ -30,7 +36,7 @@ function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstru
 		registerAccelerator: false,
 		enabled: item.enabled,
 		click: () => {
-			window.webContents.send(EDIT_COMMAND, item.id);
+			sendCommand(window, item.id);
 		},
 	};
 }
