@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
-import { SET_EDIT_MENU } from "../preload/channels";
+import { SET_EDIT_MENU } from "../shared/editMenu";
 import { setEditMenu } from "./editMenu";
 
 function createWindow(): void {

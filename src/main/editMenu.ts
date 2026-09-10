@@ -1,7 +1,7 @@
 import { Menu, app } from "electron";
 import type { BrowserWindow, MenuItemConstructorOptions } from "electron";
-import { EDIT_COMMAND } from "../preload/channels";
-import type { EditMenuItem } from "../preload/channels";
+import { EDIT_COMMAND } from "../shared/editMenu";
+import type { EditMenuItem } from "../shared/editMenu";
 
 function isEditMenuItem(value: unknown): value is EditMenuItem {
 	if (typeof value !== "object" || value === null) {

@@ -16,6 +16,7 @@ STACK.md gives the architecture and the performance targets. TOOLING.md gives th
 - `src/document/` is the document model. `DesignDocument` owns the Loro document and gives one subscription for each layer. Pure TypeScript. No React, no Electron, no DOM.
 - `src/renderer/` is the user interface. React reads the document with `useSyncExternalStore`, one subscription for each layer.
 - `src/main/` is the Electron main process. `src/preload/` is the bridge, and it stays small.
+- `src/shared/` is the contract between the processes. Pure types and constants. It imports nothing.
 - `src/workers/` runs sync, export, and large queries off the main thread.
 - The lint rules hold these limits. Do not add an exception. Move the code.
 

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
-import { EDIT_COMMAND } from "../src/preload/channels";
+import { EDIT_COMMAND } from "../src/shared/editMenu";
 import { at, openStage } from "./support";
 
 const FIRST = { press: { x: 40, y: 40 }, release: { x: 240, y: 180 } };

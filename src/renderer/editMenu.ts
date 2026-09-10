@@ -1,14 +1,7 @@
 import type { DesignDocument } from "../document/document";
+import type { EditMenuItem } from "../shared/editMenu";
 import { EDIT_COMMANDS, commandById, runEditCommand } from "./input/editCommand";
-import type { EditCommandId } from "./input/editCommand";
 import type { UserState } from "./state/userState";
-
-interface EditMenuItem {
-	id: EditCommandId;
-	label: string;
-	accelerator: string;
-	enabled: boolean;
-}
 
 interface EditMenuBridge {
 	setEditMenu: (items: readonly EditMenuItem[]) => void;

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { EDIT_COMMAND, SET_EDIT_MENU } from "./channels";
-import type { EditMenuItem } from "./channels";
+import { EDIT_COMMAND, SET_EDIT_MENU } from "../shared/editMenu";
+import type { EditMenuItem } from "../shared/editMenu";
 
 contextBridge.exposeInMainWorld("botframe", {
 	setEditMenu(items: readonly EditMenuItem[]): void {
