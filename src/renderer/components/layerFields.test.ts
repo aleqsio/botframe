@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
-import type { Layer, RectangleGeometry } from "../../document/layer";
-import { CORNER_FIELDS, LAYER_FIELDS, formatNumber, isHexColor, swappedBox } from "./layerFields";
+import type { Layer } from "../../document/layer";
+import { LAYER_FIELDS, fieldsOf, formatNumber, isHexColor, swappedBox } from "./layerFields";
 import type { LayerField } from "./layerFields";
 
 function layerOf(doc: DesignDocument): Layer {
@@ -13,8 +13,8 @@ function layerOf(doc: DesignDocument): Layer {
 	return layer;
 }
 
-function fieldNamed(label: string): LayerField {
-	const field = LAYER_FIELDS.find((entry) => entry.label === label);
+function fieldNamed(layer: Layer, label: string): LayerField {
+	const field = fieldsOf(layer).find((entry) => entry.label === label);
 	if (field === undefined) {
 		throw new Error(`no field is named ${label}`);
 	}
@@ -23,7 +23,8 @@ function fieldNamed(label: string): LayerField {
 
 function applied(label: string, value: number): Layer {
 	const doc = DesignDocument.create();
-	fieldNamed(label).apply(doc, layerOf(doc), value);
+	const layer = layerOf(doc);
+	fieldNamed(layer, label).apply(doc, layer, value);
 	return layerOf(doc);
 }
 
@@ -58,40 +59,42 @@ describe("LAYER_FIELDS", () => {
 	it("commits the write of a field as one change", () => {
 		const doc = DesignDocument.create();
 		const before = doc.changeCount();
+		const layer = layerOf(doc);
 
-		fieldNamed("X").apply(doc, layerOf(doc), 10);
+		fieldNamed(layer, "X").apply(doc, layer, 10);
 
 		expect(doc.changeCount()).toBe(before + 1);
 	});
 });
 
-describe("CORNER_FIELDS", () => {
-	const geometry: RectangleGeometry = {
-		kind: "rectangle",
-		cornerRadius: 8,
-		cornerSmoothing: 0.5,
-		artboard: false,
-	};
+describe("fieldsOf", () => {
+	it("lists the corner fields of a rectangle after the box fields", () => {
+		const labels = fieldsOf(layerOf(DesignDocument.create())).map((field) => field.label);
+		expect(labels).toEqual(["X", "Y", "W", "H", "Rotation", "Radius", "Smoothing"]);
+	});
 
-	it("reads the corner radius and the corner smoothing", () => {
-		expect(CORNER_FIELDS.map((field) => [field.label, field.read(geometry)])).toEqual([
-			["Radius", 8],
-			["Smoothing", 0.5],
-		]);
+	it("lists no corner field for a geometry that has no corner", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		doc.setGeometry(id, { kind: "ellipse" });
+
+		const labels = fieldsOf(layerOf(doc)).map((field) => field.label);
+
+		expect(labels).toEqual(LAYER_FIELDS.map((field) => field.label));
+	});
+
+	it("reads and writes the corner radius and the corner smoothing", () => {
+		expect(applied("Radius", 12)).toMatchObject({
+			geometry: { cornerRadius: 12, cornerSmoothing: 0 },
+		});
+		expect(applied("Smoothing", 0.5)).toMatchObject({
+			geometry: { cornerRadius: 0, cornerSmoothing: 0.5 },
+		});
 	});
 
 	it("holds a corner at zero", () => {
-		expect(CORNER_FIELDS.map((field) => field.next(geometry, -4))).toEqual([
-			{ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0.5, artboard: false },
-			{ kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0, artboard: false },
-		]);
-	});
-
-	it("writes one corner field and keeps the other fields", () => {
-		expect(CORNER_FIELDS.map((field) => field.next(geometry, 2))).toEqual([
-			{ kind: "rectangle", cornerRadius: 2, cornerSmoothing: 0.5, artboard: false },
-			{ kind: "rectangle", cornerRadius: 8, cornerSmoothing: 2, artboard: false },
-		]);
+		expect(applied("Radius", -4)).toMatchObject({ geometry: { cornerRadius: 0 } });
+		expect(applied("Smoothing", -4)).toMatchObject({ geometry: { cornerSmoothing: 0 } });
 	});
 });
 

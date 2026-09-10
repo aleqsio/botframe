@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
-import type { Layer, RectangleGeometry } from "../../document/layer";
+import type { Layer } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { NumberField, PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { CORNER_FIELDS, LAYER_FIELDS, isHexColor, swappedBox } from "./layerFields";
+import { fieldsOf, isHexColor, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
 function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
@@ -14,32 +14,6 @@ function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
 	}
 	doc.resize(layer.id, { x: layer.x, y: layer.y, width: preset.width, height: preset.height });
 	doc.commit(COMMIT_MESSAGES.resize);
-}
-
-function CornerFields({
-	doc,
-	geometry,
-	layer,
-}: {
-	doc: DesignDocument;
-	geometry: RectangleGeometry;
-	layer: Layer;
-}): ReactElement {
-	return (
-		<div className="property-grid">
-			{CORNER_FIELDS.map((field) => (
-				<NumberField
-					key={field.label}
-					label={field.label}
-					onCommit={(value) => {
-						doc.setGeometry(layer.id, field.next(geometry, value));
-						doc.commit("set corners");
-					}}
-					value={field.read(geometry)}
-				/>
-			))}
-		</div>
-	);
 }
 
 function ArtboardFields({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
@@ -87,8 +61,6 @@ export function LayerProperties({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
-	const geometry = layer.geometry.kind === "rectangle" ? layer.geometry : null;
-
 	return (
 		<>
 			<PropertyField
@@ -100,7 +72,7 @@ export function LayerProperties({
 				value={layer.name}
 			/>
 			<div className="property-grid">
-				{LAYER_FIELDS.map((field) => (
+				{fieldsOf(layer).map((field) => (
 					<NumberField
 						key={field.label}
 						label={field.label}
@@ -122,7 +94,6 @@ export function LayerProperties({
 				}}
 				value={layer.fill}
 			/>
-			{geometry === null ? null : <CornerFields doc={doc} geometry={geometry} layer={layer} />}
 			<label className="property-switch">
 				<input
 					checked={layer.clip}

@@ -5,6 +5,8 @@ import { normalizeDegrees } from "../input/layerSpace";
 import { MIN_LAYER_SIZE } from "../input/transform";
 
 const DECIMALS = 100;
+type CornerKey = "cornerRadius" | "cornerSmoothing";
+
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/iu;
 
 function clampSize(value: number): number {
@@ -19,12 +21,6 @@ export interface LayerField {
 	label: string;
 	read: (layer: Layer) => number;
 	apply: (doc: DesignDocument, layer: Layer, value: number) => void;
-}
-
-export interface CornerField {
-	label: string;
-	read: (geometry: RectangleGeometry) => number;
-	next: (geometry: RectangleGeometry, value: number) => RectangleGeometry;
 }
 
 function boxOf(layer: Layer): Rect {
@@ -80,18 +76,28 @@ export const LAYER_FIELDS: readonly LayerField[] = [
 	},
 ];
 
-export const CORNER_FIELDS: readonly CornerField[] = [
-	{
-		label: "Radius",
-		read: (geometry) => geometry.cornerRadius,
-		next: (geometry, value) => ({ ...geometry, cornerRadius: clampCorner(value) }),
-	},
-	{
-		label: "Smoothing",
-		read: (geometry) => geometry.cornerSmoothing,
-		next: (geometry, value) => ({ ...geometry, cornerSmoothing: clampCorner(value) }),
-	},
-];
+function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry): LayerField {
+	return {
+		label,
+		read: () => geometry[key],
+		apply: (doc, layer, value) => {
+			doc.setGeometry(layer.id, { ...geometry, [key]: clampCorner(value) });
+			doc.commit("set corners");
+		},
+	};
+}
+
+export function fieldsOf(layer: Layer): readonly LayerField[] {
+	const { geometry } = layer;
+	if (geometry.kind !== "rectangle") {
+		return LAYER_FIELDS;
+	}
+	return [
+		...LAYER_FIELDS,
+		cornerField("Radius", "cornerRadius", geometry),
+		cornerField("Smoothing", "cornerSmoothing", geometry),
+	];
+}
 
 export function swappedBox(layer: Layer): Rect {
 	return { x: layer.x, y: layer.y, width: layer.height, height: layer.width };
