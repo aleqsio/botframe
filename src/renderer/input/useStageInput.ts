@@ -1,22 +1,29 @@
 import { useRef } from "react";
-import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
+import type {
+	MouseEvent as ReactMouseEvent,
+	PointerEvent as ReactPointerEvent,
+	WheelEvent as ReactWheelEvent,
+} from "react";
 import type { LayerId } from "../../document/layer";
-import { toCanvasPoint } from "../state/camera";
-import type { Camera, Point } from "../state/camera";
-import type { Slot } from "../state/slot";
+import { applyViewportDelta, toCanvasPoint } from "../state/camera";
+import type { Camera, Point, StagePoint, ViewportDelta } from "../state/camera";
+import type { UserState } from "../state/userState";
 import { GestureRecognizer } from "./gesture";
 import type { Gesture, PointerSample } from "./gesture";
 import { layerIdsUnder } from "./hitTest";
+import { wheelDelta } from "./wheel";
 
 type StagePointerEvent = ReactPointerEvent<HTMLElement>;
 type StageMouseEvent = ReactMouseEvent<HTMLElement>;
+type StageWheelEvent = ReactWheelEvent<HTMLElement>;
 
 const PRIMARY_BUTTON = 0;
+const TOUCH_POINTER = "touch";
 
 export interface StageInputHandlers {
-	onDragStart: (origin: Point, point: Point, layerIds: readonly LayerId[]) => void;
-	onDragMove: (point: Point) => void;
-	onDragEnd: (point: Point) => void;
+	onDragStart: (origin: StagePoint, point: StagePoint, layerIds: readonly LayerId[]) => void;
+	onDragMove: (point: StagePoint) => void;
+	onDragEnd: (point: StagePoint) => void;
 	onTap: (layerIds: readonly LayerId[]) => void;
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
 }
@@ -27,14 +34,28 @@ interface StagePointerHandlers {
 	onPointerDown: (event: StagePointerEvent) => void;
 	onPointerMove: (event: StagePointerEvent) => void;
 	onPointerUp: (event: StagePointerEvent) => void;
+	onWheel: (event: StageWheelEvent) => void;
+}
+
+interface PendingWheel {
+	at: Point;
+	pan: Point;
+	scale: number;
 }
 
 interface StageInput {
 	recognizer: GestureRecognizer;
 	stageOrigin: Point;
 	layerIds: readonly LayerId[];
-	pending: PointerSample | null;
+	moves: Map<number, PointerSample>;
+	wheel: PendingWheel | null;
 	frame: number;
+}
+
+interface StageSession {
+	input: StageInput;
+	handlers: StageInputHandlers;
+	user: UserState;
 }
 
 function createStageInput(): StageInput {
@@ -42,7 +63,8 @@ function createStageInput(): StageInput {
 		recognizer: new GestureRecognizer(),
 		stageOrigin: { x: 0, y: 0 },
 		layerIds: [],
-		pending: null,
+		moves: new Map(),
+		wheel: null,
 		frame: 0,
 	};
 }
@@ -52,7 +74,12 @@ function isPrimaryButton(event: StagePointerEvent): boolean {
 }
 
 function sampleOf(event: StagePointerEvent): PointerSample {
-	return { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+	return {
+		pointerId: event.pointerId,
+		x: event.clientX,
+		y: event.clientY,
+		touch: event.pointerType === TOUCH_POINTER,
+	};
 }
 
 function clientPointOf(event: StageMouseEvent): Point {
@@ -63,38 +90,46 @@ function layerIdsAt(client: Point): readonly LayerId[] {
 	return layerIdsUnder(document.elementsFromPoint(client.x, client.y));
 }
 
-function canvasPoint(input: StageInput, camera: Camera, client: Point): Point {
-	return toCanvasPoint(camera, {
-		x: client.x - input.stageOrigin.x,
-		y: client.y - input.stageOrigin.y,
-	});
+function stageOf(input: StageInput, client: Point): Point {
+	return { x: client.x - input.stageOrigin.x, y: client.y - input.stageOrigin.y };
 }
 
-function emit(
-	gesture: Gesture | null,
-	input: StageInput,
-	handlers: StageInputHandlers,
-	camera: Camera,
-): void {
+function stagePointOf(input: StageInput, camera: Camera, client: Point): StagePoint {
+	const stage = stageOf(input, client);
+	return { stage, canvas: toCanvasPoint(camera, stage) };
+}
+
+function moveViewport(session: StageSession, at: Point, delta: ViewportDelta): void {
+	const camera = session.user.camera;
+	camera.set(applyViewportDelta(camera.get(), stageOf(session.input, at), delta));
+}
+
+function emit(session: StageSession, gesture: Gesture | null): void {
+	const { input, handlers } = session;
+	const camera = session.user.camera.get();
 	switch (gesture?.kind) {
 		case "dragStart": {
 			handlers.onDragStart(
-				canvasPoint(input, camera, gesture.origin),
-				canvasPoint(input, camera, gesture.point),
+				stagePointOf(input, camera, gesture.origin),
+				stagePointOf(input, camera, gesture.point),
 				input.layerIds,
 			);
 			break;
 		}
 		case "dragMove": {
-			handlers.onDragMove(canvasPoint(input, camera, gesture.point));
+			handlers.onDragMove(stagePointOf(input, camera, gesture.point));
 			break;
 		}
 		case "dragEnd": {
-			handlers.onDragEnd(canvasPoint(input, camera, gesture.point));
+			handlers.onDragEnd(stagePointOf(input, camera, gesture.point));
 			break;
 		}
 		case "tap": {
 			handlers.onTap(input.layerIds);
+			break;
+		}
+		case "pinch": {
+			moveViewport(session, gesture.center, gesture);
 			break;
 		}
 		case undefined: {
@@ -103,90 +138,137 @@ function emit(
 	}
 }
 
-function step(input: StageInput, handlers: StageInputHandlers, camera: Camera): void {
-	const pending = input.pending;
-	input.pending = null;
-	if (pending === null) {
-		return;
+function step(session: StageSession): void {
+	const { input } = session;
+	const wheel = input.wheel;
+	const moves = [...input.moves.values()];
+	input.wheel = null;
+	input.moves.clear();
+	if (wheel !== null) {
+		moveViewport(session, wheel.at, wheel);
 	}
-	emit(input.recognizer.move(pending), input, handlers, camera);
+	for (const sample of moves) {
+		emit(session, input.recognizer.move(sample));
+	}
 }
 
-function flush(input: StageInput, handlers: StageInputHandlers, camera: Camera): void {
+function schedule(session: StageSession): void {
+	const { input } = session;
+	if (input.frame !== 0) {
+		return;
+	}
+	input.frame = requestAnimationFrame(() => {
+		input.frame = 0;
+		step(session);
+	});
+}
+
+function flush(session: StageSession): void {
+	const { input } = session;
 	if (input.frame !== 0) {
 		cancelAnimationFrame(input.frame);
 	}
 	input.frame = 0;
-	step(input, handlers, camera);
+	step(session);
 }
 
-function beginGesture(input: StageInput, event: StagePointerEvent): void {
-	if (!isPrimaryButton(event) || !input.recognizer.down(sampleOf(event))) {
+function readStageOrigin(input: StageInput, element: HTMLElement): void {
+	const box = element.getBoundingClientRect();
+	input.stageOrigin = { x: box.left, y: box.top };
+}
+
+function accumulate(previous: PendingWheel | null, at: Point, delta: ViewportDelta): PendingWheel {
+	if (previous === null) {
+		return { at, pan: delta.pan, scale: delta.scale };
+	}
+	return {
+		at,
+		pan: { x: previous.pan.x + delta.pan.x, y: previous.pan.y + delta.pan.y },
+		scale: previous.scale * delta.scale,
+	};
+}
+
+function beginGesture(session: StageSession, event: StagePointerEvent): void {
+	if (!isPrimaryButton(event)) {
 		return;
 	}
-	const box = event.currentTarget.getBoundingClientRect();
-	input.stageOrigin = { x: box.left, y: box.top };
-	input.layerIds = layerIdsAt(clientPointOf(event));
+	const { input } = session;
+	flush(session);
+	const down = input.recognizer.down(sampleOf(event));
+	if (!down.taken) {
+		return;
+	}
+	emit(session, down.ended);
+	readStageOrigin(input, event.currentTarget);
+	input.layerIds = layerIdsAt({ x: event.clientX, y: event.clientY });
 	event.currentTarget.setPointerCapture(event.pointerId);
 }
 
-export function useStageInput(
-	camera: Slot<Camera>,
-	handlers: StageInputHandlers,
-): StagePointerHandlers {
-	const state = useRef<StageInput | null>(null);
-
-	function finish(event: StagePointerEvent, cancelled: boolean): void {
-		const input = state.current;
-		if (input === null || !input.recognizer.tracks(event.pointerId)) {
-			return;
-		}
-		const view = camera.get();
-		flush(input, handlers, view);
-		const sample = sampleOf(event);
-		const gesture = cancelled ? input.recognizer.cancel(sample) : input.recognizer.up(sample);
-		emit(gesture, input, handlers, view);
+function trackMove(session: StageSession, event: StagePointerEvent): void {
+	const { input } = session;
+	if (!input.recognizer.tracks(event.pointerId)) {
+		return;
 	}
+	input.moves.set(event.pointerId, sampleOf(event));
+	schedule(session);
+}
 
-	function onPointerDown(event: StagePointerEvent): void {
-		beginGesture((state.current ??= createStageInput()), event);
+function trackWheel(session: StageSession, event: StageWheelEvent): void {
+	const { input } = session;
+	if (input.frame === 0) {
+		readStageOrigin(input, event.currentTarget);
 	}
+	const at = { x: event.clientX, y: event.clientY };
+	input.wheel = accumulate(input.wheel, at, wheelDelta(event, session.user.tool.get()));
+	schedule(session);
+}
 
-	function onContextMenu(event: StageMouseEvent): void {
-		event.preventDefault();
-		if (state.current?.recognizer.active() === true) {
-			return;
-		}
-		const client = clientPointOf(event);
-		handlers.onContextMenu(client, layerIdsAt(client));
+function finish(session: StageSession, event: StagePointerEvent, cancelled: boolean): void {
+	const { recognizer } = session.input;
+	if (!recognizer.tracks(event.pointerId)) {
+		return;
 	}
+	flush(session);
+	const sample = sampleOf(event);
+	emit(session, cancelled ? recognizer.cancel(sample) : recognizer.up(sample));
+}
 
-	function onPointerMove(event: StagePointerEvent): void {
-		const input = state.current;
-		if (input === null || !input.recognizer.tracks(event.pointerId)) {
-			return;
-		}
-		input.pending = sampleOf(event);
-		if (input.frame !== 0) {
-			return;
-		}
-		input.frame = requestAnimationFrame(() => {
-			input.frame = 0;
-			step(input, handlers, camera.get());
-		});
+function openMenu(session: StageSession, event: StageMouseEvent): void {
+	event.preventDefault();
+	if (session.input.recognizer.active()) {
+		return;
+	}
+	const client = clientPointOf(event);
+	session.handlers.onContextMenu(client, layerIdsAt(client));
+}
+
+export function useStageInput(user: UserState, handlers: StageInputHandlers): StagePointerHandlers {
+	const input = useRef<StageInput | null>(null);
+
+	function session(): StageSession {
+		return { input: (input.current ??= createStageInput()), handlers, user };
 	}
 
 	return {
-		onContextMenu,
-		onPointerCancel: (event) => {
-			finish(event, true);
+		onContextMenu: (event) => {
+			openMenu(session(), event);
 		},
-		onPointerDown,
-		onPointerMove,
+		onPointerCancel: (event) => {
+			finish(session(), event, true);
+		},
+		onPointerDown: (event) => {
+			beginGesture(session(), event);
+		},
+		onPointerMove: (event) => {
+			trackMove(session(), event);
+		},
 		onPointerUp: (event) => {
 			if (isPrimaryButton(event)) {
-				finish(event, false);
+				finish(session(), event, false);
 			}
+		},
+		onWheel: (event) => {
+			trackWheel(session(), event);
 		},
 	};
 }
