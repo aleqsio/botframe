@@ -1,0 +1,59 @@
+import { Menu, app } from "electron";
+import type { BrowserWindow, MenuItemConstructorOptions } from "electron";
+import { EDIT_COMMAND } from "../preload/channels";
+import type { EditMenuItem } from "../preload/channels";
+
+function isEditMenuItem(value: unknown): value is EditMenuItem {
+	if (typeof value !== "object" || value === null) {
+		return false;
+	}
+	const item = value as Partial<Record<keyof EditMenuItem, unknown>>;
+	return (
+		typeof item.id === "string" &&
+		typeof item.label === "string" &&
+		typeof item.accelerator === "string" &&
+		typeof item.enabled === "boolean"
+	);
+}
+
+function readItems(value: unknown): EditMenuItem[] {
+	const list = Array.isArray(value) ? (value as readonly unknown[]) : [];
+	return list.flatMap((entry) => (isEditMenuItem(entry) ? [entry] : []));
+}
+
+function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstructorOptions {
+	return {
+		label: item.label,
+		accelerator: item.accelerator,
+		// The renderer runs the command, so the menu shows the accelerator but does not claim
+		// the key. https://www.electronjs.org/docs/latest/api/menu-item#menuitemregisteraccelerator
+		registerAccelerator: false,
+		enabled: item.enabled,
+		click: () => {
+			window.webContents.send(EDIT_COMMAND, item.id);
+		},
+	};
+}
+
+function firstMenu(): MenuItemConstructorOptions {
+	if (process.platform === "darwin") {
+		return {
+			label: app.name,
+			submenu: [
+				{ role: "about" },
+				{ type: "separator" },
+				{ role: "hide" },
+				{ type: "separator" },
+				{ role: "quit" },
+			],
+		};
+	}
+	return { label: "File", submenu: [{ role: "quit" }] };
+}
+
+export function setEditMenu(value: unknown, window: BrowserWindow): void {
+	const edit = readItems(value).map((item) => commandItem(item, window));
+	Menu.setApplicationMenu(
+		Menu.buildFromTemplate([firstMenu(), { label: "Edit", submenu: edit }, { role: "windowMenu" }]),
+	);
+}

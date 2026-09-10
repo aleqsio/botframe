@@ -1,5 +1,7 @@
 import { join } from "node:path";
-import { BrowserWindow, app } from "electron";
+import { BrowserWindow, app, ipcMain } from "electron";
+import { SET_EDIT_MENU } from "../preload/channels";
+import { setEditMenu } from "./editMenu";
 
 function createWindow(): void {
 	const window = new BrowserWindow({
@@ -11,6 +13,7 @@ function createWindow(): void {
 		vibrancy: "under-window",
 		visualEffectState: "active",
 		webPreferences: {
+			preload: join(import.meta.dirname, "../preload/index.cjs"),
 			contextIsolation: true,
 			nodeIntegration: false,
 			sandbox: true,
@@ -27,6 +30,13 @@ function createWindow(): void {
 	}
 	void window.loadURL(devServerUrl);
 }
+
+ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
+	const window = BrowserWindow.fromWebContents(event.sender);
+	if (window !== null) {
+		setEditMenu(args[0], window);
+	}
+});
 
 app.on("ready", () => {
 	createWindow();

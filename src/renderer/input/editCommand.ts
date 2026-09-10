@@ -3,7 +3,7 @@ import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import type { KeyStroke } from "./layerCommand";
 
-type EditCommandId = "undo" | "redo";
+export type EditCommandId = "undo" | "redo";
 
 export interface EditCommand {
 	id: EditCommandId;
