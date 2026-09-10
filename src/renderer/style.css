@@ -274,3 +274,37 @@ body {
 .panel-action:hover {
 	background-color: var(--panel-selected);
 }
+
+.layer-menu {
+	min-width: 160px;
+	padding: 6px;
+	border: 1px solid var(--bar-border);
+	border-radius: 12px;
+	background: var(--bar-background);
+	backdrop-filter: blur(10px) saturate(140%);
+	-webkit-backdrop-filter: blur(10px) saturate(140%);
+	box-shadow: var(--bar-shadow);
+	color: var(--bar-icon-selected);
+	outline: none;
+}
+
+.layer-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border-radius: 8px;
+	cursor: default;
+}
+
+.layer-menu-item[data-highlighted] {
+	background-color: var(--bar-selected);
+}
+
+.layer-menu-swatch {
+	flex: none;
+	width: 12px;
+	height: 12px;
+	border: 1px solid var(--bar-border);
+	border-radius: 3px;
+}
