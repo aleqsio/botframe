@@ -1,7 +1,9 @@
-import type { Layer } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 
 const HALF_TURN = 180;
+
+export type ReadLayer = (id: LayerId) => Layer | null;
 
 export function centerOf(layer: Layer): Point {
 	return { x: layer.x + layer.width / 2, y: layer.y + layer.height / 2 };
@@ -30,4 +32,39 @@ export function angleFrom(center: Point, point: Point): number {
 export function normalizeDegrees(degrees: number): number {
 	const full = HALF_TURN * 2;
 	return ((degrees % full) + full) % full;
+}
+
+export function layerChain(read: ReadLayer, id: LayerId | null): Layer[] {
+	const chain: Layer[] = [];
+	let next = id;
+	while (next !== null) {
+		const layer = read(next);
+		if (layer === null) {
+			break;
+		}
+		chain.push(layer);
+		next = layer.parent;
+	}
+	return chain.toReversed();
+}
+
+function intoLayer(layer: Layer, point: Point): Point {
+	const local = toLayerPoint(layer, point);
+	const half = halfSizeOf(layer);
+	return { x: local.x + half.x, y: local.y + half.y };
+}
+
+function outOfLayer(layer: Layer, point: Point): Point {
+	const half = halfSizeOf(layer);
+	const turned = rotatePoint({ x: point.x - half.x, y: point.y - half.y }, layer.rotation);
+	const center = centerOf(layer);
+	return { x: center.x + turned.x, y: center.y + turned.y };
+}
+
+export function toParentPoint(chain: readonly Layer[], point: Point): Point {
+	return chain.reduce<Point>((carried, layer) => intoLayer(layer, carried), point);
+}
+
+export function fromParentPoint(chain: readonly Layer[], point: Point): Point {
+	return chain.reduceRight<Point>((carried, layer) => outOfLayer(layer, carried), point);
 }
