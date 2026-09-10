@@ -1,4 +1,4 @@
-import type { Layer, LayerId } from "../../document/layer";
+import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 
 const HALF_TURN = 180;
@@ -9,8 +9,8 @@ export function centerOf(layer: Layer): Point {
 	return { x: layer.x + layer.width / 2, y: layer.y + layer.height / 2 };
 }
 
-export function halfSizeOf(layer: Layer): Point {
-	return { x: layer.width / 2, y: layer.height / 2 };
+export function halfSizeOf(rect: Rect): Point {
+	return { x: rect.width / 2, y: rect.height / 2 };
 }
 
 export function rotatePoint(point: Point, degrees: number): Point {
