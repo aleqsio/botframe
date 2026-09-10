@@ -1,5 +1,5 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroMap, LoroTree } from "loro-crdt";
+import type { LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
 import type { Geometry, Layer, LayerFields, LayerId, Rect } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
@@ -86,8 +86,8 @@ export class DesignDocument {
 		if (cached !== undefined) {
 			return cached;
 		}
-		const node = this.#tree().getNodeByID(id);
-		if (node === undefined || node.isDeleted()) {
+		const node = this.#liveNode(id);
+		if (node === null) {
 			return null;
 		}
 		const layer: Layer = {
@@ -172,8 +172,8 @@ export class DesignDocument {
 	}
 
 	#write(id: LayerId, fields: Readonly<Record<string, number>>): void {
-		const node = this.#tree().getNodeByID(id);
-		if (node === undefined || node.isDeleted()) {
+		const node = this.#liveNode(id);
+		if (node === null) {
 			return;
 		}
 		for (const [key, value] of Object.entries(fields)) {
@@ -193,11 +193,16 @@ export class DesignDocument {
 		return this.#doc.getTree(LAYERS);
 	}
 
+	#liveNode(id: LayerId): LoroTreeNode | null {
+		const node = this.#tree().getNodeByID(id);
+		return node === undefined || node.isDeleted() ? null : node;
+	}
+
 	#trackLayer(id: LayerId): Set<() => void> {
 		const listeners = new Set<() => void>();
 		this.#listeners.set(id, listeners);
-		const node = this.#tree().getNodeByID(id);
-		if (node !== undefined) {
+		const node = this.#liveNode(id);
+		if (node !== null) {
 			this.#nodeSubscriptions.set(
 				id,
 				node.data.subscribe(() => {

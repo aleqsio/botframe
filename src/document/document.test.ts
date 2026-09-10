@@ -273,6 +273,25 @@ describe("the layer writer", () => {
 		expect(doc.layer(id)).toBeNull();
 	});
 
+	it("notifies a subscriber of a live layer and none of a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const live = doc.createLayer(DRAWN);
+		const gone = doc.createLayer(DRAWN);
+		doc.deleteLayer(gone);
+		const liveListener = vi.fn<() => void>();
+		const goneListener = vi.fn<() => void>();
+		doc.subscribeLayer(live, liveListener);
+		doc.subscribeLayer(gone, goneListener);
+
+		doc.resize(live, { x: 0, y: 0, width: 10, height: 10 });
+		doc.resize(gone, { x: 0, y: 0, width: 10, height: 10 });
+
+		expect(doc.layer(live)).toMatchObject({ width: 10, height: 10 });
+		expect(doc.layer(gone)).toBeNull();
+		expect(liveListener).toHaveBeenCalled();
+		expect(goneListener).not.toHaveBeenCalled();
+	});
+
 	it("notifies the layer list on a create and on a delete", () => {
 		const doc = DesignDocument.create();
 		const structure = vi.fn<() => void>();
