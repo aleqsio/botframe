@@ -12,7 +12,6 @@ const ARTBOARD: DrawPreset = {
 	fill: "#ffffff",
 	clip: true,
 	artboard: true,
-	commit: "create artboard",
 };
 
 const RECTANGLE: DrawPreset = {
@@ -20,7 +19,6 @@ const RECTANGLE: DrawPreset = {
 	fill: "#d9d9d9",
 	clip: false,
 	artboard: false,
-	commit: "create rectangle",
 };
 
 function createHandBehavior(): ToolBehavior {

@@ -6,17 +6,16 @@ import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { drawnRect, tappedRect } from "./draw";
 import type { Modifiers } from "./modifiers";
+import { NOTHING_SELECTED } from "./selectBehavior";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 const CANCEL_COMMIT = "cancel draw";
-const NOTHING_SELECTED: readonly LayerId[] = [];
 
 export interface DrawPreset {
 	label: string;
 	fill: string;
 	clip: boolean;
 	artboard: boolean;
-	commit: string;
 }
 
 function layersOf(doc: DesignDocument): (Layer | null)[] {
@@ -41,7 +40,7 @@ function startLayer(target: PointerTarget, preset: DrawPreset, rect: Rect): Laye
 }
 
 function endGesture(target: PointerTarget, preset: DrawPreset): void {
-	target.doc.commit(preset.commit);
+	target.doc.commit(`create ${preset.label.toLowerCase()}`);
 	target.user.tool.set(DEFAULT_TOOL);
 }
 

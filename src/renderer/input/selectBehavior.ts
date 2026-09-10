@@ -9,7 +9,7 @@ import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
 
-const NOTHING_SELECTED: readonly LayerId[] = [];
+export const NOTHING_SELECTED: readonly LayerId[] = [];
 
 type Drag =
 	| { kind: "move"; id: LayerId; offset: Point }
