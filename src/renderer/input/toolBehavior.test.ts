@@ -194,7 +194,7 @@ describe("the draw tools", () => {
 		expect(target.doc.layerIds()).toHaveLength(2);
 		expect(target.doc.changeCount()).toBe(changes + 1);
 		expect(target.user.tool.get()).toBe("select");
-		expect(target.user.drawing.get()).toBeNull();
+		expect(target.user.draw.get()).toBeNull();
 	});
 
 	it("draws a rectangle with the grey fill, no clip, and the next free name", () => {
@@ -236,7 +236,7 @@ describe("the draw tools", () => {
 
 		expect(target.doc.layerIds()).toHaveLength(1);
 		expect(target.user.selection.get()).toEqual([]);
-		expect(target.user.drawing.get()).toBeNull();
+		expect(target.user.draw.get()).toBeNull();
 		expect(target.doc.changeCount()).toBe(changes + 1);
 		expect(target.user.tool.get()).toBe("select");
 	});

@@ -46,56 +46,45 @@ function endGesture(target: PointerTarget, preset: DrawPreset): void {
 }
 
 export function cancelDraw(doc: DesignDocument, user: UserState): void {
-	const id = user.drawing.get();
+	const draw = user.draw.get();
 	user.tool.set(DEFAULT_TOOL);
-	if (id === null) {
+	if (draw === null) {
 		return;
 	}
-	user.drawing.set(null);
+	user.draw.set(null);
 	user.selection.set(NOTHING_SELECTED);
-	doc.deleteLayer(id);
+	doc.deleteLayer(draw.id);
 	doc.commit(CANCEL_COMMIT);
 }
 
+function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
+	const draw = target.user.draw.get();
+	if (draw !== null) {
+		target.doc.resize(draw.id, drawnRect(draw.origin, point, modifiers));
+	}
+}
+
 export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
-	return () => {
-		let origin: Point | null = null;
-		let drawn: LayerId | null = null;
-
-		function drawnBy(target: PointerTarget): LayerId | null {
-			return drawn !== null && target.user.drawing.get() === drawn ? drawn : null;
-		}
-
-		function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
-			const id = drawnBy(target);
-			if (id === null || origin === null) {
+	return () => ({
+		dragStart(target, start, point, modifiers) {
+			const origin = start.canvas;
+			const id = startLayer(target, preset, drawnRect(origin, point.canvas, modifiers));
+			target.user.draw.set({ id, origin });
+		},
+		drag(target, point, modifiers) {
+			stretch(target, point.canvas, modifiers);
+		},
+		dragEnd(target, point, modifiers) {
+			if (target.user.draw.get() === null) {
 				return;
 			}
-			target.doc.resize(id, drawnRect(origin, point, modifiers));
-		}
-
-		return {
-			dragStart(target, start, point, modifiers) {
-				origin = start.canvas;
-				drawn = startLayer(target, preset, drawnRect(origin, point.canvas, modifiers));
-				target.user.drawing.set(drawn);
-			},
-			drag(target, point, modifiers) {
-				stretch(target, point.canvas, modifiers);
-			},
-			dragEnd(target, point, modifiers) {
-				if (drawnBy(target) !== null) {
-					stretch(target, point.canvas, modifiers);
-					target.user.drawing.set(null);
-					endGesture(target, preset);
-				}
-				origin = null;
-				drawn = null;
-			},
-			tap(target, point) {
-				startLayer(target, preset, tappedRect(point.canvas));
-				endGesture(target, preset);
-			},
-		};
-	};
+			stretch(target, point.canvas, modifiers);
+			target.user.draw.set(null);
+			endGesture(target, preset);
+		},
+		tap(target, point) {
+			startLayer(target, preset, tappedRect(point.canvas));
+			endGesture(target, preset);
+		},
+	});
 }
