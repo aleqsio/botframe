@@ -1,15 +1,17 @@
 :root {
-	color-scheme: light dark;
-	--stage-background: #f2f2f2;
+	color-scheme: dark;
+	--stage-background: #16161c;
+	--window-tint: rgb(11 11 18 / 0.66);
+	--canvas-border: inset 0 0 0 0.5px rgb(255 255 255 / 0.17);
 	--title-bar: 36px;
-	--canvas-inset: 6px;
+	--canvas-inset: 8px;
 	--layers-width: 200px;
 	--properties-width: 232px;
-	--panel-text: light-dark(rgb(0 0 0 / 0.85), rgb(255 255 255 / 0.92));
-	--panel-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.55));
-	--panel-hover: light-dark(rgb(0 0 0 / 0.06), rgb(255 255 255 / 0.1));
-	--panel-selected: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.18));
-	--canvas-radius: 10px;
+	--panel-text: rgb(255 255 255 / 0.92);
+	--panel-label: rgb(255 255 255 / 0.55);
+	--panel-hover: rgb(255 255 255 / 0.1);
+	--panel-selected: rgb(255 255 255 / 0.18);
+	--canvas-radius: 4px;
 	--bar-background: rgb(44 43 54 / 0.8);
 	--bar-border: rgb(255 255 255 / 0.1);
 	--bar-shadow: 0 12px 32px rgb(20 19 27 / 0.24), 0 2px 6px rgb(20 19 27 / 0.18);
@@ -40,7 +42,7 @@ body,
 
 body {
 	overflow: hidden;
-	background: transparent;
+	background: var(--window-tint);
 	font:
 		13px system-ui,
 		sans-serif;
@@ -67,6 +69,15 @@ body {
 	border-radius: var(--canvas-radius);
 	overflow: hidden;
 	touch-action: none;
+}
+
+#stage::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: var(--canvas-border);
+	pointer-events: none;
 }
 
 #viewport {
