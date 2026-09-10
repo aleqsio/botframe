@@ -35,6 +35,10 @@ export function toCanvasPoint(camera: Camera, stagePoint: Point): Point {
 	};
 }
 
+export function viewportCenter(camera: Camera, size: { width: number; height: number }): Point {
+	return toCanvasPoint(camera, { x: size.width / 2, y: size.height / 2 });
+}
+
 export function moveCamera(camera: Camera, pan: Point): Camera {
 	return { x: camera.x + pan.x, y: camera.y + pan.y, zoom: camera.zoom };
 }
