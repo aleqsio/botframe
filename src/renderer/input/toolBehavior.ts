@@ -1,7 +1,8 @@
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { ToolId } from "../components/tools";
-import type { Point } from "../state/camera";
+import { moveCamera } from "../state/camera";
+import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 
 const NOTHING_SELECTED: readonly LayerId[] = [];
@@ -14,9 +15,9 @@ export interface PointerTarget {
 
 export interface ToolBehavior {
 	tap?: (target: PointerTarget) => void;
-	dragStart?: (target: PointerTarget, origin: Point, point: Point) => void;
-	drag?: (target: PointerTarget, point: Point) => void;
-	dragEnd?: (target: PointerTarget, point: Point) => void;
+	dragStart?: (target: PointerTarget, origin: StagePoint, point: StagePoint) => void;
+	drag?: (target: PointerTarget, point: StagePoint) => void;
+	dragEnd?: (target: PointerTarget, point: StagePoint) => void;
 	context?: (target: PointerTarget, client: Point) => void;
 }
 
@@ -59,23 +60,50 @@ function createSelectBehavior(): ToolBehavior {
 		dragStart(target, origin, point) {
 			const layerId = topLayerId(target);
 			select(target.user, layerId);
-			grab = grabOf(target.doc, layerId, origin);
-			moveTo(target.doc, point);
+			grab = grabOf(target.doc, layerId, origin.canvas);
+			moveTo(target.doc, point.canvas);
 		},
 		drag(target, point) {
-			moveTo(target.doc, point);
+			moveTo(target.doc, point.canvas);
 		},
 		dragEnd(target, point) {
 			if (grab === null) {
 				return;
 			}
-			moveTo(target.doc, point);
+			moveTo(target.doc, point.canvas);
 			grab = null;
 			target.doc.commit("move layer");
 		},
 		context(target, client) {
 			const { layerIds } = target;
 			target.user.menu.set(layerIds.length === 0 ? null : { client, layerIds });
+		},
+	};
+}
+
+function createHandBehavior(): ToolBehavior {
+	let held: Point | null = null;
+
+	function panTo(user: UserState, point: StagePoint): void {
+		if (held === null) {
+			return;
+		}
+		const pan = { x: point.stage.x - held.x, y: point.stage.y - held.y };
+		held = point.stage;
+		user.camera.set(moveCamera(user.camera.get(), pan));
+	}
+
+	return {
+		dragStart(target, origin, point) {
+			held = origin.stage;
+			panTo(target.user, point);
+		},
+		drag(target, point) {
+			panTo(target.user, point);
+		},
+		dragEnd(target, point) {
+			panTo(target.user, point);
+			held = null;
 		},
 	};
 }
@@ -91,5 +119,5 @@ export const TOOL_BEHAVIORS: Readonly<Record<ToolId, () => ToolBehavior>> = {
 	ellipse: noPointerBehavior,
 	text: noPointerBehavior,
 	image: noPointerBehavior,
-	zoom: noPointerBehavior,
+	hand: createHandBehavior,
 };

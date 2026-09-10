@@ -11,7 +11,7 @@ export const TOOLS = [
 	{ id: "frame", label: "Frame", icon: "frame" },
 	{ id: "rectangle", label: "Rectangle", icon: "rectangle" },
 	{ id: "ellipse", label: "Ellipse", icon: "ellipse" },
-	{ id: "zoom", label: "Zoom", icon: "zoom" },
+	{ id: "hand", label: "Hand", icon: "hand" },
 	{ id: "text", label: "Text", icon: "text" },
 	{ id: "image", label: "Image", icon: "image" },
 ] as const satisfies readonly ToolDefinition[];
