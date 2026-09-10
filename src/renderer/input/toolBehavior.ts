@@ -2,7 +2,8 @@ import type { ToolId } from "../components/tools";
 import { moveCamera } from "../state/camera";
 import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
-import { ARTBOARD_DEFAULTS, RECTANGLE_DEFAULTS, createDrawBehavior } from "./drawBehavior";
+import { ARTBOARD_DEFAULTS, RECTANGLE_DEFAULTS } from "../components/layerDefaults";
+import { createDrawBehavior } from "./drawBehavior";
 import { createSelectBehavior } from "./selectBehavior";
 import type { ToolBehavior } from "./tool";
 

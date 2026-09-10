@@ -1,11 +1,10 @@
 import type { ReactElement, RefObject } from "react";
 import type { DesignDocument } from "../../document/document";
-import { ARTBOARD_DEFAULTS, drawCommit, drawnFields } from "../input/drawBehavior";
 import { viewportCenter } from "../state/camera";
 import type { UserState } from "../state/userState";
+import { ARTBOARD_DEFAULTS, drawnFields, finishDraw, placeLayer } from "./layerDefaults";
 import { PRESET_GROUPS } from "./presets";
 import type { ArtboardPreset } from "./presets";
-import { DEFAULT_TOOL } from "./tools";
 
 export function PresetList({
 	doc,
@@ -28,9 +27,8 @@ export function PresetList({
 			width: preset.width,
 			height: preset.height,
 		};
-		user.selection.set([doc.createLayer(drawnFields(ARTBOARD_DEFAULTS, rect, preset.name))]);
-		doc.commit(drawCommit(ARTBOARD_DEFAULTS));
-		user.tool.set(DEFAULT_TOOL);
+		placeLayer(doc, user, drawnFields(ARTBOARD_DEFAULTS, rect, preset.name), null);
+		finishDraw(doc, user, ARTBOARD_DEFAULTS);
 	}
 
 	return (
