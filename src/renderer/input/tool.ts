@@ -13,14 +13,14 @@ export interface PointerTarget {
 
 export interface ToolBehavior {
 	hover?: (target: PointerTarget, point: StagePoint) => Zone | null;
-	tap?: (target: PointerTarget, point: StagePoint) => void;
+	tap?: (target: PointerTarget, point: StagePoint) => boolean;
 	dragStart?: (
 		target: PointerTarget,
 		origin: StagePoint,
 		point: StagePoint,
 		modifiers: Modifiers,
-	) => void;
+	) => boolean;
 	drag?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => void;
 	dragEnd?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => void;
-	context?: (target: PointerTarget, client: Point) => void;
+	context?: (target: PointerTarget, client: Point) => boolean;
 }

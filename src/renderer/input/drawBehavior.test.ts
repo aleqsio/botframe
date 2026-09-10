@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cancelDraw } from "./drawBehavior";
 import { NO_MODIFIERS } from "./modifiers";
-import { TOOL_BEHAVIORS } from "./toolBehavior";
+import { behaviorFor } from "./toolBehavior";
 import { firstId } from "./toolFixtures";
 import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
 
@@ -15,7 +15,7 @@ describe("the draw tools", () => {
 		const target = targetOf(false);
 		const changes = target.doc.changeCount();
 
-		dragOver(TOOL_BEHAVIORS.artboard(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+		dragOver(behaviorFor("artboard"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
 		expect(drawnLayer(target)).toMatchObject({
 			x: 40,
@@ -37,7 +37,7 @@ describe("the draw tools", () => {
 	it("draws a rectangle with the grey fill, no clip, and the next free name", () => {
 		const target = targetOf(false);
 
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+		dragOver(behaviorFor("rectangle"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
 		expect(drawnLayer(target)).toMatchObject({
 			fill: "#d9d9d9",
@@ -51,7 +51,7 @@ describe("the draw tools", () => {
 		const target = targetOf(false);
 		const changes = target.doc.changeCount();
 
-		tapAt(TOOL_BEHAVIORS.artboard(), target, CENTER);
+		tapAt(behaviorFor("artboard"), target, CENTER);
 
 		expect(drawnLayer(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
 		expect(target.doc.changeCount()).toBe(changes + 1);
@@ -60,7 +60,7 @@ describe("the draw tools", () => {
 
 	it("deletes the layer in progress on a cancel and writes no change on the release", () => {
 		const target = targetOf(false);
-		const behavior = TOOL_BEHAVIORS.artboard();
+		const behavior = behaviorFor("artboard");
 		const camera = target.user.camera.get();
 		const changes = target.doc.changeCount();
 		const press = pointAt(camera, DRAW_PRESS);
@@ -82,7 +82,7 @@ describe("the draw tools", () => {
 		const target = targetOf(true);
 		const parent = firstId(target.doc);
 
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: PRESS, release: { x: 500, y: 330 } });
+		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
 
 		const drawn = drawnLayer(target);
 		expect(drawn).toMatchObject({ parent, x: 20, y: 20, width: 60, height: 50 });
@@ -94,7 +94,7 @@ describe("the draw tools", () => {
 		const target = targetOf(true);
 		const parent = firstId(target.doc);
 
-		tapAt(TOOL_BEHAVIORS.rectangle(), target, PRESS);
+		tapAt(behaviorFor("rectangle"), target, PRESS);
 
 		expect(drawnLayer(target)).toMatchObject({ parent, x: 20, y: 20, width: 100, height: 100 });
 	});
@@ -102,7 +102,7 @@ describe("the draw tools", () => {
 	it("holds the box in the space of the parent when the parent moves during the draw", () => {
 		const target = targetOf(true);
 		const parent = firstId(target.doc);
-		const behavior = TOOL_BEHAVIORS.rectangle();
+		const behavior = behaviorFor("rectangle");
 		const camera = target.user.camera.get();
 		const press = pointAt(camera, PRESS);
 
@@ -119,7 +119,7 @@ describe("the draw tools", () => {
 		const parent = firstId(target.doc);
 		target.doc.update(parent, { rotation: 90 });
 
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, {
+		dragOver(behaviorFor("rectangle"), target, {
 			press: { x: 600, y: 240 },
 			release: { x: 550, y: 300 },
 		});
