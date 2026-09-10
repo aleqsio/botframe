@@ -22,31 +22,13 @@ function frameStyle(layer: Layer): CSSProperties {
 	};
 }
 
-function LayerSpace({
-	doc,
-	id,
-	children,
-}: {
-	doc: DesignDocument;
-	id: LayerId | null;
-	children: ReactNode;
-}): ReactNode {
-	return id === null ? (
-		children
-	) : (
-		<ParentSpace doc={doc} id={id}>
-			{children}
-		</ParentSpace>
-	);
-}
-
 function ParentSpace({
 	doc,
 	id,
 	children,
 }: {
 	doc: DesignDocument;
-	id: LayerId;
+	id: LayerId | null;
 	children: ReactNode;
 }): ReactNode {
 	const layer = useLayer(doc, id);
@@ -56,11 +38,11 @@ function ParentSpace({
 	}
 
 	return (
-		<LayerSpace doc={doc} id={layer.parent}>
+		<ParentSpace doc={doc} id={layer.parent}>
 			<div className="layer-space" style={{ transform: layerTransform(layer) }}>
 				{children}
 			</div>
-		</LayerSpace>
+		</ParentSpace>
 	);
 }
 
@@ -72,13 +54,13 @@ function SelectionFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): Reac
 	}
 
 	return (
-		<LayerSpace doc={doc} id={layer.parent}>
+		<ParentSpace doc={doc} id={layer.parent}>
 			<div className="selection" style={frameStyle(layer)}>
 				{CORNERS.map((corner) => (
 					<span className="selection-handle" data-corner={corner} key={corner} />
 				))}
 			</div>
-		</LayerSpace>
+		</ParentSpace>
 	);
 }
 
