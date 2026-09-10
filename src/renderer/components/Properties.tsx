@@ -10,8 +10,6 @@ import { layerEntry } from "./layerEntry";
 import { TOOLS } from "./tools";
 import type { ToolId } from "./tools";
 
-const ARTBOARD_TOOL: ToolId = "artboard";
-
 function panelTitle(layer: Layer | null, tool: ToolId): string {
 	if (layer !== null) {
 		return layerEntry(layer).label;
@@ -36,7 +34,7 @@ export function Properties({
 		<aside className="panel" id="properties">
 			<h2 className="panel-title">{panelTitle(layer, tool)}</h2>
 			{layer === null ? null : <LayerProperties doc={doc} layer={layer} />}
-			{layer === null && tool === ARTBOARD_TOOL ? (
+			{layer === null && tool === "artboard" ? (
 				<PresetList doc={doc} stage={stage} user={user} />
 			) : null}
 		</aside>

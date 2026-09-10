@@ -7,11 +7,6 @@ import { isArtboard } from "./layerEntry";
 import { CORNER_FIELDS, LAYER_FIELDS, isHexColor, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
-const RENAME_COMMIT = "rename layer";
-const FILL_COMMIT = "set fill";
-const CLIP_COMMIT = "set clip";
-const CORNER_COMMIT = "set corners";
-
 function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
 	const preset = presetNamed(name);
 	if (preset === null) {
@@ -19,10 +14,6 @@ function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
 	}
 	doc.resize(layer.id, { x: layer.x, y: layer.y, width: preset.width, height: preset.height });
 	doc.commit(COMMIT_MESSAGES.resize);
-}
-
-function rectangleGeometry(layer: Layer): RectangleGeometry | null {
-	return layer.geometry.kind === "rectangle" ? layer.geometry : null;
 }
 
 function CornerFields({
@@ -42,7 +33,7 @@ function CornerFields({
 					label={field.label}
 					onCommit={(value) => {
 						doc.setGeometry(layer.id, field.next(geometry, value));
-						doc.commit(CORNER_COMMIT);
+						doc.commit("set corners");
 					}}
 					value={field.read(geometry)}
 				/>
@@ -96,7 +87,7 @@ export function LayerProperties({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
-	const geometry = rectangleGeometry(layer);
+	const geometry = layer.geometry.kind === "rectangle" ? layer.geometry : null;
 
 	return (
 		<>
@@ -104,7 +95,7 @@ export function LayerProperties({
 				label="Name"
 				onCommit={(text) => {
 					doc.rename(layer.id, text);
-					doc.commit(RENAME_COMMIT);
+					doc.commit("rename layer");
 				}}
 				value={layer.name}
 			/>
@@ -127,7 +118,7 @@ export function LayerProperties({
 						return;
 					}
 					doc.setFill(layer.id, text);
-					doc.commit(FILL_COMMIT);
+					doc.commit("set fill");
 				}}
 				value={layer.fill}
 			/>
@@ -137,7 +128,7 @@ export function LayerProperties({
 					checked={layer.clip}
 					onChange={(event) => {
 						doc.setClip(layer.id, event.target.checked);
-						doc.commit(CLIP_COMMIT);
+						doc.commit("set clip");
 					}}
 					type="checkbox"
 				/>

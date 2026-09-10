@@ -17,6 +17,12 @@ async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {
 	return { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) };
 }
 
+async function typeInto(window: Page, label: string, text: string): Promise<void> {
+	const field = window.getByLabel(label, { exact: true });
+	await field.fill(text);
+	await field.press("Enter");
+}
+
 test("a preset places an artboard of that size at the middle of the stage", async () => {
 	const { app, layers, stage, window } = await openStage();
 	const title = window.locator("#properties .panel-title");
@@ -97,12 +103,6 @@ test("a name that a person types letter by letter does not change the tool", asy
 
 	await app.close();
 });
-
-async function typeInto(window: Page, label: string, text: string): Promise<void> {
-	const field = window.getByLabel(label, { exact: true });
-	await field.fill(text);
-	await field.press("Enter");
-}
 
 test("the panel keeps a fill and a width that the stage can paint", async () => {
 	const { app, layers, window } = await openStage();

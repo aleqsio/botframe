@@ -1,22 +1,11 @@
 import type { ReactElement, RefObject } from "react";
 import type { DesignDocument } from "../../document/document";
-import type { Rect } from "../../document/layer";
 import { ARTBOARD_DEFAULTS, drawCommit, drawnFields } from "../input/drawBehavior";
 import { viewportCenter } from "../state/camera";
-import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { PRESET_GROUPS } from "./presets";
 import type { ArtboardPreset } from "./presets";
 import { DEFAULT_TOOL } from "./tools";
-
-function boxAround(center: Point, preset: ArtboardPreset): Rect {
-	return {
-		x: center.x - preset.width / 2,
-		y: center.y - preset.height / 2,
-		width: preset.width,
-		height: preset.height,
-	};
-}
 
 export function PresetList({
 	doc,
@@ -32,7 +21,13 @@ export function PresetList({
 		if (box === undefined) {
 			return;
 		}
-		const rect = boxAround(viewportCenter(user.camera.get(), box), preset);
+		const center = viewportCenter(user.camera.get(), box);
+		const rect = {
+			x: center.x - preset.width / 2,
+			y: center.y - preset.height / 2,
+			width: preset.width,
+			height: preset.height,
+		};
 		user.selection.set([doc.createLayer(drawnFields(ARTBOARD_DEFAULTS, rect, preset.name))]);
 		doc.commit(drawCommit(ARTBOARD_DEFAULTS));
 		user.tool.set(DEFAULT_TOOL);
