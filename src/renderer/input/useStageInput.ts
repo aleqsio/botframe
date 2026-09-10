@@ -1,24 +1,28 @@
 import { useRef } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { LayerId } from "../../document/layer";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera, Point } from "../state/camera";
 import type { Slot } from "../state/slot";
 import { GestureRecognizer } from "./gesture";
 import type { Gesture, PointerSample } from "./gesture";
+import { layerIdsUnder } from "./hitTest";
 
 type StagePointerEvent = ReactPointerEvent<HTMLElement>;
+type StageMouseEvent = ReactMouseEvent<HTMLElement>;
 
 const PRIMARY_BUTTON = 0;
 
 export interface StageInputHandlers {
-	onDragStart: (origin: Point, point: Point, layerId: LayerId | null) => void;
+	onDragStart: (origin: Point, point: Point, layerIds: readonly LayerId[]) => void;
 	onDragMove: (point: Point) => void;
 	onDragEnd: (point: Point) => void;
-	onTap: (layerId: LayerId | null) => void;
+	onTap: (layerIds: readonly LayerId[]) => void;
+	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
 }
 
 interface StagePointerHandlers {
+	onContextMenu: (event: StageMouseEvent) => void;
 	onPointerCancel: (event: StagePointerEvent) => void;
 	onPointerDown: (event: StagePointerEvent) => void;
 	onPointerMove: (event: StagePointerEvent) => void;
@@ -28,7 +32,7 @@ interface StagePointerHandlers {
 interface StageInput {
 	recognizer: GestureRecognizer;
 	stageOrigin: Point;
-	layerId: LayerId | null;
+	layerIds: readonly LayerId[];
 	pending: PointerSample | null;
 	frame: number;
 }
@@ -37,7 +41,7 @@ function createStageInput(): StageInput {
 	return {
 		recognizer: new GestureRecognizer(),
 		stageOrigin: { x: 0, y: 0 },
-		layerId: null,
+		layerIds: [],
 		pending: null,
 		frame: 0,
 	};
@@ -51,14 +55,12 @@ function sampleOf(event: StagePointerEvent): PointerSample {
 	return { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
 }
 
-function isLayerId(value: string): value is LayerId {
-	return /^\d+@\d+$/u.test(value);
+function clientPointOf(event: StageMouseEvent): Point {
+	return { x: event.clientX, y: event.clientY };
 }
 
-function layerIdAt(target: EventTarget): LayerId | null {
-	const element = target instanceof Element ? target.closest("[data-layer-id]") : null;
-	const value = element instanceof HTMLElement ? element.dataset["layerId"] : undefined;
-	return value !== undefined && isLayerId(value) ? value : null;
+function layerIdsAt(client: Point): readonly LayerId[] {
+	return layerIdsUnder(document.elementsFromPoint(client.x, client.y));
 }
 
 function canvasPoint(input: StageInput, camera: Camera, client: Point): Point {
@@ -79,7 +81,7 @@ function emit(
 			handlers.onDragStart(
 				canvasPoint(input, camera, gesture.origin),
 				canvasPoint(input, camera, gesture.point),
-				input.layerId,
+				input.layerIds,
 			);
 			break;
 		}
@@ -92,7 +94,7 @@ function emit(
 			break;
 		}
 		case "tap": {
-			handlers.onTap(input.layerId);
+			handlers.onTap(input.layerIds);
 			break;
 		}
 		case undefined: {
@@ -124,7 +126,7 @@ function beginGesture(input: StageInput, event: StagePointerEvent): void {
 	}
 	const box = event.currentTarget.getBoundingClientRect();
 	input.stageOrigin = { x: box.left, y: box.top };
-	input.layerId = layerIdAt(event.target);
+	input.layerIds = layerIdsAt(clientPointOf(event));
 	event.currentTarget.setPointerCapture(event.pointerId);
 }
 
@@ -150,6 +152,15 @@ export function useStageInput(
 		beginGesture((state.current ??= createStageInput()), event);
 	}
 
+	function onContextMenu(event: StageMouseEvent): void {
+		event.preventDefault();
+		if (state.current?.recognizer.active() === true) {
+			return;
+		}
+		const client = clientPointOf(event);
+		handlers.onContextMenu(client, layerIdsAt(client));
+	}
+
 	function onPointerMove(event: StagePointerEvent): void {
 		const input = state.current;
 		if (input === null || !input.recognizer.tracks(event.pointerId)) {
@@ -166,6 +177,7 @@ export function useStageInput(
 	}
 
 	return {
+		onContextMenu,
 		onPointerCancel: (event) => {
 			finish(event, true);
 		},
