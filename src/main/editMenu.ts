@@ -28,9 +28,17 @@ function sendCommand(window: BrowserWindow, id: string): void {
 }
 
 function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstructorOptions {
+	const children = item.submenu;
+	if (children !== undefined) {
+		return {
+			label: item.label,
+			enabled: item.enabled,
+			submenu: children.map((child) => commandItem(child, window)),
+		};
+	}
 	return {
 		label: item.label,
-		accelerator: item.accelerator,
+		...(item.accelerator === "" ? {} : { accelerator: item.accelerator }),
 		// The renderer runs the command, so the menu shows the accelerator but does not claim
 		// the key. https://www.electronjs.org/docs/latest/api/menu-item#menuitemregisteraccelerator
 		registerAccelerator: false,
@@ -39,6 +47,17 @@ function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstru
 			sendCommand(window, item.id);
 		},
 	};
+}
+
+function withSeparators(
+	items: readonly EditMenuItem[],
+	window: BrowserWindow,
+): MenuItemConstructorOptions[] {
+	return items.flatMap((item) =>
+		item.separatorBefore === true
+			? [{ type: "separator" as const }, commandItem(item, window)]
+			: [commandItem(item, window)],
+	);
 }
 
 function firstMenu(): MenuItemConstructorOptions {
@@ -58,7 +77,7 @@ function firstMenu(): MenuItemConstructorOptions {
 }
 
 export function setEditMenu(value: unknown, window: BrowserWindow): void {
-	const edit = readItems(value).map((item) => commandItem(item, window));
+	const edit = withSeparators(readItems(value), window);
 	Menu.setApplicationMenu(
 		Menu.buildFromTemplate([firstMenu(), { label: "Edit", submenu: edit }, { role: "windowMenu" }]),
 	);

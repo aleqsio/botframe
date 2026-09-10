@@ -19,13 +19,13 @@ interface MenuState {
 	enabled: boolean;
 }
 
-function editMenu(app: ElectronApplication): Promise<MenuState[]> {
+function historyMenu(app: ElectronApplication): Promise<MenuState[]> {
 	return app.evaluate(({ Menu }) => {
 		const edit = Menu.getApplicationMenu()?.items.find((item) => item.label === "Edit");
-		return (edit?.submenu?.items ?? []).map((item) => ({
-			label: item.label,
-			enabled: item.enabled,
-		}));
+		const history = new Set(["Undo", "Redo"]);
+		return (edit?.submenu?.items ?? [])
+			.filter((item) => history.has(item.label))
+			.map((item) => ({ label: item.label, enabled: item.enabled }));
 	});
 }
 
@@ -77,7 +77,7 @@ test("the Edit menu follows the history of the document", async () => {
 	const { app, layers, origin, window } = await openStage();
 
 	await expect
-		.poll(() => editMenu(app))
+		.poll(() => historyMenu(app))
 		.toEqual([
 			{ label: "Undo", enabled: false },
 			{ label: "Redo", enabled: false },
@@ -86,7 +86,7 @@ test("the Edit menu follows the history of the document", async () => {
 	await drawRectangle(window, origin, FIRST);
 	await expect(layers).toHaveCount(2);
 	await expect
-		.poll(() => editMenu(app))
+		.poll(() => historyMenu(app))
 		.toEqual([
 			{ label: "Undo", enabled: true },
 			{ label: "Redo", enabled: false },
@@ -95,7 +95,7 @@ test("the Edit menu follows the history of the document", async () => {
 	await window.keyboard.press(UNDO);
 	await expect(layers).toHaveCount(1);
 	await expect
-		.poll(() => editMenu(app))
+		.poll(() => historyMenu(app))
 		.toEqual([
 			{ label: "Undo", enabled: false },
 			{ label: "Redo", enabled: true },
