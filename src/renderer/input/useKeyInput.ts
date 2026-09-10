@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { UserState } from "../state/userState";
 import { cancelDraw } from "./drawBehavior";
+import { commandForStroke, runEditCommand } from "./editCommand";
 import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 import type { KeyStroke } from "./layerCommand";
 import { toolFor } from "./toolKey";
@@ -28,6 +29,10 @@ function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): 
 	if (stroke.key === CANCEL_KEY) {
 		cancelDraw(doc, user);
 		return true;
+	}
+	const edit = commandForStroke(stroke);
+	if (edit !== null) {
+		return runEditCommand(edit, doc, user);
 	}
 	if (user.dragging.get()) {
 		return false;

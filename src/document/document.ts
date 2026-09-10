@@ -1,5 +1,6 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, LoroMap, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
+import { DocumentHistory } from "./history";
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
@@ -50,6 +51,19 @@ function childIdsOf(node: LoroTreeNode): readonly LayerId[] {
 	return node.children()?.map((child) => child.id) ?? NO_IDS;
 }
 
+function subscribeTo(listeners: Set<() => void>, listener: () => void): Unsubscribe {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+}
+
+function notify(listeners: Iterable<() => void>): void {
+	for (const listener of listeners) {
+		listener();
+	}
+}
+
 function writePatch(data: LoroMap, patch: LayerPatch): void {
 	const { geometry, ...fields } = patch;
 	for (const [key, value] of Object.entries(fields)) {
@@ -62,16 +76,19 @@ function writePatch(data: LoroMap, patch: LayerPatch): void {
 
 export class DesignDocument {
 	readonly #doc: LoroDoc;
+	readonly #history: DocumentHistory;
 	readonly #layers = new Map<LayerId, Layer>();
 	readonly #listeners = new Map<LayerId, Set<() => void>>();
 	readonly #nodeSubscriptions = new Map<LayerId, Unsubscribe>();
 	readonly #structureListeners = new Set<() => void>();
+	readonly #historyListeners = new Set<() => void>();
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	#ids: readonly LayerId[] | null = null;
 	#roots: readonly LayerId[] | null = null;
 
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
+		this.#history = new DocumentHistory(doc);
 		this.#doc.subscribe((event) => {
 			const items = treeItems(event);
 			if (items.length === 0) {
@@ -88,6 +105,7 @@ export class DesignDocument {
 		const document = new DesignDocument(new LoroDoc());
 		document.createLayer(SEED_RECTANGLE);
 		document.commit("create rectangle");
+		document.#clearHistory();
 		return document;
 	}
 
@@ -168,10 +186,7 @@ export class DesignDocument {
 	}
 
 	subscribeStructure(listener: () => void): Unsubscribe {
-		this.#structureListeners.add(listener);
-		return () => {
-			this.#structureListeners.delete(listener);
-		};
+		return subscribeTo(this.#structureListeners, listener);
 	}
 
 	subscribeLayer(id: LayerId, listener: () => void): Unsubscribe {
@@ -196,6 +211,27 @@ export class DesignDocument {
 
 	commit(message: string): void {
 		this.#doc.commit({ message });
+		this.#refreshHistory();
+	}
+
+	undo(): boolean {
+		return this.#applyHistory(() => this.#history.undo());
+	}
+
+	redo(): boolean {
+		return this.#applyHistory(() => this.#history.redo());
+	}
+
+	canUndo(): boolean {
+		return this.#history.flags().canUndo;
+	}
+
+	canRedo(): boolean {
+		return this.#history.flags().canRedo;
+	}
+
+	subscribeHistory(listener: () => void): Unsubscribe {
+		return subscribeTo(this.#historyListeners, listener);
 	}
 
 	snapshot(): Uint8Array {
@@ -204,6 +240,7 @@ export class DesignDocument {
 
 	merge(update: Uint8Array): void {
 		this.#doc.import(update);
+		this.#refreshHistory();
 	}
 
 	subscribeLocalUpdates(listener: (update: Uint8Array) => void): Unsubscribe {
@@ -214,13 +251,40 @@ export class DesignDocument {
 		return this.#doc.exportJsonUpdates().changes.length;
 	}
 
+	#applyHistory(step: () => boolean): boolean {
+		const stepped = step();
+		if (stepped) {
+			this.#forgetEveryCache();
+		}
+		this.#refreshHistory();
+		return stepped;
+	}
+
+	#forgetEveryCache(): void {
+		this.#layers.clear();
+		this.#children.clear();
+		for (const listeners of this.#listeners.values()) {
+			notify(listeners);
+		}
+		this.#notifyStructure();
+	}
+
+	#clearHistory(): void {
+		this.#history.clear();
+		this.#refreshHistory();
+	}
+
+	#refreshHistory(): void {
+		if (this.#history.refresh()) {
+			notify(this.#historyListeners);
+		}
+	}
+
 	#notifyStructure(): void {
 		this.#ids = null;
 		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#readRoots());
 		this.#refreshChildren();
-		for (const listener of this.#structureListeners) {
-			listener();
-		}
+		notify(this.#structureListeners);
 	}
 
 	#readRoots(): readonly LayerId[] {
@@ -298,8 +362,6 @@ export class DesignDocument {
 
 	#invalidate(id: LayerId): void {
 		this.#layers.delete(id);
-		for (const listener of this.#listeners.get(id) ?? []) {
-			listener();
-		}
+		notify(this.#listeners.get(id) ?? []);
 	}
 }

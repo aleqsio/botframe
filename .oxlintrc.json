@@ -128,6 +128,40 @@
 			}
 		},
 		{
+			"files": ["src/shared/**"],
+			"rules": {
+				"eslint/no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["react", "react-dom", "react/*", "react-dom/*"],
+								"message": "The contract between the processes is pure. No React."
+							},
+							{
+								"group": ["electron", "electron/*"],
+								"message": "The contract between the processes is pure. No Electron."
+							},
+							{
+								"group": ["node:*"],
+								"message": "The contract between the processes is pure. No Node modules."
+							},
+							{
+								"group": [
+									"**/document/**",
+									"**/renderer/**",
+									"**/main/**",
+									"**/preload/**",
+									"**/workers/**"
+								],
+								"message": "The contract between the processes imports nothing."
+							}
+						]
+					}
+				]
+			}
+		},
+		{
 			"files": ["src/renderer/**", "src/workers/**"],
 			"rules": {
 				"eslint/no-restricted-imports": [

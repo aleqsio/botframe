@@ -8,6 +8,16 @@ export default defineConfig({
 			rolldownOptions: { input: { index: "src/main/index.ts" } },
 		},
 	},
+	preload: {
+		build: {
+			rolldownOptions: {
+				input: { index: "src/preload/index.ts" },
+				// A sandboxed preload script must be CommonJS.
+				// https://www.electronjs.org/docs/latest/tutorial/esm#preload-scripts
+				output: { format: "cjs", entryFileNames: "[name].cjs" },
+			},
+		},
+	},
 	renderer: {
 		root: "src/renderer",
 		plugins: [
