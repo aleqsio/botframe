@@ -186,6 +186,7 @@ describe("the draw tools", () => {
 			y: 40,
 			width: 200,
 			height: 140,
+			parent: null,
 			fill: "#ffffff",
 			clip: true,
 			name: "Artboard 1",
@@ -239,6 +240,45 @@ describe("the draw tools", () => {
 		expect(target.user.draw.get()).toBeNull();
 		expect(target.doc.changeCount()).toBe(changes + 1);
 		expect(target.user.tool.get()).toBe("select");
+	});
+
+	it("draws the new layer inside the layer under the press, in the space of that layer", () => {
+		const target = targetOf(true);
+		const parent = firstId(target.doc);
+
+		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: PRESS, release: { x: 500, y: 330 } });
+
+		const drawn = drawnLayer(target);
+		expect(drawn).toMatchObject({ parent, x: 20, y: 20, width: 60, height: 50 });
+		expect(target.doc.childIds(parent)).toEqual([drawn.id]);
+		expect(target.doc.rootIds()).toEqual([parent]);
+	});
+
+	it("places the box of a tap inside the layer under the tap", () => {
+		const target = targetOf(true);
+		const parent = firstId(target.doc);
+
+		tapAt(TOOL_BEHAVIORS.rectangle(), target, PRESS);
+
+		expect(drawnLayer(target)).toMatchObject({ parent, x: 20, y: 20, width: 100, height: 100 });
+	});
+
+	it("draws inside a turned parent in the space of that parent", () => {
+		const target = targetOf(true);
+		const parent = firstId(target.doc);
+		target.doc.rotate(parent, 90);
+
+		dragOver(TOOL_BEHAVIORS.rectangle(), target, {
+			press: { x: 600, y: 240 },
+			release: { x: 550, y: 300 },
+		});
+
+		const drawn = drawnLayer(target);
+		expect(drawn.parent).toBe(parent);
+		expect(drawn.x).toBeCloseTo(20);
+		expect(drawn.y).toBeCloseTo(20);
+		expect(drawn.width).toBeCloseTo(60);
+		expect(drawn.height).toBeCloseTo(50);
 	});
 
 	it("gives the stage back to the select tool when a cancel finds no draw", () => {
