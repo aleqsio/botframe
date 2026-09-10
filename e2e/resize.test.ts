@@ -62,7 +62,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await dragTo(TURN_FROM, TURN_TO);
 	await expect(layer).toHaveAttribute(
 		"style",
-		/translate3d\(320px, 235px, 0px\) rotate\(180deg\)/u,
+		/translate3d\(320px, 235px, 0px\) translate\(205px, 125px\) rotate\(180deg\)/u,
 	);
 
 	await app.close();

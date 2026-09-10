@@ -80,7 +80,17 @@ body {
 	position: absolute;
 	top: 0;
 	left: 0;
+	transform-origin: 0 0;
 	will-change: transform;
+}
+
+.layer-space {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	transform-origin: 0 0;
 }
 
 #stage[data-tool="select"] .layer {
@@ -120,6 +130,7 @@ body {
 	top: 0;
 	left: 0;
 	pointer-events: none;
+	transform-origin: 0 0;
 	will-change: transform;
 }
 
@@ -283,6 +294,10 @@ body {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+}
+
+.layer-list .layer-list {
+	padding-left: 14px;
 }
 
 .layer-row {

@@ -7,6 +7,7 @@ import { writeVariant } from "./write";
 export type Unsubscribe = () => void;
 
 const LAYERS = "layers";
+const NO_IDS: readonly LayerId[] = [];
 const GEOMETRY = "geometry";
 
 const SEED_RECTANGLE: LayerFields = {
@@ -33,6 +34,14 @@ const GEOMETRY_READERS: Readonly<
 	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
 };
 
+function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {
+	return cached.length === next.length && cached.every((id, index) => id === next[index]);
+}
+
+function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readonly LayerId[] {
+	return sameIds(cached, next) ? cached : next;
+}
+
 function writeFields(data: LoroMap, fields: LayerFields): void {
 	data.set("x", fields.x);
 	data.set("y", fields.y);
@@ -50,7 +59,9 @@ export class DesignDocument {
 	readonly #listeners = new Map<LayerId, Set<() => void>>();
 	readonly #nodeSubscriptions = new Map<LayerId, Unsubscribe>();
 	readonly #structureListeners = new Set<() => void>();
-	#ids: LayerId[] | null = null;
+	readonly #children = new Map<LayerId, readonly LayerId[]>();
+	#ids: readonly LayerId[] | null = null;
+	#roots: readonly LayerId[] | null = null;
 
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
@@ -74,11 +85,26 @@ export class DesignDocument {
 		return new DesignDocument(doc);
 	}
 
-	layerIds(): LayerId[] {
+	layerIds(): readonly LayerId[] {
 		this.#ids ??= this.#tree()
 			.getNodes()
 			.map((node) => node.id);
 		return this.#ids;
+	}
+
+	rootIds(): readonly LayerId[] {
+		this.#roots ??= this.#readRoots();
+		return this.#roots;
+	}
+
+	childIds(parent: LayerId): readonly LayerId[] {
+		const cached = this.#children.get(parent);
+		if (cached !== undefined) {
+			return cached;
+		}
+		const ids = this.#readChildren(parent);
+		this.#children.set(parent, ids);
+		return ids;
 	}
 
 	layer(id: LayerId): Layer | null {
@@ -103,21 +129,22 @@ export class DesignDocument {
 			}),
 			name: readString(node.data, "name", ""),
 			clip: readBoolean(node.data, "clip", false),
+			parent: node.parent()?.id ?? null,
 		};
 		this.#layers.set(id, layer);
 		return layer;
 	}
 
-	createLayer(fields: LayerFields): LayerId {
-		const node = this.#tree().createNode();
+	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
+		const node = this.#tree().createNode(parent ?? undefined);
 		writeFields(node.data, fields);
 		this.#notifyStructure();
 		return node.id;
 	}
 
 	deleteLayer(id: LayerId): void {
+		this.#forget(id);
 		this.#tree().delete(id);
-		this.#layers.delete(id);
 		this.#notifyStructure();
 	}
 
@@ -184,9 +211,34 @@ export class DesignDocument {
 
 	#notifyStructure(): void {
 		this.#ids = null;
+		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#readRoots());
+		for (const [parent, cached] of this.#children) {
+			this.#children.set(parent, refreshed(cached, this.#readChildren(parent)));
+		}
 		for (const listener of this.#structureListeners) {
 			listener();
 		}
+	}
+
+	#readRoots(): readonly LayerId[] {
+		return this.#tree()
+			.roots()
+			.map((node) => node.id);
+	}
+
+	#readChildren(parent: LayerId): readonly LayerId[] {
+		return (
+			this.#liveNode(parent)
+				?.children()
+				?.map((node) => node.id) ?? NO_IDS
+		);
+	}
+
+	#forget(id: LayerId): void {
+		for (const child of this.childIds(id)) {
+			this.#forget(child);
+		}
+		this.#layers.delete(id);
 	}
 
 	#tree(): LoroTree {

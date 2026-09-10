@@ -22,6 +22,7 @@ export interface Layer extends Rect {
 	geometry: Geometry;
 	name: string;
 	clip: boolean;
+	parent: LayerId | null;
 }
 
 export interface LayerFields extends Rect {

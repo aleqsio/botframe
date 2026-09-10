@@ -11,7 +11,7 @@ export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }):
 	return (
 		<>
 			<div id="title-bar" />
-			<LayerList />
+			<LayerList doc={doc} user={user} />
 			<Stage doc={doc} user={user} />
 			<Properties />
 			<ToolBar tool={user.tool} />

@@ -1,23 +1,24 @@
-import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
+import { parentChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
-
-export const NOTHING_SELECTED: readonly LayerId[] = [];
 
 type Drag =
 	| { kind: "move"; id: LayerId; offset: Point }
 	| { kind: "resize"; start: Layer; handle: Handle }
 	| { kind: "rotate"; start: Layer; origin: Point };
 
-function topLayerId(target: PointerTarget): LayerId | null {
-	return target.layerIds[0] ?? null;
+interface Aim {
+	layer: Layer;
+	point: Point;
+	zone: Zone | null;
 }
 
 function select(user: UserState, layerId: LayerId | null): void {
@@ -29,34 +30,52 @@ function selectedLayer(target: PointerTarget): Layer | null {
 	return id === undefined ? null : target.doc.layer(id);
 }
 
-function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
-	const layer = selectedLayer(target);
-	return layer === null ? null : zoneAt(layer, canvas, target.user.camera.get().zoom);
+function chainOf(target: PointerTarget, id: LayerId): Layer[] {
+	return parentChain((layerId) => target.doc.layer(layerId), id);
 }
 
-function moveDrag(doc: DesignDocument, layerId: LayerId | null, origin: Point): Drag | null {
-	const layer = layerId === null ? null : doc.layer(layerId);
+function aimAt(target: PointerTarget, canvas: Point): Aim | null {
+	const layer = selectedLayer(target);
 	if (layer === null) {
 		return null;
 	}
+	const point = toParentPoint(chainOf(target, layer.id), canvas);
+	return { layer, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
+}
+
+function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
+	return aimAt(target, canvas)?.zone ?? null;
+}
+
+function handleDrag(aim: Aim | null): Drag | null {
+	if (aim === null || aim.zone === null) {
+		return null;
+	}
+	const { layer, point, zone } = aim;
+	if (zone.mode === "rotate") {
+		return { kind: "rotate", start: layer, origin: point };
+	}
+	return { kind: "resize", start: layer, handle: zone.handle };
+}
+
+function moveDrag(target: PointerTarget, canvas: Point): Drag | null {
+	const layerId = target.layerIds[0] ?? null;
+	select(target.user, layerId);
+	const layer = layerId === null ? null : target.doc.layer(layerId);
+	if (layer === null) {
+		return null;
+	}
+	const origin = toParentPoint(chainOf(target, layer.id), canvas);
 	return { kind: "move", id: layer.id, offset: { x: origin.x - layer.x, y: origin.y - layer.y } };
 }
 
-function beginDrag(target: PointerTarget, origin: Point): Drag | null {
-	const layer = selectedLayer(target);
-	const zone = layer === null ? null : zoneAt(layer, origin, target.user.camera.get().zoom);
-	if (layer !== null && zone !== null) {
-		if (zone.mode === "rotate") {
-			return { kind: "rotate", start: layer, origin };
-		}
-		return { kind: "resize", start: layer, handle: zone.handle };
-	}
-	const layerId = topLayerId(target);
-	select(target.user, layerId);
-	return moveDrag(target.doc, layerId, origin);
+function draggedId(drag: Drag): LayerId {
+	return drag.kind === "move" ? drag.id : drag.start.id;
 }
 
-function applyDrag(doc: DesignDocument, drag: Drag, point: Point, modifiers: Modifiers): void {
+function applyDrag(target: PointerTarget, drag: Drag, canvas: Point, modifiers: Modifiers): void {
+	const { doc } = target;
+	const point = toParentPoint(chainOf(target, draggedId(drag)), canvas);
 	switch (drag.kind) {
 		case "move": {
 			doc.move(drag.id, point.x - drag.offset.x, point.y - drag.offset.y);
@@ -78,7 +97,7 @@ export function createSelectBehavior(): ToolBehavior {
 
 	function apply(target: PointerTarget, point: Point, modifiers: Modifiers): void {
 		if (current !== null) {
-			applyDrag(target.doc, current, point, modifiers);
+			applyDrag(target, current, point, modifiers);
 		}
 	}
 
@@ -88,11 +107,11 @@ export function createSelectBehavior(): ToolBehavior {
 		},
 		tap(target, point) {
 			if (zoneUnder(target, point.canvas) === null) {
-				select(target.user, topLayerId(target));
+				select(target.user, target.layerIds[0] ?? null);
 			}
 		},
 		dragStart(target, origin, point, modifiers) {
-			current = beginDrag(target, origin.canvas);
+			current = handleDrag(aimAt(target, origin.canvas)) ?? moveDrag(target, origin.canvas);
 			apply(target, point.canvas, modifiers);
 		},
 		drag(target, point, modifiers) {

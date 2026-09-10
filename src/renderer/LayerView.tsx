@@ -4,7 +4,7 @@ import type { LayerId } from "../document/layer";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
-import { useLayer } from "./useDocument";
+import { useChildIds, useLayer } from "./useDocument";
 
 export function LayerView({
 	doc,
@@ -16,6 +16,7 @@ export function LayerView({
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
+	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
 
 	if (layer === null) {
@@ -28,6 +29,10 @@ export function LayerView({
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
 			style={layerStyle(layer)}
-		/>
+		>
+			{childIds.map((childId) => (
+				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
+			))}
+		</div>
 	);
 }

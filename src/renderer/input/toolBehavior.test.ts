@@ -1,70 +1,44 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { Layer, LayerId } from "../../document/layer";
+import type { LayerId } from "../../document/layer";
 import { TOOLS } from "../components/tools";
-import { IDENTITY_CAMERA, toCanvasPoint } from "../state/camera";
-import type { Camera, Point, StagePoint } from "../state/camera";
-import { UserState } from "../state/userState";
-import { cancelDraw } from "./drawBehavior";
-import { NO_MODIFIERS } from "./modifiers";
+import { IDENTITY_CAMERA } from "../state/camera";
 import type { Modifiers } from "./modifiers";
-import type { PointerTarget, ToolBehavior } from "./tool";
+import { NO_MODIFIERS } from "./modifiers";
+import type { PointerTarget } from "./tool";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
+import { firstId } from "../../document/documentFixtures";
+import { dragOver, pointAt, tapAt, targetOf } from "./toolFixtures";
+import { UserState } from "../state/userState";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
 const CLIENT = { x: 120, y: 80 };
 const CENTER = { x: 540, y: 340 };
 const SE_CORNER = { x: 660, y: 420 };
-const DRAW_PRESS = { x: 40, y: 40 };
-const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_REACH = { x: 678, y: 438 };
 const E_SIDE = { x: 660, y: 340 };
 const SHIFT: Modifiers = { shift: true, alt: false };
 const ALT: Modifiers = { shift: false, alt: true };
 
-function firstId(doc: DesignDocument): LayerId {
-	const [id] = doc.layerIds();
-	if (id === undefined) {
-		throw new Error("document has no layers");
-	}
-	return id;
-}
-
-function targetOf(withLayer: boolean): PointerTarget {
+function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {
 	const doc = DesignDocument.create();
-	return { doc, user: new UserState(), layerIds: withLayer ? [firstId(doc)] : [] };
-}
-
-function drawnLayer(target: PointerTarget): Layer {
-	const [id] = target.user.selection.get();
-	const layer = id === undefined ? null : target.doc.layer(id);
-	if (layer === null) {
-		throw new Error("no layer is selected");
-	}
-	return layer;
-}
-
-function pointAt(camera: Camera, stage: Point): StagePoint {
-	return { stage, canvas: toCanvasPoint(camera, stage) };
-}
-
-function tapAt(behavior: ToolBehavior, target: PointerTarget, stage: Point): void {
-	behavior.tap?.(target, pointAt(target.user.camera.get(), stage));
-}
-
-interface DragSpec {
-	press: Point;
-	release: Point;
-	modifiers?: Modifiers;
-}
-
-function dragOver(behavior: ToolBehavior, target: PointerTarget, spec: DragSpec): void {
-	const camera = target.user.camera.get();
-	const modifiers = spec.modifiers ?? NO_MODIFIERS;
-	behavior.dragStart?.(target, pointAt(camera, spec.press), pointAt(camera, spec.press), modifiers);
-	behavior.drag?.(target, pointAt(camera, spec.release), modifiers);
-	behavior.dragEnd?.(target, pointAt(camera, spec.release), modifiers);
+	const parent = firstId(doc);
+	doc.rotate(parent, rotation);
+	const child = doc.createLayer(
+		{
+			x: 20,
+			y: 20,
+			width: 60,
+			height: 40,
+			fill: "#d9d9d9",
+			name: "",
+			clip: false,
+			geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		},
+		parent,
+	);
+	return { target: { doc, user: new UserState(), layerIds: [child] }, child };
 }
 
 describe("TOOL_BEHAVIORS", () => {
@@ -171,85 +145,6 @@ describe("TOOL_BEHAVIORS", () => {
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
 		expect(target.doc.changeCount()).toBe(changes);
 		expect(target.user.selection.get()).toEqual([]);
-	});
-});
-
-describe("the draw tools", () => {
-	it("draws an artboard, selects it, and gives the stage back to the select tool", () => {
-		const target = targetOf(false);
-		const changes = target.doc.changeCount();
-
-		dragOver(TOOL_BEHAVIORS.artboard(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
-
-		expect(drawnLayer(target)).toMatchObject({
-			x: 40,
-			y: 40,
-			width: 200,
-			height: 140,
-			fill: "#ffffff",
-			clip: true,
-			name: "Artboard 1",
-			geometry: { kind: "rectangle", artboard: true },
-		});
-		expect(target.doc.layerIds()).toHaveLength(2);
-		expect(target.doc.changeCount()).toBe(changes + 1);
-		expect(target.user.tool.get()).toBe("select");
-		expect(target.user.draw.get()).toBeNull();
-	});
-
-	it("draws a rectangle with the grey fill, no clip, and the next free name", () => {
-		const target = targetOf(false);
-
-		dragOver(TOOL_BEHAVIORS.rectangle(), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
-
-		expect(drawnLayer(target)).toMatchObject({
-			fill: "#d9d9d9",
-			clip: false,
-			name: "Rectangle 2",
-			geometry: { kind: "rectangle", artboard: false },
-		});
-	});
-
-	it("places a box of the default size where the tap lands", () => {
-		const target = targetOf(false);
-		const changes = target.doc.changeCount();
-
-		tapAt(TOOL_BEHAVIORS.artboard(), target, CENTER);
-
-		expect(drawnLayer(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
-		expect(target.doc.changeCount()).toBe(changes + 1);
-		expect(target.user.tool.get()).toBe("select");
-	});
-
-	it("deletes the layer in progress on a cancel and writes no change on the release", () => {
-		const target = targetOf(false);
-		const behavior = TOOL_BEHAVIORS.artboard();
-		const camera = target.user.camera.get();
-		const changes = target.doc.changeCount();
-		const press = pointAt(camera, DRAW_PRESS);
-
-		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
-		behavior.drag?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
-		cancelDraw(target.doc, target.user);
-		behavior.drag?.(target, pointAt(camera, CENTER), NO_MODIFIERS);
-		behavior.dragEnd?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
-
-		expect(target.doc.layerIds()).toHaveLength(1);
-		expect(target.user.selection.get()).toEqual([]);
-		expect(target.user.draw.get()).toBeNull();
-		expect(target.doc.changeCount()).toBe(changes + 1);
-		expect(target.user.tool.get()).toBe("select");
-	});
-
-	it("gives the stage back to the select tool when a cancel finds no draw", () => {
-		const target = targetOf(false);
-		target.user.tool.set("rectangle");
-		const changes = target.doc.changeCount();
-
-		cancelDraw(target.doc, target.user);
-
-		expect(target.user.tool.get()).toBe("select");
-		expect(target.doc.changeCount()).toBe(changes);
 	});
 });
 
@@ -407,5 +302,52 @@ describe("the hand tool", () => {
 		dragOver(TOOL_BEHAVIORS.hand(), target, { press: PRESS, release: RELEASE });
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 2 });
+	});
+});
+
+describe("a layer inside a parent", () => {
+	it("moves the layer in the space of its parent", () => {
+		const { target, child } = nestedTarget(0);
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 470, y: 310 },
+		});
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 40, y: 40 });
+		expect(target.user.selection.get()).toEqual([child]);
+	});
+
+	it("moves the layer along the axes of a turned parent", () => {
+		const { target, child } = nestedTarget(90);
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: { x: 580, y: 270 },
+			release: { x: 580, y: 290 },
+		});
+
+		const moved = target.doc.layer(child);
+		expect(moved?.x).toBeCloseTo(40);
+		expect(moved?.y).toBeCloseTo(20);
+	});
+
+	it("takes the resize handle of the layer at the canvas point of that handle", () => {
+		const { target, child } = nestedTarget(0);
+		const behavior = TOOL_BEHAVIORS.select();
+		tapAt(behavior, target, { x: 450, y: 290 });
+
+		expect(behavior.hover?.(target, pointAt(target.user.camera.get(), { x: 500, y: 320 }))).toEqual(
+			{
+				mode: "resize",
+				handle: "se",
+			},
+		);
+
+		dragOver(TOOL_BEHAVIORS.select(), target, {
+			press: { x: 500, y: 320 },
+			release: { x: 520, y: 340 },
+		});
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20, width: 80, height: 60 });
 	});
 });

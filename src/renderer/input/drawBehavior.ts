@@ -3,10 +3,11 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import { nextLayerName } from "../components/layerEntry";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { Point } from "../state/camera";
+import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { drawnRect, tappedRect } from "./draw";
+import { layerChain, parentChain, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
-import { NOTHING_SELECTED } from "./selectBehavior";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 const CANCEL_COMMIT = "cancel draw";
@@ -22,19 +23,44 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 	return doc.layerIds().map((id) => doc.layer(id));
 }
 
-function startLayer(target: PointerTarget, preset: DrawPreset, rect: Rect): LayerId {
-	const id = target.doc.createLayer({
-		...rect,
-		fill: preset.fill,
-		name: nextLayerName(preset.label, layersOf(target.doc)),
-		clip: preset.clip,
-		geometry: {
-			kind: "rectangle",
-			cornerRadius: 0,
-			cornerSmoothing: 0,
-			artboard: preset.artboard,
+function chainUnder(target: PointerTarget): Layer[] {
+	return layerChain((id) => target.doc.layer(id), target.layerIds[0] ?? null);
+}
+
+function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
+	const draw = target.user.draw.get();
+	if (draw === null) {
+		return;
+	}
+	const chain = parentChain((id) => target.doc.layer(id), draw.id);
+	target.doc.resize(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
+}
+
+function parentOf(chain: readonly Layer[]): LayerId | null {
+	return chain.at(-1)?.id ?? null;
+}
+
+function startLayer(
+	target: PointerTarget,
+	preset: DrawPreset,
+	rect: Rect,
+	chain: readonly Layer[],
+): LayerId {
+	const id = target.doc.createLayer(
+		{
+			...rect,
+			fill: preset.fill,
+			name: nextLayerName(preset.label, layersOf(target.doc)),
+			clip: preset.clip,
+			geometry: {
+				kind: "rectangle",
+				cornerRadius: 0,
+				cornerSmoothing: 0,
+				artboard: preset.artboard,
+			},
 		},
-	});
+		parentOf(chain),
+	);
 	target.user.selection.set([id]);
 	return id;
 }
@@ -56,18 +82,13 @@ export function cancelDraw(doc: DesignDocument, user: UserState): void {
 	doc.commit(CANCEL_COMMIT);
 }
 
-function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
-	const draw = target.user.draw.get();
-	if (draw !== null) {
-		target.doc.resize(draw.id, drawnRect(draw.origin, point, modifiers));
-	}
-}
-
 export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
 	return () => ({
 		dragStart(target, start, point, modifiers) {
-			const origin = start.canvas;
-			const id = startLayer(target, preset, drawnRect(origin, point.canvas, modifiers));
+			const chain = chainUnder(target);
+			const origin = toParentPoint(chain, start.canvas);
+			const corner = toParentPoint(chain, point.canvas);
+			const id = startLayer(target, preset, drawnRect(origin, corner, modifiers), chain);
 			target.user.draw.set({ id, origin });
 		},
 		drag(target, point, modifiers) {
@@ -82,7 +103,8 @@ export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
 			endGesture(target, preset);
 		},
 		tap(target, point) {
-			startLayer(target, preset, tappedRect(point.canvas));
+			const under = chainUnder(target);
+			startLayer(target, preset, tappedRect(toParentPoint(under, point.canvas)), under);
 			endGesture(target, preset);
 		},
 	});
