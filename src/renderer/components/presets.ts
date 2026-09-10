@@ -27,7 +27,7 @@ export const PRESET_GROUPS: readonly PresetGroup[] = [
 		name: "Desktop",
 		presets: [
 			{ name: "Desktop", width: 1440, height: 1024 },
-			{ name: "Desktop large", width: 1920, height: 1080 },
+			{ name: "Desktop large", width: 1920, height: 1200 },
 		],
 	},
 	{

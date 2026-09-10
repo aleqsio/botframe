@@ -20,6 +20,11 @@ describe("PRESET_GROUPS", () => {
 		}
 	});
 
+	it("gives each preset a size that no other preset holds", () => {
+		const sizes = ALL.map((preset) => `${preset.width}x${preset.height}`);
+		expect(new Set(sizes).size).toBe(ALL.length);
+	});
+
 	it("keeps the name Custom free for a size that no preset holds", () => {
 		expect(ALL.map((preset) => preset.name)).not.toContain(CUSTOM_PRESET);
 	});
@@ -41,8 +46,8 @@ describe("presetNameFor", () => {
 		expect(presetNameFor(393, 852)).toBe("iPhone 16");
 	});
 
-	it("names a size that two presets hold after the first of the two", () => {
-		expect(presetNameFor(1920, 1080)).toBe("Desktop large");
+	it("names the size of a preset in a later group", () => {
+		expect(presetNameFor(1920, 1080)).toBe("Slide 16:9");
 	});
 
 	it("names a size that no preset holds Custom", () => {
