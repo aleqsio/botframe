@@ -1,5 +1,5 @@
-import { _electron as electron, expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { at, launchApp, stageOrigin } from "./support";
 
 const CENTER = { x: 540, y: 340 };
 const SE_CORNER = { x: 660, y: 420 };
@@ -11,40 +11,28 @@ const CENTERED_SE = { x: 730, y: 485 };
 const TURN_FROM = { x: 302, y: 217 };
 const TURN_TO = { x: 748, y: 503 };
 
-function stageOrigin(window: Page): Promise<{ x: number; y: number }> {
-	return window.locator("#stage").evaluate((element) => {
-		const box = element.getBoundingClientRect();
-		return { x: box.left, y: box.top };
-	});
-}
-
 test("the selected layer takes a resize from each handle and a turn from the corner reach", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const stage = window.locator("#stage");
 	const layer = window.locator(".layer");
 	const handles = window.locator(".selection-handle");
 
 	await expect(layer).toBeVisible();
 	const origin = await stageOrigin(window);
-	const at = (point: { x: number; y: number }) => ({
-		x: origin.x + point.x,
-		y: origin.y + point.y,
-	});
 	const dragTo = async (from: { x: number; y: number }, to: { x: number; y: number }) => {
-		await window.mouse.move(at(from).x, at(from).y);
+		await window.mouse.move(at(origin, from).x, at(origin, from).y);
 		await window.mouse.down();
-		await window.mouse.move(at(to).x, at(to).y, { steps: 6 });
+		await window.mouse.move(at(origin, to).x, at(origin, to).y, { steps: 6 });
 		await window.mouse.up();
 	};
 
 	await expect(handles).toHaveCount(0);
-	await window.mouse.move(at(CENTER).x, at(CENTER).y);
+	await window.mouse.move(at(origin, CENTER).x, at(origin, CENTER).y);
 	await window.mouse.down();
 	await window.mouse.up();
 	await expect(handles).toHaveCount(4);
 
-	await window.mouse.move(at(SE_CORNER).x, at(SE_CORNER).y);
+	await window.mouse.move(at(origin, SE_CORNER).x, at(origin, SE_CORNER).y);
 	await expect(stage).toHaveAttribute("data-zone", "resize-se");
 	await expect(stage).toHaveCSS("cursor", "nwse-resize");
 
@@ -52,7 +40,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /translate3d\(420px, 260px, 0px\).*width: 280px/su);
 	await expect(layer).toHaveAttribute("style", /height: 200px/u);
 
-	await window.mouse.move(at(WEST_SIDE).x, at(WEST_SIDE).y);
+	await window.mouse.move(at(origin, WEST_SIDE).x, at(origin, WEST_SIDE).y);
 	await expect(stage).toHaveAttribute("data-zone", "resize-w");
 	await expect(stage).toHaveCSS("cursor", "ew-resize");
 
@@ -68,7 +56,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /translate3d\(320px, 235px, 0px\).*width: 410px/su);
 	await expect(layer).toHaveAttribute("style", /height: 250px/u);
 
-	await window.mouse.move(at(TURN_FROM).x, at(TURN_FROM).y);
+	await window.mouse.move(at(origin, TURN_FROM).x, at(origin, TURN_FROM).y);
 	await expect(stage).toHaveAttribute("data-zone", "rotate-nw");
 
 	await dragTo(TURN_FROM, TURN_TO);

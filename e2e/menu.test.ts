@@ -1,21 +1,18 @@
-import { _electron as electron, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { at, launchApp, stageOrigin } from "./support";
 
 const GRAB = { x: 460, y: 300 };
 const DELTA = { x: 60, y: 40 };
 
 test("the secondary press lists the layer under the pointer and selects it", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 	const menu = window.locator(".layer-menu");
 	const item = menu.getByRole("menuitem");
 
 	await expect(layer).toBeVisible();
-	const origin = await window.locator("#stage").evaluate((element) => {
-		const box = element.getBoundingClientRect();
-		return { x: box.left, y: box.top };
-	});
-	const press = { x: origin.x + GRAB.x, y: origin.y + GRAB.y };
+	const origin = await stageOrigin(window);
+	const press = at(origin, GRAB);
 
 	await window.mouse.move(press.x, press.y);
 	await window.mouse.down({ button: "right" });
