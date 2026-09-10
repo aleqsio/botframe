@@ -60,10 +60,8 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(stage).toHaveAttribute("data-zone", "rotate-nw");
 
 	await dragTo(TURN_FROM, TURN_TO);
-	await expect(layer).toHaveAttribute(
-		"style",
-		/translate3d\(320px, 235px, 0px\) rotate\(180deg\)/u,
-	);
+	await expect(layer).toHaveAttribute("style", /translate3d\(320px, 235px, 0px\)/u);
+	await expect(layer).toHaveAttribute("style", /rotate\(180deg\)/u);
 
 	await app.close();
 });

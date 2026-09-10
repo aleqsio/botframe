@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactElement } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { Layer, LayerId } from "../document/layer";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
@@ -22,7 +22,49 @@ function frameStyle(layer: Layer): CSSProperties {
 	};
 }
 
-function SelectionFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactElement | null {
+function LayerSpace({
+	doc,
+	id,
+	children,
+}: {
+	doc: DesignDocument;
+	id: LayerId | null;
+	children: ReactNode;
+}): ReactNode {
+	return id === null ? (
+		children
+	) : (
+		<ParentSpace doc={doc} id={id}>
+			{children}
+		</ParentSpace>
+	);
+}
+
+function ParentSpace({
+	doc,
+	id,
+	children,
+}: {
+	doc: DesignDocument;
+	id: LayerId;
+	children: ReactNode;
+}): ReactNode {
+	const layer = useLayer(doc, id);
+
+	if (layer === null) {
+		return children;
+	}
+
+	return (
+		<LayerSpace doc={doc} id={layer.parent}>
+			<div className="layer-space" style={{ transform: layerTransform(layer) }}>
+				{children}
+			</div>
+		</LayerSpace>
+	);
+}
+
+function SelectionFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
 	const layer = useLayer(doc, id);
 
 	if (layer === null) {
@@ -30,11 +72,13 @@ function SelectionFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): Reac
 	}
 
 	return (
-		<div className="selection" style={frameStyle(layer)}>
-			{CORNERS.map((corner) => (
-				<span className="selection-handle" data-corner={corner} key={corner} />
-			))}
-		</div>
+		<LayerSpace doc={doc} id={layer.parent}>
+			<div className="selection" style={frameStyle(layer)}>
+				{CORNERS.map((corner) => (
+					<span className="selection-handle" data-corner={corner} key={corner} />
+				))}
+			</div>
+		</LayerSpace>
 	);
 }
 
@@ -44,7 +88,7 @@ export function SelectionOverlay({
 }: {
 	doc: DesignDocument;
 	selection: Slot<readonly LayerId[]>;
-}): ReactElement | null {
+}): ReactNode {
 	const [id] = useSlot(selection);
 
 	return id === undefined ? null : <SelectionFrame doc={doc} id={id} />;

@@ -32,7 +32,7 @@ describe("layerStyle", () => {
 		const flat = layerWith({ kind: "ellipse" });
 		expect(layerStyle(flat).transform).toBe("translate3d(10px, 20px, 0)");
 		expect(layerStyle({ ...flat, rotation: 30 }).transform).toBe(
-			"translate3d(10px, 20px, 0) rotate(30deg)",
+			"translate3d(10px, 20px, 0) translate(15px, 20px) rotate(30deg) translate(-15px, -20px)",
 		);
 	});
 

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Geometry, Layer } from "../document/layer";
+import { halfSizeOf } from "./input/layerSpace";
 
 declare module "react" {
 	interface CSSProperties {
@@ -34,7 +35,12 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 
 export function layerTransform(layer: Layer): string {
 	const place = `translate3d(${layer.x}px, ${layer.y}px, 0)`;
-	return layer.rotation === 0 ? place : `${place} rotate(${layer.rotation}deg)`;
+	if (layer.rotation === 0) {
+		return place;
+	}
+	const half = halfSizeOf(layer);
+	const turn = `rotate(${layer.rotation}deg)`;
+	return `${place} translate(${half.x}px, ${half.y}px) ${turn} translate(${-half.x}px, ${-half.y}px)`;
 }
 
 export function layerStyle(layer: Layer): CSSProperties {

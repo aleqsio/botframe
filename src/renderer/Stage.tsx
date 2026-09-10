@@ -6,10 +6,10 @@ import { Viewport } from "./Viewport";
 import { useCanvasInput } from "./input/useCanvasInput";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useLayerIds } from "./useDocument";
+import { useRootIds } from "./useDocument";
 
 export function Stage({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
-	const ids = useLayerIds(doc);
+	const ids = useRootIds(doc);
 	const tool = useSlot(user.tool);
 	const zone = useSlot(user.zone);
 	const handlers = useCanvasInput(doc, user);
