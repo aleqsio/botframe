@@ -1,5 +1,5 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
+import type { LoroEventBatch, LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
@@ -42,6 +42,14 @@ function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readon
 	return sameIds(cached, next) ? cached : next;
 }
 
+function deletedTargets(event: LoroEventBatch): LayerId[] {
+	return event.events.flatMap((entry) =>
+		entry.diff.type === "tree"
+			? entry.diff.diff.filter((item) => item.action === "delete").map((item) => item.target)
+			: [],
+	);
+}
+
 function writePatch(data: LoroMap, patch: LayerPatch): void {
 	const { geometry, ...fields } = patch;
 	for (const [key, value] of Object.entries(fields)) {
@@ -66,6 +74,9 @@ export class DesignDocument {
 		this.#doc = doc;
 		this.#doc.subscribe((event) => {
 			if (event.events.some((entry) => entry.diff.type === "tree")) {
+				for (const id of deletedTargets(event)) {
+					this.#forget(id);
+				}
 				this.#notifyStructure();
 			}
 		});
@@ -220,10 +231,11 @@ export class DesignDocument {
 	}
 
 	#forget(id: LayerId): void {
-		for (const child of this.childIds(id)) {
-			this.#forget(child);
+		for (const child of this.#tree().getNodeByID(id)?.children() ?? []) {
+			this.#forget(child.id);
 		}
 		this.#layers.delete(id);
+		this.#children.delete(id);
 	}
 
 	#tree(): LoroTree {
