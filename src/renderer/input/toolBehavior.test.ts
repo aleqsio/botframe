@@ -231,6 +231,7 @@ describe("the draw tools", () => {
 		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
 		behavior.drag?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
 		cancelDraw(target.doc, target.user);
+		behavior.drag?.(target, pointAt(camera, CENTER), NO_MODIFIERS);
 		behavior.dragEnd?.(target, pointAt(camera, DRAW_RELEASE), NO_MODIFIERS);
 
 		expect(target.doc.layerIds()).toHaveLength(1);

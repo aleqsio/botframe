@@ -90,6 +90,7 @@ test("Escape during a draw deletes the layer in progress", async () => {
 	await window.keyboard.press("Escape");
 	await expect(layers).toHaveCount(1);
 
+	await window.mouse.move(at(origin, TAP).x, at(origin, TAP).y, { steps: 4 });
 	await window.mouse.up();
 	await expect(layers).toHaveCount(1);
 	await expect(window.locator("#stage")).toHaveAttribute("data-tool", "select");

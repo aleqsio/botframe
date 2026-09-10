@@ -62,11 +62,16 @@ export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
 		let origin: Point | null = null;
 		let drawn: LayerId | null = null;
 
+		function drawnBy(target: PointerTarget): LayerId | null {
+			return drawn !== null && target.user.drawing.get() === drawn ? drawn : null;
+		}
+
 		function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {
-			if (origin === null || drawn === null) {
+			const id = drawnBy(target);
+			if (id === null || origin === null) {
 				return;
 			}
-			target.doc.resize(drawn, drawnRect(origin, point, modifiers));
+			target.doc.resize(id, drawnRect(origin, point, modifiers));
 		}
 
 		return {
@@ -79,8 +84,7 @@ export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
 				stretch(target, point.canvas, modifiers);
 			},
 			dragEnd(target, point, modifiers) {
-				const active = drawn !== null && target.user.drawing.get() === drawn;
-				if (active) {
+				if (drawnBy(target) !== null) {
 					stretch(target, point.canvas, modifiers);
 					target.user.drawing.set(null);
 					endGesture(target, preset);

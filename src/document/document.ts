@@ -173,7 +173,7 @@ export class DesignDocument {
 
 	#write(id: LayerId, fields: Readonly<Record<string, number>>): void {
 		const node = this.#tree().getNodeByID(id);
-		if (node === undefined) {
+		if (node === undefined || node.isDeleted()) {
 			return;
 		}
 		for (const [key, value] of Object.entries(fields)) {

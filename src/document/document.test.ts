@@ -263,6 +263,16 @@ describe("the layer writer", () => {
 		expect(doc.layer(id)).toBeNull();
 	});
 
+	it("writes nothing to a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		doc.deleteLayer(id);
+
+		doc.resize(id, { x: 0, y: 0, width: 10, height: 10 });
+
+		expect(doc.layer(id)).toBeNull();
+	});
+
 	it("notifies the layer list on a create and on a delete", () => {
 		const doc = DesignDocument.create();
 		const structure = vi.fn<() => void>();
