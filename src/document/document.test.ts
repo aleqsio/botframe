@@ -345,6 +345,30 @@ describe("the layer tree", () => {
 		expect(doc.rootIds()).toBe(doc.rootIds());
 	});
 
+	it("keeps the children of one layer stable when a layer joins a different parent", () => {
+		const doc = DesignDocument.create();
+		const a = doc.createLayer(DRAWN);
+		const b = doc.createLayer(DRAWN);
+		const before = doc.childIds(b);
+		const roots = doc.rootIds();
+
+		doc.createLayer(DRAWN, a);
+
+		expect(doc.childIds(b)).toBe(before);
+		expect(doc.rootIds()).toBe(roots);
+		expect(doc.childIds(a)).toHaveLength(1);
+	});
+
+	it("gives a new list of children to the layer that took the new child", () => {
+		const doc = DesignDocument.create();
+		const a = doc.createLayer(DRAWN);
+		const before = doc.childIds(a);
+
+		doc.createLayer(DRAWN, a);
+
+		expect(doc.childIds(a)).not.toBe(before);
+	});
+
 	it("keeps the snapshot of each other layer when a layer joins the tree", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);

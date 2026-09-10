@@ -34,6 +34,14 @@ const GEOMETRY_READERS: Readonly<
 	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
 };
 
+function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {
+	return cached.length === next.length && cached.every((id, index) => id === next[index]);
+}
+
+function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readonly LayerId[] {
+	return sameIds(cached, next) ? cached : next;
+}
+
 function writeFields(data: LoroMap, fields: LayerFields): void {
 	data.set("x", fields.x);
 	data.set("y", fields.y);
@@ -85,9 +93,7 @@ export class DesignDocument {
 	}
 
 	rootIds(): readonly LayerId[] {
-		this.#roots ??= this.#tree()
-			.roots()
-			.map((node) => node.id);
+		this.#roots ??= this.#readRoots();
 		return this.#roots;
 	}
 
@@ -96,10 +102,7 @@ export class DesignDocument {
 		if (cached !== undefined) {
 			return cached;
 		}
-		const ids =
-			this.#liveNode(parent)
-				?.children()
-				?.map((node) => node.id) ?? NO_IDS;
+		const ids = this.#readChildren(parent);
 		this.#children.set(parent, ids);
 		return ids;
 	}
@@ -208,11 +211,27 @@ export class DesignDocument {
 
 	#notifyStructure(): void {
 		this.#ids = null;
-		this.#roots = null;
-		this.#children.clear();
+		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#readRoots());
+		for (const [parent, cached] of this.#children) {
+			this.#children.set(parent, refreshed(cached, this.#readChildren(parent)));
+		}
 		for (const listener of this.#structureListeners) {
 			listener();
 		}
+	}
+
+	#readRoots(): readonly LayerId[] {
+		return this.#tree()
+			.roots()
+			.map((node) => node.id);
+	}
+
+	#readChildren(parent: LayerId): readonly LayerId[] {
+		return (
+			this.#liveNode(parent)
+				?.children()
+				?.map((node) => node.id) ?? NO_IDS
+		);
 	}
 
 	#forget(id: LayerId): void {
