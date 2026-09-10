@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
 import type { Layer, RectangleGeometry } from "../../document/layer";
-import { CORNER_FIELDS, LAYER_FIELDS, formatNumber, swappedBox } from "./layerFields";
+import { CORNER_FIELDS, LAYER_FIELDS, formatNumber, isHexColor, swappedBox } from "./layerFields";
 import type { LayerField } from "./layerFields";
 
 function layerOf(doc: DesignDocument): Layer {
@@ -46,6 +46,11 @@ describe("LAYER_FIELDS", () => {
 		expect(applied("H", 10)).toMatchObject({ x: 420, y: 260, width: 240, height: 10 });
 	});
 
+	it("holds the width and the height at the smallest size a layer can take", () => {
+		expect(applied("W", -50)).toMatchObject({ width: 1 });
+		expect(applied("H", 0)).toMatchObject({ height: 1 });
+	});
+
 	it("turns an angle outside one turn into an angle inside one turn", () => {
 		expect(applied("Rotation", 370)).toMatchObject({ rotation: 10 });
 	});
@@ -75,6 +80,13 @@ describe("CORNER_FIELDS", () => {
 		]);
 	});
 
+	it("holds a corner at zero", () => {
+		expect(CORNER_FIELDS.map((field) => field.next(geometry, -4))).toEqual([
+			{ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0.5, artboard: false },
+			{ kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0, artboard: false },
+		]);
+	});
+
 	it("writes one corner field and keeps the other fields", () => {
 		expect(CORNER_FIELDS.map((field) => field.next(geometry, 2))).toEqual([
 			{ kind: "rectangle", cornerRadius: 2, cornerSmoothing: 0.5, artboard: false },
@@ -91,6 +103,21 @@ describe("swappedBox", () => {
 			width: 160,
 			height: 240,
 		});
+	});
+});
+
+describe("isHexColor", () => {
+	it("accepts a color of three or six hexadecimal digits", () => {
+		expect(isHexColor("#ffffff")).toBe(true);
+		expect(isHexColor("#D9D9D9")).toBe(true);
+		expect(isHexColor("#fff")).toBe(true);
+	});
+
+	it("refuses text that CSS cannot paint", () => {
+		expect(isHexColor("")).toBe(false);
+		expect(isHexColor("notacolor")).toBe(false);
+		expect(isHexColor("#ff")).toBe(false);
+		expect(isHexColor("#gggggg")).toBe(false);
 	});
 });
 

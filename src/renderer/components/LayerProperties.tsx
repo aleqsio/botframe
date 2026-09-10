@@ -4,7 +4,7 @@ import type { Layer, RectangleGeometry } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { NumberField, PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { CORNER_FIELDS, LAYER_FIELDS, swappedBox } from "./layerFields";
+import { CORNER_FIELDS, LAYER_FIELDS, isHexColor, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
 const RENAME_COMMIT = "rename layer";
@@ -123,6 +123,9 @@ export function LayerProperties({
 			<PropertyField
 				label="Fill"
 				onCommit={(text) => {
+					if (!isHexColor(text)) {
+						return;
+					}
 					doc.setFill(layer.id, text);
 					doc.commit(FILL_COMMIT);
 				}}

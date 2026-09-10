@@ -98,15 +98,36 @@ test("a name that a person types letter by letter does not change the tool", asy
 	await app.close();
 });
 
+async function typeInto(window: Page, label: string, text: string): Promise<void> {
+	const field = window.getByLabel(label, { exact: true });
+	await field.fill(text);
+	await field.press("Enter");
+}
+
+test("the panel keeps a fill and a width that the stage can paint", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+
+	await typeInto(window, "Fill", "notacolor");
+	await expect(drawn).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+	await typeInto(window, "Fill", "#ff0000");
+	await expect(drawn).toHaveCSS("background-color", "rgb(255, 0, 0)");
+
+	await typeInto(window, "W", "-50");
+	await expect(drawn).toHaveCSS("width", "1px");
+
+	await app.close();
+});
+
 test("the box fields move and resize the layer", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
 
-	await window.getByLabel("X", { exact: true }).fill("40");
-	await window.getByLabel("X", { exact: true }).press("Enter");
-	await window.getByLabel("H", { exact: true }).fill("120");
-	await window.getByLabel("H", { exact: true }).press("Enter");
+	await typeInto(window, "X", "40");
+	await typeInto(window, "H", "120");
 
 	await expect(drawn).toHaveAttribute("style", /translate3d\(40px, /u);
 	await expect(drawn).toHaveCSS("height", "120px");
