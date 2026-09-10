@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
 import { SET_EDIT_MENU } from "../shared/editMenu";
+import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
 
 function createWindow(): void {
@@ -39,6 +40,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 });
 
 app.on("ready", () => {
+	connectClipboard();
 	createWindow();
 });
 
