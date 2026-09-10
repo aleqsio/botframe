@@ -45,6 +45,10 @@ export class GestureRecognizer {
 		return true;
 	}
 
+	active(): boolean {
+		return this.#pointer !== null;
+	}
+
 	tracks(pointerId: number): boolean {
 		return this.#pointer?.pointerId === pointerId;
 	}

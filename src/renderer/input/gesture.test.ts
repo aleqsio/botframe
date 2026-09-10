@@ -126,6 +126,25 @@ describe("GestureRecognizer", () => {
 		expect(recognizer.up(at(PRIMARY, 40, 30))).toBeNull();
 	});
 
+	it("is active only while it tracks a pointer", () => {
+		const recognizer = new GestureRecognizer();
+		expect(recognizer.active()).toBe(false);
+
+		recognizer.down(at(PRIMARY, 10, 10));
+		expect(recognizer.active()).toBe(true);
+
+		recognizer.up(at(PRIMARY, 10, 10));
+		expect(recognizer.active()).toBe(false);
+	});
+
+	it("stays active through the drag and stops when the gesture is cancelled", () => {
+		const recognizer = draggingRecognizer();
+		expect(recognizer.active()).toBe(true);
+
+		recognizer.cancel(at(PRIMARY, 40, 30));
+		expect(recognizer.active()).toBe(false);
+	});
+
 	it("takes the next pointer after the gesture ends", () => {
 		const recognizer = draggingRecognizer();
 		recognizer.up(at(PRIMARY, 40, 30));

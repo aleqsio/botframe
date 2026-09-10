@@ -9,7 +9,7 @@ const NOTHING_SELECTED: readonly LayerId[] = [];
 export interface PointerTarget {
 	doc: DesignDocument;
 	user: UserState;
-	layerId: LayerId | null;
+	layerIds: readonly LayerId[];
 }
 
 export interface ToolBehavior {
@@ -17,12 +17,17 @@ export interface ToolBehavior {
 	dragStart?: (target: PointerTarget, origin: Point, point: Point) => void;
 	drag?: (target: PointerTarget, point: Point) => void;
 	dragEnd?: (target: PointerTarget, point: Point) => void;
+	context?: (target: PointerTarget, client: Point) => void;
 }
 
 interface Grab {
 	id: LayerId;
 	offsetX: number;
 	offsetY: number;
+}
+
+function topLayerId(target: PointerTarget): LayerId | null {
+	return target.layerIds[0] ?? null;
 }
 
 function select(user: UserState, layerId: LayerId | null): void {
@@ -49,11 +54,12 @@ function createSelectBehavior(): ToolBehavior {
 
 	return {
 		tap(target) {
-			select(target.user, target.layerId);
+			select(target.user, topLayerId(target));
 		},
 		dragStart(target, origin, point) {
-			select(target.user, target.layerId);
-			grab = grabOf(target.doc, target.layerId, origin);
+			const layerId = topLayerId(target);
+			select(target.user, layerId);
+			grab = grabOf(target.doc, layerId, origin);
 			moveTo(target.doc, point);
 		},
 		drag(target, point) {
@@ -66,6 +72,10 @@ function createSelectBehavior(): ToolBehavior {
 			moveTo(target.doc, point);
 			grab = null;
 			target.doc.commit("move layer");
+		},
+		context(target, client) {
+			const { layerIds } = target;
+			target.user.menu.set(layerIds.length === 0 ? null : { client, layerIds });
 		},
 	};
 }

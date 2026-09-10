@@ -9,6 +9,7 @@ import type { PointerTarget, ToolBehavior } from "./toolBehavior";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
+const CLIENT = { x: 120, y: 80 };
 
 function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -20,7 +21,7 @@ function firstId(doc: DesignDocument): LayerId {
 
 function targetOf(withLayer: boolean): PointerTarget {
 	const doc = DesignDocument.create();
-	return { doc, user: new UserState(), layerId: withLayer ? firstId(doc) : null };
+	return { doc, user: new UserState(), layerIds: withLayer ? [firstId(doc)] : [] };
 }
 
 function dragOver(
@@ -69,7 +70,7 @@ describe("TOOL_BEHAVIORS", () => {
 		TOOL_BEHAVIORS.select().tap?.(target);
 		expect(target.user.selection.get()).toEqual([id]);
 
-		TOOL_BEHAVIORS.select().tap?.({ ...target, layerId: null });
+		TOOL_BEHAVIORS.select().tap?.({ ...target, layerIds: [] });
 		expect(target.user.selection.get()).toEqual([]);
 	});
 
@@ -78,10 +79,46 @@ describe("TOOL_BEHAVIORS", () => {
 		const id = firstId(target.doc);
 		TOOL_BEHAVIORS.select().tap?.(target);
 
-		dragOver(TOOL_BEHAVIORS.select(), { ...target, layerId: null }, PRESS, RELEASE);
+		dragOver(TOOL_BEHAVIORS.select(), { ...target, layerIds: [] }, PRESS, RELEASE);
 
 		expect(target.user.selection.get()).toEqual([]);
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
+	});
+
+	it("takes the topmost layer under the pointer and leaves the layers below it", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		const below = "9@9" as LayerId;
+
+		TOOL_BEHAVIORS.select().tap?.({ ...target, layerIds: [id, below] });
+
+		expect(target.user.selection.get()).toEqual([id]);
+	});
+
+	it("opens the menu with each layer under the secondary press", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		const below = "9@9" as LayerId;
+
+		TOOL_BEHAVIORS.select().context?.({ ...target, layerIds: [id, below] }, CLIENT);
+
+		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [id, below] });
+	});
+
+	it("opens no menu on the empty canvas", () => {
+		const target = targetOf(false);
+
+		TOOL_BEHAVIORS.select().context?.(target, CLIENT);
+
+		expect(target.user.menu.get()).toBeNull();
+	});
+
+	it("gives no answer to the secondary press for a tool that draws later", () => {
+		const target = targetOf(true);
+
+		expect(TOOL_BEHAVIORS.rectangle().context).toBeUndefined();
+		expect(TOOL_BEHAVIORS.zoom().context).toBeUndefined();
+		expect(target.user.menu.get()).toBeNull();
 	});
 
 	it("leaves the document and the selection alone for a tool that draws later", () => {
