@@ -7,6 +7,7 @@ import {
 	cameraTransform,
 	moveCamera,
 	toCanvasPoint,
+	viewportCenter,
 	zoomCameraAt,
 } from "./camera";
 import type { Camera, Point } from "./camera";
@@ -132,5 +133,21 @@ describe("cameraTransform", () => {
 
 	it("writes the identity camera with no pan and no zoom", () => {
 		expect(cameraTransform(IDENTITY_CAMERA)).toBe("translate(0px, 0px) scale(1)");
+	});
+});
+
+describe("viewportCenter", () => {
+	it("gives the canvas point at the middle of the viewport", () => {
+		expect(viewportCenter(IDENTITY_CAMERA, { width: 800, height: 600 })).toEqual({
+			x: 400,
+			y: 300,
+		});
+	});
+
+	it("follows the camera pan and the zoom", () => {
+		expect(viewportCenter({ x: -100, y: -50, zoom: 2 }, { width: 800, height: 600 })).toEqual({
+			x: 250,
+			y: 175,
+		});
 	});
 });

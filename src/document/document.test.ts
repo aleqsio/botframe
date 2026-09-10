@@ -2,9 +2,16 @@ import { LoroDoc } from "loro-crdt";
 import type { LoroMap } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
-import { firstId } from "./documentFixtures";
 import type { LayerFields, LayerId } from "./layer";
 import { readString } from "./read";
+
+function firstId(doc: DesignDocument): LayerId {
+	const [id] = doc.layerIds();
+	if (id === undefined) {
+		throw new Error("document has no layers");
+	}
+	return id;
+}
 
 const DRAWN: LayerFields = {
 	x: 12,
@@ -42,7 +49,7 @@ describe("DesignDocument", () => {
 	it("reads a moved position back before the move is committed", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
-		doc.move(id, 11, 22);
+		doc.update(id, { x: 11, y: 22 });
 		expect(doc.layer(id)).toMatchObject({ x: 11, y: 22 });
 	});
 
@@ -50,8 +57,8 @@ describe("DesignDocument", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
 
-		doc.resize(id, { x: 10, y: 20, width: 30, height: 40 });
-		doc.rotate(id, 45);
+		doc.update(id, { x: 10, y: 20, width: 30, height: 40 });
+		doc.update(id, { rotation: 45 });
 
 		expect(doc.layer(id)).toMatchObject({ x: 10, y: 20, width: 30, height: 40, rotation: 45 });
 	});
@@ -66,7 +73,7 @@ describe("DesignDocument", () => {
 		const id = firstId(doc);
 		const before = doc.changeCount();
 		for (let step = 0; step < 200; step += 1) {
-			doc.move(id, step, step * 2);
+			doc.update(id, { x: step, y: step * 2 });
 		}
 		doc.commit("move layer");
 		expect(doc.changeCount()).toBe(before + 1);
@@ -91,7 +98,7 @@ describe("DesignDocument", () => {
 		doc.subscribeLayer(first, firstListener);
 		doc.subscribeLayer(other, otherListener);
 
-		doc.move(first, 1, 1);
+		doc.update(first, { x: 1, y: 1 });
 
 		expect(firstListener).toHaveBeenCalled();
 		expect(otherListener).not.toHaveBeenCalled();
@@ -101,7 +108,7 @@ describe("DesignDocument", () => {
 		const doc = DesignDocument.create();
 		const structure = vi.fn<() => void>();
 		doc.subscribeStructure(structure);
-		doc.move(firstId(doc), 5, 5);
+		doc.update(firstId(doc), { x: 5, y: 5 });
 		doc.commit("move layer");
 		expect(structure).not.toHaveBeenCalled();
 	});
@@ -110,7 +117,7 @@ describe("DesignDocument", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
 		expect(doc.layer(id)).toBe(doc.layer(id));
-		doc.move(id, 1, 2);
+		doc.update(id, { x: 1, y: 2 });
 		expect(doc.layer(id)).not.toBe(null);
 		expect(doc.layer(id)).toMatchObject({ x: 1, y: 2 });
 	});
@@ -141,14 +148,14 @@ describe("DesignDocument", () => {
 		const listener = vi.fn<() => void>();
 		const unsubscribe = doc.subscribeLayer(id, listener);
 		unsubscribe();
-		doc.move(id, 3, 4);
+		doc.update(id, { x: 3, y: 4 });
 		expect(listener).not.toHaveBeenCalled();
 	});
 
 	it("keeps the moved position through a snapshot round trip", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
-		doc.move(id, 640, 480);
+		doc.update(id, { x: 640, y: 480 });
 		doc.commit("move layer");
 		expect(DesignDocument.open(doc.snapshot()).layer(id)).toMatchObject({ x: 640, y: 480 });
 	});
@@ -238,7 +245,7 @@ describe("the layer writer", () => {
 
 		const id = doc.createLayer(DRAWN);
 		for (let step = 1; step <= 200; step += 1) {
-			doc.resize(id, { x: 0, y: 0, width: step, height: step });
+			doc.update(id, { x: 0, y: 0, width: step, height: step });
 		}
 		doc.commit("create artboard");
 
@@ -261,7 +268,7 @@ describe("the layer writer", () => {
 		const id = doc.createLayer(DRAWN);
 		doc.deleteLayer(id);
 
-		doc.resize(id, { x: 0, y: 0, width: 10, height: 10 });
+		doc.update(id, { x: 0, y: 0, width: 10, height: 10 });
 
 		expect(doc.layer(id)).toBeNull();
 	});
@@ -276,8 +283,8 @@ describe("the layer writer", () => {
 		doc.subscribeLayer(live, liveListener);
 		doc.subscribeLayer(gone, goneListener);
 
-		doc.resize(live, { x: 0, y: 0, width: 10, height: 10 });
-		doc.resize(gone, { x: 0, y: 0, width: 10, height: 10 });
+		doc.update(live, { x: 0, y: 0, width: 10, height: 10 });
+		doc.update(gone, { x: 0, y: 0, width: 10, height: 10 });
 
 		expect(doc.layer(live)).toMatchObject({ width: 10, height: 10 });
 		expect(doc.layer(gone)).toBeNull();
@@ -394,5 +401,72 @@ describe("the layer tree", () => {
 
 		expect(structure).toHaveBeenCalled();
 		expect(doc.childIds(parent)).toHaveLength(1);
+	});
+});
+
+describe("the field writers", () => {
+	it("writes the name, the clip flag, and the fill", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.update(id, { name: "Cover", clip: true, fill: "#ff0000" });
+
+		expect(doc.layer(id)).toMatchObject({ name: "Cover", clip: true, fill: "#ff0000" });
+	});
+
+	it("writes the corner radius and the corner smoothing of the geometry", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.update(id, {
+			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, artboard: true },
+		});
+
+		expect(doc.layer(id)).toMatchObject({
+			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, artboard: true },
+		});
+	});
+
+	it("notifies the layer of a name change and of a geometry change", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		const listener = vi.fn<() => void>();
+		doc.subscribeLayer(id, listener);
+
+		doc.update(id, { name: "Cover" });
+		expect(listener).toHaveBeenCalled();
+
+		listener.mockClear();
+		doc.update(id, {
+			geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, artboard: false },
+		});
+		expect(listener).toHaveBeenCalled();
+	});
+
+	it("writes nothing to a layer that a delete took away", () => {
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		doc.deleteLayer(id);
+
+		doc.update(id, { name: "Cover" });
+		doc.update(id, { clip: false });
+		doc.update(id, { fill: "#ff0000" });
+		doc.update(id, { geometry: { kind: "ellipse" } });
+
+		expect(doc.layer(id)).toBeNull();
+	});
+
+	it("records one change for a name that a person types letter by letter", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		const before = doc.changeCount();
+
+		for (const name of ["C", "Co", "Cov", "Cove", "Cover"]) {
+			doc.update(id, { name: name });
+		}
+		doc.commit("rename layer");
+
+		expect(doc.changeCount()).toBe(before + 1);
+		expect(doc.layer(id)).toMatchObject({ name: "Cover" });
 	});
 });

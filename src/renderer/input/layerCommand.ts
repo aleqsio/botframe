@@ -77,15 +77,15 @@ export function commandFor(stroke: KeyStroke): LayerCommand | null {
 export function applyCommand(doc: DesignDocument, layer: Layer, command: LayerCommand): void {
 	switch (command.kind) {
 		case "move": {
-			doc.move(layer.id, layer.x + command.by.x, layer.y + command.by.y);
+			doc.update(layer.id, { x: layer.x + command.by.x, y: layer.y + command.by.y });
 			break;
 		}
 		case "resize": {
-			doc.resize(layer.id, scaledRect(layer, command.factor));
+			doc.update(layer.id, scaledRect(layer, command.factor));
 			break;
 		}
 		case "rotate": {
-			doc.rotate(layer.id, normalizeDegrees(layer.rotation + command.degrees));
+			doc.update(layer.id, { rotation: normalizeDegrees(layer.rotation + command.degrees) });
 			break;
 		}
 	}

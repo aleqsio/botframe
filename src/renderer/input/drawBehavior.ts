@@ -1,5 +1,7 @@
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, Rect } from "../../document/layer";
+import { drawnFields, finishDraw, placeLayer } from "../components/layerDefaults";
+import type { DrawDefaults } from "../components/layerDefaults";
 import { nextLayerName } from "../components/layerEntry";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { Point } from "../state/camera";
@@ -11,13 +13,6 @@ import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 const CANCEL_COMMIT = "cancel draw";
-
-export interface DrawPreset {
-	label: string;
-	fill: string;
-	clip: boolean;
-	artboard: boolean;
-}
 
 function layersOf(doc: DesignDocument): (Layer | null)[] {
 	return doc.layerIds().map((id) => doc.layer(id));
@@ -33,7 +28,7 @@ function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): voi
 		return;
 	}
 	const chain = parentChain((id) => target.doc.layer(id), draw.id);
-	target.doc.resize(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
+	target.doc.update(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
 }
 
 function parentOf(chain: readonly Layer[]): LayerId | null {
@@ -42,32 +37,12 @@ function parentOf(chain: readonly Layer[]): LayerId | null {
 
 function startLayer(
 	target: PointerTarget,
-	preset: DrawPreset,
+	defaults: DrawDefaults,
 	rect: Rect,
 	chain: readonly Layer[],
 ): LayerId {
-	const id = target.doc.createLayer(
-		{
-			...rect,
-			fill: preset.fill,
-			name: nextLayerName(preset.label, layersOf(target.doc)),
-			clip: preset.clip,
-			geometry: {
-				kind: "rectangle",
-				cornerRadius: 0,
-				cornerSmoothing: 0,
-				artboard: preset.artboard,
-			},
-		},
-		parentOf(chain),
-	);
-	target.user.selection.set([id]);
-	return id;
-}
-
-function endGesture(target: PointerTarget, preset: DrawPreset): void {
-	target.doc.commit(`create ${preset.label.toLowerCase()}`);
-	target.user.tool.set(DEFAULT_TOOL);
+	const name = nextLayerName(defaults.label, layersOf(target.doc));
+	return placeLayer(target.doc, target.user, drawnFields(defaults, rect, name), parentOf(chain));
 }
 
 export function cancelDraw(doc: DesignDocument, user: UserState): void {
@@ -82,13 +57,13 @@ export function cancelDraw(doc: DesignDocument, user: UserState): void {
 	doc.commit(CANCEL_COMMIT);
 }
 
-export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
+export function createDrawBehavior(defaults: DrawDefaults): () => ToolBehavior {
 	return () => ({
 		dragStart(target, start, point, modifiers) {
 			const chain = chainUnder(target);
 			const origin = toParentPoint(chain, start.canvas);
 			const corner = toParentPoint(chain, point.canvas);
-			const id = startLayer(target, preset, drawnRect(origin, corner, modifiers), chain);
+			const id = startLayer(target, defaults, drawnRect(origin, corner, modifiers), chain);
 			target.user.draw.set({ id, origin });
 		},
 		drag(target, point, modifiers) {
@@ -100,12 +75,12 @@ export function createDrawBehavior(preset: DrawPreset): () => ToolBehavior {
 			}
 			stretch(target, point.canvas, modifiers);
 			target.user.draw.set(null);
-			endGesture(target, preset);
+			finishDraw(target.doc, target.user, defaults);
 		},
 		tap(target, point) {
 			const under = chainUnder(target);
-			startLayer(target, preset, tappedRect(toParentPoint(under, point.canvas)), under);
-			endGesture(target, preset);
+			startLayer(target, defaults, tappedRect(toParentPoint(under, point.canvas)), under);
+			finishDraw(target.doc, target.user, defaults);
 		},
 	});
 }

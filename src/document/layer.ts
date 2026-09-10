@@ -8,6 +8,8 @@ export type Geometry =
 	| { kind: "path"; d: string }
 	| { kind: "unsupported" };
 
+export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;
+
 export type Rect = {
 	x: number;
 	y: number;
@@ -25,9 +27,13 @@ export interface Layer extends Rect {
 	parent: LayerId | null;
 }
 
+type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
+
 export interface LayerFields extends Rect {
 	fill: string;
 	name: string;
 	clip: boolean;
-	geometry: Exclude<Geometry, { kind: "unsupported" }>;
+	geometry: WritableGeometry;
 }
+
+export type LayerPatch = Partial<LayerFields & { rotation: number }>;

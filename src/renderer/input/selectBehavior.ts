@@ -78,15 +78,17 @@ function applyDrag(target: PointerTarget, drag: Drag, canvas: Point, modifiers: 
 	const point = toParentPoint(chainOf(target, draggedId(drag)), canvas);
 	switch (drag.kind) {
 		case "move": {
-			doc.move(drag.id, point.x - drag.offset.x, point.y - drag.offset.y);
+			doc.update(drag.id, { x: point.x - drag.offset.x, y: point.y - drag.offset.y });
 			break;
 		}
 		case "resize": {
-			doc.resize(drag.start.id, resizedRect(drag.start, drag.handle, point, modifiers));
+			doc.update(drag.start.id, resizedRect(drag.start, drag.handle, point, modifiers));
 			break;
 		}
 		case "rotate": {
-			doc.rotate(drag.start.id, rotatedDegrees(drag.start, drag.origin, point, modifiers));
+			doc.update(drag.start.id, {
+				rotation: rotatedDegrees(drag.start, drag.origin, point, modifiers),
+			});
 			break;
 		}
 	}
