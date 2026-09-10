@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { fromParentPoint, layerChain, toParentPoint } from "./layerSpace";
+import { layerChain, toParentPoint } from "./layerSpace";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {
@@ -60,22 +60,5 @@ describe("toParentPoint", () => {
 
 	it("takes the point through each layer of the chain", () => {
 		expect(toParentPoint([FLAT, CHILD], { x: 250, y: 230 })).toEqual({ x: 50, y: 30 });
-	});
-});
-
-describe("fromParentPoint", () => {
-	it("gives the point of the parent space back on the canvas", () => {
-		expect(fromParentPoint([FLAT], { x: 50, y: 30 })).toEqual({ x: 150, y: 130 });
-	});
-
-	it("undoes toParentPoint through a turned chain", () => {
-		const chain = [TURNED, layerAt("2@1", "1@1", 30)];
-		const canvas = { x: 321, y: 123 };
-
-		const local = toParentPoint(chain, canvas);
-		const back = fromParentPoint(chain, local);
-
-		expect(back.x).toBeCloseTo(canvas.x);
-		expect(back.y).toBeCloseTo(canvas.y);
 	});
 });

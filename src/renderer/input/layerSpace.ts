@@ -54,17 +54,6 @@ function intoLayer(layer: Layer, point: Point): Point {
 	return { x: local.x + half.x, y: local.y + half.y };
 }
 
-function outOfLayer(layer: Layer, point: Point): Point {
-	const half = halfSizeOf(layer);
-	const turned = rotatePoint({ x: point.x - half.x, y: point.y - half.y }, layer.rotation);
-	const center = centerOf(layer);
-	return { x: center.x + turned.x, y: center.y + turned.y };
-}
-
 export function toParentPoint(chain: readonly Layer[], point: Point): Point {
 	return chain.reduce<Point>((carried, layer) => intoLayer(layer, carried), point);
-}
-
-export function fromParentPoint(chain: readonly Layer[], point: Point): Point {
-	return chain.reduceRight<Point>((carried, layer) => outOfLayer(layer, carried), point);
 }
