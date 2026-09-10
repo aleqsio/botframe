@@ -8,6 +8,7 @@ import {
 	ROTATE_STEP_SHIFT,
 	resizedRect,
 	rotatedDegrees,
+	scaledRect,
 } from "./transform";
 
 const ALT: Modifiers = { shift: false, alt: true };
@@ -118,6 +119,17 @@ describe("resizedRect", () => {
 			y: 110,
 			width: 220,
 			height: 100,
+		});
+	});
+});
+
+describe("scaledRect", () => {
+	it("scales about the center of the layer and holds a minimum size", () => {
+		expect(scaledRect(FLAT, 1.5)).toEqual({ x: 50, y: 75, width: 300, height: 150 });
+		expect(scaledRect(FLAT, 0.5)).toEqual({ x: 150, y: 125, width: 100, height: 50 });
+		expect(scaledRect(FLAT, 0)).toMatchObject({
+			width: MIN_LAYER_SIZE,
+			height: MIN_LAYER_SIZE,
 		});
 	});
 });

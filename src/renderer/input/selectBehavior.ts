@@ -4,6 +4,7 @@ import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
+import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
@@ -14,12 +15,6 @@ type Drag =
 	| { kind: "move"; id: LayerId; offset: Point }
 	| { kind: "resize"; start: Layer; handle: Handle }
 	| { kind: "rotate"; start: Layer; origin: Point };
-
-const COMMIT_MESSAGES: Readonly<Record<Drag["kind"], string>> = {
-	move: "move layer",
-	resize: "resize layer",
-	rotate: "rotate layer",
-};
 
 function topLayerId(target: PointerTarget): LayerId | null {
 	return target.layerIds[0] ?? null;

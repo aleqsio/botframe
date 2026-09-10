@@ -3,8 +3,7 @@ import type { DesignDocument } from "../document/document";
 import { LayerView } from "./LayerView";
 import { SelectionOverlay } from "./SelectionOverlay";
 import { Viewport } from "./Viewport";
-import { useStageInput } from "./input/useStageInput";
-import { useToolInput } from "./input/useToolInput";
+import { useCanvasInput } from "./input/useCanvasInput";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
 import { useLayerIds } from "./useDocument";
@@ -13,7 +12,7 @@ export function Stage({ doc, user }: { doc: DesignDocument; user: UserState }): 
 	const ids = useLayerIds(doc);
 	const tool = useSlot(user.tool);
 	const zone = useSlot(user.zone);
-	const handlers = useStageInput(user, useToolInput(doc, user));
+	const handlers = useCanvasInput(doc, user);
 
 	return (
 		<main data-tool={tool} data-zone={zone ?? undefined} id="stage" {...handlers}>

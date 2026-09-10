@@ -36,7 +36,7 @@ export interface StageInputHandlers {
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
 }
 
-interface StagePointerHandlers {
+export interface StagePointerHandlers {
 	onContextMenu: (event: StageMouseEvent) => void;
 	onPointerCancel: (event: StagePointerEvent) => void;
 	onPointerDown: (event: StagePointerEvent) => void;

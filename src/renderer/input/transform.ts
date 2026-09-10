@@ -72,6 +72,13 @@ export function resizedRect(
 	return { x: center.x - next.x, y: center.y - next.y, width: next.x * 2, height: next.y * 2 };
 }
 
+export function scaledRect(start: Layer, factor: number): Rect {
+	const width = Math.max(start.width * factor, MIN_LAYER_SIZE);
+	const height = Math.max(start.height * factor, MIN_LAYER_SIZE);
+	const center = centerOf(start);
+	return { x: center.x - width / 2, y: center.y - height / 2, width, height };
+}
+
 function snapStep(modifiers: Modifiers): number {
 	if (modifiers.shift) {
 		return ROTATE_STEP_SHIFT;
