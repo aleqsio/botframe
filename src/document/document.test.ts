@@ -345,6 +345,16 @@ describe("the layer tree", () => {
 		expect(doc.rootIds()).toBe(doc.rootIds());
 	});
 
+	it("keeps the snapshot of each other layer when a layer joins the tree", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		const before = doc.layer(id);
+
+		doc.createLayer(DRAWN);
+
+		expect(doc.layer(id)).toBe(before);
+	});
+
 	it("takes the whole branch away when a delete takes the parent", () => {
 		const doc = DesignDocument.create();
 		const parent = doc.createLayer(DRAWN);
