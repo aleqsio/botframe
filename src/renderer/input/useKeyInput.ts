@@ -6,7 +6,7 @@ import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 export function useKeyInput(doc: DesignDocument, user: UserState): void {
 	useEffect(() => {
 		function onKeyDown(event: KeyboardEvent): void {
-			if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
+			if (event.defaultPrevented || user.dragging.get()) {
 				return;
 			}
 			const command = commandFor(event);

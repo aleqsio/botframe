@@ -18,6 +18,9 @@ export type LayerCommand =
 export interface KeyStroke {
 	key: string;
 	shiftKey: boolean;
+	altKey: boolean;
+	ctrlKey: boolean;
+	metaKey: boolean;
 }
 
 export const COMMIT_MESSAGES: Readonly<Record<LayerCommand["kind"], string>> = {
@@ -47,7 +50,14 @@ const SCALE_KEYS: Readonly<Record<string, number>> = {
 	_: -1,
 };
 
+function isAccelerator(stroke: KeyStroke): boolean {
+	return stroke.metaKey || (stroke.ctrlKey && !stroke.altKey);
+}
+
 export function commandFor(stroke: KeyStroke): LayerCommand | null {
+	if (isAccelerator(stroke)) {
+		return null;
+	}
 	const nudge = NUDGE_KEYS[stroke.key];
 	if (nudge !== undefined) {
 		const step = stroke.shiftKey ? NUDGE_STEP_SHIFT : NUDGE_STEP;

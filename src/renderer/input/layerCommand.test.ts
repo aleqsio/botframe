@@ -10,10 +10,13 @@ import {
 	applyCommand,
 	commandFor,
 } from "./layerCommand";
+import type { KeyStroke } from "./layerCommand";
 import { ROTATE_STEP_SHIFT } from "./transform";
 
-function stroke(key: string, shiftKey = false): { key: string; shiftKey: boolean } {
-	return { key, shiftKey };
+const PLAIN = { shiftKey: false, altKey: false, ctrlKey: false, metaKey: false };
+
+function stroke(key: string, held: Partial<KeyStroke> = {}): KeyStroke {
+	return { key, ...PLAIN, ...held };
 }
 
 function firstId(doc: DesignDocument): LayerId {
@@ -39,11 +42,11 @@ describe("commandFor", () => {
 			by: { x: NUDGE_STEP, y: 0 },
 		});
 		expect(commandFor(stroke("ArrowUp"))).toEqual({ kind: "move", by: { x: 0, y: -NUDGE_STEP } });
-		expect(commandFor(stroke("ArrowDown", true))).toEqual({
+		expect(commandFor(stroke("ArrowDown", { shiftKey: true }))).toEqual({
 			kind: "move",
 			by: { x: 0, y: NUDGE_STEP_SHIFT },
 		});
-		expect(commandFor(stroke("ArrowLeft", true))).toEqual({
+		expect(commandFor(stroke("ArrowLeft", { shiftKey: true }))).toEqual({
 			kind: "move",
 			by: { x: -NUDGE_STEP_SHIFT, y: 0 },
 		});
@@ -52,19 +55,51 @@ describe("commandFor", () => {
 	it("turns by one degree with a bracket, and by fifteen with shift", () => {
 		expect(commandFor(stroke("]"))).toEqual({ kind: "rotate", degrees: TURN_STEP });
 		expect(commandFor(stroke("["))).toEqual({ kind: "rotate", degrees: -TURN_STEP });
-		expect(commandFor(stroke("}", true))).toEqual({ kind: "rotate", degrees: ROTATE_STEP_SHIFT });
-		expect(commandFor(stroke("{", true))).toEqual({ kind: "rotate", degrees: -ROTATE_STEP_SHIFT });
+		expect(commandFor(stroke("}", { shiftKey: true }))).toEqual({
+			kind: "rotate",
+			degrees: ROTATE_STEP_SHIFT,
+		});
+		expect(commandFor(stroke("{", { shiftKey: true }))).toEqual({
+			kind: "rotate",
+			degrees: -ROTATE_STEP_SHIFT,
+		});
 	});
 
 	it("takes the shifted character of a bracket key as the same turn", () => {
-		expect(commandFor(stroke("]", true))).toEqual({ kind: "rotate", degrees: ROTATE_STEP_SHIFT });
+		expect(commandFor(stroke("]", { shiftKey: true }))).toEqual({
+			kind: "rotate",
+			degrees: ROTATE_STEP_SHIFT,
+		});
 	});
 
 	it("scales by five percent, and by twenty with shift", () => {
 		expect(commandFor(stroke("="))).toEqual({ kind: "resize", factor: 1 + SCALE_STEP });
 		expect(commandFor(stroke("-"))).toEqual({ kind: "resize", factor: 1 - SCALE_STEP });
-		expect(commandFor(stroke("+", true))).toEqual({ kind: "resize", factor: 1 + SCALE_STEP_SHIFT });
-		expect(commandFor(stroke("_", true))).toEqual({ kind: "resize", factor: 1 - SCALE_STEP_SHIFT });
+		expect(commandFor(stroke("+", { shiftKey: true }))).toEqual({
+			kind: "resize",
+			factor: 1 + SCALE_STEP_SHIFT,
+		});
+		expect(commandFor(stroke("_", { shiftKey: true }))).toEqual({
+			kind: "resize",
+			factor: 1 - SCALE_STEP_SHIFT,
+		});
+	});
+
+	it("leaves a key with an accelerator to the application that holds it", () => {
+		expect(commandFor(stroke("ArrowRight", { metaKey: true }))).toBeNull();
+		expect(commandFor(stroke("ArrowRight", { ctrlKey: true }))).toBeNull();
+		expect(commandFor(stroke("]", { metaKey: true }))).toBeNull();
+	});
+
+	it("takes a key that a keyboard layout writes with alt or with alt gr", () => {
+		expect(commandFor(stroke("[", { altKey: true }))).toEqual({
+			kind: "rotate",
+			degrees: -TURN_STEP,
+		});
+		expect(commandFor(stroke("[", { ctrlKey: true, altKey: true }))).toEqual({
+			kind: "rotate",
+			degrees: -TURN_STEP,
+		});
 	});
 
 	it("gives no command for a key that the canvas does not hold", () => {

@@ -41,6 +41,7 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 		onDragStart(origin, point, layerIds, modifiers) {
 			const current = begin(layerIds);
 			gesture.current = current;
+			user.dragging.set(true);
 			current.behavior.dragStart?.(current.target, origin, point, modifiers);
 		},
 		onDragMove(point, modifiers) {
@@ -50,6 +51,7 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 		onDragEnd(point, modifiers) {
 			const current = gesture.current;
 			gesture.current = null;
+			user.dragging.set(false);
 			current?.behavior.dragEnd?.(current.target, point, modifiers);
 		},
 		onTap(layerIds, point) {

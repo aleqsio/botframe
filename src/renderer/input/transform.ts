@@ -73,8 +73,10 @@ export function resizedRect(
 }
 
 export function scaledRect(start: Layer, factor: number): Rect {
-	const width = Math.max(start.width * factor, MIN_LAYER_SIZE);
-	const height = Math.max(start.height * factor, MIN_LAYER_SIZE);
+	const smallest = Math.min(start.width, start.height);
+	const applied = Math.max(factor, Math.min(1, MIN_LAYER_SIZE / smallest));
+	const width = start.width * applied;
+	const height = start.height * applied;
 	const center = centerOf(start);
 	return { x: center.x - width / 2, y: center.y - height / 2, width, height };
 }

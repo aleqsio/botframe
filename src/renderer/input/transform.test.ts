@@ -127,8 +127,20 @@ describe("scaledRect", () => {
 	it("scales about the center of the layer and holds a minimum size", () => {
 		expect(scaledRect(FLAT, 1.5)).toEqual({ x: 50, y: 75, width: 300, height: 150 });
 		expect(scaledRect(FLAT, 0.5)).toEqual({ x: 150, y: 125, width: 100, height: 50 });
-		expect(scaledRect(FLAT, 0)).toMatchObject({
-			width: MIN_LAYER_SIZE,
+		expect(scaledRect(FLAT, 0)).toEqual({
+			x: 199,
+			y: 149.5,
+			width: MIN_LAYER_SIZE * 2,
+			height: MIN_LAYER_SIZE,
+		});
+	});
+
+	it("holds the aspect ratio of a thin layer at the minimum size", () => {
+		const thin = { ...FLAT, width: 400, height: 2 };
+		const floored = scaledRect(thin, 0.1);
+		expect(floored).toMatchObject({ width: 200, height: MIN_LAYER_SIZE });
+		expect(scaledRect({ ...thin, ...floored }, 0.5)).toMatchObject({
+			width: 200,
 			height: MIN_LAYER_SIZE,
 		});
 	});
