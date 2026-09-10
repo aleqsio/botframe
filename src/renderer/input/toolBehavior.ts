@@ -38,7 +38,7 @@ function noPointerBehavior(): ToolBehavior {
 
 export const TOOL_BEHAVIORS: Readonly<Record<ToolId, () => ToolBehavior>> = {
 	select: createSelectBehavior,
-	frame: noPointerBehavior,
+	artboard: noPointerBehavior,
 	rectangle: noPointerBehavior,
 	ellipse: noPointerBehavior,
 	text: noPointerBehavior,
