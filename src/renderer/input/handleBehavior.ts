@@ -4,7 +4,7 @@ import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
-import { parentPointOf } from "./targetSpace";
+import { parentPointOf, selectedLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizedRect, rotatedDegrees } from "./transform";
 
@@ -16,11 +16,6 @@ interface Aim {
 	layer: Layer;
 	point: Point;
 	zone: Zone | null;
-}
-
-function selectedLayer(target: PointerTarget): Layer | null {
-	const [id] = target.user.selection.get();
-	return id === undefined ? null : target.doc.layer(id);
 }
 
 function aimAt(target: PointerTarget, canvas: Point): Aim | null {
