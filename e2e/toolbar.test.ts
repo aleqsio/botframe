@@ -26,11 +26,11 @@ test("the floating bar sits at the bottom center and holds one selected tool", a
 
 	await expect(bar.getByLabel("Select")).toHaveAttribute("data-pressed", "");
 	await expect(stage).toHaveAttribute("data-tool", "select");
-	await expect(layer).toHaveCSS("cursor", "grab");
+	await expect(layer).toHaveCSS("cursor", "default");
 
 	await stage.hover({ position: { x: EMPTY_SPOT, y: EMPTY_SPOT } });
 	await window.mouse.down();
-	await expect(layer).toHaveCSS("cursor", "grab");
+	await expect(layer).toHaveCSS("cursor", "default");
 	await window.mouse.up();
 
 	await bar.getByLabel("Ellipse").click();
