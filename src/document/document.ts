@@ -105,6 +105,7 @@ export class DesignDocument {
 		const document = new DesignDocument(new LoroDoc());
 		document.createLayer(SEED_RECTANGLE);
 		document.commit("create rectangle");
+		document.#clearHistory();
 		return document;
 	}
 
@@ -266,6 +267,11 @@ export class DesignDocument {
 			notify(listeners);
 		}
 		this.#notifyStructure();
+	}
+
+	#clearHistory(): void {
+		this.#history.clear();
+		this.#refreshHistory();
 	}
 
 	#refreshHistory(): void {

@@ -13,6 +13,14 @@ describe("the history", () => {
 		expect(doc.redo()).toBe(false);
 	});
 
+	it("keeps the seed of a new document out of the history", () => {
+		const doc = DesignDocument.create();
+
+		expect(doc.canUndo()).toBe(false);
+		expect(doc.undo()).toBe(false);
+		expect(doc.layerIds()).toHaveLength(1);
+	});
+
 	it("undoes a committed move and redoes it", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
@@ -43,7 +51,8 @@ describe("the history", () => {
 
 		expect(doc.undo()).toBe(true);
 		expect(doc.layer(id)).toMatchObject({ x: 420, y: 260 });
-		expect(doc.canUndo()).toBe(true);
+		expect(doc.canUndo()).toBe(false);
+		expect(doc.canRedo()).toBe(true);
 	});
 
 	it("takes the layer of an undone create away and gives it back on redo", () => {

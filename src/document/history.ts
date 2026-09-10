@@ -32,6 +32,10 @@ export class DocumentHistory {
 		return this.#undo.redo();
 	}
 
+	clear(): void {
+		this.#undo.clear();
+	}
+
 	refresh(): boolean {
 		const next = { canUndo: this.#undo.canUndo(), canRedo: this.#undo.canRedo() };
 		if (sameFlags(this.#flags, next)) {
