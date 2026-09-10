@@ -86,6 +86,14 @@ body {
 	cursor: grabbing;
 }
 
+#stage[data-tool="hand"] {
+	cursor: grab;
+}
+
+#stage[data-tool="hand"]:active {
+	cursor: grabbing;
+}
+
 .layer[data-selected] {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
