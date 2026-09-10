@@ -65,6 +65,7 @@ export function createDrawBehavior(defaults: DrawDefaults): () => ToolBehavior {
 			const corner = toParentPoint(chain, point.canvas);
 			const id = startLayer(target, defaults, drawnRect(origin, corner, modifiers), chain);
 			target.user.draw.set({ id, origin });
+			return true;
 		},
 		drag(target, point, modifiers) {
 			stretch(target, point.canvas, modifiers);
@@ -81,6 +82,7 @@ export function createDrawBehavior(defaults: DrawDefaults): () => ToolBehavior {
 			const under = chainUnder(target);
 			startLayer(target, defaults, tappedRect(toParentPoint(under, point.canvas)), under);
 			finishDraw(target.doc, target.user, defaults);
+			return true;
 		},
 	});
 }

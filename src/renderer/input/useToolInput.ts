@@ -6,7 +6,7 @@ import type { UserState } from "../state/userState";
 import { zoneKey } from "./handles";
 import { visibleLayerIds } from "./hitTest";
 import type { PointerTarget, ToolBehavior } from "./tool";
-import { TOOL_BEHAVIORS } from "./toolBehavior";
+import { behaviorFor } from "./toolBehavior";
 import type { StageInputHandlers } from "./useStageInput";
 
 const NO_LAYERS: readonly LayerId[] = [];
@@ -28,7 +28,7 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 	const gesture = useRef<ToolGesture | null>(null);
 
 	function begin(layerIds: readonly LayerId[]): ToolGesture {
-		return { behavior: TOOL_BEHAVIORS[user.tool.get()](), target: targetOf(doc, user, layerIds) };
+		return { behavior: behaviorFor(user.tool.get()), target: targetOf(doc, user, layerIds) };
 	}
 
 	function hoverZone(point: StagePoint): void {
