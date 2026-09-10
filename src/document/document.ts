@@ -1,6 +1,6 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroMap, LoroTree, LoroTreeNode } from "loro-crdt";
-import type { Geometry, Layer, LayerFields, LayerId, Rect } from "./layer";
+import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
@@ -42,15 +42,14 @@ function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readon
 	return sameIds(cached, next) ? cached : next;
 }
 
-function writeFields(data: LoroMap, fields: LayerFields): void {
-	data.set("x", fields.x);
-	data.set("y", fields.y);
-	data.set("width", fields.width);
-	data.set("height", fields.height);
-	data.set("fill", fields.fill);
-	data.set("name", fields.name);
-	data.set("clip", fields.clip);
-	writeVariant(data.ensureMergeableMap(GEOMETRY), fields.geometry);
+function writePatch(data: LoroMap, patch: LayerPatch): void {
+	const { geometry, ...fields } = patch;
+	for (const [key, value] of Object.entries(fields)) {
+		data.set(key, value);
+	}
+	if (geometry !== undefined) {
+		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
+	}
 }
 
 export class DesignDocument {
@@ -137,7 +136,7 @@ export class DesignDocument {
 
 	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
 		const node = this.#tree().createNode(parent ?? undefined);
-		writeFields(node.data, fields);
+		writePatch(node.data, fields);
 		this.#notifyStructure();
 		return node.id;
 	}
@@ -166,36 +165,12 @@ export class DesignDocument {
 		};
 	}
 
-	move(id: LayerId, x: number, y: number): void {
-		this.#write(id, { x, y });
-	}
-
-	resize(id: LayerId, rect: Rect): void {
-		this.#write(id, rect);
-	}
-
-	rotate(id: LayerId, rotation: number): void {
-		this.#write(id, { rotation });
-	}
-
-	rename(id: LayerId, name: string): void {
-		this.#write(id, { name });
-	}
-
-	setClip(id: LayerId, clip: boolean): void {
-		this.#write(id, { clip });
-	}
-
-	setFill(id: LayerId, fill: string): void {
-		this.#write(id, { fill });
-	}
-
-	setGeometry(id: LayerId, geometry: LayerFields["geometry"]): void {
+	update(id: LayerId, patch: LayerPatch): void {
 		const node = this.#liveNode(id);
 		if (node === null) {
 			return;
 		}
-		writeVariant(node.data.ensureMergeableMap(GEOMETRY), geometry);
+		writePatch(node.data, patch);
 		this.#invalidate(id);
 	}
 
@@ -217,17 +192,6 @@ export class DesignDocument {
 
 	changeCount(): number {
 		return this.#doc.exportJsonUpdates().changes.length;
-	}
-
-	#write(id: LayerId, fields: Readonly<Record<string, number | string | boolean>>): void {
-		const node = this.#liveNode(id);
-		if (node === null) {
-			return;
-		}
-		for (const [key, value] of Object.entries(fields)) {
-			node.data.set(key, value);
-		}
-		this.#invalidate(id);
 	}
 
 	#notifyStructure(): void {

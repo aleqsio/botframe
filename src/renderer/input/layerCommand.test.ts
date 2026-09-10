@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { Layer, LayerId } from "../../document/layer";
+import type { Layer } from "../../document/layer";
 import {
 	NUDGE_STEP,
 	NUDGE_STEP_SHIFT,
@@ -11,20 +11,13 @@ import {
 	commandFor,
 } from "./layerCommand";
 import type { KeyStroke } from "./layerCommand";
+import { firstId } from "./toolFixtures";
 import { ROTATE_STEP_SHIFT } from "./transform";
 
 const PLAIN = { shiftKey: false, altKey: false, ctrlKey: false, metaKey: false };
 
 function stroke(key: string, held: Partial<KeyStroke> = {}): KeyStroke {
 	return { key, ...PLAIN, ...held };
-}
-
-function firstId(doc: DesignDocument): LayerId {
-	const [id] = doc.layerIds();
-	if (id === undefined) {
-		throw new Error("document has no layers");
-	}
-	return id;
 }
 
 function layerOf(doc: DesignDocument): Layer {

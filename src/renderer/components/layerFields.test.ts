@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import { firstId } from "../../document/documentFixtures";
+import { firstId } from "../input/toolFixtures";
 import type { Layer } from "../../document/layer";
 import { LAYER_FIELDS, fieldsOf, formatNumber, swappedBox } from "./layerFields";
 import type { LayerField } from "./layerFields";
@@ -76,7 +76,7 @@ describe("fieldsOf", () => {
 	it("lists no corner field for a geometry that has no corner", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
-		doc.setGeometry(id, { kind: "ellipse" });
+		doc.update(id, { geometry: { kind: "ellipse" } });
 
 		const labels = fieldsOf(layerOf(doc)).map((field) => field.label);
 
@@ -99,13 +99,8 @@ describe("fieldsOf", () => {
 });
 
 describe("swappedBox", () => {
-	it("exchanges the width and the height and keeps the corner", () => {
-		expect(swappedBox(layerOf(DesignDocument.create()))).toEqual({
-			x: 420,
-			y: 260,
-			width: 160,
-			height: 240,
-		});
+	it("exchanges the width and the height", () => {
+		expect(swappedBox(layerOf(DesignDocument.create()))).toEqual({ width: 160, height: 240 });
 	});
 });
 

@@ -28,7 +28,7 @@ function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): voi
 		return;
 	}
 	const chain = parentChain((id) => target.doc.layer(id), draw.id);
-	target.doc.resize(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
+	target.doc.update(draw.id, drawnRect(draw.origin, toParentPoint(chain, point), modifiers));
 }
 
 function parentOf(chain: readonly Layer[]): LayerId | null {

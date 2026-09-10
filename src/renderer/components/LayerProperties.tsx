@@ -12,7 +12,7 @@ function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
 	if (preset === null) {
 		return;
 	}
-	doc.resize(layer.id, { x: layer.x, y: layer.y, width: preset.width, height: preset.height });
+	doc.update(layer.id, { width: preset.width, height: preset.height });
 	doc.commit(COMMIT_MESSAGES.resize);
 }
 
@@ -43,7 +43,7 @@ function ArtboardFields({ doc, layer }: { doc: DesignDocument; layer: Layer }): 
 			<button
 				className="panel-action"
 				onClick={() => {
-					doc.resize(layer.id, swappedBox(layer));
+					doc.update(layer.id, swappedBox(layer));
 					doc.commit(COMMIT_MESSAGES.resize);
 				}}
 				type="button"
@@ -66,7 +66,7 @@ export function LayerProperties({
 			<PropertyField
 				label="Name"
 				onCommit={(text) => {
-					doc.rename(layer.id, text);
+					doc.update(layer.id, { name: text });
 					doc.commit("rename layer");
 				}}
 				value={layer.name}
@@ -89,7 +89,7 @@ export function LayerProperties({
 					if (!CSS.supports("color", text)) {
 						return;
 					}
-					doc.setFill(layer.id, text);
+					doc.update(layer.id, { fill: text });
 					doc.commit("set fill");
 				}}
 				value={layer.fill}
@@ -98,7 +98,7 @@ export function LayerProperties({
 				<input
 					checked={layer.clip}
 					onChange={(event) => {
-						doc.setClip(layer.id, event.target.checked);
+						doc.update(layer.id, { clip: event.target.checked });
 						doc.commit("set clip");
 					}}
 					type="checkbox"

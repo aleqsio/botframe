@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cancelDraw } from "./drawBehavior";
 import { NO_MODIFIERS } from "./modifiers";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
-import { firstId } from "../../document/documentFixtures";
+import { firstId } from "./toolFixtures";
 import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
@@ -107,7 +107,7 @@ describe("the draw tools", () => {
 		const press = pointAt(camera, PRESS);
 
 		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
-		target.doc.move(parent, 400, 240);
+		target.doc.update(parent, { x: 400, y: 240 });
 		behavior.drag?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
 		behavior.dragEnd?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
 
@@ -117,7 +117,7 @@ describe("the draw tools", () => {
 	it("draws inside a turned parent in the space of that parent", () => {
 		const target = targetOf(true);
 		const parent = firstId(target.doc);
-		target.doc.rotate(parent, 90);
+		target.doc.update(parent, { rotation: 90 });
 
 		dragOver(TOOL_BEHAVIORS.rectangle(), target, {
 			press: { x: 600, y: 240 },

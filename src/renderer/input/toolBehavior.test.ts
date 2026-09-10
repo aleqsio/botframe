@@ -7,7 +7,7 @@ import type { Modifiers } from "./modifiers";
 import { NO_MODIFIERS } from "./modifiers";
 import type { PointerTarget } from "./tool";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
-import { firstId } from "../../document/documentFixtures";
+import { firstId } from "./toolFixtures";
 import { dragOver, pointAt, tapAt, targetOf } from "./toolFixtures";
 import { UserState } from "../state/userState";
 
@@ -24,7 +24,7 @@ const ALT: Modifiers = { shift: false, alt: true };
 function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {
 	const doc = DesignDocument.create();
 	const parent = firstId(doc);
-	doc.rotate(parent, rotation);
+	doc.update(parent, { rotation: rotation });
 	const child = doc.createLayer(
 		{
 			x: 20,

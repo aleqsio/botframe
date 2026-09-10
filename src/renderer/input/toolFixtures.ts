@@ -1,6 +1,5 @@
 import { DesignDocument } from "../../document/document";
-import { firstId } from "../../document/documentFixtures";
-import type { Layer } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
@@ -12,6 +11,14 @@ export interface DragSpec {
 	press: Point;
 	release: Point;
 	modifiers?: Modifiers;
+}
+
+export function firstId(doc: DesignDocument): LayerId {
+	const [id] = doc.layerIds();
+	if (id === undefined) {
+		throw new Error("document has no layers");
+	}
+	return id;
 }
 
 export function targetOf(withLayer: boolean): PointerTarget {

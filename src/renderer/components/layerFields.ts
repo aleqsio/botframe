@@ -21,17 +21,13 @@ export interface LayerField {
 	apply: (doc: DesignDocument, layer: Layer, value: number) => void;
 }
 
-function boxOf(layer: Layer): Rect {
-	return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
-}
-
 function resize(doc: DesignDocument, layer: Layer, box: Partial<Rect>): void {
-	doc.resize(layer.id, { ...boxOf(layer), ...box });
+	doc.update(layer.id, box);
 	doc.commit(COMMIT_MESSAGES.resize);
 }
 
 function moveTo(doc: DesignDocument, layer: Layer, x: number, y: number): void {
-	doc.move(layer.id, x, y);
+	doc.update(layer.id, { x, y });
 	doc.commit(COMMIT_MESSAGES.move);
 }
 
@@ -68,7 +64,7 @@ export const LAYER_FIELDS: readonly LayerField[] = [
 		label: "Rotation",
 		read: (layer) => layer.rotation,
 		apply: (doc, layer, value) => {
-			doc.rotate(layer.id, normalizeDegrees(value));
+			doc.update(layer.id, { rotation: normalizeDegrees(value) });
 			doc.commit(COMMIT_MESSAGES.rotate);
 		},
 	},
@@ -79,7 +75,7 @@ function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry)
 		label,
 		read: () => geometry[key],
 		apply: (doc, layer, value) => {
-			doc.setGeometry(layer.id, { ...geometry, [key]: clampCorner(value) });
+			doc.update(layer.id, { geometry: { ...geometry, [key]: clampCorner(value) } });
 			doc.commit("set corners");
 		},
 	};
@@ -97,8 +93,8 @@ export function fieldsOf(layer: Layer): readonly LayerField[] {
 	];
 }
 
-export function swappedBox(layer: Layer): Rect {
-	return { x: layer.x, y: layer.y, width: layer.height, height: layer.width };
+export function swappedBox(layer: Layer): Pick<Rect, "width" | "height"> {
+	return { width: layer.height, height: layer.width };
 }
 
 export function formatNumber(value: number): string {
