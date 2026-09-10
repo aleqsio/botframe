@@ -7,7 +7,8 @@ import type { Modifiers } from "./modifiers";
 import { NO_MODIFIERS } from "./modifiers";
 import type { PointerTarget } from "./tool";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
-import { dragOver, firstId, pointAt, tapAt, targetOf } from "./toolSupport";
+import { firstId } from "../../document/documentFixtures";
+import { dragOver, pointAt, tapAt, targetOf } from "./toolFixtures";
 import { UserState } from "../state/userState";
 
 const PRESS = { x: 440, y: 280 };

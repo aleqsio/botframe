@@ -2,6 +2,7 @@ import { LoroDoc } from "loro-crdt";
 import type { LoroMap } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
+import { firstId } from "./documentFixtures";
 import type { LayerFields, LayerId } from "./layer";
 import { readString } from "./read";
 
@@ -15,14 +16,6 @@ const DRAWN: LayerFields = {
 	clip: true,
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
 };
-
-function firstId(doc: DesignDocument): LayerId {
-	const [id] = doc.layerIds();
-	if (id === undefined) {
-		throw new Error("document has no layers");
-	}
-	return id;
-}
 
 function geometryBag(doc: LoroDoc, id: LayerId): LoroMap {
 	const node = doc.getTree("layers").getNodeByID(id);

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { cancelDraw } from "./drawBehavior";
 import { NO_MODIFIERS } from "./modifiers";
 import { TOOL_BEHAVIORS } from "./toolBehavior";
-import { dragOver, drawnLayer, firstId, pointAt, tapAt, targetOf } from "./toolSupport";
+import { firstId } from "../../document/documentFixtures";
+import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const CENTER = { x: 540, y: 340 };
