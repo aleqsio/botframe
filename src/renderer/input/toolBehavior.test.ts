@@ -60,17 +60,17 @@ function zoneUnderTool(tool: ToolId): Zone | null {
 
 describe("the behavior of each tool", () => {
 	it("gives the handles of the selected layer to each tool the bar shows but the hand", () => {
-		const zones = TOOLS.map((tool) => [tool.id, zoneUnderTool(tool.id)]);
+		const zones = Object.fromEntries(TOOLS.map((tool) => [tool.id, zoneUnderTool(tool.id)]));
 
-		expect(zones).toEqual([
-			["select", SE_ZONE],
-			["artboard", SE_ZONE],
-			["rectangle", SE_ZONE],
-			["ellipse", SE_ZONE],
-			["hand", null],
-			["text", SE_ZONE],
-			["image", SE_ZONE],
-		]);
+		expect(zones).toEqual({
+			select: SE_ZONE,
+			artboard: SE_ZONE,
+			rectangle: SE_ZONE,
+			ellipse: SE_ZONE,
+			hand: null,
+			text: SE_ZONE,
+			image: SE_ZONE,
+		});
 	});
 
 	it("moves the layer under the pointer with one change for the drag", () => {
@@ -162,7 +162,7 @@ describe("the behavior of each tool", () => {
 	});
 
 	it("leaves the document and the selection alone for a tool that draws later", () => {
-		const target = targetOf(true);
+		const target = selectedTarget();
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
@@ -171,7 +171,7 @@ describe("the behavior of each tool", () => {
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
 		expect(target.doc.changeCount()).toBe(changes);
-		expect(target.user.selection.get()).toEqual([]);
+		expect(target.user.selection.get()).toEqual([id]);
 	});
 });
 
@@ -325,6 +325,19 @@ describe("the handles under a draw tool", () => {
 
 			expect([tool, target.doc.layerIds().length]).toEqual([tool, count]);
 			expect(target.doc.layer(id)).toMatchObject({ width: 280, height: 200 });
+			expect(target.user.selection.get()).toEqual([id]);
+		}
+	});
+
+	it("draws no new layer when the tap of a draw tool lands on a handle", () => {
+		for (const tool of DRAW_TOOLS) {
+			const target = selectedTarget();
+			const id = firstId(target.doc);
+			const count = target.doc.layerIds().length;
+
+			tapAt(behaviorFor(tool), target, SE_CORNER);
+
+			expect([tool, target.doc.layerIds().length]).toEqual([tool, count]);
 			expect(target.user.selection.get()).toEqual([id]);
 		}
 	});
