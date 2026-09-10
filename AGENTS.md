@@ -35,10 +35,17 @@ Write each reply and each Markdown file in this repository in ASD-STE100, Simpli
 - Write a test that fails before the change and passes after the change.
 - Prove the change against the application that runs. Give the command and the output in the pull request.
 
+## Pull requests
+
+- Use the stacked pull requests of `gh` if the installed version gives them.
+- If `gh` does not give them, make each pull request against `main`.
+- Rebase the branch on `main` before you open the pull request, and again before you merge it.
+
 ## Never
 
 - Never change a lint limit, a tsconfig option, or a dependency rule to make a check pass.
 - Never use `--no-verify`.
 - Never add a dependency without a reason in the pull request.
 - Never load a font, an image, or a script from a different site. Each asset goes through the asset store.
+- Never open a pull request against a branch that is not `main`.
 - Never let a model write this file. A person writes it.
