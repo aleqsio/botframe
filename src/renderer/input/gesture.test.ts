@@ -81,7 +81,10 @@ describe("GestureRecognizer", () => {
 		const recognizer = new GestureRecognizer();
 		recognizer.down(at(PRIMARY, 10, 10));
 
-		expect(recognizer.up(at(PRIMARY, 200, 200))).toEqual({ kind: "tap" });
+		expect(recognizer.up(at(PRIMARY, 200, 200))).toEqual({
+			kind: "tap",
+			point: { x: 200, y: 200 },
+		});
 	});
 
 	it("reports a tap when the pointer stays inside the tap limit", () => {
@@ -89,7 +92,7 @@ describe("GestureRecognizer", () => {
 		recognizer.down(at(PRIMARY, 10, 10));
 		recognizer.move(at(PRIMARY, 12, 11));
 
-		expect(recognizer.up(at(PRIMARY, 12, 11))).toEqual({ kind: "tap" });
+		expect(recognizer.up(at(PRIMARY, 12, 11))).toEqual({ kind: "tap", point: { x: 12, y: 11 } });
 	});
 
 	it("reports no tap when the press is cancelled", () => {

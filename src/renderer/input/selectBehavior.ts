@@ -91,8 +91,10 @@ export function createSelectBehavior(): ToolBehavior {
 		hover(target, point) {
 			return zoneUnder(target, point.canvas);
 		},
-		tap(target) {
-			select(target.user, topLayerId(target));
+		tap(target, point) {
+			if (zoneUnder(target, point.canvas) === null) {
+				select(target.user, topLayerId(target));
+			}
 		},
 		dragStart(target, origin, point, modifiers) {
 			current = beginDrag(target, origin.canvas);

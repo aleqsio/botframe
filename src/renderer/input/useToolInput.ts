@@ -52,9 +52,9 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 			gesture.current = null;
 			current?.behavior.dragEnd?.(current.target, point, modifiers);
 		},
-		onTap(layerIds) {
+		onTap(layerIds, point) {
 			const current = begin(layerIds);
-			current.behavior.tap?.(current.target);
+			current.behavior.tap?.(current.target, point);
 		},
 		onHover(point) {
 			hoverZone(point);

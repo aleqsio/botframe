@@ -95,10 +95,20 @@ describe("resizedRect", () => {
 		});
 	});
 
-	it("holds a minimum size when the handle passes the opposite edge", () => {
+	it("holds a minimum size at the fixed edge when the handle passes it", () => {
 		expect(resizedRect(FLAT, "se", { x: 100, y: 100 }, NO_MODIFIERS)).toMatchObject({
+			x: 100,
+			y: 100,
 			width: MIN_LAYER_SIZE,
 			height: MIN_LAYER_SIZE,
+		});
+		expect(resizedRect(FLAT, "e", { x: 0, y: 150 }, NO_MODIFIERS)).toMatchObject({
+			x: 100,
+			width: MIN_LAYER_SIZE,
+		});
+		expect(resizedRect(FLAT, "w", { x: 400, y: 150 }, NO_MODIFIERS)).toMatchObject({
+			x: 300 - MIN_LAYER_SIZE,
+			width: MIN_LAYER_SIZE,
 		});
 	});
 

@@ -20,7 +20,7 @@ function halfExtent(direction: number, half: number, moved: number, fromCenter: 
 	if (direction === 0) {
 		return half;
 	}
-	const extent = fromCenter ? Math.abs(moved) : Math.abs(moved + direction * half) / 2;
+	const extent = fromCenter ? Math.abs(moved) : (moved * direction + half) / 2;
 	return Math.max(extent, MIN_LAYER_SIZE / 2);
 }
 

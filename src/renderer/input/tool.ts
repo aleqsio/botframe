@@ -13,7 +13,7 @@ export interface PointerTarget {
 
 export interface ToolBehavior {
 	hover?: (target: PointerTarget, point: StagePoint) => Zone | null;
-	tap?: (target: PointerTarget) => void;
+	tap?: (target: PointerTarget, point: StagePoint) => void;
 	dragStart?: (
 		target: PointerTarget,
 		origin: StagePoint,
