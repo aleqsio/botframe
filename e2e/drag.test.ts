@@ -21,6 +21,14 @@ test("dragging the rectangle writes the new position into the document", async (
 	}
 
 	await window.mouse.move(box.x + GRAB.x, box.y + GRAB.y);
+	await window.mouse.down({ button: "right" });
+	await window.mouse.move(box.x + GRAB.x + DELTA.x, box.y + GRAB.y + DELTA.y, { steps: 4 });
+	await window.mouse.up({ button: "right" });
+
+	expect(await layer.boundingBox()).toMatchObject({ x: box.x, y: box.y });
+	await expect(layer).not.toHaveAttribute("data-selected", "");
+
+	await window.mouse.move(box.x + GRAB.x, box.y + GRAB.y);
 	await window.mouse.down();
 	await window.mouse.move(box.x + GRAB.x + DELTA.x, box.y + GRAB.y + DELTA.y, { steps: 12 });
 	await window.mouse.up();
@@ -29,6 +37,7 @@ test("dragging the rectangle writes the new position into the document", async (
 		timeout: 2000,
 	});
 	expect(await layer.boundingBox()).toMatchObject({ x: box.x + DELTA.x, y: box.y + DELTA.y });
+	await expect(layer).toHaveAttribute("data-selected", "");
 
 	await app.close();
 });

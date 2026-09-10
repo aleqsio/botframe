@@ -18,6 +18,7 @@
 	--bar-hover: rgb(255 255 255 / 0.08);
 	--bar-selected: rgb(255 255 255 / 0.16);
 	--bar-focus: rgb(138 168 255 / 0.9);
+	--selection: #0d99ff;
 }
 
 * {
@@ -60,19 +61,33 @@ body {
 	background: var(--stage-background);
 	border-radius: var(--canvas-radius);
 	overflow: hidden;
+	touch-action: none;
+}
+
+#viewport {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
 }
 
 .layer {
 	position: absolute;
 	top: 0;
 	left: 0;
-	cursor: grab;
-	touch-action: none;
 	will-change: transform;
 }
 
-.layer:active {
+#stage[data-tool="select"] .layer {
+	cursor: grab;
+}
+
+#stage[data-tool="select"] .layer:active {
 	cursor: grabbing;
+}
+
+.layer[data-selected] {
+	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
 
 .floating-bar {
