@@ -6,13 +6,14 @@ import type {
 	RefObject,
 } from "react";
 import type { LayerPatch } from "../../document/layer";
-import { isUnit } from "../../document/length";
+import type { Unit } from "../../document/length";
 import { modifiersOf } from "../input/modifiers";
 import type { Modifiers } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { DraftInput } from "./PropertyField";
+import { UnitSelect } from "./UnitSelect";
 import { fieldPatch, typedPatch } from "./layerFields";
-import type { LayerField, UnitChoice } from "./layerFields";
+import type { LayerField } from "./layerFields";
 import { draggedValue, formatNumber } from "./numberValue";
 
 const PRIMARY_BUTTON = 0;
@@ -127,15 +128,7 @@ function commitText(props: NumberChipProps, text: string): void {
 	props.onCommit();
 }
 
-function commitUnit(props: NumberChipProps, choice: UnitChoice, name: string): void {
-	if (!isUnit(name)) {
-		return;
-	}
-	props.onPatch(choice.convert(name));
-	props.onCommit();
-}
-
-function UnitSelect(props: NumberChipProps): ReactElement | null {
+function ChipUnit(props: NumberChipProps): ReactElement | null {
 	const { field } = props;
 	const { choice } = field;
 
@@ -148,20 +141,14 @@ function UnitSelect(props: NumberChipProps): ReactElement | null {
 	}
 
 	return (
-		<select
-			aria-label={`${field.label} unit`}
-			className="chip-unit"
-			onChange={(event) => {
-				commitUnit(props, choice, event.target.value);
+		<UnitSelect
+			choice={choice}
+			field={field}
+			onPick={(unit: Unit) => {
+				props.onPatch(choice.convert(unit));
+				props.onCommit();
 			}}
-			value={field.unit}
-		>
-			{choice.units.map((unit) => (
-				<option key={unit} value={unit}>
-					{unit}
-				</option>
-			))}
-		</select>
+		/>
 	);
 }
 
@@ -223,7 +210,7 @@ export function NumberChip(props: NumberChipProps): ReactElement {
 				}}
 				value={formatNumber(value)}
 			/>
-			<UnitSelect {...props} />
+			<ChipUnit {...props} />
 		</div>
 	);
 }

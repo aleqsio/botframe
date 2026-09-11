@@ -40,6 +40,11 @@ function chipValue(window: Page, label: string): Locator {
 	return window.getByLabel(`${label} value`, { exact: true });
 }
 
+async function pickUnit(window: Page, label: string, unit: string): Promise<void> {
+	await window.getByLabel(`${label} unit`, { exact: true }).click();
+	await window.getByRole("option", { name: unit, exact: true }).click();
+}
+
 async function dragBy(window: Page, handle: Locator, pixels: number): Promise<void> {
 	const start = await centerOf(handle);
 	await window.mouse.move(start.x, start.y);
@@ -283,17 +288,17 @@ test("a layer inside a container takes a unit that is not the pixel", async () =
 	const child = layers.nth(1).locator("> .layer");
 	const unit = window.getByLabel("W unit", { exact: true });
 
-	await expect(unit).toHaveValue("px");
+	await expect(unit).toHaveText("px");
 	await expect(chipValue(window, "W")).toHaveValue("100");
 
-	await unit.selectOption("%");
+	await pickUnit(window, "W", "%");
 
 	await expect(chipValue(window, "W")).toHaveValue("50");
 	await expect(child).toHaveCSS("width", "100px");
 
 	await typeInto(window, "W value", "25%");
 
-	await expect(unit).toHaveValue("%");
+	await expect(unit).toHaveText("%");
 	await expect(child).toHaveCSS("width", "50px");
 
 	await app.close();
@@ -304,7 +309,7 @@ test("shift steps a percentage by five, and the layer follows the artboard", asy
 	await drawWith(window, origin, "a", ARTBOARD);
 	await drawWith(window, origin, "r", INSIDE);
 	const child = layers.nth(1).locator("> .layer");
-	await window.getByLabel("W unit", { exact: true }).selectOption("%");
+	await pickUnit(window, "W", "%");
 
 	await window.keyboard.down("Shift");
 	await dragBy(window, chipHandle(window, "W"), SHIFT_DRAG);
