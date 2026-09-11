@@ -8,9 +8,9 @@ import type { LayerId } from "../../document/layer";
 import { applyViewportDelta, toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint, ViewportDelta } from "../state/camera";
 import type { UserState } from "../state/userState";
-import { GestureRecognizer } from "./gesture";
+import { GestureRecognizer, sampleOf } from "./gesture";
 import type { Gesture, PointerSample } from "./gesture";
-import { layerIdsUnder } from "./hitTest";
+import { layerIdsAt } from "./hitTest";
 import { NO_MODIFIERS, modifiersOf } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { wheelDelta } from "./wheel";
@@ -20,7 +20,6 @@ type StageMouseEvent = ReactMouseEvent<HTMLElement>;
 type StageWheelEvent = ReactWheelEvent<HTMLElement>;
 
 const PRIMARY_BUTTON = 0;
-const TOUCH_POINTER = "touch";
 
 export interface StageInputHandlers {
 	onDragStart: (
@@ -86,21 +85,8 @@ function isPrimaryButton(event: StagePointerEvent): boolean {
 	return event.button === PRIMARY_BUTTON;
 }
 
-function sampleOf(event: StagePointerEvent): PointerSample {
-	return {
-		pointerId: event.pointerId,
-		x: event.clientX,
-		y: event.clientY,
-		touch: event.pointerType === TOUCH_POINTER,
-	};
-}
-
 function clientPointOf(event: StageMouseEvent): Point {
 	return { x: event.clientX, y: event.clientY };
-}
-
-function layerIdsAt(client: Point): readonly LayerId[] {
-	return layerIdsUnder(document.elementsFromPoint(client.x, client.y));
 }
 
 function stageOf(input: StageInput, client: Point): Point {
@@ -109,7 +95,7 @@ function stageOf(input: StageInput, client: Point): Point {
 
 function stagePointOf(input: StageInput, camera: Camera, client: Point): StagePoint {
 	const stage = stageOf(input, client);
-	return { stage, canvas: toCanvasPoint(camera, stage) };
+	return { client, stage, canvas: toCanvasPoint(camera, stage) };
 }
 
 function moveViewport(session: StageSession, at: Point, delta: ViewportDelta): void {

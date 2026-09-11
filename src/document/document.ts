@@ -195,6 +195,16 @@ export class DesignDocument {
 		this.#notifyStructure();
 	}
 
+	move(id: LayerId, parent: LayerId | null, index?: number): boolean {
+		if (!this.#canMove(id, parent, index)) {
+			return false;
+		}
+		this.#tree().move(id, parent ?? undefined, index);
+		this.#forget(id);
+		this.#notifyStructure();
+		return true;
+	}
+
 	subscribeStructure(listener: () => void): Unsubscribe {
 		return subscribeTo(this.#structureListeners, listener);
 	}
@@ -322,6 +332,33 @@ export class DesignDocument {
 				this.#invalidate(item.target);
 			}
 		}
+	}
+
+	#canMove(id: LayerId, parent: LayerId | null, index: number | undefined): boolean {
+		if (this.#liveNode(id) === null) {
+			return false;
+		}
+		if (parent !== null && (this.#liveNode(parent) === null || this.#insideSubtree(id, parent))) {
+			return false;
+		}
+		return index === undefined || this.#fitsIndex(id, parent, index);
+	}
+
+	#fitsIndex(id: LayerId, parent: LayerId | null, index: number): boolean {
+		const siblings = parent === null ? this.rootIds() : this.childIds(parent);
+		const room = siblings.length - (siblings.includes(id) ? 1 : 0);
+		return Number.isInteger(index) && index >= 0 && index <= room;
+	}
+
+	#insideSubtree(id: LayerId, parent: LayerId): boolean {
+		let node = this.#tree().getNodeByID(parent);
+		while (node !== undefined) {
+			if (node.id === id) {
+				return true;
+			}
+			node = node.parent();
+		}
+		return false;
 	}
 
 	#forget(id: LayerId): void {

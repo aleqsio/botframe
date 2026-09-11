@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { containsPoint, layerChain, toParentPoint } from "./layerSpace";
+import { containsPoint, fromParentPoint, layerChain, toParentPoint } from "./layerSpace";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {
@@ -81,5 +81,26 @@ describe("containsPoint", () => {
 	it("turns the point against the angle of the layer", () => {
 		expect(containsPoint(TURNED, { x: 290, y: 150 })).toBe(false);
 		expect(containsPoint(TURNED, { x: 200, y: 240 })).toBe(true);
+	});
+});
+
+describe("fromParentPoint", () => {
+	it("takes a point back out of one flat parent", () => {
+		expect(fromParentPoint([FLAT], { x: 50, y: 30 })).toEqual({ x: 150, y: 130 });
+	});
+
+	it("turns the point back with a turned parent", () => {
+		const inside = toParentPoint([TURNED], { x: 250, y: 230 });
+
+		expect(fromParentPoint([TURNED], inside).x).toBeCloseTo(250);
+		expect(fromParentPoint([TURNED], inside).y).toBeCloseTo(230);
+	});
+
+	it("is the inverse of toParentPoint over a chain", () => {
+		const canvas = { x: 250, y: 230 };
+		const inside = toParentPoint([FLAT, CHILD], canvas);
+
+		expect(fromParentPoint([FLAT, CHILD], inside).x).toBeCloseTo(canvas.x);
+		expect(fromParentPoint([FLAT, CHILD], inside).y).toBeCloseTo(canvas.y);
 	});
 });
