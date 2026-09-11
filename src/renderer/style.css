@@ -856,9 +856,12 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .unit-trigger {
 	display: flex;
+	align-self: stretch;
 	align-items: center;
 	gap: 1px;
-	padding: 1px 1px 1px 3px;
+	margin: -4px -7px -4px 0;
+	padding: 0 7px 0 4px;
+	border-radius: 0 6px 6px 0;
 	outline: none;
 	cursor: default;
 	transition: background-color 200ms ease;
@@ -872,7 +875,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .unit-trigger:focus-visible {
 	outline: 2px solid var(--panel-focus);
-	outline-offset: 1px;
+	outline-offset: -2px;
 }
 
 .unit-chevron {
