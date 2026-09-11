@@ -165,6 +165,44 @@ describe("a move of a layer", () => {
 		expect(doc.childIds(parent)).toEqual([first, joined, second]);
 	});
 
+	it("counts the index of a move in the same parent after the layer leaves its place", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const first = doc.createLayer(DRAWN, parent);
+		const second = doc.createLayer(DRAWN, parent);
+		const third = doc.createLayer(DRAWN, parent);
+
+		expect(doc.move(first, parent, 2)).toBe(true);
+
+		expect(doc.childIds(parent)).toEqual([second, third, first]);
+	});
+
+	it("refuses an index beyond the end of the new child list", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+		const joined = doc.createLayer(DRAWN);
+
+		expect(doc.move(joined, parent, 2)).toBe(false);
+		expect(doc.move(child, parent, 1)).toBe(false);
+		expect(doc.move(joined, null, 9)).toBe(false);
+		expect(doc.move(joined, parent, -1)).toBe(false);
+
+		expect(doc.childIds(parent)).toEqual([child]);
+		expect(doc.rootIds()).toContain(joined);
+	});
+
+	it("takes the last index that the new child list has room for", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+		const joined = doc.createLayer(DRAWN);
+
+		expect(doc.move(joined, parent, 1)).toBe(true);
+
+		expect(doc.childIds(parent)).toEqual([child, joined]);
+	});
+
 	it("notifies the layer list and the layer itself when the parent changes", () => {
 		const doc = DesignDocument.create();
 		const parent = doc.createLayer(DRAWN);
