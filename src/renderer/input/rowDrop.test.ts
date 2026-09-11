@@ -9,6 +9,7 @@ const [FIRST = "1@1", BRANCH = "2@1", LAST = "3@1"] = ROOT_IDS;
 const LEAF: LayerId = "4@1";
 const SHOOT: LayerId = "5@1";
 const DEEP: LayerId = "6@1";
+const DEEP_TWO: LayerId = "8@1";
 const GONE: LayerId = "9@9";
 const TURNED_BRANCH: LayerId = "7@1";
 
@@ -17,8 +18,9 @@ const CHILDREN: Readonly<Record<string, readonly LayerId[]>> = {
 	[BRANCH]: [LEAF, SHOOT],
 	[LAST]: [],
 	[LEAF]: [],
-	[SHOOT]: [DEEP],
+	[SHOOT]: [DEEP, DEEP_TWO],
 	[DEEP]: [],
+	[DEEP_TWO]: [],
 };
 
 const PARENTS: Readonly<Record<string, LayerId | null>> = {
@@ -28,6 +30,7 @@ const PARENTS: Readonly<Record<string, LayerId | null>> = {
 	[LEAF]: BRANCH,
 	[SHOOT]: BRANCH,
 	[DEEP]: SHOOT,
+	[DEEP_TWO]: SHOOT,
 };
 
 const ARTBOARDS: ReadonlySet<LayerId> = new Set([BRANCH, LAST]);
@@ -117,8 +120,18 @@ describe("rowMoveOf", () => {
 	it("gives the parent and the index of the row for before and after", () => {
 		expect(moveOf(LEAF, FIRST, "before")).toEqual({ parent: null, index: 0 });
 		expect(moveOf(LEAF, FIRST, "after")).toEqual({ parent: null, index: 1 });
-		expect(moveOf(LEAF, DEEP, "before")).toEqual({ parent: SHOOT, index: 0 });
-		expect(moveOf(LEAF, DEEP, "after")).toEqual({ parent: SHOOT, index: 1 });
+		expect(moveOf(FIRST, LEAF, "before")).toEqual({ parent: BRANCH, index: 0 });
+		expect(moveOf(FIRST, LEAF, "after")).toEqual({ parent: BRANCH, index: 1 });
+	});
+
+	it("refuses a drop beside a child of a row that is no artboard", () => {
+		expect(moveOf(FIRST, DEEP, "before")).toBeNull();
+		expect(moveOf(FIRST, DEEP, "after")).toBeNull();
+	});
+
+	it("still orders the children that a row which is no artboard already holds", () => {
+		expect(moveOf(DEEP_TWO, DEEP, "before")).toEqual({ parent: SHOOT, index: 0 });
+		expect(moveOf(DEEP, DEEP_TWO, "after")).toEqual({ parent: SHOOT, index: 1 });
 	});
 
 	it("counts the index after the dragged row leaves its own place", () => {

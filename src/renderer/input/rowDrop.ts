@@ -61,10 +61,17 @@ function insideMove(dragged: LayerId, parent: LayerId, tree: RowTree): RowMove {
 	return { parent, index: indexAfterLift(children, dragged, children.length) };
 }
 
+function takesSibling(dragged: LayerId, parent: LayerId | null, tree: RowTree): boolean {
+	if (parent === null || isArtboard(tree.read(parent))) {
+		return true;
+	}
+	return tree.read(dragged)?.parent === parent;
+}
+
 function siblingMove(dragged: LayerId, row: Layer, place: RowPlace, tree: RowTree): RowMove | null {
 	const siblings = tree.childIds(row.parent);
 	const at = siblings.indexOf(row.id);
-	if (at < 0) {
+	if (at < 0 || !takesSibling(dragged, row.parent, tree)) {
 		return null;
 	}
 	const slot = place === "after" ? at + 1 : at;

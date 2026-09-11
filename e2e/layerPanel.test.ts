@@ -267,7 +267,7 @@ test("the middle of a row that is no artboard takes the drop after that row", as
 	await expect(rows).toHaveText(["Rectangle", "Rectangle 2"]);
 
 	await pressRow(window, lines.nth(0));
-	await moveOnto(window, lines.nth(1), 0.5);
+	await moveOnto(window, lines.nth(1), 0.7);
 
 	await expect(lines.nth(1)).toHaveAttribute("data-mark", "after");
 

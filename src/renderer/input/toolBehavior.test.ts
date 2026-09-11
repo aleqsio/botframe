@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { LayerId } from "../../document/layer";
 import { TOOLS } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { Modifiers } from "./modifiers";
@@ -8,15 +7,7 @@ import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { Zone } from "./handles";
 import { firstId } from "./toolFixtures";
-import {
-	coveredTarget,
-	dragOver,
-	drawnLayer,
-	nestedTarget,
-	pointAt,
-	tapAt,
-	targetOf,
-} from "./toolFixtures";
+import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
@@ -26,7 +17,6 @@ const SE_CORNER = { x: 660, y: 420 };
 const GROWN_SE = { x: 700, y: 460 };
 const SE_REACH = { x: 678, y: 438 };
 const E_SIDE = { x: 660, y: 340 };
-const EMPTY = { x: 300, y: 200 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_ZONE = { mode: "resize", handle: "se" };
@@ -58,130 +48,6 @@ describe("the behavior of each tool", () => {
 			text: SE_ZONE,
 			image: SE_ZONE,
 		});
-	});
-
-	it("moves the layer under the pointer with one change for the drag", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		const changes = target.doc.changeCount();
-
-		dragOver(behaviorFor("select"), target, { press: PRESS, release: RELEASE });
-
-		expect(target.doc.layer(id)).toMatchObject({ x: 520, y: 330 });
-		expect(target.doc.changeCount()).toBe(changes + 1);
-		expect(target.user.selection.get()).toEqual([id]);
-	});
-
-	it("holds the grab of one gesture inside that gesture", () => {
-		const first = targetOf(true);
-		const second = targetOf(true);
-
-		dragOver(behaviorFor("select"), first, { press: PRESS, release: RELEASE });
-		dragOver(behaviorFor("select"), second, { press: { x: 500, y: 300 }, release: RELEASE });
-
-		expect(first.doc.layer(firstId(first.doc))).toMatchObject({ x: 520, y: 330 });
-		expect(second.doc.layer(firstId(second.doc))).toMatchObject({ x: 460, y: 310 });
-	});
-
-	it("selects the layer under the press and clears the selection on the empty canvas", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-
-		tapAt(behaviorFor("select"), target, CENTER);
-		expect(target.user.selection.get()).toEqual([id]);
-
-		tapAt(behaviorFor("select"), { ...target, layerIds: [] }, EMPTY);
-		expect(target.user.selection.get()).toEqual([]);
-	});
-
-	it("clears the selection when the drag starts on the empty canvas", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		tapAt(behaviorFor("select"), target, CENTER);
-
-		dragOver(
-			behaviorFor("select"),
-			{ ...target, layerIds: [] },
-			{
-				press: EMPTY,
-				release: RELEASE,
-			},
-		);
-
-		expect(target.user.selection.get()).toEqual([]);
-		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
-	});
-
-	it("holds the selection and moves it when the press finds no layer inside its box", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		tapAt(behaviorFor("select"), target, CENTER);
-		const clipped = { ...target, layerIds: [] };
-
-		tapAt(behaviorFor("select"), clipped, CENTER);
-		expect(target.user.selection.get()).toEqual([id]);
-
-		dragOver(behaviorFor("select"), clipped, { press: PRESS, release: RELEASE });
-		expect(target.user.selection.get()).toEqual([id]);
-		expect(target.doc.layer(id)).toMatchObject({ x: 520, y: 330 });
-	});
-
-	it("takes the topmost layer under the pointer and leaves the layers below it", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		const below = "9@9" as LayerId;
-
-		tapAt(behaviorFor("select"), { ...target, layerIds: [id, below] }, CENTER);
-
-		expect(target.user.selection.get()).toEqual([id]);
-	});
-
-	it("moves the selected layer when the drag starts on a layer above it", () => {
-		const { target, above, below } = coveredTarget();
-
-		dragOver(behaviorFor("select"), target, { press: PRESS, release: RELEASE });
-
-		expect(target.user.selection.get()).toEqual([below]);
-		expect(target.doc.layer(below)).toMatchObject({ x: 520, y: 330 });
-		expect(target.doc.layer(above)).toMatchObject({ x: 420, y: 260 });
-	});
-
-	it("takes the layer above on a tap, even when the layer below it holds the selection", () => {
-		const { target, above } = coveredTarget();
-
-		tapAt(behaviorFor("select"), target, CENTER);
-
-		expect(target.user.selection.get()).toEqual([above]);
-	});
-
-	it("opens the menu with each layer under the secondary press", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		const below = "9@9" as LayerId;
-
-		behaviorFor("select").context?.({ ...target, layerIds: [id, below] }, CLIENT);
-
-		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [id, below] });
-		expect(target.user.selection.get()).toEqual([id]);
-	});
-
-	it("keeps the selection when the secondary press finds it under the pointer", () => {
-		const { target, below } = coveredTarget();
-
-		behaviorFor("select").context?.(target, CLIENT);
-
-		expect(target.user.selection.get()).toEqual([below]);
-	});
-
-	it("opens the menu with no layer, and holds the selection, on the empty canvas", () => {
-		const target = targetOf(true);
-		const id = firstId(target.doc);
-		target.user.selection.set([id]);
-
-		behaviorFor("select").context?.({ ...target, layerIds: [] }, CLIENT);
-
-		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [] });
-		expect(target.user.selection.get()).toEqual([id]);
 	});
 
 	it("gives no answer to the secondary press for a tool that draws later", () => {

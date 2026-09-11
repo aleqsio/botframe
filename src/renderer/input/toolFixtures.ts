@@ -101,7 +101,7 @@ export function nestedTarget(rotation: number): { target: PointerTarget; child: 
 	});
 	const child = doc.createLayer(NESTED_CHILD, parent);
 	const layerIdsAt = (): readonly LayerId[] => [child, parent];
-	return { target: { doc, user: new UserState(), layerIds: [child], layerIdsAt }, child };
+	return { target: { doc, user: new UserState(), layerIds: [child, parent], layerIdsAt }, child };
 }
 
 export function drawnLayer(target: PointerTarget): Layer {
