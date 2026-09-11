@@ -10,7 +10,7 @@ function isRectangle(layer: Layer | null): boolean {
 	return layer?.geometry.kind === "rectangle";
 }
 
-function insideSubtree(read: ReadLayer, id: LayerId, root: LayerId): boolean {
+export function insideSubtree(read: ReadLayer, id: LayerId, root: LayerId): boolean {
 	let next: LayerId | null = id;
 	while (next !== null) {
 		if (next === root) {
