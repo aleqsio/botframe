@@ -99,6 +99,14 @@ test("the artboard tool opens a bar of presets above the tool bar, and select op
 		})
 		.toEqual({ gap: 8, heights: true });
 
+	const middle = (await window.evaluate(() => globalThis.innerWidth)) / 2;
+	const toolBox = await boxOf(tools);
+	const optionsBox = await boxOf(options);
+	const inspector = await boxOf(window.getByRole("complementary", { name: "Inspector" }));
+	expect(toolBox.x + toolBox.width / 2).toBeCloseTo(middle, 0);
+	expect(optionsBox.x + optionsBox.width / 2).toBeCloseTo(middle, 0);
+	expect(optionsBox.x + optionsBox.width).toBeLessThanOrEqual(inspector.x);
+
 	await window.keyboard.press("v");
 	await expect(window.getByRole("toolbar")).toHaveCount(1);
 

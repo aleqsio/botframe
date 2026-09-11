@@ -217,7 +217,7 @@ body {
 
 #dock {
 	position: fixed;
-	right: calc(var(--inspector-width) + 2 * var(--edge));
+	right: 0;
 	bottom: 24px;
 	left: 0;
 	display: flex;
@@ -234,6 +234,7 @@ body {
 }
 
 #dock > :not(:last-child) {
+	max-width: min(100%, 100vw - 2 * (var(--inspector-width) + 2 * var(--edge)));
 	animation: options-enter 160ms ease-out;
 }
 
