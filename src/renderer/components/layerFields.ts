@@ -32,7 +32,7 @@ const RADIUS_BOUND: Bound = { kind: "clamp", min: 0, max: COORDINATE_LIMIT };
 const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
 export interface UnitChoice {
-	units: readonly Unit[];
+	possible: ReadonlySet<Unit>;
 	convert: (unit: Unit) => LayerPatch;
 	parse: (text: string) => LayerPatch | null;
 }
@@ -72,14 +72,13 @@ function boxPatch(key: BoxKey, length: Length): LayerPatch {
 function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
 	const axis = AXIS_OF[key];
 	const held = layer.lengths[key].unit;
-	const offered = availableUnits(axis, basis);
-	const units = offered.includes(held) ? offered : [held, ...offered];
+	const possible = new Set<Unit>([held, ...availableUnits(axis, basis)]);
 	return {
-		units,
+		possible,
 		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
 		parse: (text) => {
 			const typed = parseLength(text, held);
-			return typed === null || !units.includes(typed.unit) ? null : boxPatch(key, typed);
+			return typed === null || !possible.has(typed.unit) ? null : boxPatch(key, typed);
 		},
 	};
 }

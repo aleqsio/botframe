@@ -132,7 +132,7 @@ function ChipUnit(props: NumberChipProps): ReactElement | null {
 	const { field } = props;
 	const { choice } = field;
 
-	if (choice === null || choice.units.length < 2) {
+	if (choice === null) {
 		return field.unit === "" ? null : (
 			<span aria-hidden="true" className="chip-unit">
 				{field.unit}
