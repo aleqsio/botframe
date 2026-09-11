@@ -45,7 +45,7 @@ test("the secondary press lists the layer under the pointer and selects it", asy
 
 	await window.keyboard.press("Escape");
 	await expect(menu).toBeHidden();
-	await expect(layer).not.toHaveAttribute("data-selected", "");
+	await expect(layer).toHaveAttribute("data-selected", "");
 
 	await window.mouse.down({ button: "right" });
 	await window.mouse.up({ button: "right" });
@@ -65,6 +65,27 @@ test("the secondary press lists the layer under the pointer and selects it", asy
 
 	await window.mouse.up();
 	await expect(layer).toHaveAttribute("style", /translate3d\(480px, 300px, 0px\)/u);
+
+	await app.close();
+});
+
+test("the secondary press on a layer takes it away with the Delete command", async () => {
+	const { app, window } = await launchApp();
+	const layer = window.locator(".layer");
+	const menu = window.locator(".layer-menu");
+
+	await expect(layer).toBeVisible();
+	const origin = await stageOrigin(window);
+
+	await pressRight(window, at(origin, GRAB));
+
+	await expect(menu).toBeVisible();
+	await expect(layer).toHaveAttribute("data-selected", "");
+
+	await menuItem(menu, "Delete").click();
+
+	await expect(menu).toBeHidden();
+	await expect(layer).toHaveCount(0);
 
 	await app.close();
 });

@@ -8,7 +8,15 @@ import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { Zone } from "./handles";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
+import {
+	coveredTarget,
+	dragOver,
+	drawnLayer,
+	nestedTarget,
+	pointAt,
+	tapAt,
+	targetOf,
+} from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
@@ -128,6 +136,24 @@ describe("the behavior of each tool", () => {
 		expect(target.user.selection.get()).toEqual([id]);
 	});
 
+	it("moves the selected layer when the drag starts on a layer above it", () => {
+		const { target, above, below } = coveredTarget();
+
+		dragOver(behaviorFor("select"), target, { press: PRESS, release: RELEASE });
+
+		expect(target.user.selection.get()).toEqual([below]);
+		expect(target.doc.layer(below)).toMatchObject({ x: 520, y: 330 });
+		expect(target.doc.layer(above)).toMatchObject({ x: 420, y: 260 });
+	});
+
+	it("takes the layer above on a tap, even when the layer below it holds the selection", () => {
+		const { target, above } = coveredTarget();
+
+		tapAt(behaviorFor("select"), target, CENTER);
+
+		expect(target.user.selection.get()).toEqual([above]);
+	});
+
 	it("opens the menu with each layer under the secondary press", () => {
 		const target = targetOf(true);
 		const id = firstId(target.doc);
@@ -136,14 +162,26 @@ describe("the behavior of each tool", () => {
 		behaviorFor("select").context?.({ ...target, layerIds: [id, below] }, CLIENT);
 
 		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [id, below] });
+		expect(target.user.selection.get()).toEqual([id]);
 	});
 
-	it("opens the menu with no layer on the empty canvas", () => {
-		const target = targetOf(false);
+	it("keeps the selection when the secondary press finds it under the pointer", () => {
+		const { target, below } = coveredTarget();
 
 		behaviorFor("select").context?.(target, CLIENT);
 
+		expect(target.user.selection.get()).toEqual([below]);
+	});
+
+	it("opens the menu with no layer, and holds the selection, on the empty canvas", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		target.user.selection.set([id]);
+
+		behaviorFor("select").context?.({ ...target, layerIds: [] }, CLIENT);
+
 		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [] });
+		expect(target.user.selection.get()).toEqual([id]);
 	});
 
 	it("gives no answer to the secondary press for a tool that draws later", () => {

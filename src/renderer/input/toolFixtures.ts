@@ -27,6 +27,13 @@ const NESTED_CHILD: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
 };
 
+const COVER: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
+	fill: "#ffffff",
+	name: "",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
+
 export const NO_HITS = (): readonly LayerId[] => [];
 
 export function targetOf(withLayer: boolean): PointerTarget {
@@ -37,6 +44,31 @@ export function targetOf(withLayer: boolean): PointerTarget {
 		layerIds: withLayer ? [firstId(doc)] : [],
 		layerIdsAt: NO_HITS,
 	};
+}
+
+export interface CoveredScene {
+	target: PointerTarget;
+	above: LayerId;
+	below: LayerId;
+}
+
+export function coveredTarget(): CoveredScene {
+	const doc = DesignDocument.create();
+	const below = firstId(doc);
+	const box = doc.layer(below);
+	if (box === null) {
+		throw new Error("the document has no layer");
+	}
+	const above = doc.createLayer({
+		...COVER,
+		x: box.x,
+		y: box.y,
+		width: box.width,
+		height: box.height,
+	});
+	const user = new UserState();
+	user.selection.set([below]);
+	return { target: { doc, user, layerIds: [above, below], layerIdsAt: NO_HITS }, above, below };
 }
 
 export interface DropScene {

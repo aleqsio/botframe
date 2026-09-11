@@ -32,6 +32,22 @@ function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
 	return held;
 }
 
+function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
+	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
+}
+
+function holdsLayerUnder(target: PointerTarget): boolean {
+	const selection = target.user.selection.get();
+	return target.layerIds.some((id) => selection.includes(id));
+}
+
+function selectForMenu(target: PointerTarget): void {
+	const layerId = target.layerIds[0];
+	if (layerId !== undefined && !holdsLayerUnder(target)) {
+		select(target.user, layerId);
+	}
+}
+
 export function createPickBehavior(): ToolBehavior {
 	return {
 		tap(target, point) {
@@ -39,7 +55,7 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {
-			const layer = layerOfPress(target, origin.canvas);
+			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
 			}
@@ -54,6 +70,7 @@ export function createPickBehavior(): ToolBehavior {
 			finishMove(target, point, modifiers);
 		},
 		context(target, client) {
+			selectForMenu(target);
 			target.user.menu.set({ client, layerIds: target.layerIds });
 			return true;
 		},
