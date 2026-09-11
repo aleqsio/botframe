@@ -2,12 +2,11 @@ import type { LayerId } from "../../document/layer";
 import { isRootArtboard } from "../components/layerEntry";
 import type { LayerMove } from "../state/userState";
 import type { ReadLayer } from "./layerSpace";
-import { changesParent } from "./moveDrag";
 import type { RowDrag } from "./rowDrop";
 
 function dropTarget(move: LayerMove | null, drag: RowDrag | null): LayerId | null {
 	if (move !== null) {
-		return changesParent(move) ? move.parent : null;
+		return move.parent;
 	}
 	return drag?.target?.place === "inside" ? drag.target.id : null;
 }

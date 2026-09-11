@@ -66,8 +66,8 @@ describe("droppedInto", () => {
 		expect(droppedInto(moveInto(null), null, read)).toBeNull();
 	});
 
-	it("gives no layer when the move drag leaves the first parent alone", () => {
-		expect(droppedInto(moveInto(ARTBOARD, ARTBOARD), null, read)).toBeNull();
+	it("gives the parent that holds the layer when the move drag keeps the first parent", () => {
+		expect(droppedInto(moveInto(ARTBOARD, ARTBOARD), null, read)).toBe(ARTBOARD);
 	});
 
 	it("gives no layer for an artboard at the root of the document", () => {

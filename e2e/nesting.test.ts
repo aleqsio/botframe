@@ -19,6 +19,7 @@ const NESTED: Drag = { from: { x: 300, y: 60 }, to: { x: 460, y: 160 } };
 const GRAB_THE_SHAPE = { x: 540, y: 340 };
 const OVER_THE_ROOT_ARTBOARD = { x: 470, y: 170 };
 const OVER_THE_NESTED_ARTBOARD = { x: 440, y: 150 };
+const INSIDE_THE_NESTED_ARTBOARD: Drag = { from: OVER_THE_NESTED_ARTBOARD, to: { x: 420, y: 130 } };
 
 async function idOf(locator: Locator): Promise<string> {
 	const id = await locator.getAttribute("data-layer-id");
@@ -208,7 +209,7 @@ test("a draw over a shape puts the new layer at the root, not in the shape", asy
 	await app.close();
 });
 
-test("the drop target takes a highlight, and a root artboard takes none", async () => {
+test("the parent of the dragged layer keeps a highlight, and a root artboard takes none", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const frame = window.locator(".drop-frame");
 
@@ -234,6 +235,15 @@ test("the drop target takes a highlight, and a root artboard takes none", async 
 	);
 	await expect(frame).toHaveCount(1);
 	await expect(frame).toHaveCSS("outline-color", SELECTION_BLUE);
+	expect(await boxOf(frame)).toEqual(at(origin, NESTED.from));
+
+	await window.mouse.up();
+
+	await expect(frame).toHaveCount(0);
+	await expect(nested.locator("> .layer")).toHaveCount(1);
+
+	await pressInto(window, origin, INSIDE_THE_NESTED_ARTBOARD);
+	await expect(frame).toHaveCount(1);
 	expect(await boxOf(frame)).toEqual(at(origin, NESTED.from));
 
 	await window.mouse.up();
