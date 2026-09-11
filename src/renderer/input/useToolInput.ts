@@ -63,7 +63,9 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 		},
 		onContextMenu(client, layerIds) {
 			const current = begin(layerIds);
-			current.behavior.context?.(current.target, client);
+			if (current.behavior.context?.(current.target, client) !== true) {
+				user.menu.set({ client, layerIds: NO_LAYERS });
+			}
 		},
 	};
 }

@@ -59,8 +59,7 @@ export function createPickBehavior(): ToolBehavior {
 			target.doc.commit(COMMIT_MESSAGES.move);
 		},
 		context(target, client) {
-			const { layerIds } = target;
-			target.user.menu.set(layerIds.length === 0 ? null : { client, layerIds });
+			target.user.menu.set({ client, layerIds: target.layerIds });
 			return true;
 		},
 	};
