@@ -13,9 +13,9 @@ export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }):
 
 	return (
 		<>
+			<Stage doc={doc} stage={stage} user={user} />
 			<div id="title-bar" />
 			<LayerList doc={doc} user={user} />
-			<Stage doc={doc} stage={stage} user={user} />
 			<Properties doc={doc} stage={stage} user={user} />
 			<ToolBar tool={user.tool} />
 			<LayerMenu doc={doc} user={user} />

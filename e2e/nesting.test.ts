@@ -3,17 +3,17 @@ import type { Locator, Page } from "@playwright/test";
 import { at, boxOf, dragOn, drawWith, openStage, pressInto } from "./support";
 import type { Drag, Point } from "./support";
 
-const ARTBOARD: Drag = { from: { x: 40, y: 40 }, to: { x: 240, y: 180 } };
-const INSIDE: Drag = { from: { x: 80, y: 80 }, to: { x: 180, y: 140 } };
-const OVER_THE_EDGE: Drag = { from: { x: 180, y: 120 }, to: { x: 300, y: 240 } };
-const MOVE_ARTBOARD: Drag = { from: { x: 220, y: 60 }, to: { x: 270, y: 110 } };
-const OUTSIDE_THE_CLIP = { x: 270, y: 210 };
-const CLIPPED_DRAG: Drag = { from: OUTSIDE_THE_CLIP, to: { x: 300, y: 230 } };
+const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
+const OVER_THE_EDGE: Drag = { from: { x: 420, y: 120 }, to: { x: 540, y: 240 } };
+const MOVE_ARTBOARD: Drag = { from: { x: 460, y: 60 }, to: { x: 510, y: 110 } };
+const OUTSIDE_THE_CLIP = { x: 510, y: 210 };
+const CLIPPED_DRAG: Drag = { from: OUTSIDE_THE_CLIP, to: { x: 540, y: 230 } };
 const SELECTION_BLUE = "rgb(13, 153, 255)";
-const OVER_THE_ARTBOARD = { x: 200, y: 150 };
+const OVER_THE_ARTBOARD = { x: 440, y: 150 };
 const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOARD };
-const BEYOND_THE_CLIP = { x: 280, y: 150 };
-const CARRIED = { x: -340, y: -190 };
+const BEYOND_THE_CLIP = { x: 520, y: 150 };
+const CARRIED = { x: -100, y: -190 };
 
 async function idOf(locator: Locator): Promise<string> {
 	const id = await locator.getAttribute("data-layer-id");
@@ -74,7 +74,7 @@ test("a child of an artboard moves with the artboard", async () => {
 
 	await dragOn(window, origin, MOVE_ARTBOARD);
 
-	await expect(artboard).toHaveAttribute("style", /translate3d\(90px, 90px, 0px\)/u);
+	await expect(artboard).toHaveAttribute("style", /translate3d\(330px, 90px, 0px\)/u);
 	await expect(child).toHaveAttribute("style", /translate3d\(40px, 40px, 0px\)/u);
 	expect(await boxOf(child)).toEqual({ x: before.x + 50, y: before.y + 50 });
 

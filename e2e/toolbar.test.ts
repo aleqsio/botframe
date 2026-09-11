@@ -1,7 +1,7 @@
 import { _electron as electron, expect, test } from "@playwright/test";
 
 const BOTTOM_GAP = 24;
-const EMPTY_SPOT = 8;
+const EMPTY_SPOT = { x: 300, y: 600 };
 
 test("the floating bar sits at the bottom center and holds one selected tool", async () => {
 	const app = await electron.launch({ args: ["out/main/index.js"] });
@@ -28,7 +28,7 @@ test("the floating bar sits at the bottom center and holds one selected tool", a
 	await expect(stage).toHaveAttribute("data-tool", "select");
 	await expect(layer).toHaveCSS("cursor", "default");
 
-	await stage.hover({ position: { x: EMPTY_SPOT, y: EMPTY_SPOT } });
+	await stage.hover({ position: EMPTY_SPOT });
 	await window.mouse.down();
 	await expect(layer).toHaveCSS("cursor", "default");
 	await window.mouse.up();

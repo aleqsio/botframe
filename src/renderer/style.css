@@ -1,17 +1,20 @@
 :root {
-	color-scheme: dark;
-	--stage-background: #16161c;
-	--window-tint: rgb(11 11 18 / 0.66);
-	--canvas-border: inset 0 0 0 0.5px rgb(255 255 255 / 0.17);
+	color-scheme: light dark;
 	--title-bar: 36px;
-	--canvas-inset: 8px;
-	--layers-width: 200px;
-	--properties-width: 232px;
-	--panel-text: rgb(255 255 255 / 0.92);
-	--panel-label: rgb(255 255 255 / 0.55);
-	--panel-hover: rgb(255 255 255 / 0.1);
-	--panel-selected: rgb(255 255 255 / 0.18);
-	--canvas-radius: 4px;
+	--edge: 10px;
+	--card-top: 52px;
+	--stage-background: light-dark(#f2f2f2, #1d1c22);
+	--stage-dots: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
+	--panel-background: light-dark(rgb(255 255 255 / 0.9), rgb(44 43 52 / 0.92));
+	--panel-border: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
+	--panel-shadow: 0 18px 40px rgb(20 19 27 / 0.14), 0 2px 6px rgb(20 19 27 / 0.08);
+	--panel-text: light-dark(rgb(0 0 0 / 0.88), rgb(255 255 255 / 0.92));
+	--panel-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.55));
+	--panel-hover: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.08));
+	--panel-selected: light-dark(rgb(0 0 0 / 0.09), rgb(255 255 255 / 0.16));
+	--panel-divider: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
+	--panel-focus: light-dark(rgb(13 153 255 / 0.9), rgb(138 168 255 / 0.9));
+	--canvas-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.5));
 	--bar-background: rgb(44 43 54 / 0.8);
 	--bar-border: rgb(255 255 255 / 0.1);
 	--bar-shadow: 0 12px 32px rgb(20 19 27 / 0.24), 0 2px 6px rgb(20 19 27 / 0.18);
@@ -28,6 +31,12 @@
 		crosshair;
 }
 
+@media (prefers-color-scheme: dark) {
+	:root {
+		--panel-shadow: 0 18px 40px rgb(0 0 0 / 0.36), 0 2px 6px rgb(0 0 0 / 0.24);
+	}
+}
+
 * {
 	margin: 0;
 	box-sizing: border-box;
@@ -42,7 +51,7 @@ body,
 
 body {
 	overflow: hidden;
-	background: var(--window-tint);
+	background: var(--stage-background);
 	font:
 		13px system-ui,
 		sans-serif;
@@ -51,7 +60,7 @@ body {
 }
 
 #title-bar {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	right: 0;
 	left: 0;
@@ -61,23 +70,12 @@ body {
 
 #stage {
 	position: absolute;
-	top: var(--title-bar);
-	right: var(--properties-width);
-	bottom: var(--canvas-inset);
-	left: var(--layers-width);
-	background: var(--stage-background);
-	border-radius: var(--canvas-radius);
-	overflow: hidden;
-	touch-action: none;
-}
-
-#stage::after {
-	content: "";
-	position: absolute;
 	inset: 0;
-	border-radius: inherit;
-	box-shadow: var(--canvas-border);
-	pointer-events: none;
+	overflow: hidden;
+	background-color: var(--stage-background);
+	background-image: radial-gradient(var(--stage-dots) 1px, transparent 1.2px);
+	background-size: 20px 20px;
+	touch-action: none;
 }
 
 #viewport {
@@ -275,26 +273,34 @@ body {
 	stroke-linejoin: round;
 }
 
-.panel {
-	position: absolute;
-	top: var(--title-bar);
-	bottom: 0;
+#layers,
+#properties {
+	position: fixed;
+	top: var(--card-top);
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	padding: 10px 8px;
-	color: var(--panel-text);
+	max-height: calc(100% - var(--card-top) - var(--edge));
+	padding: 6px;
 	overflow-y: auto;
+	border: 1px solid var(--panel-border);
+	border-radius: 14px;
+	background: var(--panel-background);
+	backdrop-filter: blur(16px) saturate(150%);
+	-webkit-backdrop-filter: blur(16px) saturate(150%);
+	box-shadow: var(--panel-shadow);
+	color: var(--panel-text);
+	-webkit-app-region: no-drag;
 }
 
 #layers {
-	left: 0;
-	width: var(--layers-width);
+	left: var(--edge);
+	width: 210px;
 }
 
 #properties {
-	right: 0;
-	width: var(--properties-width);
+	right: var(--edge);
+	width: 248px;
 }
 
 .panel-title {
@@ -530,7 +536,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .number-chip:has(.property-input:focus) {
 	background-color: var(--panel-selected);
-	box-shadow: 0 0 0 1.5px var(--bar-focus);
+	box-shadow: 0 0 0 1.5px var(--panel-focus);
 }
 
 .chip-handle {
@@ -542,7 +548,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 }
 
 .chip-handle:has(.chip-grip:focus-visible) {
-	outline: 2px solid var(--bar-focus);
+	outline: 2px solid var(--panel-focus);
 	outline-offset: 2px;
 }
 
@@ -641,7 +647,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 }
 
 .segment:focus-visible {
-	outline: 2px solid var(--bar-focus);
+	outline: 2px solid var(--panel-focus);
 	outline-offset: -2px;
 }
 
@@ -652,7 +658,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 	gap: 8px;
 	margin-top: 2px;
 	padding-top: 8px;
-	border-top: 1px solid var(--bar-border);
+	border-top: 1px solid var(--panel-divider);
 }
 
 .footer-select {

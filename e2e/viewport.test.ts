@@ -3,7 +3,7 @@ import type { JSHandle, Locator, Page } from "@playwright/test";
 import { launchApp, stageOrigin } from "./support";
 
 const LAYER = { x: 420, y: 260, width: 240, height: 160 };
-const PRESS = { x: 60, y: 60 };
+const PRESS = { x: 300, y: 60 };
 const PAN = { x: 120, y: 80 };
 const GRAB = { x: 20, y: 20 };
 const LAYER_DRAG = { x: 100, y: 70 };

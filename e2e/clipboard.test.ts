@@ -20,7 +20,7 @@ interface MenuEntry {
 	children: string[];
 }
 
-const ARTBOARD = { press: { x: 40, y: 40 }, release: { x: 240, y: 180 } };
+const ARTBOARD = { press: { x: 280, y: 40 }, release: { x: 480, y: 180 } };
 const OVER_EMPTY = { x: 500, y: 300 };
 
 function clipboardFlavors(app: ElectronApplication): Promise<boolean> {
