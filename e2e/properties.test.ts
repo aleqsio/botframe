@@ -129,6 +129,47 @@ test("a name that a person types letter by letter does not change the tool", asy
 	await app.close();
 });
 
+test("the fill swatch opens a picker that paints the layer", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+	const fill = window.getByLabel("Fill", { exact: true });
+
+	await window.getByLabel("Fill picker", { exact: true }).click();
+	const area = window.getByLabel(/^Saturation and brightness/u);
+	await expect(area).toBeVisible();
+
+	await window.getByLabel("#0d99ff", { exact: true }).click();
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(13, 153, 255)");
+	await expect(fill).toHaveValue("#0d99ff");
+
+	await window.getByLabel("Opacity", { exact: true }).fill("50");
+
+	await expect(fill).toHaveValue("#0d99ff80");
+	await expect(drawn).toHaveCSS("background-color", "rgba(13, 153, 255, 0.5)");
+
+	await area.focus();
+	await window.keyboard.press("ArrowLeft");
+
+	await expect(fill).not.toHaveValue("#0d99ff80");
+
+	await app.close();
+});
+
+test("the fill field reads a color that a person names and writes it as hex", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+
+	await typeInto(window, "Fill", "rebeccapurple");
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(102, 51, 153)");
+	await expect(window.getByLabel("Fill", { exact: true })).toHaveValue("#663399");
+
+	await app.close();
+});
+
 test("the panel keeps a fill and a width that the stage can paint", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);

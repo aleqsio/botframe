@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { ArtboardFooter } from "./ArtboardFooter";
+import { ColorField } from "./ColorField";
 import { NumberChip } from "./NumberChip";
 import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
@@ -88,13 +89,12 @@ export function LayerProperties({
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
-			<PropertyField
+			<ColorField
 				label="Fill"
-				onCommit={(text) => {
-					if (!CSS.supports("color", text)) {
-						return;
-					}
+				onChange={(text) => {
 					doc.update(layer.id, { fill: text });
+				}}
+				onCommit={() => {
 					doc.commit("set fill");
 				}}
 				value={layer.fill}
