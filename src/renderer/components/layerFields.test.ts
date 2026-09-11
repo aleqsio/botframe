@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import { firstId } from "../input/toolFixtures";
 import type { Layer } from "../../document/layer";
-import { LAYER_FIELDS, fieldsOf, formatNumber, swappedBox } from "./layerFields";
+import { NO_MODIFIERS } from "../input/modifiers";
+import { stepOf } from "../input/step";
+import { firstId } from "../input/toolFixtures";
+import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox } from "./layerFields";
 import type { LayerField } from "./layerFields";
+
+const ALT = { shift: false, alt: true };
+const SHIFT = { shift: true, alt: false };
+const BOX_LABELS = ["X", "Y", "W", "H", "Rotation"];
 
 function layerOf(doc: DesignDocument): Layer {
 	const layer = doc.layer(firstId(doc));
@@ -24,19 +30,35 @@ function fieldNamed(layer: Layer, label: string): LayerField {
 function applied(label: string, value: number): Layer {
 	const doc = DesignDocument.create();
 	const layer = layerOf(doc);
-	fieldNamed(layer, label).apply(doc, layer, value);
+	const field = fieldNamed(layer, label);
+	doc.update(layer.id, fieldPatch(field, value));
+	doc.commit(field.message);
 	return layerOf(doc);
 }
 
-describe("LAYER_FIELDS", () => {
+describe("the layer fields", () => {
 	it("reads the box and the angle of a layer", () => {
 		const layer = layerOf(DesignDocument.create());
-		expect(LAYER_FIELDS.map((field) => [field.label, field.read(layer)])).toEqual([
+		const box = fieldsOf(layer).filter((field) => BOX_LABELS.includes(field.label));
+		expect(box.map((field) => [field.label, field.read(layer)])).toEqual([
 			["X", 420],
 			["Y", 260],
 			["W", 240],
 			["H", 160],
 			["Rotation", 0],
+		]);
+	});
+
+	it("gives each field a unit", () => {
+		const layer = layerOf(DesignDocument.create());
+		expect(fieldsOf(layer).map((field) => [field.label, field.unit])).toEqual([
+			["X", "px"],
+			["Y", "px"],
+			["W", "px"],
+			["H", "px"],
+			["Rotation", "deg"],
+			["Radius", "px"],
+			["Smoothing", ""],
 		]);
 	});
 
@@ -52,8 +74,29 @@ describe("LAYER_FIELDS", () => {
 		expect(applied("H", 0)).toMatchObject({ height: 1 });
 	});
 
+	it("holds the position inside the limit of the canvas", () => {
+		expect(applied("X", 1e9)).toMatchObject({ x: 100_000 });
+		expect(applied("Y", -1e9)).toMatchObject({ y: -100_000 });
+	});
+
 	it("turns an angle outside one turn into an angle inside one turn", () => {
 		expect(applied("Rotation", 370)).toMatchObject({ rotation: 10 });
+	});
+
+	it("wraps the angle at zero and at one full turn", () => {
+		expect(applied("Rotation", 0)).toMatchObject({ rotation: 0 });
+		expect(applied("Rotation", 360)).toMatchObject({ rotation: 0 });
+		expect(applied("Rotation", 359.5)).toMatchObject({ rotation: 359.5 });
+		expect(applied("Rotation", -1)).toMatchObject({ rotation: 359 });
+		expect(applied("Rotation", 720)).toMatchObject({ rotation: 0 });
+	});
+
+	it("gives each field a step that shift makes large and alt makes small", () => {
+		const layer = layerOf(DesignDocument.create());
+		for (const field of fieldsOf(layer)) {
+			expect(stepOf(field.step, ALT)).toBeLessThan(stepOf(field.step, NO_MODIFIERS));
+			expect(stepOf(field.step, SHIFT)).toBeGreaterThan(stepOf(field.step, NO_MODIFIERS));
+		}
 	});
 
 	it("commits the write of a field as one change", () => {
@@ -61,26 +104,32 @@ describe("LAYER_FIELDS", () => {
 		const before = doc.changeCount();
 		const layer = layerOf(doc);
 
-		fieldNamed(layer, "X").apply(doc, layer, 10);
+		doc.update(layer.id, fieldPatch(fieldNamed(layer, "X"), 10));
+		doc.commit("move layer");
 
 		expect(doc.changeCount()).toBe(before + 1);
 	});
 });
 
-describe("fieldsOf", () => {
-	it("lists the corner fields of a rectangle after the box fields", () => {
-		const labels = fieldsOf(layerOf(DesignDocument.create())).map((field) => field.label);
-		expect(labels).toEqual(["X", "Y", "W", "H", "Rotation", "Radius", "Smoothing"]);
+describe("fieldGroupsOf", () => {
+	it("groups the fields of a rectangle", () => {
+		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
+		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
+			["Position", ["X", "Y"]],
+			["Size", ["W", "H"]],
+			["Rotation", ["Rotation"]],
+			["Corners", ["Radius", "Smoothing"]],
+		]);
 	});
 
-	it("lists no corner field for a geometry that has no corner", () => {
+	it("lists no corner group for a geometry that has no corner", () => {
 		const doc = DesignDocument.create();
-		const id = firstId(doc);
-		doc.update(id, { geometry: { kind: "ellipse" } });
+		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });
 
-		const labels = fieldsOf(layerOf(doc)).map((field) => field.label);
+		const groups = fieldGroupsOf(layerOf(doc));
 
-		expect(labels).toEqual(LAYER_FIELDS.map((field) => field.label));
+		expect(groups.map((group) => group.name)).toEqual(["Position", "Size", "Rotation"]);
+		expect(fieldsOf(layerOf(doc)).map((field) => field.label)).toEqual(BOX_LABELS);
 	});
 
 	it("reads and writes the corner radius and the corner smoothing", () => {
@@ -92,25 +141,15 @@ describe("fieldsOf", () => {
 		});
 	});
 
-	it("holds a corner at zero", () => {
+	it("holds a corner at zero, and the smoothing at one", () => {
 		expect(applied("Radius", -4)).toMatchObject({ geometry: { cornerRadius: 0 } });
 		expect(applied("Smoothing", -4)).toMatchObject({ geometry: { cornerSmoothing: 0 } });
+		expect(applied("Smoothing", 4)).toMatchObject({ geometry: { cornerSmoothing: 1 } });
 	});
 });
 
 describe("swappedBox", () => {
 	it("exchanges the width and the height", () => {
 		expect(swappedBox(layerOf(DesignDocument.create()))).toEqual({ width: 160, height: 240 });
-	});
-});
-
-describe("formatNumber", () => {
-	it("writes a whole number with no decimal point", () => {
-		expect(formatNumber(240)).toBe("240");
-	});
-
-	it("cuts an angle from a drag to two decimals", () => {
-		expect(formatNumber(37.423_42)).toBe("37.42");
-		expect(formatNumber(-0.004)).toBe("0");
 	});
 });

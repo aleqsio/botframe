@@ -2,13 +2,10 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { normalizeDegrees } from "./layerSpace";
-import { ROTATE_STEP_SHIFT, scaledRect } from "./transform";
-
-export const NUDGE_STEP = 1;
-export const NUDGE_STEP_SHIFT = 10;
-export const TURN_STEP = 1;
-export const SCALE_STEP = 0.05;
-export const SCALE_STEP_SHIFT = 0.2;
+import { modifiersOf } from "./modifiers";
+import type { Modifiers } from "./modifiers";
+import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, stepOf } from "./step";
+import { scaledRect } from "./transform";
 
 export type LayerCommand =
 	| { kind: "move"; by: Point }
@@ -54,24 +51,29 @@ function isAccelerator(stroke: KeyStroke): boolean {
 	return stroke.metaKey || (stroke.ctrlKey && !stroke.altKey);
 }
 
+function withoutLayoutAlt(modifiers: Modifiers): Modifiers {
+	return { shift: modifiers.shift, alt: false };
+}
+
 export function commandFor(stroke: KeyStroke): LayerCommand | null {
 	if (isAccelerator(stroke)) {
 		return null;
 	}
+	const modifiers = modifiersOf(stroke);
 	const nudge = NUDGE_KEYS[stroke.key];
 	if (nudge !== undefined) {
-		const step = stroke.shiftKey ? NUDGE_STEP_SHIFT : NUDGE_STEP;
+		const step = stepOf(LENGTH_STEP, modifiers);
 		return { kind: "move", by: { x: nudge.x * step, y: nudge.y * step } };
 	}
 	const turn = TURN_KEYS[stroke.key];
 	if (turn !== undefined) {
-		return { kind: "rotate", degrees: turn * (stroke.shiftKey ? ROTATE_STEP_SHIFT : TURN_STEP) };
+		return { kind: "rotate", degrees: turn * stepOf(ANGLE_STEP, withoutLayoutAlt(modifiers)) };
 	}
 	const scale = SCALE_KEYS[stroke.key];
 	if (scale === undefined) {
 		return null;
 	}
-	return { kind: "resize", factor: 1 + scale * (stroke.shiftKey ? SCALE_STEP_SHIFT : SCALE_STEP) };
+	return { kind: "resize", factor: 1 + scale * stepOf(FACTOR_STEP, modifiers) };
 }
 
 export function applyCommand(doc: DesignDocument, layer: Layer, command: LayerCommand): void {

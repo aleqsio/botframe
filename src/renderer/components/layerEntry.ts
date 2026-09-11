@@ -19,7 +19,7 @@ export function isArtboard(layer: Layer | null): boolean {
 	return geometry?.kind === "rectangle" && geometry.artboard;
 }
 
-function kindLabel(layer: Layer | null): string {
+export function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 
 const PATHS = {
 	artboard: "M8.5 3v18M15.5 3v18M3 8.5h18M3 15.5h18",
+	chevron: "m7 10 5 5 5-5",
 	ellipse: "M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z",
 	hand: "M9 11V5a1.5 1.5 0 0 1 3 0v6M12 11V4a1.5 1.5 0 0 1 3 0v7M15 11V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.4-2.6L6 14.6a1.5 1.5 0 0 1 2.6-1.5l.4.7M9 11V9.5a1.5 1.5 0 0 0-3 0V13",
 	image:
