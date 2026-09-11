@@ -2,10 +2,11 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { ArtboardFooter } from "./ArtboardFooter";
+import { ColorField } from "./ColorField";
 import { NumberChip } from "./NumberChip";
 import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { fieldGroupsOf, fieldPatch } from "./layerFields";
+import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup, LayerField } from "./layerFields";
 
 function LayerChip({
@@ -23,8 +24,8 @@ function LayerChip({
 			onCommit={() => {
 				doc.commit(field.message);
 			}}
-			onUpdate={(value) => {
-				doc.update(layer.id, fieldPatch(field, value));
+			onPatch={(patch) => {
+				doc.update(layer.id, patch);
 			}}
 			value={field.read(layer)}
 		/>
@@ -85,16 +86,15 @@ export function LayerProperties({
 				}}
 				value={layer.name}
 			/>
-			{fieldGroupsOf(layer).map((group) => (
+			{fieldGroupsOf(layer, doc.basisOf(layer.id)).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
-			<PropertyField
+			<ColorField
 				label="Fill"
-				onCommit={(text) => {
-					if (!CSS.supports("color", text)) {
-						return;
-					}
+				onChange={(text) => {
 					doc.update(layer.id, { fill: text });
+				}}
+				onCommit={() => {
 					doc.commit("set fill");
 				}}
 				value={layer.fill}

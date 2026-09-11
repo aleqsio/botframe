@@ -1,5 +1,4 @@
-import type { LayerId } from "../document/layer";
-import type { LayerNode } from "../document/subtree";
+import type { LayerId, LayerPatch } from "../document/layer";
 import { isArtboard } from "./components/layerEntry";
 import type { ReadLayer } from "./input/layerSpace";
 
@@ -18,6 +17,15 @@ export function pasteParent(
 	return selected === undefined ? null : (read(selected)?.parent ?? null);
 }
 
-export function shiftNode(node: LayerNode, by: number): LayerNode {
-	return { ...node, fields: { ...node.fields, x: node.fields.x + by, y: node.fields.y + by } };
+export interface LayerShift {
+	layer: ReadLayer;
+	update: (id: LayerId, patch: LayerPatch) => void;
+}
+
+export function shiftLayer(shift: LayerShift, id: LayerId, by: number): void {
+	const layer = shift.layer(id);
+	if (layer === null || by === 0) {
+		return;
+	}
+	shift.update(id, { x: layer.x + by, y: layer.y + by });
 }

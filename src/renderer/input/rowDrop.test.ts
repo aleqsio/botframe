@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import { centerOf, fromParentPoint } from "./layerSpace";
-import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf, rowTargetOf } from "./rowDrop";
+import type { Placement } from "./dropTarget";
+import {
+	carriedMove,
+	carriedPlacement,
+	rowMarkOf,
+	rowMoveOf,
+	rowPlaceOf,
+	rowTargetOf,
+} from "./rowDrop";
 import type { RowPlace, RowTree } from "./rowDrop";
 
 const ROOT_IDS: readonly LayerId[] = ["1@1", "2@1", "3@1"];
@@ -53,6 +62,7 @@ function read(id: LayerId): Layer | null {
 		y: 0,
 		width: 10,
 		height: 10,
+		...pixelBox({ x: 0, y: 0, width: 10, height: 10 }),
 		rotation: 0,
 		fill: "#000000",
 		geometry: geometryOf(id),
@@ -219,18 +229,23 @@ function placedLayer(id: LayerId): Layer {
 	return layer;
 }
 
+function carriedInto(id: LayerId, parent: LayerId | null): Placement | null {
+	const carried = carriedMove(placedRead, id, parent);
+	return carried === null ? null : carriedPlacement(carried, carried.layer);
+}
+
 describe("carriedPlacement", () => {
 	it("gives no placement when the parent does not change", () => {
-		expect(carriedPlacement(placedRead, FIRST, null)).toBeNull();
+		expect(carriedMove(placedRead, FIRST, null)).toBeNull();
 	});
 
 	it("takes the placement into the space of a flat new parent", () => {
-		expect(carriedPlacement(placedRead, FIRST, BRANCH)).toEqual({ x: 200, y: 150, rotation: 0 });
+		expect(carriedInto(FIRST, BRANCH)).toEqual({ x: 200, y: 150, rotation: 0 });
 	});
 
 	it("turns the layer against a turned new parent, so it keeps its place on the screen", () => {
 		const layer = placedLayer(FIRST);
-		const placement = carriedPlacement(placedRead, FIRST, TURNED_BRANCH);
+		const placement = carriedInto(FIRST, TURNED_BRANCH);
 
 		const center = fromParentPoint(
 			[placedLayer(TURNED_BRANCH)],
@@ -241,7 +256,22 @@ describe("carriedPlacement", () => {
 		expect(placement?.rotation).toBeCloseTo(270);
 	});
 
+	it("places the layer by the size it takes in the new parent", () => {
+		const carried = carriedMove(placedRead, FIRST, BRANCH);
+		if (carried === null) {
+			throw new Error("the layer does not carry into the branch");
+		}
+		const held = carriedPlacement(carried, carried.layer);
+		const larger = { width: carried.layer.width + 40, height: carried.layer.height + 20 };
+
+		expect(carriedPlacement(carried, larger)).toEqual({
+			x: held.x - 20,
+			y: held.y - 10,
+			rotation: held.rotation,
+		});
+	});
+
 	it("gives no placement for a layer the document lost", () => {
-		expect(carriedPlacement(placedRead, GONE, BRANCH)).toBeNull();
+		expect(carriedMove(placedRead, GONE, BRANCH)).toBeNull();
 	});
 });

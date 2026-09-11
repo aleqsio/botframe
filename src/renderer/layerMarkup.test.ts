@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelLengths } from "../document/documentFixtures";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -16,7 +17,8 @@ const FIELDS: LayerFields = {
 };
 
 function nodeOf(fields: Partial<LayerFields>, children: readonly LayerNode[] = []): LayerNode {
-	return { fields: { ...FIELDS, ...fields }, rotation: 0, children };
+	const merged = { ...FIELDS, ...fields };
+	return { fields: merged, rotation: 0, lengths: pixelLengths(merged), children };
 }
 
 describe("layerMarkup", () => {
@@ -57,7 +59,12 @@ describe("layerMarkup", () => {
 	});
 
 	it("writes the angle of a layer that a person turned", () => {
-		const node: LayerNode = { fields: FIELDS, rotation: 30, children: [] };
+		const node: LayerNode = {
+			fields: FIELDS,
+			rotation: 30,
+			lengths: pixelLengths(FIELDS),
+			children: [],
+		};
 		expect(layerMarkup(node)).toContain("rotate(30deg)");
 	});
 });

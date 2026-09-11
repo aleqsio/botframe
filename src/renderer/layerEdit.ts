@@ -1,6 +1,6 @@
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
-import { PASTE_OFFSET, shiftNode } from "./paste";
+import { PASTE_OFFSET, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
 
 function copyOf(doc: DesignDocument, id: LayerId): LayerId | null {
@@ -8,7 +8,9 @@ function copyOf(doc: DesignDocument, id: LayerId): LayerId | null {
 	if (node === null) {
 		return null;
 	}
-	return doc.createSubtree(shiftNode(node, PASTE_OFFSET), doc.layer(id)?.parent ?? null);
+	const copy = doc.createSubtree(node, doc.layer(id)?.parent ?? null);
+	shiftLayer(doc, copy, PASTE_OFFSET);
+	return copy;
 }
 
 export function deleteSelection(doc: DesignDocument, user: UserState): boolean {

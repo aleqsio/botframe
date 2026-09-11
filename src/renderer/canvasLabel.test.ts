@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../document/documentFixtures";
 import type { Layer } from "../document/layer";
 import { canvasLabelStyle, hasCanvasLabel } from "./canvasLabel";
 
@@ -8,6 +9,7 @@ const ARTBOARD: Layer = {
 	y: 60,
 	width: 393,
 	height: 852,
+	...pixelBox({ x: 40, y: 60, width: 393, height: 852 }),
 	rotation: 0,
 	fill: "#ffffff",
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },

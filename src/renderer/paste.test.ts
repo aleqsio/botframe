@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Layer, LayerId } from "../document/layer";
-import { PLAIN_RECTANGLE } from "../document/subtree";
-import type { LayerNode } from "../document/subtree";
-import { PASTE_OFFSET, pasteParent, shiftNode } from "./paste";
+import { pixelBox } from "../document/documentFixtures";
+import type { Layer, LayerId, LayerPatch } from "../document/layer";
+import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 
 const ROOT_RECTANGLE = "1@1" as LayerId;
 const ARTBOARD = "2@1" as LayerId;
@@ -16,6 +15,7 @@ function layerOf(id: LayerId, parent: LayerId | null, artboard: boolean): Layer 
 		y: 0,
 		width: 100,
 		height: 100,
+		...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 		rotation: 0,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard },
@@ -34,23 +34,6 @@ const LAYERS: Readonly<Record<string, Layer>> = {
 
 function read(id: LayerId): Layer | null {
 	return LAYERS[id] ?? null;
-}
-
-function nodeAt(x: number, y: number): LayerNode {
-	return {
-		fields: {
-			x,
-			y,
-			width: 10,
-			height: 10,
-			fill: "#000000",
-			name: "",
-			clip: false,
-			geometry: PLAIN_RECTANGLE,
-		},
-		rotation: 0,
-		children: [],
-	};
 }
 
 describe("pasteParent", () => {
@@ -83,24 +66,33 @@ describe("pasteParent", () => {
 	});
 });
 
-describe("shiftNode", () => {
-	it("moves the layer and leaves each other field alone", () => {
-		const node = shiftNode(nodeAt(40, 60), PASTE_OFFSET);
+describe("shiftLayer", () => {
+	it("moves the layer by the offset", () => {
+		const patches: LayerPatch[] = [];
+		shiftLayer(
+			{ layer: read, update: (_id, patch) => void patches.push(patch) },
+			CHILD,
+			PASTE_OFFSET,
+		);
 
-		expect(node.fields.x).toBe(40 + PASTE_OFFSET);
-		expect(node.fields.y).toBe(60 + PASTE_OFFSET);
-		expect(node.fields.width).toBe(10);
-		expect(node.rotation).toBe(0);
+		expect(patches).toEqual([{ x: PASTE_OFFSET, y: PASTE_OFFSET }]);
 	});
 
-	it("holds the position when the offset is zero", () => {
-		expect(shiftNode(nodeAt(40, 60), 0).fields).toMatchObject({ x: 40, y: 60 });
+	it("writes nothing when the offset is zero", () => {
+		const patches: LayerPatch[] = [];
+		shiftLayer({ layer: read, update: (_id, patch) => void patches.push(patch) }, CHILD, 0);
+
+		expect(patches).toEqual([]);
 	});
 
-	it("does not change the node it reads", () => {
-		const node = nodeAt(40, 60);
-		shiftNode(node, PASTE_OFFSET);
+	it("writes nothing for a layer the document lost", () => {
+		const patches: LayerPatch[] = [];
+		shiftLayer(
+			{ layer: read, update: (_id, patch) => void patches.push(patch) },
+			"9@9",
+			PASTE_OFFSET,
+		);
 
-		expect(node.fields.x).toBe(40);
+		expect(patches).toEqual([]);
 	});
 });

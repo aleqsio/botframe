@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import type { Size } from "../../document/length";
 import { isArtboard } from "../components/layerEntry";
 import { heldPlacement, insideSubtree } from "./dropTarget";
 import type { Placement } from "./dropTarget";
@@ -100,14 +101,24 @@ export function rowMarkOf(drag: RowDrag | null, id: LayerId): RowMark | null {
 	return target !== null && target.id === id ? target.place : null;
 }
 
-export function carriedPlacement(
+export interface CarriedMove {
+	layer: Layer;
+	from: readonly Layer[];
+	to: readonly Layer[];
+}
+
+export function carriedMove(
 	read: ReadLayer,
 	id: LayerId,
 	parent: LayerId | null,
-): Placement | null {
+): CarriedMove | null {
 	const layer = read(id);
 	if (layer === null || layer.parent === parent) {
 		return null;
 	}
-	return heldPlacement(layer, parentChain(read, id), layerChain(read, parent));
+	return { layer, from: parentChain(read, id), to: layerChain(read, parent) };
+}
+
+export function carriedPlacement(carried: CarriedMove, size: Size): Placement {
+	return heldPlacement(carried.layer, carried.from, carried.to, size);
 }

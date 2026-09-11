@@ -1,4 +1,5 @@
 import type { TreeID } from "loro-crdt";
+import type { LayerLengths } from "./length";
 
 export type LayerId = TreeID;
 
@@ -25,7 +26,10 @@ export interface Layer extends Rect {
 	name: string;
 	clip: boolean;
 	parent: LayerId | null;
+	lengths: LayerLengths;
 }
+
+export type LayerTraits = Omit<Layer, "id" | "parent">;
 
 export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 
@@ -36,4 +40,7 @@ export interface LayerFields extends Rect {
 	geometry: WritableGeometry;
 }
 
-export type LayerPatch = Partial<LayerFields & { rotation: number }>;
+export type LayerPatch = Partial<LayerFields> & {
+	rotation?: number;
+	lengths?: Partial<LayerLengths>;
+};

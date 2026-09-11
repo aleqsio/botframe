@@ -7,6 +7,7 @@ export interface StepRule {
 }
 
 export const LENGTH_STEP: StepRule = { small: 0.1, normal: 1, large: 10 };
+export const PERCENT_STEP: StepRule = { small: 0.1, normal: 1, large: 5 };
 export const ANGLE_STEP: StepRule = { small: 0.1, normal: 1, large: 15 };
 export const FACTOR_STEP: StepRule = { small: 0.01, normal: 0.05, large: 0.2 };
 export const ANGLE_SNAP: StepRule = { small: 5, normal: 0, large: ANGLE_STEP.large };

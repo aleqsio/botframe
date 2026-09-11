@@ -1,4 +1,6 @@
 import type { LayerFields, WritableGeometry } from "./layer";
+import { PIXELS, isUnit } from "./length";
+import type { LayerLengths, Length } from "./length";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
 
@@ -75,11 +77,29 @@ function fieldsOf(bag: Bag): LayerFields {
 	};
 }
 
-function nodeOf(value: unknown): LayerNode {
+function lengthOf(value: unknown, pixels: number): Length {
+	const bag = bagOf(value);
+	const unit = words(bag, "unit", "");
+	return isUnit(unit) ? { value: count(bag, "value"), unit } : { value: pixels, unit: PIXELS };
+}
+
+function lengthsOf(value: unknown, fields: LayerFields): LayerLengths {
 	const bag = bagOf(value);
 	return {
-		fields: fieldsOf(bagOf(bag["fields"])),
+		x: lengthOf(bag["x"], fields.x),
+		y: lengthOf(bag["y"], fields.y),
+		width: lengthOf(bag["width"], fields.width),
+		height: lengthOf(bag["height"], fields.height),
+	};
+}
+
+function nodeOf(value: unknown): LayerNode {
+	const bag = bagOf(value);
+	const fields = fieldsOf(bagOf(bag["fields"]));
+	return {
+		fields,
 		rotation: count(bag, "rotation"),
+		lengths: lengthsOf(bag["lengths"], fields),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

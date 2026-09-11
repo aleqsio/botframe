@@ -1,31 +1,46 @@
 import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
+import { AXIS_OF, PIXELS, availableUnits, lengthIn, parseLength } from "../../document/length";
+import type { Basis, BoxKey, Length, Unit } from "../../document/length";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
-import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP } from "../input/step";
+import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
 import type { StepRule } from "../input/step";
 import { MIN_LAYER_SIZE } from "../input/transform";
 import { boundValue } from "./numberValue";
 import type { Bound } from "./numberValue";
 
 const COORDINATE_LIMIT = 100_000;
+const RELATIVE_LIMIT = 10_000;
+const SMALLEST_RELATIVE_SIZE = 0.1;
 const FULL_TURN = 360;
 const SMOOTHING_LIMIT = 1;
-const PIXELS = "px";
 const DEGREES = "deg";
 const NO_UNIT = "";
 const CORNER_MESSAGE = "set corners";
 
-type BoxKey = "x" | "y" | "width" | "height";
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
 const PLACE_BOUND: Bound = { kind: "clamp", min: -COORDINATE_LIMIT, max: COORDINATE_LIMIT };
 const SIZE_BOUND: Bound = { kind: "clamp", min: MIN_LAYER_SIZE, max: COORDINATE_LIMIT };
+const RELATIVE_PLACE_BOUND: Bound = { kind: "clamp", min: -RELATIVE_LIMIT, max: RELATIVE_LIMIT };
+const RELATIVE_SIZE_BOUND: Bound = {
+	kind: "clamp",
+	min: SMALLEST_RELATIVE_SIZE,
+	max: RELATIVE_LIMIT,
+};
 const TURN_BOUND: Bound = { kind: "wrap", min: 0, max: FULL_TURN };
 const RADIUS_BOUND: Bound = { kind: "clamp", min: 0, max: COORDINATE_LIMIT };
 const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
+export interface UnitChoice {
+	units: readonly Unit[];
+	convert: (unit: Unit) => LayerPatch;
+	parse: (text: string) => LayerPatch | null;
+}
+
 export interface LayerField {
 	label: string;
 	unit: string;
+	choice: UnitChoice | null;
 	bound: Bound;
 	step: StepRule;
 	message: string;
@@ -38,16 +53,48 @@ export interface FieldGroup {
 	fields: readonly LayerField[];
 }
 
-function boxField(label: string, key: BoxKey): LayerField {
-	const place = key === "x" || key === "y";
+function placeKey(key: BoxKey): boolean {
+	return key === "x" || key === "y";
+}
+
+function boundOf(key: BoxKey, unit: Unit): Bound {
+	if (unit === PIXELS) {
+		return placeKey(key) ? PLACE_BOUND : SIZE_BOUND;
+	}
+	return placeKey(key) ? RELATIVE_PLACE_BOUND : RELATIVE_SIZE_BOUND;
+}
+
+function boxPatch(key: BoxKey, length: Length): LayerPatch {
+	const value = boundValue(boundOf(key, length.unit), length.value);
+	return { lengths: { [key]: { value, unit: length.unit } } };
+}
+
+function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
+	const axis = AXIS_OF[key];
+	const held = layer.lengths[key].unit;
+	const offered = availableUnits(axis, basis);
+	const units = offered.includes(held) ? offered : [held, ...offered];
+	return {
+		units,
+		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
+		parse: (text) => {
+			const typed = parseLength(text, held);
+			return typed === null || !units.includes(typed.unit) ? null : boxPatch(key, typed);
+		},
+	};
+}
+
+function boxField(label: string, key: BoxKey, layer: Layer, basis: Basis): LayerField {
+	const { unit } = layer.lengths[key];
 	return {
 		label,
-		unit: PIXELS,
-		bound: place ? PLACE_BOUND : SIZE_BOUND,
-		step: LENGTH_STEP,
-		message: place ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
-		read: (layer) => layer[key],
-		patch: (value) => ({ [key]: value }),
+		unit,
+		choice: unitChoice(key, layer, basis),
+		bound: boundOf(key, unit),
+		step: unit === PIXELS ? LENGTH_STEP : PERCENT_STEP,
+		message: placeKey(key) ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
+		read: (target) => target.lengths[key].value,
+		patch: (value) => boxPatch(key, { value, unit }),
 	};
 }
 
@@ -56,6 +103,7 @@ function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry)
 	return {
 		label,
 		unit: smooth ? NO_UNIT : PIXELS,
+		choice: null,
 		bound: smooth ? SMOOTHING_BOUND : RADIUS_BOUND,
 		step: smooth ? FACTOR_STEP : LENGTH_STEP,
 		message: CORNER_MESSAGE,
@@ -67,6 +115,7 @@ function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry)
 const TURN_FIELD: LayerField = {
 	label: "Rotation",
 	unit: DEGREES,
+	choice: null,
 	bound: TURN_BOUND,
 	step: ANGLE_STEP,
 	message: COMMIT_MESSAGES.rotate,
@@ -74,11 +123,19 @@ const TURN_FIELD: LayerField = {
 	patch: (value) => ({ rotation: value }),
 };
 
-const BOX_GROUPS: readonly FieldGroup[] = [
-	{ name: "Position", fields: [boxField("X", "x"), boxField("Y", "y")] },
-	{ name: "Size", fields: [boxField("W", "width"), boxField("H", "height")] },
-	{ name: "Rotation", fields: [TURN_FIELD] },
-];
+function boxGroups(layer: Layer, basis: Basis): readonly FieldGroup[] {
+	return [
+		{
+			name: "Position",
+			fields: [boxField("X", "x", layer, basis), boxField("Y", "y", layer, basis)],
+		},
+		{
+			name: "Size",
+			fields: [boxField("W", "width", layer, basis), boxField("H", "height", layer, basis)],
+		},
+		{ name: "Rotation", fields: [TURN_FIELD] },
+	];
+}
 
 function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 	return {
@@ -90,20 +147,26 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 	};
 }
 
-export function fieldGroupsOf(layer: Layer): readonly FieldGroup[] {
+export function fieldGroupsOf(layer: Layer, basis: Basis): readonly FieldGroup[] {
+	const groups = boxGroups(layer, basis);
 	const { geometry } = layer;
-	if (geometry.kind !== "rectangle") {
-		return BOX_GROUPS;
-	}
-	return [...BOX_GROUPS, cornerGroup(geometry)];
+	return geometry.kind === "rectangle" ? [...groups, cornerGroup(geometry)] : groups;
 }
 
-export function fieldsOf(layer: Layer): readonly LayerField[] {
-	return fieldGroupsOf(layer).flatMap((group) => group.fields);
+export function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
+	return fieldGroupsOf(layer, basis).flatMap((group) => group.fields);
 }
 
 export function fieldPatch(field: LayerField, value: number): LayerPatch {
 	return field.patch(boundValue(field.bound, value));
+}
+
+export function typedPatch(field: LayerField, text: string): LayerPatch | null {
+	if (field.choice !== null) {
+		return field.choice.parse(text);
+	}
+	const value = Number.parseFloat(text);
+	return Number.isFinite(value) ? fieldPatch(field, value) : null;
 }
 
 export type Size = Pick<Rect, "width" | "height">;

@@ -5,10 +5,14 @@ import type {
 	ReactElement,
 	RefObject,
 } from "react";
+import type { LayerPatch } from "../../document/layer";
+import type { Unit } from "../../document/length";
 import { modifiersOf } from "../input/modifiers";
 import type { Modifiers } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { DraftInput } from "./PropertyField";
+import { UnitSelect } from "./UnitSelect";
+import { fieldPatch, typedPatch } from "./layerFields";
 import type { LayerField } from "./layerFields";
 import { draggedValue, formatNumber } from "./numberValue";
 
@@ -34,7 +38,7 @@ type DragRef = RefObject<ChipDrag | null>;
 export interface NumberChipProps {
 	field: LayerField;
 	value: number;
-	onUpdate: (value: number) => void;
+	onPatch: (patch: LayerPatch) => void;
 	onCommit: () => void;
 }
 
@@ -52,6 +56,10 @@ function steppedValue(field: LayerField, start: number, moved: number, held: Mod
 
 function draggedTo(drag: ChipDrag, field: LayerField): number {
 	return steppedValue(field, drag.startValue, drag.x - drag.startX, drag.modifiers);
+}
+
+function applyValue(props: NumberChipProps, value: number): void {
+	props.onPatch(fieldPatch(props.field, value));
 }
 
 function beginDrag(held: DragRef, props: NumberChipProps, event: ReactPointerEvent<HTMLElement>) {
@@ -81,7 +89,7 @@ function trackDrag(held: DragRef, props: NumberChipProps, event: ReactPointerEve
 	}
 	drag.frame = requestAnimationFrame(() => {
 		drag.frame = 0;
-		props.onUpdate(draggedTo(drag, props.field));
+		applyValue(props, draggedTo(drag, props.field));
 	});
 }
 
@@ -97,7 +105,7 @@ function endDrag(held: DragRef, props: NumberChipProps): void {
 	if (drag.x === drag.startX) {
 		return;
 	}
-	props.onUpdate(draggedTo(drag, props.field));
+	applyValue(props, draggedTo(drag, props.field));
 	props.onCommit();
 }
 
@@ -107,17 +115,41 @@ function stepByKey(props: NumberChipProps, event: ReactKeyboardEvent<HTMLElement
 		return;
 	}
 	event.preventDefault();
-	props.onUpdate(steppedValue(props.field, props.value, sign, modifiersOf(event)));
+	applyValue(props, steppedValue(props.field, props.value, sign, modifiersOf(event)));
 	props.onCommit();
 }
 
 function commitText(props: NumberChipProps, text: string): void {
-	const next = Number.parseFloat(text);
-	if (!Number.isFinite(next)) {
+	const patch = typedPatch(props.field, text);
+	if (patch === null) {
 		return;
 	}
-	props.onUpdate(next);
+	props.onPatch(patch);
 	props.onCommit();
+}
+
+function ChipUnit(props: NumberChipProps): ReactElement | null {
+	const { field } = props;
+	const { choice } = field;
+
+	if (choice === null || choice.units.length < 2) {
+		return field.unit === "" ? null : (
+			<span aria-hidden="true" className="chip-unit">
+				{field.unit}
+			</span>
+		);
+	}
+
+	return (
+		<UnitSelect
+			choice={choice}
+			field={field}
+			onPick={(unit: Unit) => {
+				props.onPatch(choice.convert(unit));
+				props.onCommit();
+			}}
+		/>
+	);
 }
 
 function useChipHandlers(props: NumberChipProps): ChipHandlers {
@@ -178,11 +210,7 @@ export function NumberChip(props: NumberChipProps): ReactElement {
 				}}
 				value={formatNumber(value)}
 			/>
-			{field.unit === "" ? null : (
-				<span aria-hidden="true" className="chip-unit">
-					{field.unit}
-				</span>
-			)}
+			<ChipUnit {...props} />
 		</div>
 	);
 }

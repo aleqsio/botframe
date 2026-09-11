@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { openStage } from "./support";
+import { drawWith, openStage } from "./support";
+import type { Drag } from "./support";
 
 const PRESET = { name: "iPhone 16", width: 393, height: 852 };
+const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
+const SHIFT_DRAG = 2;
 const DRAG = 40;
 const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
 
@@ -34,6 +38,11 @@ function chipHandle(window: Page, label: string): Locator {
 
 function chipValue(window: Page, label: string): Locator {
 	return window.getByLabel(`${label} value`, { exact: true });
+}
+
+async function pickUnit(window: Page, label: string, unit: string): Promise<void> {
+	await window.getByLabel(`${label} unit`, { exact: true }).click();
+	await window.getByRole("option", { name: unit, exact: true }).click();
 }
 
 async function dragBy(window: Page, handle: Locator, pixels: number): Promise<void> {
@@ -125,6 +134,67 @@ test("a name that a person types letter by letter does not change the tool", asy
 	await app.close();
 });
 
+test("the fill swatch opens a picker that paints the layer", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+	const fill = window.getByLabel("Fill", { exact: true });
+
+	await window.getByLabel("Fill picker", { exact: true }).click();
+	const area = window.getByLabel(/^Saturation and brightness/u);
+	await expect(area).toBeVisible();
+
+	await window.getByLabel("#0d99ff", { exact: true }).click();
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(13, 153, 255)");
+	await expect(fill).toHaveValue("#0d99ff");
+
+	await window.getByLabel("Opacity", { exact: true }).fill("50");
+
+	await expect(fill).toHaveValue("#0d99ff80");
+	await expect(drawn).toHaveCSS("background-color", "rgba(13, 153, 255, 0.5)");
+
+	await area.focus();
+	await window.keyboard.press("ArrowLeft");
+
+	await expect(fill).not.toHaveValue("#0d99ff80");
+
+	await app.close();
+});
+
+test("the picker holds the angle of a color that shows no angle", async () => {
+	const { app, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const fill = window.getByLabel("Fill", { exact: true });
+	await expect(fill).toHaveValue("#ffffff");
+
+	await window.getByLabel("Fill picker", { exact: true }).click();
+	await window.getByLabel("Hue", { exact: true }).fill("120");
+	await window.getByLabel(/^Saturation and brightness/u).press("ArrowRight");
+
+	await expect(fill).toHaveValue("#fcfffc");
+
+	await app.close();
+});
+
+test("the fill field reads a color that a person names and writes it as hex", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+
+	await typeInto(window, "Fill", "rebeccapurple");
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(102, 51, 153)");
+	await expect(window.getByLabel("Fill", { exact: true })).toHaveValue("#663399");
+
+	await typeInto(window, "Fill", "inherit");
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(102, 51, 153)");
+	await expect(window.getByLabel("Fill", { exact: true })).toHaveValue("#663399");
+
+	await app.close();
+});
+
 test("the panel keeps a fill and a width that the stage can paint", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
@@ -212,6 +282,61 @@ test("shift makes a large drag step and alt makes a small one", async () => {
 	await dragBy(window, chipHandle(window, "W"), 10);
 	await window.keyboard.up("Alt");
 	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width + 21));
+
+	await app.close();
+});
+
+test("a layer inside a container takes a unit that is not the pixel", async () => {
+	const { app, layers, origin, window } = await openStage();
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", INSIDE);
+	const child = layers.nth(1).locator("> .layer");
+	const unit = window.getByLabel("W unit", { exact: true });
+
+	await expect(unit).toHaveText("px");
+	await expect(chipValue(window, "W")).toHaveValue("100");
+
+	await pickUnit(window, "W", "%");
+
+	await expect(chipValue(window, "W")).toHaveValue("50");
+	await expect(child).toHaveCSS("width", "100px");
+
+	await typeInto(window, "W value", "25%");
+
+	await expect(unit).toHaveText("%");
+	await expect(child).toHaveCSS("width", "50px");
+
+	await app.close();
+});
+
+test("shift steps a percentage by five, and the layer follows the artboard", async () => {
+	const { app, layers, origin, window } = await openStage();
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", INSIDE);
+	const child = layers.nth(1).locator("> .layer");
+	await pickUnit(window, "W", "%");
+
+	await window.keyboard.down("Shift");
+	await dragBy(window, chipHandle(window, "W"), SHIFT_DRAG);
+	await window.keyboard.up("Shift");
+
+	await expect(chipValue(window, "W")).toHaveValue("60");
+	await expect(child).toHaveCSS("width", "120px");
+
+	await window.locator(".layer-row").nth(1).click();
+	await typeInto(window, "W value", "400");
+
+	await expect(child).toHaveCSS("width", "240px");
+
+	await app.close();
+});
+
+test("a layer at the root takes the pixel only", async () => {
+	const { app, window } = await openStage();
+	await placePreset(window, PRESET.name);
+
+	await expect(window.getByLabel("W unit", { exact: true })).toHaveCount(0);
+	await expect(window.locator(".number-chip", { hasText: "W" }).first()).toContainText("px");
 
 	await app.close();
 });

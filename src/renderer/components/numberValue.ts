@@ -1,4 +1,4 @@
-const DECIMALS = 100;
+import { roundNumber } from "../../document/length";
 
 export type Bound =
 	| { kind: "clamp"; min: number; max: number }
@@ -9,10 +9,6 @@ export interface NumberDrag {
 	moved: number;
 	step: number;
 	bound: Bound;
-}
-
-export function roundNumber(value: number): number {
-	return Math.round(value * DECIMALS) / DECIMALS;
 }
 
 export function formatNumber(value: number): string {
