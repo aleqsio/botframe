@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
+import { carriedPosition, rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
 import type { RowPlace, RowTree } from "./rowDrop";
 
 const ROOT_IDS: readonly LayerId[] = ["1@1", "2@1", "3@1"];
@@ -136,5 +136,42 @@ describe("rowMarkOf", () => {
 	it("marks nothing without a drag and nothing without a target", () => {
 		expect(rowMarkOf(null, FIRST)).toBeNull();
 		expect(rowMarkOf({ id: FIRST, target: null }, BRANCH)).toBeNull();
+	});
+});
+
+const PLACED: Readonly<Record<string, { x: number; y: number; rotation: number }>> = {
+	"1@1": { x: 300, y: 200, rotation: 0 },
+	"2@1": { x: 100, y: 50, rotation: 0 },
+	"7@1": { x: 100, y: 50, rotation: 90 },
+};
+
+function placedRead(id: LayerId): Layer | null {
+	const base = read(id === "7@1" ? BRANCH : id);
+	const placed = PLACED[id];
+	if (base === null || placed === undefined) {
+		return base;
+	}
+	return {
+		...base,
+		id,
+		x: placed.x,
+		y: placed.y,
+		rotation: placed.rotation,
+		width: 80,
+		height: 60,
+	};
+}
+
+describe("carriedPosition", () => {
+	it("gives no position when the parent does not change", () => {
+		expect(carriedPosition(placedRead, FIRST, null)).toBeNull();
+	});
+
+	it("takes the position into the space of a flat new parent", () => {
+		expect(carriedPosition(placedRead, FIRST, BRANCH)).toEqual({ x: 200, y: 150 });
+	});
+
+	it("gives no position for a layer the document lost", () => {
+		expect(carriedPosition(placedRead, GONE, BRANCH)).toBeNull();
 	});
 });
