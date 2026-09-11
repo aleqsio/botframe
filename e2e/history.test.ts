@@ -3,8 +3,8 @@ import type { ElectronApplication, Page } from "@playwright/test";
 import { EDIT_COMMAND } from "../src/shared/editMenu";
 import { at, openStage } from "./support";
 
-const FIRST = { press: { x: 40, y: 40 }, release: { x: 240, y: 180 } };
-const SECOND = { press: { x: 280, y: 40 }, release: { x: 400, y: 140 } };
+const FIRST = { press: { x: 280, y: 40 }, release: { x: 480, y: 180 } };
+const SECOND = { press: { x: 520, y: 40 }, release: { x: 640, y: 140 } };
 const APPLE = process.platform === "darwin";
 const UNDO = APPLE ? "Meta+z" : "Control+z";
 const REDO = APPLE ? "Meta+Shift+z" : "Control+y";

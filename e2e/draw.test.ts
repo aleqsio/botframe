@@ -2,9 +2,9 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { at, openStage } from "./support";
 
-const PRESS = { x: 40, y: 40 };
-const RELEASE = { x: 240, y: 180 };
-const TAP = { x: 60, y: 220 };
+const PRESS = { x: 280, y: 40 };
+const RELEASE = { x: 480, y: 180 };
+const TAP = { x: 300, y: 220 };
 
 type Point = { x: number; y: number };
 
@@ -24,7 +24,7 @@ test("the artboard tool draws a white artboard that clips its content", async ()
 	await window.mouse.up();
 
 	const drawn = layers.nth(1);
-	await expect(drawn).toHaveAttribute("style", /translate3d\(40px, 40px, 0px\)/u);
+	await expect(drawn).toHaveAttribute("style", /translate3d\(280px, 40px, 0px\)/u);
 	await expect(drawn).toHaveCSS("width", "200px");
 	await expect(drawn).toHaveCSS("height", "140px");
 	await expect(drawn).toHaveCSS("background-color", "rgb(255, 255, 255)");
@@ -60,7 +60,7 @@ test("a tap with a draw tool places a box of the default size on the point", asy
 	await window.mouse.up();
 
 	const drawn = layers.nth(1);
-	await expect(drawn).toHaveAttribute("style", /translate3d\(60px, 220px, 0px\)/u);
+	await expect(drawn).toHaveAttribute("style", /translate3d\(300px, 220px, 0px\)/u);
 	await expect(drawn).toHaveCSS("width", "100px");
 	await expect(drawn).toHaveCSS("height", "100px");
 	await expect(stage).toHaveAttribute("data-tool", "select");

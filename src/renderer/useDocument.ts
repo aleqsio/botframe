@@ -11,6 +11,13 @@ export function useRootIds(doc: DesignDocument): readonly LayerId[] {
 	);
 }
 
+export function useLayerCount(doc: DesignDocument): number {
+	return useSyncExternalStore(
+		useCallback((listener: () => void) => doc.subscribeStructure(listener), [doc]),
+		useCallback(() => doc.layerIds().length, [doc]),
+	);
+}
+
 export function useChildIds(doc: DesignDocument, id: LayerId): readonly LayerId[] {
 	return useSyncExternalStore(
 		useCallback((listener: () => void) => doc.subscribeStructure(listener), [doc]),

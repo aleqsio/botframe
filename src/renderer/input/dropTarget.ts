@@ -1,7 +1,12 @@
 import type { Layer, LayerId } from "../../document/layer";
 import { isArtboard } from "../components/layerEntry";
-import type { Point } from "../state/camera";
-import { rotatePoint } from "./layerSpace";
+import {
+	centerOf,
+	fromParentPoint,
+	halfSizeOf,
+	normalizeDegrees,
+	toParentPoint,
+} from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
 
 type TakesChild = (layer: Layer | null) => boolean;
@@ -36,10 +41,22 @@ export function dropParentOf(
 	return null;
 }
 
+export type Placement = Pick<Layer, "x" | "y" | "rotation">;
+
 function chainRotation(chain: readonly Layer[]): number {
 	return chain.reduce((total, layer) => total + layer.rotation, 0);
 }
 
-export function heldOffset(from: readonly Layer[], to: readonly Layer[], offset: Point): Point {
-	return rotatePoint(offset, chainRotation(from) - chainRotation(to));
+export function heldPlacement(
+	layer: Layer,
+	from: readonly Layer[],
+	to: readonly Layer[],
+): Placement {
+	const center = toParentPoint(to, fromParentPoint(from, centerOf(layer)));
+	const half = halfSizeOf(layer);
+	return {
+		x: center.x - half.x,
+		y: center.y - half.y,
+		rotation: normalizeDegrees(layer.rotation + chainRotation(from) - chainRotation(to)),
+	};
 }

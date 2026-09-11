@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactElement, ReactNode } from "react";
-import { cameraTransform } from "./state/camera";
+import { cameraTransform, dotGrid } from "./state/camera";
 import type { Camera } from "./state/camera";
 import type { Slot } from "./state/slot";
 import { useSlot } from "./state/useSlot";
@@ -14,6 +14,14 @@ function viewportStyle(camera: Camera): CSSProperties {
 	return { transform: cameraTransform(camera), "--zoom": camera.zoom };
 }
 
+function dotGridStyle(camera: Camera): CSSProperties {
+	const { spacing, offset } = dotGrid(camera);
+	return {
+		backgroundPosition: `${offset.x}px ${offset.y}px`,
+		backgroundSize: `${spacing}px ${spacing}px`,
+	};
+}
+
 export function Viewport({
 	camera,
 	children,
@@ -24,8 +32,11 @@ export function Viewport({
 	const view = useSlot(camera);
 
 	return (
-		<div id="viewport" style={viewportStyle(view)}>
-			{children}
-		</div>
+		<>
+			<div id="dot-grid" style={dotGridStyle(view)} />
+			<div id="viewport" style={viewportStyle(view)}>
+				{children}
+			</div>
+		</>
 	);
 }

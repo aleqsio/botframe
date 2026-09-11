@@ -9,6 +9,16 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 
 const ARTBOARD_LABEL = "Artboard";
 
+export type LayerGlyph = "artboard" | "ellipse" | "rectangle";
+
+export interface InspectorHeading {
+	glyph: LayerGlyph | "page";
+	name: string;
+	kind: string;
+}
+
+const PAGE_HEADING: InspectorHeading = { glyph: "page", name: "Page", kind: "Nothing is selected" };
+
 export interface LayerEntry {
 	label: string;
 	swatch: string;
@@ -19,7 +29,7 @@ export function isArtboard(layer: Layer | null): boolean {
 	return geometry?.kind === "rectangle" && geometry.artboard;
 }
 
-export function kindLabel(layer: Layer | null): string {
+function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}
@@ -31,6 +41,20 @@ export function layerEntry(layer: Layer | null): LayerEntry {
 		return { label: GEOMETRY_LABELS.unsupported, swatch: "transparent" };
 	}
 	return { label: layer.name === "" ? kindLabel(layer) : layer.name, swatch: layer.fill };
+}
+
+export function glyphOf(layer: Layer | null): LayerGlyph {
+	if (isArtboard(layer)) {
+		return "artboard";
+	}
+	return layer?.geometry.kind === "ellipse" ? "ellipse" : "rectangle";
+}
+
+export function inspectorHeading(layer: Layer | null): InspectorHeading {
+	if (layer === null) {
+		return PAGE_HEADING;
+	}
+	return { glyph: glyphOf(layer), name: layerEntry(layer).label, kind: kindLabel(layer) };
 }
 
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {

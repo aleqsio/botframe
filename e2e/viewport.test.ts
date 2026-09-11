@@ -3,7 +3,7 @@ import type { JSHandle, Locator, Page } from "@playwright/test";
 import { launchApp, stageOrigin } from "./support";
 
 const LAYER = { x: 420, y: 260, width: 240, height: 160 };
-const PRESS = { x: 60, y: 60 };
+const PRESS = { x: 300, y: 60 };
 const PAN = { x: 120, y: 80 };
 const GRAB = { x: 20, y: 20 };
 const LAYER_DRAG = { x: 100, y: 70 };
@@ -60,7 +60,7 @@ function watchViewport(window: Page): Promise<JSHandle<string[]>> {
 test("the hand tool moves the canvas and leaves the layers alone", async () => {
 	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
-	const bar = window.locator(".floating-bar");
+	const bar = window.getByRole("toolbar", { name: "Tools" });
 
 	await expect(layer).toBeVisible();
 	const origin = await stageOrigin(window);
@@ -89,7 +89,7 @@ test("the hand tool moves the canvas and leaves the layers alone", async () => {
 	});
 	expect(await layer.getAttribute("style")).toBe(layerStyle);
 	expect(await boxOf(bar)).toEqual(barBox);
-	await expect(bar.locator(".tool-button")).toHaveCount(7);
+	await expect(bar.locator(".tool-button")).toHaveCount(6);
 
 	const written = await records.jsonValue();
 	expect(written.length).toBeGreaterThan(0);
@@ -101,7 +101,7 @@ test("the hand tool moves the canvas and leaves the layers alone", async () => {
 test("a wheel with the control key scales the canvas about the pointer", async () => {
 	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
-	const bar = window.locator(".floating-bar");
+	const bar = window.getByRole("toolbar", { name: "Tools" });
 
 	await expect(layer).toBeVisible();
 	await expect(window.locator("#stage")).toHaveAttribute("data-tool", "select");
@@ -133,7 +133,7 @@ test("a wheel with the control key scales the canvas about the pointer", async (
 test("a layer drag stays correct after the canvas moves and scales", async () => {
 	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
-	const bar = window.locator(".floating-bar");
+	const bar = window.getByRole("toolbar", { name: "Tools" });
 
 	await expect(layer).toBeVisible();
 	const origin = await stageOrigin(window);

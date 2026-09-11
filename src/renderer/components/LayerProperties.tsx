@@ -4,7 +4,7 @@ import type { Layer } from "../../document/layer";
 import { ArtboardFooter } from "./ArtboardFooter";
 import { NumberChip } from "./NumberChip";
 import { PropertyField } from "./PropertyField";
-import { isArtboard, kindLabel } from "./layerEntry";
+import { isArtboard } from "./layerEntry";
 import { fieldGroupsOf, fieldPatch } from "./layerFields";
 import type { FieldGroup, LayerField } from "./layerFields";
 
@@ -76,11 +76,7 @@ export function LayerProperties({
 	layer: Layer;
 }): ReactElement {
 	return (
-		<div className="fine-tune">
-			<div className="card-bar">
-				<span className="card-title">Layer</span>
-				<span className="card-state">{kindLabel(layer)}</span>
-			</div>
+		<>
 			<PropertyField
 				label="Name"
 				onCommit={(text) => {
@@ -105,6 +101,6 @@ export function LayerProperties({
 			/>
 			<ClipSwitch doc={doc} layer={layer} />
 			{isArtboard(layer) ? <ArtboardFooter doc={doc} layer={layer} /> : null}
-		</div>
+		</>
 	);
 }

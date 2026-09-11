@@ -5,10 +5,13 @@ import {
 	MIN_ZOOM,
 	applyViewportDelta,
 	cameraTransform,
+	dotGrid,
 	moveCamera,
+	steppedZoom,
 	toCanvasPoint,
 	viewportCenter,
 	zoomCameraAt,
+	zoomPercent,
 } from "./camera";
 import type { Camera, Point } from "./camera";
 
@@ -126,6 +129,43 @@ describe("applyViewportDelta", () => {
 	});
 });
 
+describe("dotGrid", () => {
+	it("puts a dot on each 20px of the canvas under the identity camera", () => {
+		expect(dotGrid(IDENTITY_CAMERA)).toEqual({ spacing: 20, offset: { x: 10, y: 10 } });
+	});
+
+	it("moves the dots with the pan", () => {
+		expect(dotGrid({ x: 47, y: 13, zoom: 1 })).toEqual({ spacing: 20, offset: { x: 17, y: 3 } });
+	});
+
+	it("scales the spacing with the zoom inside one octave", () => {
+		expect(dotGrid({ x: 0, y: 0, zoom: 1.6 }).spacing).toBeCloseTo(32, 9);
+		expect(dotGrid({ x: 0, y: 0, zoom: 0.75 }).spacing).toBeCloseTo(30, 9);
+	});
+
+	it("halves or doubles the canvas spacing at each octave to keep the dots apart", () => {
+		expect(dotGrid({ x: 0, y: 0, zoom: 2 }).spacing).toBeCloseTo(20, 9);
+		expect(dotGrid({ x: 0, y: 0, zoom: 0.5 }).spacing).toBeCloseTo(20, 9);
+		expect(dotGrid({ x: 0, y: 0, zoom: MIN_ZOOM }).spacing).toBeGreaterThanOrEqual(20);
+		expect(dotGrid({ x: 0, y: 0, zoom: MAX_ZOOM }).spacing).toBeLessThan(40);
+	});
+
+	it("keeps a dot on a canvas point of the grid under a pan and a zoom", () => {
+		const camera: Camera = { x: 37, y: -12, zoom: 3.3 };
+		const grid = dotGrid(camera);
+		const step = grid.spacing / camera.zoom;
+		const dot = toStagePoint(camera, { x: step * 5, y: step * -2 });
+
+		expect(wrapped(dot.x - grid.offset.x - grid.spacing / 2, grid.spacing)).toBeCloseTo(0, 6);
+		expect(wrapped(dot.y - grid.offset.y - grid.spacing / 2, grid.spacing)).toBeCloseTo(0, 6);
+	});
+});
+
+function wrapped(value: number, period: number): number {
+	const rest = ((value % period) + period) % period;
+	return Math.min(rest, period - rest);
+}
+
 describe("cameraTransform", () => {
 	it("pans first and zooms after", () => {
 		expect(cameraTransform({ x: 12, y: -8, zoom: 1.5 })).toBe("translate(12px, -8px) scale(1.5)");
@@ -149,5 +189,36 @@ describe("viewportCenter", () => {
 			x: 250,
 			y: 175,
 		});
+	});
+});
+
+describe("steppedZoom", () => {
+	it("goes to the next level above or below a zoom between two levels", () => {
+		expect(steppedZoom(1.6, "in")).toBe(2);
+		expect(steppedZoom(1.6, "out")).toBe(1);
+	});
+
+	it("goes past the level that the zoom already holds", () => {
+		expect(steppedZoom(1, "in")).toBe(2);
+		expect(steppedZoom(1, "out")).toBe(0.5);
+		expect(steppedZoom(0.25, "out")).toBe(0.1);
+	});
+
+	it("counts a zoom a rounding error away from a level as that level", () => {
+		expect(steppedZoom(1.999_999_999_999, "in")).toBe(4);
+		expect(steppedZoom(2.000_000_000_001, "out")).toBe(1);
+	});
+
+	it("stops at the ends", () => {
+		expect(steppedZoom(64, "in")).toBe(64);
+		expect(steppedZoom(0.02, "out")).toBe(0.02);
+	});
+});
+
+describe("zoomPercent", () => {
+	it("writes the zoom as a whole percent", () => {
+		expect(zoomPercent(0.02)).toBe("2%");
+		expect(zoomPercent(1.6)).toBe("160%");
+		expect(zoomPercent(1.234_56)).toBe("123%");
 	});
 });

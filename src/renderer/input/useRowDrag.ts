@@ -11,7 +11,7 @@ import type { UserState } from "../state/userState";
 import { GestureRecognizer, sampleOf } from "./gesture";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import { scrollStepOf } from "./panelScroll";
-import { carriedPosition, rowMoveOf } from "./rowDrop";
+import { carriedPlacement, rowMoveOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
 import { rowTargetAt } from "./rowHit";
 
@@ -135,7 +135,7 @@ function applyDrop(session: RowSession): void {
 	if (move === null) {
 		return;
 	}
-	const carried = carriedPosition((id) => session.doc.layer(id), drag.id, move.parent);
+	const carried = carriedPlacement((id) => session.doc.layer(id), drag.id, move.parent);
 	if (session.doc.move(drag.id, move.parent, move.index)) {
 		if (carried !== null) {
 			session.doc.update(drag.id, carried);

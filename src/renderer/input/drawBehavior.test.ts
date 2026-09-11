@@ -47,6 +47,26 @@ describe("the draw tools", () => {
 		});
 	});
 
+	it("draws an ellipse with the grey fill, no clip, and the next free name", () => {
+		const target = targetOf(false);
+
+		dragOver(behaviorFor("ellipse"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+
+		expect(drawnLayer(target)).toMatchObject({
+			x: 40,
+			y: 40,
+			width: 200,
+			height: 140,
+			rotation: 0,
+			parent: null,
+			fill: "#d9d9d9",
+			clip: false,
+			name: "Ellipse 1",
+			geometry: { kind: "ellipse" },
+		});
+		expect(target.user.tool.get()).toBe("select");
+	});
+
 	it("places a box of the default size where the tap lands", () => {
 		const target = targetOf(false);
 		const changes = target.doc.changeCount();

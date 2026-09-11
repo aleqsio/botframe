@@ -152,4 +152,8 @@ describe("swappedBox", () => {
 	it("exchanges the width and the height", () => {
 		expect(swappedBox(layerOf(DesignDocument.create()))).toEqual({ width: 160, height: 240 });
 	});
+
+	it("exchanges the width and the height of a preset", () => {
+		expect(swappedBox({ width: 393, height: 852 })).toEqual({ width: 852, height: 393 });
+	});
 });

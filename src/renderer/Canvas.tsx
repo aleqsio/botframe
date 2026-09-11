@@ -2,10 +2,12 @@ import { useRef } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import { Stage } from "./Stage";
-import { LayerList } from "./components/LayerList";
+import { FileBar } from "./components/FileBar";
+import { Inspector } from "./components/Inspector";
+import { LayersCard } from "./components/LayerList";
 import { LayerMenu } from "./components/LayerMenu";
-import { Properties } from "./components/Properties";
-import { ToolBar } from "./components/ToolBar";
+import { ToolDock } from "./components/ToolDock";
+import { ZoomBar } from "./components/ZoomBar";
 import type { UserState } from "./state/userState";
 
 export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
@@ -13,11 +15,12 @@ export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }):
 
 	return (
 		<>
-			<div id="title-bar" />
-			<LayerList doc={doc} user={user} />
 			<Stage doc={doc} stage={stage} user={user} />
-			<Properties doc={doc} stage={stage} user={user} />
-			<ToolBar tool={user.tool} />
+			<FileBar layersOpen={user.layersOpen} />
+			<LayersCard doc={doc} user={user} />
+			<ZoomBar camera={user.camera} stage={stage} />
+			<Inspector doc={doc} user={user} />
+			<ToolDock doc={doc} stage={stage} user={user} />
 			<LayerMenu doc={doc} user={user} />
 		</>
 	);

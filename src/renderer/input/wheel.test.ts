@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { wheelDelta } from "./wheel";
+import { sidewaysPixels, wheelDelta } from "./wheel";
 import type { WheelInput } from "./wheel";
 
 const PIXEL_MODE = 0;
@@ -68,5 +68,18 @@ describe("wheelDelta", () => {
 		expect(moved.scale).toBe(1);
 		expect(scaled.pan).toEqual(NO_PAN);
 		expect(scaled.scale).toBe(1);
+	});
+});
+
+describe("sidewaysPixels", () => {
+	it("turns a mostly vertical wheel into a sideways pixel delta", () => {
+		expect(sidewaysPixels(wheel({ deltaY: 40 }))).toBe(40);
+		expect(sidewaysPixels(wheel({ deltaX: 5, deltaY: -25 }))).toBe(-25);
+		expect(sidewaysPixels(wheel({ deltaMode: LINE_MODE, deltaY: 3 }))).toBe(48);
+	});
+
+	it("gives no delta for a mostly horizontal wheel, which scrolls the row itself", () => {
+		expect(sidewaysPixels(wheel({ deltaX: 30, deltaY: 10 }))).toBe(0);
+		expect(sidewaysPixels(wheel({}))).toBe(0);
 	});
 });

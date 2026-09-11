@@ -10,7 +10,7 @@ test("the rectangle tool takes the resize handles of the selected layer", async 
 	const stage = window.locator("#stage");
 	const layer = window.locator(".layer");
 	const handles = window.locator(".selection-handle");
-	const bar = window.locator(".floating-bar");
+	const bar = window.getByRole("toolbar", { name: "Tools" });
 
 	await expect(layer).toHaveCount(1);
 	const origin = await stageOrigin(window);

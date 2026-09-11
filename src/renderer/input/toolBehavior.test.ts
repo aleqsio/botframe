@@ -149,7 +149,7 @@ describe("the behavior of each tool", () => {
 	it("gives no answer to the secondary press for a tool that draws later", () => {
 		const target = targetOf(true);
 
-		expect(behaviorFor("ellipse").context?.(target, CLIENT)).toBe(false);
+		expect(behaviorFor("text").context?.(target, CLIENT)).toBe(false);
 		expect(behaviorFor("image").context?.(target, CLIENT)).toBe(false);
 		expect(target.user.menu.get()).toBeNull();
 	});
@@ -159,8 +159,8 @@ describe("the behavior of each tool", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(behaviorFor("ellipse"), target, { press: PRESS, release: RELEASE });
-		tapAt(behaviorFor("ellipse"), target, CENTER);
+		dragOver(behaviorFor("text"), target, { press: PRESS, release: RELEASE });
+		tapAt(behaviorFor("image"), target, CENTER);
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
 		expect(target.doc.changeCount()).toBe(changes);

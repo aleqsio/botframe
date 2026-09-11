@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
+import { canvasLabelStyle, hasCanvasLabel } from "./canvasLabel";
+import { layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
@@ -33,6 +35,34 @@ export function LayerView({
 			{childIds.map((childId) => (
 				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
 			))}
+		</div>
+	);
+}
+
+export function ArtboardLabel({
+	doc,
+	id,
+	selection,
+}: {
+	doc: DesignDocument;
+	id: LayerId;
+	selection: Slot<readonly LayerId[]>;
+}): ReactElement | null {
+	const layer = useLayer(doc, id);
+	const selected = useSelected(selection, id);
+
+	if (layer === null || !hasCanvasLabel(layer)) {
+		return null;
+	}
+
+	return (
+		<div
+			className="artboard-label"
+			data-layer-id={id}
+			data-selected={selected ? "" : undefined}
+			style={canvasLabelStyle(layer)}
+		>
+			{layerEntry(layer).label}
 		</div>
 	);
 }

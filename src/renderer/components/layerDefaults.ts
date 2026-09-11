@@ -1,5 +1,5 @@
 import type { DesignDocument } from "../../document/document";
-import type { LayerFields, LayerId, Rect } from "../../document/layer";
+import type { LayerFields, LayerId, Rect, WritableGeometry } from "../../document/layer";
 import type { UserState } from "../state/userState";
 import { DEFAULT_TOOL } from "./tools";
 
@@ -7,21 +7,28 @@ export interface DrawDefaults {
 	label: string;
 	fill: string;
 	clip: boolean;
-	artboard: boolean;
+	geometry: WritableGeometry;
 }
 
 export const ARTBOARD_DEFAULTS: DrawDefaults = {
 	label: "Artboard",
 	fill: "#ffffff",
 	clip: true,
-	artboard: true,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
 };
 
 export const RECTANGLE_DEFAULTS: DrawDefaults = {
 	label: "Rectangle",
 	fill: "#d9d9d9",
 	clip: false,
-	artboard: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
+
+export const ELLIPSE_DEFAULTS: DrawDefaults = {
+	label: "Ellipse",
+	fill: "#d9d9d9",
+	clip: false,
+	geometry: { kind: "ellipse" },
 };
 
 export function drawnFields(defaults: DrawDefaults, rect: Rect, name: string): LayerFields {
@@ -30,12 +37,7 @@ export function drawnFields(defaults: DrawDefaults, rect: Rect, name: string): L
 		fill: defaults.fill,
 		name,
 		clip: defaults.clip,
-		geometry: {
-			kind: "rectangle",
-			cornerRadius: 0,
-			cornerSmoothing: 0,
-			artboard: defaults.artboard,
-		},
+		geometry: defaults.geometry,
 	};
 }
 

@@ -3,8 +3,8 @@ import type { ElectronApplication, Locator, Page } from "@playwright/test";
 import { EDIT_LABELS, drawWith, menuItem, openStage, pressRight } from "./support";
 import type { Drag, Point } from "./support";
 
-const ARTBOARD: Drag = { from: { x: 40, y: 40 }, to: { x: 240, y: 180 } };
-const INSIDE: Drag = { from: { x: 80, y: 80 }, to: { x: 180, y: 140 } };
+const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const BRANCH = ["Rectangle", "Artboard 1", "Rectangle 2"];
 
 test("the chevron takes the children of a row away and brings them back", async () => {
@@ -125,7 +125,7 @@ test("a press with a small move selects the row and moves no layer", async () =>
 
 function smallDrag(step: number): Drag {
 	const top = 40 + step * 44;
-	return { from: { x: 60, y: top }, to: { x: 140, y: top + 14 } };
+	return { from: { x: 300, y: top }, to: { x: 380, y: top + 14 } };
 }
 
 async function drawSteps(window: Page, origin: Point, left: number): Promise<void> {

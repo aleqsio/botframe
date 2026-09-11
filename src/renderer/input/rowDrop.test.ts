@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { carriedPosition, rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
+import { centerOf, fromParentPoint } from "./layerSpace";
+import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
 import type { RowPlace, RowTree } from "./rowDrop";
 
 const ROOT_IDS: readonly LayerId[] = ["1@1", "2@1", "3@1"];
@@ -9,6 +10,7 @@ const LEAF: LayerId = "4@1";
 const SHOOT: LayerId = "5@1";
 const DEEP: LayerId = "6@1";
 const GONE: LayerId = "9@9";
+const TURNED_BRANCH: LayerId = "7@1";
 
 const CHILDREN: Readonly<Record<string, readonly LayerId[]>> = {
 	[FIRST]: [],
@@ -162,16 +164,37 @@ function placedRead(id: LayerId): Layer | null {
 	};
 }
 
-describe("carriedPosition", () => {
-	it("gives no position when the parent does not change", () => {
-		expect(carriedPosition(placedRead, FIRST, null)).toBeNull();
+function placedLayer(id: LayerId): Layer {
+	const layer = placedRead(id);
+	if (layer === null) {
+		throw new Error("the fixture has no layer with this id");
+	}
+	return layer;
+}
+
+describe("carriedPlacement", () => {
+	it("gives no placement when the parent does not change", () => {
+		expect(carriedPlacement(placedRead, FIRST, null)).toBeNull();
 	});
 
-	it("takes the position into the space of a flat new parent", () => {
-		expect(carriedPosition(placedRead, FIRST, BRANCH)).toEqual({ x: 200, y: 150 });
+	it("takes the placement into the space of a flat new parent", () => {
+		expect(carriedPlacement(placedRead, FIRST, BRANCH)).toEqual({ x: 200, y: 150, rotation: 0 });
 	});
 
-	it("gives no position for a layer the document lost", () => {
-		expect(carriedPosition(placedRead, GONE, BRANCH)).toBeNull();
+	it("turns the layer against a turned new parent, so it keeps its place on the screen", () => {
+		const layer = placedLayer(FIRST);
+		const placement = carriedPlacement(placedRead, FIRST, TURNED_BRANCH);
+
+		const center = fromParentPoint(
+			[placedLayer(TURNED_BRANCH)],
+			centerOf({ ...layer, ...placement }),
+		);
+		expect(center.x).toBeCloseTo(centerOf(layer).x);
+		expect(center.y).toBeCloseTo(centerOf(layer).y);
+		expect(placement?.rotation).toBeCloseTo(270);
+	});
+
+	it("gives no placement for a layer the document lost", () => {
+		expect(carriedPlacement(placedRead, GONE, BRANCH)).toBeNull();
 	});
 });
