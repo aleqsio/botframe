@@ -99,3 +99,84 @@ describe("the layer tree", () => {
 		expect(doc.childIds(parent)).toHaveLength(1);
 	});
 });
+
+describe("a move of a layer", () => {
+	it("gives the layer a new parent and takes it out of the old child list", () => {
+		const doc = DesignDocument.create();
+		const from = doc.createLayer(DRAWN);
+		const to = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, from);
+		expect(doc.layer(child)).toMatchObject({ parent: from });
+
+		expect(doc.move(child, to)).toBe(true);
+
+		expect(doc.childIds(from)).toEqual([]);
+		expect(doc.childIds(to)).toEqual([child]);
+		expect(doc.layer(child)).toMatchObject({ parent: to });
+		expect(doc.rootIds()).not.toContain(child);
+	});
+
+	it("puts the layer back among the roots", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+
+		expect(doc.move(child, null)).toBe(true);
+
+		expect(doc.childIds(parent)).toEqual([]);
+		expect(doc.rootIds()).toContain(child);
+		expect(doc.layer(child)).toMatchObject({ parent: null });
+	});
+
+	it("refuses a move into the subtree of the layer itself", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN, parent);
+		const grandchild = doc.createLayer(DRAWN, child);
+
+		expect(doc.move(parent, grandchild)).toBe(false);
+		expect(doc.move(parent, parent)).toBe(false);
+
+		expect(doc.layer(parent)).toMatchObject({ parent: null });
+		expect(doc.childIds(grandchild)).toEqual([]);
+		expect(doc.childIds(child)).toEqual([grandchild]);
+	});
+
+	it("refuses a move of a layer the document lost", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const gone = doc.createLayer(DRAWN);
+		doc.deleteLayer(gone);
+
+		expect(doc.move(gone, parent)).toBe(false);
+		expect(doc.move(parent, gone)).toBe(false);
+		expect(doc.childIds(parent)).toEqual([]);
+	});
+
+	it("puts the layer at the index the move names among its new siblings", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const first = doc.createLayer(DRAWN, parent);
+		const second = doc.createLayer(DRAWN, parent);
+		const joined = doc.createLayer(DRAWN);
+
+		expect(doc.move(joined, parent, 1)).toBe(true);
+
+		expect(doc.childIds(parent)).toEqual([first, joined, second]);
+	});
+
+	it("notifies the layer list and the layer itself when the parent changes", () => {
+		const doc = DesignDocument.create();
+		const parent = doc.createLayer(DRAWN);
+		const child = doc.createLayer(DRAWN);
+		const structure = vi.fn<() => void>();
+		const layer = vi.fn<() => void>();
+		doc.subscribeStructure(structure);
+		doc.subscribeLayer(child, layer);
+
+		doc.move(child, parent);
+
+		expect(structure).toHaveBeenCalled();
+		expect(layer).toHaveBeenCalled();
+	});
+});
