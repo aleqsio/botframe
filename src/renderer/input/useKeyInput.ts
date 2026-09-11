@@ -42,6 +42,7 @@ function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): 
 	const tool = toolFor(stroke);
 	if (tool !== null) {
 		user.tool.set(tool);
+		user.highlight.set(null);
 		return true;
 	}
 	return transformLayer(doc, user, stroke);

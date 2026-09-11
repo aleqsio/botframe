@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { LayerId } from "../../document/layer";
 import { IDENTITY_CAMERA } from "../state/camera";
 import { composeBehaviors } from "./composeBehaviors";
 import { NO_MODIFIERS } from "./modifiers";
@@ -8,12 +9,17 @@ import { pointAt, targetOf } from "./toolFixtures";
 const PRESS = { x: 10, y: 20 };
 const RELEASE = { x: 30, y: 40 };
 const SE_ZONE = { mode: "resize", handle: "se" };
+const LAYER = "7@7" as LayerId;
 
 function recorder(name: string, claims: boolean, log: string[]): ToolBehavior {
 	return {
 		hover() {
 			log.push(`${name}.hover`);
 			return claims ? { mode: "resize", handle: "se" } : null;
+		},
+		highlight() {
+			log.push(`${name}.highlight`);
+			return claims ? LAYER : null;
 		},
 		tap() {
 			log.push(`${name}.tap`);
@@ -109,6 +115,25 @@ describe("composeBehaviors", () => {
 		const behavior = composeBehaviors([recorder("first", false, log)]);
 
 		expect(behavior.hover?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS))).toBeNull();
+	});
+
+	it("answers the highlight with the first layer and stops there", () => {
+		const log: string[] = [];
+		const behavior = composeBehaviors([
+			recorder("first", false, log),
+			recorder("second", true, log),
+			recorder("third", true, log),
+		]);
+
+		expect(behavior.highlight?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS))).toBe(LAYER);
+		expect(log).toEqual(["first.highlight", "second.highlight"]);
+	});
+
+	it("gives the hover no layer when no behavior answers", () => {
+		const log: string[] = [];
+		const behavior = composeBehaviors([recorder("first", false, log)]);
+
+		expect(behavior.highlight?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS))).toBeNull();
 	});
 
 	it("stops the tap and the secondary press at the first claim", () => {

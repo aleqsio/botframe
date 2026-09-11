@@ -32,6 +32,7 @@ export interface StageInputHandlers {
 	onDragEnd: (point: StagePoint, modifiers: Modifiers) => void;
 	onTap: (layerIds: readonly LayerId[], point: StagePoint) => void;
 	onHover: (point: StagePoint) => void;
+	onLeave: () => void;
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
 }
 
@@ -260,6 +261,12 @@ function finish(session: StageSession, event: StagePointerEvent, cancelled: bool
 	emit(session, cancelled ? recognizer.cancel(sample) : recognizer.up(sample));
 }
 
+function leaveStage(session: StageSession): void {
+	session.input.hover = null;
+	session.user.pointer.set(null);
+	session.handlers.onLeave();
+}
+
 function openMenu(session: StageSession, event: StageMouseEvent): void {
 	event.preventDefault();
 	if (session.input.recognizer.active()) {
@@ -284,7 +291,7 @@ export function useStageInput(user: UserState, handlers: StageInputHandlers): St
 			finish(session(), event, true);
 		},
 		onPointerLeave: () => {
-			user.pointer.set(null);
+			leaveStage(session());
 		},
 		onPointerDown: (event) => {
 			beginGesture(session(), event);
