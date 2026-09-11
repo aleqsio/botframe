@@ -29,6 +29,10 @@ export function isArtboard(layer: Layer | null): boolean {
 	return geometry?.kind === "rectangle" && geometry.artboard;
 }
 
+export function isRootArtboard(layer: Layer | null): boolean {
+	return layer !== null && layer.parent === null && isArtboard(layer);
+}
+
 function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;

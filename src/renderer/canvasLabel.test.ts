@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../document/documentFixtures";
 import type { Layer } from "../document/layer";
-import { canvasLabelStyle, hasCanvasLabel } from "./canvasLabel";
+import { canvasLabelStyle } from "./canvasLabel";
 
 const ARTBOARD: Layer = {
 	id: "1@1",
@@ -17,23 +17,6 @@ const ARTBOARD: Layer = {
 	clip: true,
 	parent: null,
 };
-
-describe("hasCanvasLabel", () => {
-	it("labels an artboard at the root of the document", () => {
-		expect(hasCanvasLabel(ARTBOARD)).toBe(true);
-	});
-
-	it("gives no label to a nested artboard or to a rectangle at the root", () => {
-		expect(hasCanvasLabel({ ...ARTBOARD, parent: "2@1" })).toBe(false);
-		expect(
-			hasCanvasLabel({
-				...ARTBOARD,
-				geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
-			}),
-		).toBe(false);
-		expect(hasCanvasLabel({ ...ARTBOARD, geometry: { kind: "ellipse" } })).toBe(false);
-	});
-});
 
 describe("canvasLabelStyle", () => {
 	it("puts the label at the corner of the artboard and holds it to the width on the screen", () => {

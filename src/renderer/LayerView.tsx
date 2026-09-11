@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
-import { canvasLabelStyle, hasCanvasLabel } from "./canvasLabel";
-import { layerEntry } from "./components/layerEntry";
+import { canvasLabelStyle } from "./canvasLabel";
+import { isRootArtboard, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
@@ -51,7 +51,7 @@ export function ArtboardLabel({
 	const layer = useLayer(doc, id);
 	const selected = useSelected(selection, id);
 
-	if (layer === null || !hasCanvasLabel(layer)) {
+	if (layer === null || !isRootArtboard(layer)) {
 		return null;
 	}
 

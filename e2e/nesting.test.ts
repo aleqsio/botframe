@@ -15,6 +15,10 @@ const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOAR
 const BEYOND_THE_CLIP = { x: 520, y: 150 };
 const CARRIED = { x: -100, y: -190 };
 const OVER_THE_SHAPE: Drag = { from: { x: 460, y: 300 }, to: { x: 560, y: 360 } };
+const NESTED: Drag = { from: { x: 300, y: 60 }, to: { x: 460, y: 160 } };
+const GRAB_THE_SHAPE = { x: 540, y: 340 };
+const OVER_THE_ROOT_ARTBOARD = { x: 470, y: 170 };
+const OVER_THE_NESTED_ARTBOARD = { x: 440, y: 150 };
 
 async function idOf(locator: Locator): Promise<string> {
 	const id = await locator.getAttribute("data-layer-id");
@@ -200,6 +204,42 @@ test("a draw over a shape puts the new layer at the root, not in the shape", asy
 	await expect(window.locator("#viewport > .layer")).toHaveCount(2);
 	await expect(layers.nth(1)).toHaveAttribute("style", /translate3d\(460px, 300px, 0px\)/u);
 	expect((await boxOf(rows.nth(1))).x).toBe((await boxOf(rows.nth(0))).x);
+
+	await app.close();
+});
+
+test("the drop target takes a highlight, and a root artboard takes none", async () => {
+	const { app, layers, origin, window } = await openStage();
+	const frame = window.locator(".drop-frame");
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", NESTED);
+	const nested = layerById(window, await idOf(layers.nth(1).locator("> .layer")));
+	await expect(nested).toHaveCount(1);
+
+	await window.mouse.move(at(origin, GRAB_THE_SHAPE).x, at(origin, GRAB_THE_SHAPE).y);
+	await window.mouse.down();
+
+	await window.mouse.move(
+		at(origin, OVER_THE_ROOT_ARTBOARD).x,
+		at(origin, OVER_THE_ROOT_ARTBOARD).y,
+		{ steps: 8 },
+	);
+	await expect(frame).toHaveCount(0);
+
+	await window.mouse.move(
+		at(origin, OVER_THE_NESTED_ARTBOARD).x,
+		at(origin, OVER_THE_NESTED_ARTBOARD).y,
+		{ steps: 8 },
+	);
+	await expect(frame).toHaveCount(1);
+	await expect(frame).toHaveCSS("outline-color", SELECTION_BLUE);
+	expect(await boxOf(frame)).toEqual(at(origin, NESTED.from));
+
+	await window.mouse.up();
+
+	await expect(frame).toHaveCount(0);
+	await expect(nested.locator("> .layer")).toHaveCount(1);
 
 	await app.close();
 });
