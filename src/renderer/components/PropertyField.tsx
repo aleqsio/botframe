@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
-import { formatNumber } from "./layerFields";
 
-export function PropertyField({
+export function DraftInput({
+	inputMode,
 	label,
 	onCommit,
 	value,
 }: {
+	inputMode: "numeric" | "text";
 	label: string;
 	onCommit: (text: string) => void;
 	value: string;
@@ -24,44 +25,37 @@ export function PropertyField({
 	}
 
 	return (
-		<label className="property-field">
-			<span className="property-label">{label}</span>
-			<input
-				className="property-input"
-				onBlur={commit}
-				onChange={(event) => {
-					setDraft(event.target.value);
-				}}
-				onKeyDown={(event) => {
-					if (event.key === "Enter") {
-						event.currentTarget.blur();
-					}
-				}}
-				value={draft ?? value}
-			/>
-		</label>
+		<input
+			aria-label={label}
+			className="property-input"
+			inputMode={inputMode}
+			onBlur={commit}
+			onChange={(event) => {
+				setDraft(event.target.value);
+			}}
+			onKeyDown={(event) => {
+				if (event.key === "Enter") {
+					event.currentTarget.blur();
+				}
+			}}
+			value={draft ?? value}
+		/>
 	);
 }
 
-export function NumberField({
+export function PropertyField({
 	label,
 	onCommit,
 	value,
 }: {
 	label: string;
-	onCommit: (value: number) => void;
-	value: number;
+	onCommit: (text: string) => void;
+	value: string;
 }): ReactElement {
 	return (
-		<PropertyField
-			label={label}
-			onCommit={(text) => {
-				const next = Number.parseFloat(text);
-				if (Number.isFinite(next)) {
-					onCommit(next);
-				}
-			}}
-			value={formatNumber(value)}
-		/>
+		<label className="property-field">
+			<span className="property-label">{label}</span>
+			<DraftInput inputMode="text" label={label} onCommit={onCommit} value={value} />
+		</label>
 	);
 }

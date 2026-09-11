@@ -2,14 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { Layer } from "../../document/layer";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
-import {
-	MIN_LAYER_SIZE,
-	ROTATE_STEP_ALT,
-	ROTATE_STEP_SHIFT,
-	resizedRect,
-	rotatedDegrees,
-	scaledRect,
-} from "./transform";
+import { ANGLE_SNAP } from "./step";
+import { MIN_LAYER_SIZE, resizedRect, rotatedDegrees, scaledRect } from "./transform";
 
 const ALT: Modifiers = { shift: false, alt: true };
 const SHIFT: Modifiers = { shift: true, alt: false };
@@ -163,10 +157,10 @@ describe("rotatedDegrees", () => {
 
 	it("steps by five degrees with alt and by fifteen degrees with shift", () => {
 		expect(rotatedDegrees(FLAT, pointAround(0), pointAround(97), ALT)).toBeCloseTo(
-			ROTATE_STEP_ALT * 19,
+			ANGLE_SNAP.small * 19,
 		);
 		expect(rotatedDegrees(FLAT, pointAround(0), pointAround(97), SHIFT)).toBeCloseTo(
-			ROTATE_STEP_SHIFT * 6,
+			ANGLE_SNAP.large * 6,
 		);
 	});
 });
