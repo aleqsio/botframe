@@ -1,102 +1,111 @@
-import type { DesignDocument } from "../../document/document";
-import type { Layer, Rect, RectangleGeometry } from "../../document/layer";
+import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
-import { normalizeDegrees } from "../input/layerSpace";
+import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP } from "../input/step";
+import type { StepRule } from "../input/step";
 import { MIN_LAYER_SIZE } from "../input/transform";
+import { boundValue } from "./numberValue";
+import type { Bound } from "./numberValue";
 
-const DECIMALS = 100;
+const COORDINATE_LIMIT = 100_000;
+const FULL_TURN = 360;
+const SMOOTHING_LIMIT = 1;
+const PIXELS = "px";
+const DEGREES = "deg";
+const NO_UNIT = "";
+const CORNER_MESSAGE = "set corners";
+
+type BoxKey = "x" | "y" | "width" | "height";
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
-function clampSize(value: number): number {
-	return Math.max(value, MIN_LAYER_SIZE);
-}
-
-function clampCorner(value: number): number {
-	return Math.max(value, 0);
-}
+const PLACE_BOUND: Bound = { kind: "clamp", min: -COORDINATE_LIMIT, max: COORDINATE_LIMIT };
+const SIZE_BOUND: Bound = { kind: "clamp", min: MIN_LAYER_SIZE, max: COORDINATE_LIMIT };
+const TURN_BOUND: Bound = { kind: "wrap", min: 0, max: FULL_TURN };
+const RADIUS_BOUND: Bound = { kind: "clamp", min: 0, max: COORDINATE_LIMIT };
+const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
 export interface LayerField {
 	label: string;
+	unit: string;
+	bound: Bound;
+	step: StepRule;
+	message: string;
 	read: (layer: Layer) => number;
-	apply: (doc: DesignDocument, layer: Layer, value: number) => void;
+	patch: (value: number) => LayerPatch;
 }
 
-function resize(doc: DesignDocument, layer: Layer, box: Partial<Rect>): void {
-	doc.update(layer.id, box);
-	doc.commit(COMMIT_MESSAGES.resize);
+export interface FieldGroup {
+	name: string;
+	fields: readonly LayerField[];
 }
 
-function moveTo(doc: DesignDocument, layer: Layer, x: number, y: number): void {
-	doc.update(layer.id, { x, y });
-	doc.commit(COMMIT_MESSAGES.move);
-}
-
-export const LAYER_FIELDS: readonly LayerField[] = [
-	{
-		label: "X",
-		read: (layer) => layer.x,
-		apply: (doc, layer, value) => {
-			moveTo(doc, layer, value, layer.y);
-		},
-	},
-	{
-		label: "Y",
-		read: (layer) => layer.y,
-		apply: (doc, layer, value) => {
-			moveTo(doc, layer, layer.x, value);
-		},
-	},
-	{
-		label: "W",
-		read: (layer) => layer.width,
-		apply: (doc, layer, value) => {
-			resize(doc, layer, { width: clampSize(value) });
-		},
-	},
-	{
-		label: "H",
-		read: (layer) => layer.height,
-		apply: (doc, layer, value) => {
-			resize(doc, layer, { height: clampSize(value) });
-		},
-	},
-	{
-		label: "Rotation",
-		read: (layer) => layer.rotation,
-		apply: (doc, layer, value) => {
-			doc.update(layer.id, { rotation: normalizeDegrees(value) });
-			doc.commit(COMMIT_MESSAGES.rotate);
-		},
-	},
-];
-
-function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry): LayerField {
+function boxField(label: string, key: BoxKey): LayerField {
+	const place = key === "x" || key === "y";
 	return {
 		label,
-		read: () => geometry[key],
-		apply: (doc, layer, value) => {
-			doc.update(layer.id, { geometry: { ...geometry, [key]: clampCorner(value) } });
-			doc.commit("set corners");
-		},
+		unit: PIXELS,
+		bound: place ? PLACE_BOUND : SIZE_BOUND,
+		step: LENGTH_STEP,
+		message: place ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
+		read: (layer) => layer[key],
+		patch: (value) => ({ [key]: value }),
 	};
 }
 
-export function fieldsOf(layer: Layer): readonly LayerField[] {
+function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry): LayerField {
+	const smooth = key === "cornerSmoothing";
+	return {
+		label,
+		unit: smooth ? NO_UNIT : PIXELS,
+		bound: smooth ? SMOOTHING_BOUND : RADIUS_BOUND,
+		step: smooth ? FACTOR_STEP : LENGTH_STEP,
+		message: CORNER_MESSAGE,
+		read: () => geometry[key],
+		patch: (value) => ({ geometry: { ...geometry, [key]: value } }),
+	};
+}
+
+const TURN_FIELD: LayerField = {
+	label: "Rotation",
+	unit: DEGREES,
+	bound: TURN_BOUND,
+	step: ANGLE_STEP,
+	message: COMMIT_MESSAGES.rotate,
+	read: (layer) => layer.rotation,
+	patch: (value) => ({ rotation: value }),
+};
+
+const BOX_GROUPS: readonly FieldGroup[] = [
+	{ name: "Position", fields: [boxField("X", "x"), boxField("Y", "y")] },
+	{ name: "Size", fields: [boxField("W", "width"), boxField("H", "height")] },
+	{ name: "Rotation", fields: [TURN_FIELD] },
+];
+
+function cornerGroup(geometry: RectangleGeometry): FieldGroup {
+	return {
+		name: "Corners",
+		fields: [
+			cornerField("Radius", "cornerRadius", geometry),
+			cornerField("Smoothing", "cornerSmoothing", geometry),
+		],
+	};
+}
+
+export function fieldGroupsOf(layer: Layer): readonly FieldGroup[] {
 	const { geometry } = layer;
 	if (geometry.kind !== "rectangle") {
-		return LAYER_FIELDS;
+		return BOX_GROUPS;
 	}
-	return [
-		...LAYER_FIELDS,
-		cornerField("Radius", "cornerRadius", geometry),
-		cornerField("Smoothing", "cornerSmoothing", geometry),
-	];
+	return [...BOX_GROUPS, cornerGroup(geometry)];
+}
+
+export function fieldsOf(layer: Layer): readonly LayerField[] {
+	return fieldGroupsOf(layer).flatMap((group) => group.fields);
+}
+
+export function fieldPatch(field: LayerField, value: number): LayerPatch {
+	return field.patch(boundValue(field.bound, value));
 }
 
 export function swappedBox(layer: Layer): Pick<Rect, "width" | "height"> {
 	return { width: layer.height, height: layer.width };
-}
-
-export function formatNumber(value: number): string {
-	return String(Math.round(value * DECIMALS) / DECIMALS);
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
-import { formatNumber } from "./layerFields";
+import { formatNumber } from "./numberValue";
 
 export function PropertyField({
 	label,

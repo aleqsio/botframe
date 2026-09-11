@@ -4,7 +4,7 @@ import type { Layer } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { NumberField, PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { fieldsOf, swappedBox } from "./layerFields";
+import { fieldPatch, fieldsOf, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
 function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
@@ -77,7 +77,8 @@ export function LayerProperties({
 						key={field.label}
 						label={field.label}
 						onCommit={(value) => {
-							field.apply(doc, layer, value);
+							doc.update(layer.id, fieldPatch(field, value));
+							doc.commit(field.message);
 						}}
 						value={field.read(layer)}
 					/>
