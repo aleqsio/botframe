@@ -932,8 +932,13 @@ button.layer-chevron[aria-expanded="false"]::before {
 	cursor: default;
 }
 
-.unit-item[data-highlighted] {
+.unit-item[data-highlighted]:not([data-disabled]) {
 	background-color: var(--bar-selected);
+}
+
+.unit-item[data-disabled] {
+	color: var(--bar-icon);
+	opacity: 0.5;
 }
 
 .unit-mark {

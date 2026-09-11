@@ -196,29 +196,30 @@ function choiceOf(held: { layer: Layer; basis: Basis }, label: string): UnitChoi
 }
 
 describe("the unit of a box field", () => {
-	it("offers pixels only to a layer that stands at the root", () => {
+	it("makes pixels the only possible unit of a layer that stands at the root", () => {
 		const doc = DesignDocument.create();
-		expect(choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W").units).toEqual(["px"]);
+		const choice = choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W");
+		expect(choice.possible).toEqual(new Set(["px"]));
 	});
 
-	it("offers each unit to a layer inside a container", () => {
+	it("makes each unit possible for a layer inside a container", () => {
 		const child = childOf(DesignDocument.create());
-		expect(choiceOf(child, "X").units).toEqual(["px", "%", "vw", "vh"]);
+		expect(choiceOf(child, "X").possible).toEqual(new Set(["px", "%", "vw", "vh"]));
 	});
 
-	it("offers the unit a layer holds, even when the layer has no basis for it", () => {
+	it("makes the unit a layer holds possible, even when the layer has no basis for it", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
 		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
 		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
 
-		expect(choiceOf(orphan, "W").units).toEqual(["%", "px"]);
+		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px"]));
 	});
 
-	it("takes no unit for the angle and for the smoothing", () => {
+	it("gives a unit choice to the box fields only, also at the root", () => {
 		const layer = layerOf(DesignDocument.create());
-		expect(fieldNamed(layer, "Rotation").choice).toBeNull();
-		expect(fieldNamed(layer, "Smoothing").choice).toBeNull();
+		const chosen = fieldsOf(layer, NO_BASIS).filter((field) => field.choice !== null);
+		expect(chosen.map((field) => field.label)).toEqual(["X", "Y", "W", "H"]);
 	});
 
 	it("holds the size of the layer when the unit changes", () => {

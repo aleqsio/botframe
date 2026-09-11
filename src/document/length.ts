@@ -1,4 +1,4 @@
-const UNITS = ["px", "%", "vw", "vh"] as const;
+export const UNITS = ["px", "%", "vw", "vh"] as const;
 
 export type Unit = (typeof UNITS)[number];
 

@@ -1,6 +1,6 @@
 import { Select } from "@base-ui-components/react/select";
 import type { ReactElement } from "react";
-import { isUnit } from "../../document/length";
+import { UNITS, isUnit } from "../../document/length";
 import type { Unit } from "../../document/length";
 import { Icon } from "./Icon";
 import type { LayerField, UnitChoice } from "./layerFields";
@@ -13,7 +13,7 @@ export interface UnitSelectProps {
 	onPick: (unit: Unit) => void;
 }
 
-function UnitMenu({ units }: { units: readonly Unit[] }): ReactElement {
+function UnitMenu({ possible }: { possible: ReadonlySet<Unit> }): ReactElement {
 	return (
 		<Select.Portal>
 			<Select.Positioner
@@ -23,8 +23,13 @@ function UnitMenu({ units }: { units: readonly Unit[] }): ReactElement {
 				sideOffset={MENU_GAP}
 			>
 				<Select.Popup className="unit-menu">
-					{units.map((unit) => (
-						<Select.Item className="unit-item" key={unit} value={unit}>
+					{UNITS.map((unit) => (
+						<Select.Item
+							className="unit-item"
+							disabled={!possible.has(unit)}
+							key={unit}
+							value={unit}
+						>
 							<Select.ItemText>{unit}</Select.ItemText>
 							<Select.ItemIndicator className="unit-mark">
 								<Icon name="check" />
@@ -53,7 +58,7 @@ export function UnitSelect({ choice, field, onPick }: UnitSelectProps): ReactEle
 					<Icon name="chevron" />
 				</span>
 			</Select.Trigger>
-			<UnitMenu units={choice.units} />
+			<UnitMenu possible={choice.possible} />
 		</Select.Root>
 	);
 }

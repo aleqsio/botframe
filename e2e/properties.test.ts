@@ -331,12 +331,31 @@ test("shift steps a percentage by five, and the layer follows the artboard", asy
 	await app.close();
 });
 
-test("a layer at the root takes the pixel only", async () => {
-	const { app, window } = await openStage();
+test("a layer at the root shows each unit and takes the pixel only", async () => {
+	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+	const unit = window.getByLabel("W unit", { exact: true });
+	const menu = window.getByRole("listbox");
+	const percent = menu.getByRole("option", { name: "%", exact: true });
 
-	await expect(window.getByLabel("W unit", { exact: true })).toHaveCount(0);
-	await expect(window.locator(".number-chip", { hasText: "W" }).first()).toContainText("px");
+	await expect(unit).toHaveText("px");
+	await unit.click();
+
+	await expect(menu.getByRole("option")).toHaveText(["px", "%", "vw", "vh"]);
+	await expect(menu.getByRole("option", { name: "px", exact: true })).toBeEnabled();
+	await expect(percent).toBeDisabled();
+
+	await window.keyboard.press("ArrowDown");
+	await expect(percent).toHaveAttribute("data-highlighted", "");
+	await window.keyboard.press("Enter");
+	await percent.click({ force: true });
+
+	await expect(percent).toBeVisible();
+	await window.keyboard.press("Escape");
+	await expect(unit).toHaveText("px");
+	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width));
+	await expect(drawn).toHaveCSS("width", `${PRESET.width}px`);
 
 	await app.close();
 });
