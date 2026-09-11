@@ -2,7 +2,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
-import { dropParentOf, heldOffset } from "./dropTarget";
+import { dropParentOf, heldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { parentChainOf, parentPointOf } from "./targetSpace";
@@ -19,24 +19,25 @@ function parentUnder(
 	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id, alt);
 }
 
-function retarget(
-	target: PointerTarget,
-	move: LayerMove,
-	point: StagePoint,
-	alt: boolean,
-): LayerMove {
+function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
+	const origin = parentPointOf(target, layer.id, canvas);
+	return { x: origin.x - layer.x, y: origin.y - layer.y };
+}
+
+function retarget(target: PointerTarget, move: LayerMove, point: StagePoint, alt: boolean): void {
 	const parent = parentUnder(target, move, point, alt);
-	if (parent === move.parent) {
-		return move;
+	const layer = target.doc.layer(move.id);
+	if (parent === move.parent || layer === null) {
+		return;
 	}
 	const from = parentChainOf(target, move.id);
 	if (!target.doc.move(move.id, parent)) {
-		return move;
+		return;
 	}
-	const offset = heldOffset(from, parentChainOf(target, move.id), move.offset);
-	const next: LayerMove = { ...move, parent, offset };
-	target.user.move.set(next);
-	return next;
+	const placement = heldPlacement(layer, from, parentChainOf(target, move.id));
+	target.doc.update(move.id, placement);
+	const offset = offsetOf(target, { ...layer, ...placement, parent }, point.canvas);
+	target.user.move.set({ ...move, parent, offset });
 }
 
 function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void {
@@ -45,13 +46,12 @@ function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void
 }
 
 export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): void {
-	const origin = parentPointOf(target, layer.id, canvas);
 	target.user.move.set({
 		id: layer.id,
 		from: layer.parent,
 		parent: layer.parent,
-		start: { x: layer.x, y: layer.y },
-		offset: { x: origin.x - layer.x, y: origin.y - layer.y },
+		start: { x: layer.x, y: layer.y, rotation: layer.rotation },
+		offset: offsetOf(target, layer, canvas),
 	});
 }
 
@@ -60,7 +60,8 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 	if (move === null) {
 		return;
 	}
-	carryLayer(target, retarget(target, move, point, modifiers.alt), point.canvas);
+	carryLayer(target, move, point.canvas);
+	retarget(target, move, point, modifiers.alt);
 }
 
 export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {

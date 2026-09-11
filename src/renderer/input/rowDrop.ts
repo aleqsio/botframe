@@ -1,7 +1,7 @@
 import type { Layer, LayerId } from "../../document/layer";
-import type { Point } from "../state/camera";
-import { insideSubtree } from "./dropTarget";
-import { fromParentPoint, layerChain, parentChain, toParentPoint } from "./layerSpace";
+import { heldPlacement, insideSubtree } from "./dropTarget";
+import type { Placement } from "./dropTarget";
+import { layerChain, parentChain } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
 
 export type RowPlace = "before" | "after" | "inside";
@@ -79,15 +79,14 @@ export function rowMarkOf(drag: RowDrag | null, id: LayerId): RowMark | null {
 	return target !== null && target.id === id ? target.place : null;
 }
 
-export function carriedPosition(
+export function carriedPlacement(
 	read: ReadLayer,
 	id: LayerId,
 	parent: LayerId | null,
-): Point | null {
+): Placement | null {
 	const layer = read(id);
 	if (layer === null || layer.parent === parent) {
 		return null;
 	}
-	const canvas = fromParentPoint(parentChain(read, id), { x: layer.x, y: layer.y });
-	return toParentPoint(layerChain(read, parent), canvas);
+	return heldPlacement(layer, parentChain(read, id), layerChain(read, parent));
 }

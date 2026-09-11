@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { dropParentOf, heldOffset } from "./dropTarget";
-import { toParentPoint } from "./layerSpace";
+import { dropParentOf, heldPlacement } from "./dropTarget";
+import { centerOf, fromParentPoint } from "./layerSpace";
 
 interface Spec {
 	id: LayerId;
@@ -78,37 +78,42 @@ describe("dropParentOf", () => {
 	});
 });
 
-describe("heldOffset", () => {
+function placed(layer: Layer, from: readonly Layer[], to: readonly Layer[]): Layer {
+	return { ...layer, ...heldPlacement(layer, from, to) };
+}
+
+describe("heldPlacement", () => {
 	const TURNED = layerOf({ id: "7@1", parent: null, artboard: true, rotation: 90 });
-	const POINTER = { x: 260, y: 180 };
-	const OFFSET = { x: 30, y: 20 };
+	const CHILD: Layer = {
+		...layerOf({ id: "8@1", parent: null, artboard: false, rotation: 30 }),
+		x: 40,
+		y: 10,
+		width: 60,
+		height: 20,
+	};
 
-	function cornerOn(chain: readonly Layer[], offset: { x: number; y: number }) {
-		const point = toParentPoint(chain, POINTER);
-		return { x: point.x - offset.x, y: point.y - offset.y };
-	}
+	it("keeps the center and the angle on the screen when the layer joins a turned parent", () => {
+		const inside = placed(CHILD, [], [TURNED]);
 
-	it("holds the corner on the screen when the layer joins a turned parent", () => {
-		const held = heldOffset([], [TURNED], OFFSET);
-
-		const moved = cornerOn([TURNED], held);
-		const same = toParentPoint([TURNED], cornerOn([], OFFSET));
-		expect(moved.x).toBeCloseTo(same.x);
-		expect(moved.y).toBeCloseTo(same.y);
+		const center = fromParentPoint([TURNED], centerOf(inside));
+		expect(center.x).toBeCloseTo(centerOf(CHILD).x);
+		expect(center.y).toBeCloseTo(centerOf(CHILD).y);
+		expect(inside.rotation).toBeCloseTo(300);
 	});
 
-	it("holds the corner on the screen when the layer leaves a turned parent", () => {
-		const inside = heldOffset([], [TURNED], OFFSET);
+	it("gives the first placement back when the layer leaves the turned parent", () => {
+		const back = placed(placed(CHILD, [], [TURNED]), [TURNED], []);
 
-		const held = heldOffset([TURNED], [], inside);
-
-		const moved = cornerOn([], held);
-		const same = cornerOn([], OFFSET);
-		expect(moved.x).toBeCloseTo(same.x);
-		expect(moved.y).toBeCloseTo(same.y);
+		expect(back.x).toBeCloseTo(CHILD.x);
+		expect(back.y).toBeCloseTo(CHILD.y);
+		expect(back.rotation).toBeCloseTo(CHILD.rotation);
 	});
 
-	it("leaves the offset alone when the two chains turn by the same angle", () => {
-		expect(heldOffset([TURNED], [TURNED], OFFSET)).toEqual(OFFSET);
+	it("keeps the placement between two chains that turn by the same angle", () => {
+		const same = placed(CHILD, [TURNED], [TURNED]);
+
+		expect(same.x).toBeCloseTo(CHILD.x);
+		expect(same.y).toBeCloseTo(CHILD.y);
+		expect(same.rotation).toBeCloseTo(CHILD.rotation);
 	});
 });

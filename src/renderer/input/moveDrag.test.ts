@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import type { LayerFields, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { centerOf, fromParentPoint } from "./layerSpace";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { cancelMove, changesParent } from "./moveDrag";
-import { parentPointOf } from "./targetSpace";
+import { parentChainOf, parentPointOf } from "./targetSpace";
+import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { NO_HITS, dragOver, dropScene, nestedTarget, pointAt } from "./toolFixtures";
 import type { DropScene } from "./toolFixtures";
@@ -32,6 +34,15 @@ const EMPTY = { x: 700, y: 600 };
 const ALT: Modifiers = { shift: false, alt: true };
 const TURNED_GRAB = { x: 580, y: 270 };
 const ON_SCREEN = { x: 600, y: 240 };
+const PULL = { x: 30, y: 10 };
+
+function canvasCenterOf(target: PointerTarget, id: LayerId): Point {
+	const layer = target.doc.layer(id);
+	if (layer === null) {
+		throw new Error("the document lost the layer");
+	}
+	return fromParentPoint(parentChainOf(target, id), centerOf(layer));
+}
 
 interface DropSpec {
 	press: Point;
@@ -199,9 +210,24 @@ describe("a layer inside an artboard", () => {
 		);
 
 		const moved = target.doc.layer(child);
-		expect(moved).toMatchObject({ parent: null });
-		expect(moved?.x).toBeCloseTo(ON_SCREEN.x);
-		expect(moved?.y).toBeCloseTo(ON_SCREEN.y);
+		expect(moved).toMatchObject({ parent: null, rotation: 90 });
+		expect(canvasCenterOf(target, child).x).toBeCloseTo(ON_SCREEN.x - 20);
+		expect(canvasCenterOf(target, child).y).toBeCloseTo(ON_SCREEN.y + 30);
+	});
+
+	it("keeps the grip under the pointer when the layer leaves a turned parent during a drag", () => {
+		const { target, child } = nestedTarget(90);
+		const start = canvasCenterOf(target, child);
+
+		dragOver(
+			behaviorFor("select"),
+			{ ...target, layerIdsAt: NO_HITS },
+			{ press: TURNED_GRAB, release: { x: TURNED_GRAB.x + PULL.x, y: TURNED_GRAB.y + PULL.y } },
+		);
+
+		expect(target.doc.layer(child)).toMatchObject({ parent: null, rotation: 90 });
+		expect(canvasCenterOf(target, child).x).toBeCloseTo(start.x + PULL.x);
+		expect(canvasCenterOf(target, child).y).toBeCloseTo(start.y + PULL.y);
 	});
 });
 
@@ -228,6 +254,27 @@ describe("Escape during a move drag", () => {
 		});
 		expect(scene.target.user.move.get()).toBeNull();
 		expect(changesParent(scene.target.user.move.get())).toBe(false);
+	});
+
+	it("gives a layer that left a turned parent its first rotation back", () => {
+		const { target, child } = nestedTarget(90);
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const leaving = { ...target, layerIdsAt: NO_HITS };
+
+		behavior.dragStart?.(
+			leaving,
+			pointAt(camera, TURNED_GRAB),
+			pointAt(camera, TURNED_GRAB),
+			NO_MODIFIERS,
+		);
+		behavior.drag?.(leaving, pointAt(camera, ON_SCREEN), NO_MODIFIERS);
+		expect(target.doc.layer(child)).toMatchObject({ parent: null, rotation: 90 });
+
+		cancelMove(target.doc, target.user);
+
+		expect(target.doc.layer(child)?.parent).not.toBeNull();
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20, rotation: 0 });
 	});
 
 	it("leaves the rest of the gesture without an answer", () => {
