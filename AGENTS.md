@@ -34,6 +34,7 @@ Write each reply and each Markdown file in this repository in ASD-STE100, Simpli
 - Do not add a dependency for a function that the platform or the standard library gives.
 - Validate external data at the boundary. Then trust the types. Make an illegal state impossible.
 - Write a test that fails before the change and passes after the change.
+- Do not add an e2e test for a change that changes only the style.
 - Prove the change against the application that runs. Give the command and the output in the pull request.
 
 ## Pull requests
