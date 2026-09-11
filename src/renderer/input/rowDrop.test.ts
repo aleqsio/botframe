@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import { centerOf, fromParentPoint } from "./layerSpace";
 import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf, rowTargetOf } from "./rowDrop";
@@ -50,6 +51,7 @@ function read(id: LayerId): Layer | null {
 		y: 0,
 		width: 10,
 		height: 10,
+		...pixelBox({ x: 0, y: 0, width: 10, height: 10 }),
 		rotation: 0,
 		fill: "#000000",
 		geometry: geometryOf(id),

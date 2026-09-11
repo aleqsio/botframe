@@ -1,8 +1,11 @@
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch, WritableGeometry } from "./layer";
+import { hasRelativeLength } from "./length";
+import type { LayerLengths } from "./length";
 
 export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
+	lengths: LayerLengths;
 	children: readonly LayerNode[];
 }
 
@@ -46,14 +49,19 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		return null;
 	}
 	const children = source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
-	return { fields: fieldsOf(layer), rotation: layer.rotation, children };
+	return { fields: fieldsOf(layer), rotation: layer.rotation, lengths: layer.lengths, children };
+}
+
+function copyPatch(node: LayerNode): LayerPatch {
+	return {
+		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
+		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
+	};
 }
 
 export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerId | null): LayerId {
 	const id = sink.createLayer(node.fields, parent);
-	if (node.rotation !== 0) {
-		sink.update(id, { rotation: node.rotation });
-	}
+	sink.update(id, copyPatch(node));
 	for (const child of node.children) {
 		createSubtree(sink, child, id);
 	}

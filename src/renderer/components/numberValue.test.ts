@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { boundValue, draggedValue, formatNumber, roundNumber } from "./numberValue";
+import { roundNumber } from "../../document/length";
+import { boundValue, draggedValue, formatNumber } from "./numberValue";
 import type { Bound } from "./numberValue";
 
 const SIZE: Bound = { kind: "clamp", min: 1, max: 100 };

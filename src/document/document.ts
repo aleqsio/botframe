@@ -1,17 +1,17 @@
 import { LoroDoc } from "loro-crdt";
-import type { LoroEventBatch, LoroMap, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
+import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
 import { DocumentHistory } from "./history";
-import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
-import { readBoolean, readNumber, readString, readVariant } from "./read";
+import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
+import { readLayerData, writePatch } from "./layerData";
+import { NO_BASIS, hasRelativeLength } from "./length";
+import type { Basis } from "./length";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
-import { writeVariant } from "./write";
 
 export type Unsubscribe = () => void;
 
 const LAYERS = "layers";
 const NO_IDS: readonly LayerId[] = [];
-const GEOMETRY = "geometry";
 
 const SEED_RECTANGLE: LayerFields = {
 	x: 420,
@@ -22,19 +22,6 @@ const SEED_RECTANGLE: LayerFields = {
 	name: "",
 	clip: false,
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
-};
-
-const GEOMETRY_READERS: Readonly<
-	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
-> = {
-	rectangle: (fields) => ({
-		kind: "rectangle",
-		cornerRadius: readNumber(fields, "cornerRadius", 0),
-		cornerSmoothing: readNumber(fields, "cornerSmoothing", 0),
-		artboard: readBoolean(fields, "artboard", false),
-	}),
-	ellipse: () => ({ kind: "ellipse" }),
-	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
 };
 
 function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {
@@ -63,16 +50,6 @@ function subscribeTo(listeners: Set<() => void>, listener: () => void): Unsubscr
 function notify(listeners: Iterable<() => void>): void {
 	for (const listener of listeners) {
 		listener();
-	}
-}
-
-function writePatch(data: LoroMap, patch: LayerPatch): void {
-	const { geometry, ...fields } = patch;
-	for (const [key, value] of Object.entries(fields)) {
-		data.set(key, value);
-	}
-	if (geometry !== undefined) {
-		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
 	}
 }
 
@@ -152,28 +129,16 @@ export class DesignDocument {
 		if (node === null) {
 			return null;
 		}
-		const layer: Layer = {
-			id,
-			x: readNumber(node.data, "x", 0),
-			y: readNumber(node.data, "y", 0),
-			width: readNumber(node.data, "width", 0),
-			height: readNumber(node.data, "height", 0),
-			rotation: readNumber(node.data, "rotation", 0),
-			fill: readString(node.data, "fill", "#000000"),
-			geometry: readVariant<Geometry>(node.data.get(GEOMETRY), GEOMETRY_READERS, {
-				kind: "unsupported",
-			}),
-			name: readString(node.data, "name", ""),
-			clip: readBoolean(node.data, "clip", false),
-			parent: node.parent()?.id ?? null,
-		};
+		const parent = node.parent()?.id ?? null;
+		const basis = this.#basisOf(parent);
+		const layer: Layer = { id, parent, basis, ...readLayerData(node.data, basis) };
 		this.#layers.set(id, layer);
 		return layer;
 	}
 
 	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
 		const node = this.#tree().createNode(parent ?? undefined);
-		writePatch(node.data, fields);
+		writePatch(node.data, fields, this.#basisOf(parent));
 		this.#notifyStructure();
 		return node.id;
 	}
@@ -225,8 +190,8 @@ export class DesignDocument {
 		if (node === null) {
 			return;
 		}
-		writePatch(node.data, patch);
-		this.#invalidate(id);
+		writePatch(node.data, patch, this.#basisOf(node.parent()?.id ?? null));
+		this.#refreshLayer(id);
 	}
 
 	commit(message: string): void {
@@ -269,6 +234,15 @@ export class DesignDocument {
 
 	changeCount(): number {
 		return this.#doc.exportJsonUpdates().changes.length;
+	}
+
+	#basisOf(parent: LayerId | null): Basis {
+		const container = parent === null ? null : this.layer(parent);
+		if (container === null) {
+			return NO_BASIS;
+		}
+		const size = { width: container.width, height: container.height };
+		return { container: size, root: container.parent === null ? size : container.basis.root };
 	}
 
 	#applyHistory(step: () => boolean): boolean {
@@ -329,7 +303,7 @@ export class DesignDocument {
 			if (item.action === "delete") {
 				this.#forget(item.target);
 			} else {
-				this.#invalidate(item.target);
+				this.#refreshLayer(item.target);
 			}
 		}
 	}
@@ -394,7 +368,7 @@ export class DesignDocument {
 			this.#nodeSubscriptions.set(
 				id,
 				node.data.subscribe(() => {
-					this.#invalidate(id);
+					this.#refreshLayer(id);
 				}),
 			);
 		}
@@ -405,6 +379,29 @@ export class DesignDocument {
 		this.#nodeSubscriptions.get(id)?.();
 		this.#nodeSubscriptions.delete(id);
 		this.#listeners.delete(id);
+	}
+
+	#refreshLayer(id: LayerId): void {
+		const stale = this.#layers.get(id);
+		this.#invalidate(id);
+		if (stale !== undefined && this.#resized(stale, id)) {
+			this.#dropRelativeBelow(this.#tree().getNodeByID(id));
+		}
+	}
+
+	#resized(stale: Layer, id: LayerId): boolean {
+		const next = this.layer(id);
+		return next !== null && (next.width !== stale.width || next.height !== stale.height);
+	}
+
+	#dropRelativeBelow(node: LoroTreeNode | undefined): void {
+		for (const child of node?.children() ?? []) {
+			const cached = this.#layers.get(child.id);
+			if (cached !== undefined && hasRelativeLength(cached.lengths)) {
+				this.#invalidate(child.id);
+			}
+			this.#dropRelativeBelow(child);
+		}
 	}
 
 	#invalidate(id: LayerId): void {

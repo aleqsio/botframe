@@ -5,7 +5,7 @@ import { ArtboardFooter } from "./ArtboardFooter";
 import { NumberChip } from "./NumberChip";
 import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
-import { fieldGroupsOf, fieldPatch } from "./layerFields";
+import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup, LayerField } from "./layerFields";
 
 function LayerChip({
@@ -23,8 +23,8 @@ function LayerChip({
 			onCommit={() => {
 				doc.commit(field.message);
 			}}
-			onUpdate={(value) => {
-				doc.update(layer.id, fieldPatch(field, value));
+			onPatch={(patch) => {
+				doc.update(layer.id, patch);
 			}}
 			value={field.read(layer)}
 		/>

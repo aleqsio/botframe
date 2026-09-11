@@ -7,7 +7,7 @@ import { bridge } from "./bridge";
 import { layerIdsUnder } from "./input/hitTest";
 import { layerMarkup } from "./layerMarkup";
 import type { Bridge } from "./bridge";
-import { PASTE_OFFSET, pasteParent, shiftNode } from "./paste";
+import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
 
 function selectedNodes(doc: DesignDocument, user: UserState): LayerNode[] {
@@ -48,13 +48,24 @@ function targetOf(doc: DesignDocument, user: UserState): LayerId | null {
 	return pasteParent((id) => doc.layer(id), under, user.selection.get());
 }
 
+function pastedId(
+	doc: DesignDocument,
+	node: LayerNode,
+	parent: LayerId | null,
+	offset: number,
+): LayerId {
+	const id = doc.createSubtree(node, parent);
+	shiftLayer(doc, id, offset);
+	return id;
+}
+
 function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvelope): void {
 	if (envelope.layers.length === 0) {
 		return;
 	}
 	const parent = targetOf(doc, user);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
-	const ids = envelope.layers.map((node) => doc.createSubtree(shiftNode(node, offset), parent));
+	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
 	user.selection.set(ids);
 	doc.commit("paste layers");
 }

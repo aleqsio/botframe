@@ -843,14 +843,38 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .chip-unit {
 	flex: none;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
 	color: var(--panel-label);
+	font: inherit;
 	font-size: 10px;
 	user-select: none;
 	-webkit-user-select: none;
 }
 
+select.chip-unit {
+	padding: 1px 2px;
+	appearance: none;
+	outline: none;
+	cursor: default;
+	transition: background-color 200ms ease;
+}
+
+select.chip-unit:hover {
+	background-color: var(--panel-selected);
+	color: var(--panel-text);
+}
+
+select.chip-unit:focus-visible {
+	outline: 2px solid var(--panel-focus);
+	outline-offset: 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.number-chip {
+	.number-chip,
+	select.chip-unit {
 		transition: none;
 	}
 }

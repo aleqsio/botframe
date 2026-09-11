@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { openStage } from "./support";
+import { drawWith, openStage } from "./support";
+import type { Drag } from "./support";
 
 const PRESET = { name: "iPhone 16", width: 393, height: 852 };
+const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
+const SHIFT_DRAG = 2;
 const DRAG = 40;
 const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
 
@@ -212,6 +216,61 @@ test("shift makes a large drag step and alt makes a small one", async () => {
 	await dragBy(window, chipHandle(window, "W"), 10);
 	await window.keyboard.up("Alt");
 	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width + 21));
+
+	await app.close();
+});
+
+test("a layer inside a container takes a unit that is not the pixel", async () => {
+	const { app, layers, origin, window } = await openStage();
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", INSIDE);
+	const child = layers.nth(1).locator("> .layer");
+	const unit = window.getByLabel("W unit", { exact: true });
+
+	await expect(unit).toHaveValue("px");
+	await expect(chipValue(window, "W")).toHaveValue("100");
+
+	await unit.selectOption("%");
+
+	await expect(chipValue(window, "W")).toHaveValue("50");
+	await expect(child).toHaveCSS("width", "100px");
+
+	await typeInto(window, "W value", "25%");
+
+	await expect(unit).toHaveValue("%");
+	await expect(child).toHaveCSS("width", "50px");
+
+	await app.close();
+});
+
+test("shift steps a percentage by five, and the layer follows the artboard", async () => {
+	const { app, layers, origin, window } = await openStage();
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", INSIDE);
+	const child = layers.nth(1).locator("> .layer");
+	await window.getByLabel("W unit", { exact: true }).selectOption("%");
+
+	await window.keyboard.down("Shift");
+	await dragBy(window, chipHandle(window, "W"), SHIFT_DRAG);
+	await window.keyboard.up("Shift");
+
+	await expect(chipValue(window, "W")).toHaveValue("60");
+	await expect(child).toHaveCSS("width", "120px");
+
+	await window.locator(".layer-row").nth(1).click();
+	await typeInto(window, "W value", "400");
+
+	await expect(child).toHaveCSS("width", "240px");
+
+	await app.close();
+});
+
+test("a layer at the root takes the pixel only", async () => {
+	const { app, window } = await openStage();
+	await placePreset(window, PRESET.name);
+
+	await expect(window.getByLabel("W unit", { exact: true })).toHaveCount(0);
+	await expect(window.locator(".number-chip", { hasText: "W" }).first()).toContainText("px");
 
 	await app.close();
 });

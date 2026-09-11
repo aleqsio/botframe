@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../document/documentFixtures";
 import type { Geometry, Layer } from "../document/layer";
 import { layerStyle } from "./layerStyle";
 
@@ -9,6 +10,7 @@ function layerWith(geometry: Geometry): Layer {
 		y: 20,
 		width: 30,
 		height: 40,
+		...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),
 		rotation: 0,
 		fill: "#123456",
 		geometry,

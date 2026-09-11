@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import { glyphOf, inspectorHeading, isArtboard, layerEntry, nextLayerName } from "./layerEntry";
 
@@ -9,6 +10,7 @@ function rectangle(id: LayerId, fill: string): Layer {
 		y: 0,
 		width: 240,
 		height: 160,
+		...pixelBox({ x: 0, y: 0, width: 240, height: 160 }),
 		rotation: 0,
 		fill,
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },

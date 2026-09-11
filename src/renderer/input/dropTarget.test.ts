@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import { centerOf, fromParentPoint } from "./layerSpace";
@@ -17,6 +18,7 @@ function layerOf(spec: Spec): Layer {
 		y: 100,
 		width: 200,
 		height: 100,
+		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation: spec.rotation ?? 0,
 		fill: "#000000",
 		geometry: {
@@ -84,6 +86,7 @@ describe("heldPlacement", () => {
 		y: 10,
 		width: 60,
 		height: 20,
+		...pixelBox({ x: 40, y: 10, width: 60, height: 20 }),
 	};
 
 	it("keeps the center and the angle on the screen when the layer joins a turned parent", () => {

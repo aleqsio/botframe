@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer } from "../../document/layer";
 import { CORNER_GRACE, EDGE_GRACE, ROTATE_REACH, zoneAt, zoneKey } from "./handles";
 
@@ -9,6 +10,7 @@ function layerAt(rotation: number): Layer {
 		y: 100,
 		width: 200,
 		height: 100,
+		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },

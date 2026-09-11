@@ -1,15 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { Layer } from "../../document/layer";
+import type { Layer, LayerFields } from "../../document/layer";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
-import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox } from "./layerFields";
-import type { LayerField } from "./layerFields";
+import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox, typedPatch } from "./layerFields";
+import type { LayerField, UnitChoice } from "./layerFields";
 
 const ALT = { shift: false, alt: true };
 const SHIFT = { shift: true, alt: false };
 const BOX_LABELS = ["X", "Y", "W", "H", "Rotation"];
+const CHILD_FIELDS: LayerFields = {
+	x: 0,
+	y: 0,
+	width: 120,
+	height: 80,
+	fill: "#d9d9d9",
+	name: "Child",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
 
 function layerOf(doc: DesignDocument): Layer {
 	const layer = doc.layer(firstId(doc));
@@ -155,5 +165,101 @@ describe("swappedBox", () => {
 
 	it("exchanges the width and the height of a preset", () => {
 		expect(swappedBox({ width: 393, height: 852 })).toEqual({ width: 852, height: 393 });
+	});
+});
+
+function childOf(doc: DesignDocument): Layer {
+	const parent = layerOf(doc);
+	const child = doc.createLayer({ ...CHILD_FIELDS }, parent.id);
+	const layer = doc.layer(child);
+	if (layer === null) {
+		throw new Error("the document lost the child");
+	}
+	return layer;
+}
+
+function choiceOf(layer: Layer, label: string): UnitChoice {
+	const { choice } = fieldNamed(layer, label);
+	if (choice === null) {
+		throw new Error(`the field ${label} takes one unit only`);
+	}
+	return choice;
+}
+
+describe("the unit of a box field", () => {
+	it("offers pixels only to a layer that stands at the root", () => {
+		const layer = layerOf(DesignDocument.create());
+		expect(choiceOf(layer, "W").units).toEqual(["px"]);
+	});
+
+	it("offers each unit to a layer inside a container", () => {
+		const child = childOf(DesignDocument.create());
+		expect(choiceOf(child, "X").units).toEqual(["px", "%", "vw", "vh"]);
+	});
+
+	it("takes no unit for the angle and for the smoothing", () => {
+		const layer = layerOf(DesignDocument.create());
+		expect(fieldNamed(layer, "Rotation").choice).toBeNull();
+		expect(fieldNamed(layer, "Smoothing").choice).toBeNull();
+	});
+
+	it("holds the size of the layer when the unit changes", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+
+		doc.update(child.id, choiceOf(child, "W").convert("%"));
+
+		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 50, unit: "%" });
+		expect(doc.layer(child.id)).toMatchObject({ width: 120 });
+	});
+
+	it("reads the unit a person types in the value", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+
+		doc.update(child.id, typedPatch(fieldNamed(child, "W"), "25%") ?? {});
+
+		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
+		expect(doc.layer(child.id)).toMatchObject({ width: 60 });
+	});
+
+	it("keeps the unit of the field when the text names no unit", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+		doc.update(child.id, choiceOf(child, "W").convert("%"));
+		const relative = doc.layer(child.id);
+
+		doc.update(child.id, typedPatch(fieldNamed(relative ?? child, "W"), "25") ?? {});
+
+		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
+	});
+
+	it("refuses a unit that the layer cannot take, and text that is not a length", () => {
+		const layer = layerOf(DesignDocument.create());
+		expect(typedPatch(fieldNamed(layer, "W"), "50%")).toBeNull();
+		expect(typedPatch(fieldNamed(layer, "W"), "wide")).toBeNull();
+		expect(typedPatch(fieldNamed(layer, "Rotation"), "half")).toBeNull();
+	});
+
+	it("steps a percentage by one, and by five with shift", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+		doc.update(child.id, choiceOf(child, "W").convert("%"));
+		const field = fieldNamed(doc.layer(child.id) ?? child, "W");
+
+		expect(stepOf(field.step, NO_MODIFIERS)).toBe(1);
+		expect(stepOf(field.step, SHIFT)).toBe(5);
+		expect(stepOf(field.step, ALT)).toBe(0.1);
+	});
+
+	it("holds a relative size above zero and a relative position inside the limit", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+		doc.update(child.id, choiceOf(child, "W").convert("%"));
+		const relative = doc.layer(child.id) ?? child;
+
+		doc.update(child.id, typedPatch(fieldNamed(relative, "W"), "-5%") ?? {});
+
+		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 0.1, unit: "%" });
 	});
 });
