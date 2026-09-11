@@ -28,6 +28,11 @@ test("dragging the rectangle writes the new position into the document", async (
 	expect(await layer.boundingBox()).toMatchObject({ x: box.x, y: box.y });
 	await expect(layer).not.toHaveAttribute("data-selected", "");
 
+	const menu = window.locator(".layer-menu");
+	await expect(menu).toBeVisible();
+	await window.keyboard.press("Escape");
+	await expect(menu).toBeHidden();
+
 	await window.mouse.move(box.x + GRAB.x, box.y + GRAB.y);
 	await window.mouse.down();
 	await window.mouse.move(box.x + GRAB.x + DELTA.x, box.y + GRAB.y + DELTA.y, { steps: 12 });

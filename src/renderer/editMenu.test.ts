@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../document/document";
 import { firstId } from "../document/documentFixtures";
 import type { EditMenuItem } from "../shared/editMenu";
-import { editMenuItems } from "./editMenu";
+import { contextMenuItems, editMenuItems } from "./editMenu";
 import { UserState } from "./state/userState";
 
 function labelsOf(items: readonly EditMenuItem[]): string[] {
@@ -76,6 +76,41 @@ describe("the Edit menu", () => {
 		expect(enabledOf(editMenuItems(doc, new UserState()))).toMatchObject({
 			Undo: true,
 			Redo: false,
+		});
+	});
+});
+
+describe("the context menu", () => {
+	it("lists the clipboard commands, gives Copy as a submenu, and holds no separator", () => {
+		const items = contextMenuItems(DesignDocument.create(), new UserState());
+
+		expect(labelsOf(items)).toEqual(["Cut", "Copy", "Copy as", "Paste"]);
+		expect(labelsOf(named(items, "Copy as").submenu ?? [])).toEqual(["HTML"]);
+		expect(withSeparator(items)).toEqual([]);
+	});
+
+	it("disables each command with no selection and an empty clipboard", () => {
+		const items = contextMenuItems(DesignDocument.create(), new UserState());
+
+		expect(enabledOf(items)).toEqual({
+			Cut: false,
+			Copy: false,
+			"Copy as": false,
+			Paste: false,
+		});
+	});
+
+	it("follows the selection and the flag of the clipboard", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		user.selection.set([firstId(doc)]);
+		user.pasteReady.set(true);
+
+		expect(enabledOf(contextMenuItems(doc, user))).toEqual({
+			Cut: true,
+			Copy: true,
+			"Copy as": true,
+			Paste: true,
 		});
 	});
 });
