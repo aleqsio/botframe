@@ -2,25 +2,53 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
+import { insideSubtree } from "./dropTarget";
 import { containsPoint } from "./layerSpace";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
-import { parentPointOf, selectedLayer } from "./targetSpace";
+import { parentPointOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 function select(user: UserState, layerId: LayerId | null): void {
 	user.selection.set(layerId === null ? NOTHING_SELECTED : [layerId]);
 }
 
+function topHit(target: PointerTarget): LayerId | null {
+	return target.layerIds[0] ?? null;
+}
+
+function isHeld(target: PointerTarget, layerId: LayerId): boolean {
+	return target.user.selection.get().includes(layerId);
+}
+
+function holdsLayer(target: PointerTarget, layerId: LayerId, inside: LayerId | null): boolean {
+	if (inside === null || inside === layerId) {
+		return false;
+	}
+	return insideSubtree((id) => target.doc.layer(id), inside, layerId);
+}
+
+function heldLayers(target: PointerTarget): Layer[] {
+	return target.user.selection.get().flatMap((id) => target.doc.layer(id) ?? []);
+}
+
+function coversPress(target: PointerTarget, layer: Layer, canvas: Point): boolean {
+	return containsPoint(layer, parentPointOf(target, layer.id, canvas));
+}
+
 function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
-	const layer = selectedLayer(target);
-	if (layer === null || !containsPoint(layer, parentPointOf(target, layer.id, canvas))) {
+	const under = topHit(target);
+	if (under !== null && isHeld(target, under)) {
 		return null;
 	}
-	return layer;
+	return (
+		heldLayers(target).find(
+			(layer) => !holdsLayer(target, layer.id, under) && coversPress(target, layer, canvas),
+		) ?? null
+	);
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = target.layerIds[0] ?? null;
+	const layerId = topHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);
@@ -36,15 +64,16 @@ function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
 }
 
-function holdsLayerUnder(target: PointerTarget): boolean {
-	const selection = target.user.selection.get();
-	return target.layerIds.some((id) => selection.includes(id));
+function holdsPress(target: PointerTarget, under: LayerId): boolean {
+	return target.user.selection
+		.get()
+		.some((id) => target.layerIds.includes(id) && !holdsLayer(target, id, under));
 }
 
 function selectForMenu(target: PointerTarget): void {
-	const layerId = target.layerIds[0];
-	if (layerId !== undefined && !holdsLayerUnder(target)) {
-		select(target.user, layerId);
+	const under = topHit(target);
+	if (under !== null && !holdsPress(target, under)) {
+		select(target.user, under);
 	}
 }
 

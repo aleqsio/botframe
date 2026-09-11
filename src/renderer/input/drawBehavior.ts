@@ -18,12 +18,9 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 	return doc.layerIds().map((id) => doc.layer(id));
 }
 
-function artboardChain(chain: readonly Layer[]): Layer[] {
-	return chain.slice(0, chain.findLastIndex((layer) => isArtboard(layer)) + 1);
-}
-
 function chainUnder(target: PointerTarget): Layer[] {
-	return artboardChain(layerChain((id) => target.doc.layer(id), target.layerIds[0] ?? null));
+	const read = (id: LayerId): Layer | null => target.doc.layer(id);
+	return layerChain(read, target.layerIds.find((id) => isArtboard(read(id))) ?? null);
 }
 
 function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {

@@ -4,7 +4,15 @@ import { NO_MODIFIERS } from "./modifiers";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
+import {
+	coveredTarget,
+	dragOver,
+	drawnLayer,
+	nestedTarget,
+	pointAt,
+	tapAt,
+	targetOf,
+} from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const CENTER = { x: 540, y: 340 };
@@ -192,6 +200,21 @@ describe("the draw tools", () => {
 
 		expect(drawnLayer(target)).toMatchObject({ parent, x: 30, y: 30, width: 30, height: 30 });
 		expect(target.doc.childIds(child)).toEqual([]);
+	});
+
+	it("draws inside an artboard that the shape above it covers", () => {
+		const { target, below } = coveredTarget();
+		target.doc.update(below, { geometry: ARTBOARD_GEOMETRY });
+
+		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
+
+		expect(drawnLayer(target)).toMatchObject({
+			parent: below,
+			x: 20,
+			y: 20,
+			width: 60,
+			height: 50,
+		});
 	});
 
 	it("gives the stage back to the select tool when a cancel finds no draw", () => {
