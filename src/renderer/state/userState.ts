@@ -26,4 +26,6 @@ export class UserState {
 	readonly zone = new Slot<ZoneKey | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);
+	readonly pointer = new Slot<Point | null>(null);
+	readonly pasteReady = new Slot<boolean>(false);
 }

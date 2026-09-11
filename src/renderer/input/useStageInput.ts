@@ -39,6 +39,7 @@ export interface StageInputHandlers {
 export interface StagePointerHandlers {
 	onContextMenu: (event: StageMouseEvent) => void;
 	onPointerCancel: (event: StagePointerEvent) => void;
+	onPointerLeave: () => void;
 	onPointerDown: (event: StagePointerEvent) => void;
 	onPointerMove: (event: StagePointerEvent) => void;
 	onPointerUp: (event: StagePointerEvent) => void;
@@ -206,12 +207,17 @@ function accumulate(previous: PendingWheel | null, at: Point, delta: ViewportDel
 	};
 }
 
+function trackPointer(session: StageSession, client: Point): void {
+	session.user.pointer.set(client);
+}
+
 function beginGesture(session: StageSession, event: StagePointerEvent): void {
 	if (!isPrimaryButton(event)) {
 		return;
 	}
 	const { input } = session;
 	flush(session);
+	trackPointer(session, clientPointOf(event));
 	input.modifiers = modifiersOf(event);
 	const down = input.recognizer.down(sampleOf(event));
 	if (!down.taken) {
@@ -232,6 +238,7 @@ function trackHover(session: StageSession, event: StagePointerEvent): void {
 		readStageOrigin(input, event.currentTarget);
 	}
 	input.hover = clientPointOf(event);
+	trackPointer(session, input.hover);
 	schedule(session);
 }
 
@@ -289,6 +296,9 @@ export function useStageInput(user: UserState, handlers: StageInputHandlers): St
 		},
 		onPointerCancel: (event) => {
 			finish(session(), event, true);
+		},
+		onPointerLeave: () => {
+			user.pointer.set(null);
 		},
 		onPointerDown: (event) => {
 			beginGesture(session(), event);

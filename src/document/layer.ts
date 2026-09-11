@@ -27,7 +27,7 @@ export interface Layer extends Rect {
 	parent: LayerId | null;
 }
 
-type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
+export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 
 export interface LayerFields extends Rect {
 	fill: string;

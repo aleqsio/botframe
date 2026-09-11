@@ -3,6 +3,8 @@ import type { LoroEventBatch, LoroMap, LoroTree, LoroTreeNode, TreeDiffItem } fr
 import { DocumentHistory } from "./history";
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
+import { createSubtree, readSubtree } from "./subtree";
+import type { LayerNode } from "./subtree";
 import { writeVariant } from "./write";
 
 export type Unsubscribe = () => void;
@@ -174,6 +176,14 @@ export class DesignDocument {
 		writePatch(node.data, fields);
 		this.#notifyStructure();
 		return node.id;
+	}
+
+	readSubtree(id: LayerId): LayerNode | null {
+		return readSubtree(this, id);
+	}
+
+	createSubtree(node: LayerNode, parent: LayerId | null): LayerId {
+		return createSubtree(this, node, parent);
 	}
 
 	deleteLayer(id: LayerId): void {

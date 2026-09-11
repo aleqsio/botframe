@@ -1,0 +1,117 @@
+import type { DesignDocument } from "../document/document";
+import { parseEnvelope, serializeEnvelope } from "../document/envelope";
+import type { LayerEnvelope } from "../document/envelope";
+import type { LayerId } from "../document/layer";
+import type { LayerNode } from "../document/subtree";
+import { bridge } from "./bridge";
+import { layerIdsUnder } from "./input/hitTest";
+import { layerMarkup } from "./layerMarkup";
+import type { Bridge } from "./bridge";
+import { PASTE_OFFSET, pasteParent, shiftNode } from "./paste";
+import type { UserState } from "./state/userState";
+
+function selectedNodes(doc: DesignDocument, user: UserState): LayerNode[] {
+	return user.selection.get().flatMap((id) => doc.readSubtree(id) ?? []);
+}
+
+function sourceParentOf(doc: DesignDocument, user: UserState): LayerId | null {
+	const [selected] = user.selection.get();
+	return selected === undefined ? null : (doc.layer(selected)?.parent ?? null);
+}
+
+function markupOf(nodes: readonly LayerNode[]): string {
+	return nodes.map((node) => layerMarkup(node)).join("");
+}
+
+async function sendToClipboard(
+	shell: Bridge,
+	user: UserState,
+	html: string,
+	layers: string | null,
+): Promise<void> {
+	await shell.writeClipboard({ html, layers });
+	user.pasteReady.set(layers !== null);
+}
+
+function write(user: UserState, html: string, layers: string | null): boolean {
+	const shell = bridge();
+	if (shell === null) {
+		return false;
+	}
+	void sendToClipboard(shell, user, html, layers);
+	return true;
+}
+
+function targetOf(doc: DesignDocument, user: UserState): LayerId | null {
+	const point = user.pointer.get();
+	const under = point === null ? [] : layerIdsUnder(document.elementsFromPoint(point.x, point.y));
+	return pasteParent((id) => doc.layer(id), under, user.selection.get());
+}
+
+function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvelope): void {
+	if (envelope.layers.length === 0) {
+		return;
+	}
+	const parent = targetOf(doc, user);
+	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
+	const ids = envelope.layers.map((node) => doc.createSubtree(shiftNode(node, offset), parent));
+	user.selection.set(ids);
+	doc.commit("paste layers");
+}
+
+async function readClipboard(shell: Bridge, doc: DesignDocument, user: UserState): Promise<void> {
+	const raw = await shell.readClipboardLayers();
+	const envelope = raw === null ? null : parseEnvelope(raw);
+	if (envelope !== null) {
+		createLayers(doc, user, envelope);
+	}
+}
+
+export function copySelection(doc: DesignDocument, user: UserState): boolean {
+	const nodes = selectedNodes(doc, user);
+	if (nodes.length === 0) {
+		return false;
+	}
+	const envelope = { sourceParent: sourceParentOf(doc, user), layers: nodes };
+	return write(user, markupOf(nodes), serializeEnvelope(envelope));
+}
+
+export function copyAsHtml(doc: DesignDocument, user: UserState): boolean {
+	const nodes = selectedNodes(doc, user);
+	return nodes.length > 0 && write(user, markupOf(nodes), null);
+}
+
+export function cutSelection(doc: DesignDocument, user: UserState): boolean {
+	if (!copySelection(doc, user)) {
+		return false;
+	}
+	for (const id of user.selection.get()) {
+		doc.deleteLayer(id);
+	}
+	doc.commit("cut layers");
+	return true;
+}
+
+export function pasteFromClipboard(doc: DesignDocument, user: UserState): boolean {
+	const shell = bridge();
+	if (shell === null) {
+		return false;
+	}
+	void readClipboard(shell, doc, user);
+	return true;
+}
+
+async function refreshPasteReady(shell: Bridge, user: UserState): Promise<void> {
+	user.pasteReady.set(await shell.hasClipboardLayers());
+}
+
+export function watchClipboard(user: UserState): void {
+	const shell = bridge();
+	if (shell === null) {
+		return;
+	}
+	window.addEventListener("focus", () => {
+		void refreshPasteReady(shell, user);
+	});
+	void refreshPasteReady(shell, user);
+}
