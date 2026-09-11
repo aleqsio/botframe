@@ -89,12 +89,8 @@ body {
 	position: absolute;
 	top: 0;
 	left: 0;
-	padding: 0;
 	overflow: hidden;
-	border: 0;
-	background: transparent;
 	color: var(--canvas-label);
-	font: inherit;
 	font-size: 11px;
 	line-height: 14px;
 	text-overflow: ellipsis;
@@ -102,7 +98,6 @@ body {
 	transform-origin: 0 0;
 	transform: translateY(calc(-100% - 4px));
 	scale: calc(1 / var(--zoom));
-	cursor: default;
 }
 
 .artboard-label[data-selected] {

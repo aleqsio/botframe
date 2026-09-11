@@ -245,3 +245,22 @@ test("the window drags by the file pill, and the top edge of the canvas takes pr
 
 	await app.close();
 });
+
+test("a press on a label goes to the tool, so the hand tool moves the canvas from it", async () => {
+	const { app, window } = await launchApp();
+	const label = window.locator(".artboard-label");
+
+	await expect(window.locator(".layer")).toHaveCount(1);
+	await window.keyboard.press("a");
+	await dragOn(window, WINDOW_ORIGIN, ROOT_ARTBOARD);
+	await expect(label).toHaveCount(1);
+	await window.keyboard.press("h");
+
+	const start = await boxOf(label);
+	const from = { x: start.x + 4, y: start.y + start.height / 2 };
+	await dragOn(window, WINDOW_ORIGIN, { from, to: { x: from.x + 40, y: from.y + 20 } });
+
+	await expect(window.locator("#viewport")).toHaveAttribute("style", /translate\(40px, 20px\)/u);
+
+	await app.close();
+});

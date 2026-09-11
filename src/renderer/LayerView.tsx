@@ -8,8 +8,6 @@ import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
 
-const PRIMARY_BUTTON = 0;
-
 export function LayerView({
 	doc,
 	id,
@@ -58,21 +56,13 @@ export function ArtboardLabel({
 	}
 
 	return (
-		<button
+		<div
 			className="artboard-label"
+			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			onPointerDown={(event) => {
-				if (event.button !== PRIMARY_BUTTON) {
-					return;
-				}
-				event.stopPropagation();
-				selection.set([id]);
-			}}
 			style={canvasLabelStyle(layer)}
-			tabIndex={-1}
-			type="button"
 		>
 			{layerEntry(layer).label}
-		</button>
+		</div>
 	);
 }
