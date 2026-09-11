@@ -6,14 +6,16 @@ import type { KeyStroke } from "./layerCommand";
 
 type EditCommandId = "undo" | "redo" | "cut" | "copy" | "copyAsHtml" | "paste";
 
+type EditCommandGroup = "history" | "clipboard";
+
 export interface EditCommand {
 	id: EditCommandId;
 	label: string;
+	group: EditCommandGroup;
 	accelerator: string;
 	matches: (stroke: KeyStroke) => boolean;
 	apply: (doc: DesignDocument, user: UserState) => boolean;
 	enabled: (doc: DesignDocument, user: UserState) => boolean;
-	separatorBefore?: boolean;
 	isFormat?: boolean;
 }
 
@@ -23,7 +25,7 @@ const CUT_KEY = "x";
 const COPY_KEY = "c";
 const PASTE_KEY = "v";
 
-function onApple(): boolean {
+export function onApple(): boolean {
 	return navigator.userAgent.includes("Mac");
 }
 
@@ -69,6 +71,7 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	{
 		id: "undo",
 		label: "Undo",
+		group: "history",
 		accelerator: "CmdOrCtrl+Z",
 		matches: undoStroke,
 		apply: (doc) => doc.undo(),
@@ -77,6 +80,7 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	{
 		id: "redo",
 		label: "Redo",
+		group: "history",
 		accelerator: onApple() ? "Cmd+Shift+Z" : "Ctrl+Y",
 		matches: redoStroke,
 		apply: (doc) => doc.redo(),
@@ -85,15 +89,16 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	{
 		id: "cut",
 		label: "Cut",
+		group: "clipboard",
 		accelerator: "CmdOrCtrl+X",
 		matches: plainStroke(CUT_KEY),
 		apply: cutSelection,
 		enabled: hasSelection,
-		separatorBefore: true,
 	},
 	{
 		id: "copy",
 		label: "Copy",
+		group: "clipboard",
 		accelerator: "CmdOrCtrl+C",
 		matches: plainStroke(COPY_KEY),
 		apply: copySelection,
@@ -102,6 +107,7 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	{
 		id: "copyAsHtml",
 		label: "HTML",
+		group: "clipboard",
 		accelerator: "",
 		matches: never,
 		apply: copyAsHtml,
@@ -111,6 +117,7 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	{
 		id: "paste",
 		label: "Paste",
+		group: "clipboard",
 		accelerator: "CmdOrCtrl+V",
 		matches: plainStroke(PASTE_KEY),
 		apply: pasteFromClipboard,

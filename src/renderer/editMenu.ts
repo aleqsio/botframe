@@ -8,21 +8,25 @@ import type { UserState } from "./state/userState";
 
 const COPY_AS = { id: "copyAs", label: "Copy as", accelerator: "" };
 
+const MENU_COMMANDS = EDIT_COMMANDS.filter((command) => command.isFormat !== true);
+
+const CLIPBOARD_COMMANDS = MENU_COMMANDS.filter((command) => command.group === "clipboard");
+
 type ReadState = (command: EditCommand) => boolean;
 
-function itemOf(command: EditCommand, isEnabled: ReadState): EditMenuItem {
+function itemOf(command: EditCommand, isEnabled: ReadState, separator: boolean): EditMenuItem {
 	return {
 		id: command.id,
 		label: command.label,
 		accelerator: command.accelerator,
 		enabled: isEnabled(command),
-		...(command.separatorBefore === true ? { separatorBefore: true } : {}),
+		...(separator ? { separatorBefore: true } : {}),
 	};
 }
 
 function formatsOf(isEnabled: ReadState): EditMenuItem[] {
 	const formats = EDIT_COMMANDS.filter((command) => command.isFormat === true);
-	return formats.map((command) => itemOf(command, isEnabled));
+	return formats.map((command) => itemOf(command, isEnabled, false));
 }
 
 function copyAsItem(isEnabled: ReadState): EditMenuItem {
@@ -30,13 +34,27 @@ function copyAsItem(isEnabled: ReadState): EditMenuItem {
 	return { ...COPY_AS, enabled: submenu.some((item) => item.enabled), submenu };
 }
 
+function opensGroup(previous: EditCommand | undefined, command: EditCommand): boolean {
+	return previous !== undefined && previous.group !== command.group;
+}
+
+function itemsOf(commands: readonly EditCommand[], isEnabled: ReadState): EditMenuItem[] {
+	return commands.flatMap((command, index) => {
+		const item = itemOf(command, isEnabled, opensGroup(commands[index - 1], command));
+		return command.id === "copy" ? [item, copyAsItem(isEnabled)] : [item];
+	});
+}
+
+function stateOf(doc: DesignDocument, user: UserState): ReadState {
+	return (command) => command.enabled(doc, user);
+}
+
 export function editMenuItems(doc: DesignDocument, user: UserState): readonly EditMenuItem[] {
-	const isEnabled: ReadState = (command) => command.enabled(doc, user);
-	return EDIT_COMMANDS.filter((command) => command.isFormat !== true).flatMap((command) =>
-		command.id === "copy"
-			? [itemOf(command, isEnabled), copyAsItem(isEnabled)]
-			: [itemOf(command, isEnabled)],
-	);
+	return itemsOf(MENU_COMMANDS, stateOf(doc, user));
+}
+
+export function contextMenuItems(doc: DesignDocument, user: UserState): readonly EditMenuItem[] {
+	return itemsOf(CLIPBOARD_COMMANDS, stateOf(doc, user));
 }
 
 function pushMenu(shell: Bridge, doc: DesignDocument, user: UserState): void {
