@@ -2,23 +2,22 @@ import { expect, test } from "@playwright/test";
 import { launchApp } from "./support";
 
 const BOTTOM_GAP = 24;
-const INSPECTOR_ROOM = 268;
 const EMPTY_SPOT = { x: 300, y: 600 };
 
-test("the tool bar sits at the bottom center of the free canvas and holds one selected tool", async () => {
+test("the tool bar sits at the bottom center of the window and holds one selected tool", async () => {
 	const { app, window } = await launchApp();
 	const bar = window.getByRole("toolbar", { name: "Tools" });
 
 	await expect(bar).toBeVisible();
 	await expect(bar.locator(".tool-button")).toHaveCount(6);
 
-	const placement = await bar.evaluate((element, room) => {
+	const placement = await bar.evaluate((element) => {
 		const box = element.getBoundingClientRect();
 		return {
-			centerOffset: box.left + box.width / 2 - (globalThis.innerWidth - room) / 2,
+			centerOffset: box.left + box.width / 2 - globalThis.innerWidth / 2,
 			bottomGap: globalThis.innerHeight - box.bottom,
 		};
-	}, INSPECTOR_ROOM);
+	});
 	expect(Math.abs(placement.centerOffset)).toBeLessThan(1);
 	expect(placement.bottomGap).toBeCloseTo(BOTTOM_GAP, 0);
 
