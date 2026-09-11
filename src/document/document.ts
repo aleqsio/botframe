@@ -196,7 +196,7 @@ export class DesignDocument {
 	}
 
 	move(id: LayerId, parent: LayerId | null, index?: number): boolean {
-		if (!this.#canMove(id, parent)) {
+		if (!this.#canMove(id, parent, index)) {
 			return false;
 		}
 		this.#tree().move(id, parent ?? undefined, index);
@@ -334,14 +334,20 @@ export class DesignDocument {
 		}
 	}
 
-	#canMove(id: LayerId, parent: LayerId | null): boolean {
+	#canMove(id: LayerId, parent: LayerId | null, index: number | undefined): boolean {
 		if (this.#liveNode(id) === null) {
 			return false;
 		}
-		if (parent === null) {
-			return true;
+		if (parent !== null && (this.#liveNode(parent) === null || this.#insideSubtree(id, parent))) {
+			return false;
 		}
-		return this.#liveNode(parent) !== null && !this.#insideSubtree(id, parent);
+		return index === undefined || this.#fitsIndex(id, parent, index);
+	}
+
+	#fitsIndex(id: LayerId, parent: LayerId | null, index: number): boolean {
+		const siblings = parent === null ? this.rootIds() : this.childIds(parent);
+		const room = siblings.length - (siblings.includes(id) ? 1 : 0);
+		return Number.isInteger(index) && index >= 0 && index <= room;
 	}
 
 	#insideSubtree(id: LayerId, parent: LayerId): boolean {
