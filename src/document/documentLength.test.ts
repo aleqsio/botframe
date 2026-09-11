@@ -126,6 +126,59 @@ describe("a length that is not in pixels", () => {
 
 		expect(doc.layer(child)?.lengths.width).toEqual({ value: 90, unit: "px" });
 	});
+});
+
+describe("a length when the tree changes", () => {
+	it("keeps the size of a layer that leaves its container", () => {
+		const { doc, child } = scene();
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+
+		doc.move(child, null);
+
+		expect(doc.layer(child)?.lengths.width).toEqual({ value: 120, unit: "px" });
+		expect(doc.layer(child)).toMatchObject({ width: 120 });
+	});
+
+	it("keeps a percentage that the new container can hold", () => {
+		const { doc, root, child } = scene();
+		const other = doc.createLayer({ ...CHILD, width: 480 }, root);
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+
+		doc.move(child, other);
+
+		expect(doc.layer(child)?.lengths.width).toEqual({ value: 50, unit: "%" });
+		expect(doc.layer(child)).toMatchObject({ width: 240 });
+	});
+
+	it("gives a copy at the root the pixels of the layer it comes from", () => {
+		const { doc, child } = scene();
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+		const node = doc.readSubtree(child);
+
+		const copy = node === null ? null : doc.createSubtree(node, null);
+
+		expect(copy === null ? null : doc.layer(copy)).toMatchObject({ width: 120 });
+	});
+
+	it("resolves a grandchild in vw under a child in pixels after the artboard grows", () => {
+		const { doc, root, child } = scene();
+		const grandchild = doc.createLayer(CHILD, child);
+		doc.update(grandchild, { lengths: { width: { value: 10, unit: "vw" } } });
+		expect(doc.layer(grandchild)).toMatchObject({ width: 24 });
+
+		doc.update(root, { width: 480 });
+
+		expect(doc.layer(grandchild)).toMatchObject({ width: 48 });
+	});
+
+	it("holds the size of a child in pixels that changes to a percentage after a resize", () => {
+		const { doc, root, child } = scene();
+		doc.layer(child);
+
+		doc.update(root, { width: 480 });
+
+		expect(doc.layer(child)?.basis.container).toEqual({ width: 480, height: 160 });
+	});
 
 	it("gives back the unit that an undo takes away", () => {
 		const { doc, child } = scene();

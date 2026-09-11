@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 import { formatColor, heldRatio, hueText, parseColor, steppedHsva, toHsva, toRgba } from "./color";
 import type { Hsva, Rgba } from "./color";
@@ -150,10 +151,19 @@ function SwatchRow({ onPick }: { onPick: (text: string) => void }): ReactElement
 	);
 }
 
+function heldHsva(draft: Hsva | null, color: Rgba): Hsva {
+	if (draft !== null && formatColor(toRgba(draft)) === formatColor(color)) {
+		return draft;
+	}
+	return toHsva(color);
+}
+
 export function ColorPicker({ color, onChange, onCommit }: ColorPickerProps): ReactElement {
-	const hsva = toHsva(color);
+	const [draft, setDraft] = useState<Hsva | null>(null);
+	const hsva = heldHsva(draft, color);
 
 	function write(next: Hsva): void {
+		setDraft(next);
 		onChange(toRgba(next));
 	}
 

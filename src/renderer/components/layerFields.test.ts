@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import type { Layer, LayerFields } from "../../document/layer";
+import { NO_BASIS } from "../../document/length";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
@@ -195,6 +196,15 @@ describe("the unit of a box field", () => {
 	it("offers each unit to a layer inside a container", () => {
 		const child = childOf(DesignDocument.create());
 		expect(choiceOf(child, "X").units).toEqual(["px", "%", "vw", "vh"]);
+	});
+
+	it("offers the unit a layer holds, even when the layer has no basis for it", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+		doc.update(child.id, choiceOf(child, "W").convert("%"));
+		const orphan = { ...(doc.layer(child.id) ?? child), basis: NO_BASIS };
+
+		expect(choiceOf(orphan, "W").units).toEqual(["%", "px"]);
 	});
 
 	it("takes no unit for the angle and for the smoothing", () => {

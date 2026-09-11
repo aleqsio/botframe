@@ -71,8 +71,9 @@ function boxPatch(key: BoxKey, length: Length): LayerPatch {
 
 function unitChoice(key: BoxKey, layer: Layer): UnitChoice {
 	const axis = AXIS_OF[key];
-	const units = availableUnits(axis, layer.basis);
 	const held = layer.lengths[key].unit;
+	const offered = availableUnits(axis, layer.basis);
+	const units = offered.includes(held) ? offered : [held, ...offered];
 	return {
 		units,
 		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, layer.basis)),

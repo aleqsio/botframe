@@ -88,6 +88,24 @@ export function parseLength(text: string, fallback: Unit): Length | null {
 	return isUnit(unit) ? { value, unit } : null;
 }
 
+export function pixelFallback(
+	lengths: LayerLengths,
+	pixels: Readonly<Record<BoxKey, number>>,
+	basis: Basis,
+): Partial<LayerLengths> {
+	const held: Partial<LayerLengths> = {};
+	for (const key of BOX_KEYS) {
+		if (pixelsPerHundred(lengths[key].unit, AXIS_OF[key], basis) === 0) {
+			held[key] = { value: pixels[key], unit: PIXELS };
+		}
+	}
+	return held;
+}
+
+export function holdsUnit(unit: Unit, axis: Axis, basis: Basis): boolean {
+	return pixelsPerHundred(unit, axis, basis) > 0;
+}
+
 export function hasRelativeLength(lengths: LayerLengths): boolean {
 	return BOX_KEYS.some((key) => lengths[key].unit !== PIXELS);
 }

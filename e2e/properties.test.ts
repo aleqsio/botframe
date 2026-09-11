@@ -157,6 +157,21 @@ test("the fill swatch opens a picker that paints the layer", async () => {
 	await app.close();
 });
 
+test("the picker holds the angle of a color that shows no angle", async () => {
+	const { app, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const fill = window.getByLabel("Fill", { exact: true });
+	await expect(fill).toHaveValue("#ffffff");
+
+	await window.getByLabel("Fill picker", { exact: true }).click();
+	await window.getByLabel("Hue", { exact: true }).fill("120");
+	await window.getByLabel(/^Saturation and brightness/u).press("ArrowRight");
+
+	await expect(fill).toHaveValue("#fcfffc");
+
+	await app.close();
+});
+
 test("the fill field reads a color that a person names and writes it as hex", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);

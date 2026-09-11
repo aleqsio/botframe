@@ -3,7 +3,7 @@ import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-
 import { DocumentHistory } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
-import { NO_BASIS, hasRelativeLength } from "./length";
+import { NO_BASIS, hasRelativeLength, pixelFallback } from "./length";
 import type { Basis } from "./length";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -164,9 +164,13 @@ export class DesignDocument {
 		if (!this.#canMove(id, parent, index)) {
 			return false;
 		}
+		const before = this.layer(id);
 		this.#tree().move(id, parent ?? undefined, index);
 		this.#forget(id);
 		this.#notifyStructure();
+		if (before !== null) {
+			this.#holdPixels(id, before);
+		}
 		return true;
 	}
 
@@ -234,6 +238,15 @@ export class DesignDocument {
 
 	changeCount(): number {
 		return this.#doc.exportJsonUpdates().changes.length;
+	}
+
+	#holdPixels(id: LayerId, before: Layer): void {
+		const node = this.#liveNode(id);
+		if (node === null) {
+			return;
+		}
+		const basis = this.#basisOf(node.parent()?.id ?? null);
+		this.update(id, { lengths: pixelFallback(before.lengths, before, basis) });
 	}
 
 	#basisOf(parent: LayerId | null): Basis {
@@ -396,12 +409,21 @@ export class DesignDocument {
 
 	#dropRelativeBelow(node: LoroTreeNode | undefined): void {
 		for (const child of node?.children() ?? []) {
-			const cached = this.#layers.get(child.id);
-			if (cached !== undefined && hasRelativeLength(cached.lengths)) {
-				this.#invalidate(child.id);
-			}
+			this.#refreshBasis(child.id);
 			this.#dropRelativeBelow(child);
 		}
+	}
+
+	#refreshBasis(id: LayerId): void {
+		const cached = this.#layers.get(id);
+		if (cached === undefined) {
+			return;
+		}
+		if (hasRelativeLength(cached.lengths)) {
+			this.#invalidate(id);
+			return;
+		}
+		this.#layers.set(id, { ...cached, basis: this.#basisOf(cached.parent) });
 	}
 
 	#invalidate(id: LayerId): void {

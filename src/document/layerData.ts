@@ -1,6 +1,15 @@
 import type { LoroMap } from "loro-crdt";
 import type { Geometry, LayerPatch, LayerTraits, Rect } from "./layer";
-import { AXIS_OF, BOX_KEYS, PIXELS, isUnit, lengthIn, resolveLength, roundNumber } from "./length";
+import {
+	AXIS_OF,
+	BOX_KEYS,
+	PIXELS,
+	holdsUnit,
+	isUnit,
+	lengthIn,
+	resolveLength,
+	roundNumber,
+} from "./length";
 import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
@@ -93,10 +102,14 @@ function writeBox(data: LoroMap, box: BoxPixels, basis: Basis): void {
 	}
 }
 
-function writeLengths(data: LoroMap, lengths: Partial<LayerLengths> | undefined): void {
+function writeLengths(
+	data: LoroMap,
+	lengths: Partial<LayerLengths> | undefined,
+	basis: Basis,
+): void {
 	for (const key of BOX_KEYS) {
 		const length = lengths?.[key];
-		if (length !== undefined) {
+		if (length !== undefined && holdsUnit(length.unit, AXIS_OF[key], basis)) {
 			writeLength(data, key, length);
 		}
 	}
@@ -108,7 +121,7 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 		data.set(key, value);
 	}
 	writeBox(data, { x, y, width, height }, basis);
-	writeLengths(data, lengths);
+	writeLengths(data, lengths, basis);
 	if (geometry !== undefined) {
 		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
 	}
