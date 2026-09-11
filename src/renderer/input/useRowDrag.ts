@@ -1,5 +1,9 @@
 import { useRef } from "react";
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type {
+	MouseEvent as ReactMouseEvent,
+	PointerEvent as ReactPointerEvent,
+	RefObject,
+} from "react";
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
@@ -12,9 +16,11 @@ import type { RowTarget, RowTree } from "./rowDrop";
 import { rowTargetAt } from "./rowHit";
 
 type RowPointerEvent = ReactPointerEvent<HTMLElement>;
+type RowMouseEvent = ReactMouseEvent<HTMLElement>;
 
 export interface RowHandlers {
 	onClick: (id: LayerId) => void;
+	onContextMenu: (event: RowMouseEvent, id: LayerId) => void;
 	onPointerCancel: (event: RowPointerEvent) => void;
 	onPointerDown: (event: RowPointerEvent, id: LayerId) => void;
 	onPointerMove: (event: RowPointerEvent) => void;
@@ -196,6 +202,21 @@ function pointerCancel(session: RowSession, event: RowPointerEvent): void {
 	}
 }
 
+function selectForMenu(session: RowSession, id: LayerId): void {
+	if (!session.user.selection.get().includes(id)) {
+		session.user.selection.set([id]);
+	}
+}
+
+function openRowMenu(session: RowSession, event: RowMouseEvent, id: LayerId): void {
+	event.preventDefault();
+	if (session.input.recognizer.active()) {
+		return;
+	}
+	selectForMenu(session, id);
+	session.user.menu.set({ client: { x: event.clientX, y: event.clientY }, layerIds: [] });
+}
+
 function rowClick(session: RowSession, id: LayerId): void {
 	if (session.input.dropped) {
 		session.input.dropped = false;
@@ -218,6 +239,9 @@ export function useRowDrag(
 	return {
 		onClick: (id) => {
 			rowClick(session(), id);
+		},
+		onContextMenu: (event, id) => {
+			openRowMenu(session(), event, id);
 		},
 		onPointerCancel: (event) => {
 			pointerCancel(session(), event);

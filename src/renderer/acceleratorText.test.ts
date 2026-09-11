@@ -18,6 +18,7 @@ describe("acceleratorText", () => {
 
 		expect(acceleratorText("CmdOrCtrl+X")).toBe("⌘X");
 		expect(acceleratorText("Cmd+Shift+Z")).toBe("⌘⇧Z");
+		expect(acceleratorText("Backspace")).toBe("⌫");
 	});
 
 	it("writes the name of each key on a different platform", () => {
@@ -25,6 +26,7 @@ describe("acceleratorText", () => {
 
 		expect(acceleratorText("CmdOrCtrl+X")).toBe("Ctrl+X");
 		expect(acceleratorText("Ctrl+Y")).toBe("Ctrl+Y");
+		expect(acceleratorText("Delete")).toBe("Delete");
 	});
 
 	it("writes nothing for a command that has no accelerator", () => {

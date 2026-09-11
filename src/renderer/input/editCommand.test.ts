@@ -45,6 +45,24 @@ describe("commandForStroke", () => {
 		expect(commandForStroke(stroke("y"))).toBeNull();
 		expect(commandForStroke(stroke("z", { ctrlKey: true, altKey: true }))).toBeNull();
 	});
+
+	it("reads delete from the Delete key and from the Backspace key", () => {
+		expect(commandForStroke(stroke("Delete"))?.id).toBe("delete");
+		expect(commandForStroke(stroke("Backspace"))?.id).toBe("delete");
+		expect(commandForStroke(stroke("Delete", { shiftKey: true }))?.id).toBe("delete");
+	});
+
+	it("reads no delete from a Delete key that holds an accelerator", () => {
+		expect(commandForStroke(stroke("Delete", { metaKey: true }))).toBeNull();
+		expect(commandForStroke(stroke("Backspace", { ctrlKey: true }))).toBeNull();
+		expect(commandForStroke(stroke("Backspace", { altKey: true }))).toBeNull();
+	});
+
+	it("reads duplicate from Cmd+D and from Ctrl+D", () => {
+		expect(commandForStroke(stroke("d", { metaKey: true }))?.id).toBe("duplicate");
+		expect(commandForStroke(stroke("d", { ctrlKey: true }))?.id).toBe("duplicate");
+		expect(commandForStroke(stroke("d"))).toBeNull();
+	});
 });
 
 describe("commandById", () => {
@@ -57,6 +75,11 @@ describe("commandById", () => {
 		expect(commandById("cut")?.label).toBe("Cut");
 		expect(commandById("copy")?.label).toBe("Copy");
 		expect(commandById("paste")?.label).toBe("Paste");
+	});
+
+	it("gives the command of each layer id", () => {
+		expect(commandById("duplicate")?.label).toBe("Duplicate");
+		expect(commandById("delete")?.label).toBe("Delete");
 	});
 
 	it("gives null for a name that no command has", () => {
@@ -118,6 +141,51 @@ describe("runEditCommand", () => {
 		expect(doc.layer(drawn)).toBeNull();
 		expect(user.selection.get()).toEqual([seed]);
 		expect(user.menu.get()).toBeNull();
+	});
+
+	it("deletes the selected layers and empties the selection", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		const id = firstId(doc);
+		user.selection.set([id]);
+
+		expect(runEditCommand(commandOf("delete"), doc, user)).toBe(true);
+		expect(doc.layer(id)).toBeNull();
+		expect(user.selection.get()).toEqual([]);
+	});
+
+	it("refuses to delete in the middle of a drag", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		const id = firstId(doc);
+		user.selection.set([id]);
+		user.dragging.set(true);
+
+		expect(runEditCommand(commandOf("delete"), doc, user)).toBe(false);
+		expect(doc.layer(id)).not.toBeNull();
+	});
+
+	it("refuses to delete in the middle of a row drag", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		const id = firstId(doc);
+		user.selection.set([id]);
+		user.rowDrag.set({ id, target: null });
+
+		expect(runEditCommand(commandOf("delete"), doc, user)).toBe(false);
+		expect(doc.layer(id)).not.toBeNull();
+	});
+
+	it("duplicates the selection and selects the copy", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		const id = firstId(doc);
+		user.selection.set([id]);
+
+		expect(runEditCommand(commandOf("duplicate"), doc, user)).toBe(true);
+		expect(doc.rootIds()).toHaveLength(2);
+		expect(user.selection.get()).not.toEqual([id]);
+		expect(user.selection.get()).toHaveLength(1);
 	});
 
 	it("keeps the selection that the undo leaves alive", () => {

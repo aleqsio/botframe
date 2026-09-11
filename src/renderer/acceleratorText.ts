@@ -5,6 +5,7 @@ const APPLE_KEYS: Readonly<Record<string, string>> = {
 	Cmd: "⌘",
 	Ctrl: "⌃",
 	Shift: "⇧",
+	Backspace: "⌫",
 };
 
 const OTHER_KEYS: Readonly<Record<string, string>> = {

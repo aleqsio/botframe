@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { at, launchApp, stageOrigin } from "./support";
+import type { Page } from "@playwright/test";
+import { at, launchApp, openStage, stageOrigin } from "./support";
+import type { Point } from "./support";
 
 const CENTER = { x: 540, y: 340 };
 const START = /translate3d\(420px, 260px, 0px\)/u;
+const APPLE = process.platform === "darwin";
+const UNDO = APPLE ? "Meta+z" : "Control+z";
+const DUPLICATE = APPLE ? "Meta+d" : "Control+d";
 
 test("the keyboard moves, turns and scales the selected layer by an exact step", async () => {
 	const { app, window } = await launchApp();
@@ -49,6 +54,53 @@ test("the keyboard moves, turns and scales the selected layer by an exact step",
 	await expect(layer).toHaveAttribute("style", /width: 302.4px/u);
 	await expect(layer).toHaveAttribute("style", /height: 201.6px/u);
 	await expect(layer).toHaveAttribute("style", /translate3d\(429.8px, 238.2px, 0px\)/u);
+
+	await app.close();
+});
+
+async function clickAt(window: Page, point: Point): Promise<void> {
+	await window.mouse.move(point.x, point.y);
+	await window.mouse.down();
+	await window.mouse.up();
+}
+
+test("the Delete key and the Backspace key take the selected layer away", async () => {
+	const { app, layers, origin, window } = await openStage();
+	const center = at(origin, CENTER);
+
+	await window.keyboard.press("Delete");
+	await expect(layers).toHaveCount(1);
+
+	await clickAt(window, center);
+	await expect(layers.nth(0)).toHaveAttribute("data-selected", "");
+
+	await window.keyboard.press("Delete");
+	await expect(layers).toHaveCount(0);
+	await expect(window.locator(".layer-row")).toHaveCount(0);
+
+	await window.keyboard.press(UNDO);
+	await expect(layers).toHaveCount(1);
+
+	await clickAt(window, center);
+	await window.keyboard.press("Backspace");
+	await expect(layers).toHaveCount(0);
+
+	await app.close();
+});
+
+test("the duplicate accelerator copies the selected layer beside it", async () => {
+	const { app, layers, origin, window } = await openStage();
+
+	await clickAt(window, at(origin, CENTER));
+	await window.keyboard.press(DUPLICATE);
+
+	await expect(layers).toHaveCount(2);
+	await expect(layers.nth(1)).toHaveAttribute("style", /translate3d\(440px, 280px, 0px\)/u);
+	await expect(layers.nth(1)).toHaveAttribute("data-selected", "");
+	await expect(layers.nth(0)).not.toHaveAttribute("data-selected", "");
+
+	await window.keyboard.press(UNDO);
+	await expect(layers).toHaveCount(1);
 
 	await app.close();
 });
