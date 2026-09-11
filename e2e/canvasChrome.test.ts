@@ -7,7 +7,7 @@ const DARK_STAGE = "rgb(29, 28, 34)";
 test("the canvas fills the window with a dot grid and follows the color scheme", async () => {
 	const { app, window } = await launchApp();
 	const stage = window.locator("#stage");
-	const panel = window.locator("#properties");
+	const panel = window.locator("#inspector");
 
 	await expect(stage).toBeVisible();
 	await expect(stage).toHaveCSS("border-radius", "0px");

@@ -10,7 +10,7 @@ import { usePicked, useSlot } from "../state/useSlot";
 import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { useChildIds, useLayer, useRootIds } from "../useDocument";
-import { isArtboard, layerEntry } from "./layerEntry";
+import { glyphOf, layerEntry } from "./layerEntry";
 
 function LayerChevron({
 	collapsed,
@@ -94,9 +94,7 @@ function LayerRow({
 					onPointerUp={rows.onPointerUp}
 					type="button"
 				>
-					<span
-						className={`layer-glyph layer-glyph-${isArtboard(layer) ? "artboard" : "rectangle"}`}
-					/>
+					<span className={`layer-glyph layer-glyph-${glyphOf(layer)}`} />
 					{entry.label}
 				</button>
 			</div>

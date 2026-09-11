@@ -46,8 +46,8 @@ async function dragBy(window: Page, handle: Locator, pixels: number): Promise<vo
 
 test("a preset places an artboard of that size at the middle of the stage", async () => {
 	const { app, layers, stage, window } = await openStage();
-	const title = window.locator("#properties .panel-title");
-	await expect(title).toHaveText("Select");
+	const title = window.locator("#inspector .inspector-name");
+	await expect(title).toHaveText("Page");
 
 	await placePreset(window, PRESET.name);
 
@@ -120,7 +120,7 @@ test("a name that a person types letter by letter does not change the tool", asy
 
 	await expect(stage).toHaveAttribute("data-tool", "select");
 	await expect(window.locator(".layer-row").nth(1)).toHaveText("Cover art");
-	await expect(window.locator("#properties .panel-title")).toHaveText("Cover art");
+	await expect(window.locator("#inspector .inspector-name")).toHaveText("Cover art");
 
 	await app.close();
 });

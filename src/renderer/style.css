@@ -458,7 +458,7 @@ body {
 #file-bar,
 #layers,
 #zoom,
-#properties {
+#inspector {
 	position: fixed;
 	border: 1px solid var(--panel-border);
 	background: var(--panel-background);
@@ -493,13 +493,11 @@ body {
 }
 
 #layers,
-#properties {
+#inspector {
 	top: var(--card-top);
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
 	max-height: calc(100% - var(--card-top) - var(--edge));
-	padding: 6px;
 	overflow-y: auto;
 	border-radius: 14px;
 }
@@ -507,9 +505,10 @@ body {
 #layers {
 	left: var(--edge);
 	width: 210px;
+	padding: 6px;
 }
 
-#properties {
+#inspector {
 	right: var(--edge);
 	width: var(--inspector-width);
 }
@@ -569,15 +568,6 @@ body {
 	.pill-button {
 		transition: none;
 	}
-}
-
-.panel-title {
-	margin: 0 0 2px 8px;
-	color: var(--panel-label);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
 }
 
 .layer-list {
@@ -703,38 +693,52 @@ button.layer-chevron[aria-expanded="false"]::before {
 	background-color: var(--panel-label);
 }
 
-.fine-tune {
+.layer-glyph-ellipse {
+	border-radius: 50%;
+	background-color: var(--panel-label);
+}
+
+.layer-glyph-page {
+	border-radius: 2px 5px 2px 2px;
+}
+
+.inspector-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 11px 12px 10px;
+	border-bottom: 1px solid var(--panel-divider);
+	background: var(--panel-background);
+}
+
+.inspector-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.inspector-kind {
+	flex: none;
+	color: var(--panel-label);
+	font-size: 11px;
+}
+
+.inspector-body {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 	padding: 8px;
-	border: 1px solid var(--bar-border);
-	border-radius: 10px;
-	background-color: rgb(255 255 255 / 0.03);
 }
 
-.card-bar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-	padding: 0 2px 2px;
-}
-
-.card-title {
-	color: var(--panel-label);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-}
-
-.card-state {
-	padding: 2px 7px;
-	border-radius: 999px;
-	background-color: var(--panel-hover);
-	color: var(--panel-label);
-	font-size: 10px;
+.inspector-value {
+	margin-left: auto;
+	font-variant-numeric: tabular-nums;
 }
 
 .field-group {

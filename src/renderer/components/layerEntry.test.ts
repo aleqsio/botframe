@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
-import { isArtboard, layerEntry, nextLayerName } from "./layerEntry";
+import { glyphOf, inspectorHeading, isArtboard, layerEntry, nextLayerName } from "./layerEntry";
 
 function rectangle(id: LayerId, fill: string): Layer {
 	return {
@@ -82,5 +82,48 @@ describe("nextLayerName", () => {
 
 	it("starts at one in an empty document", () => {
 		expect(nextLayerName("Artboard", [])).toBe("Artboard 1");
+	});
+});
+
+describe("glyphOf", () => {
+	it("draws an artboard, an ellipse, and a rectangle with their own glyph", () => {
+		const layer = rectangle("1@1", "#000000");
+
+		expect(glyphOf(artboard("2@1"))).toBe("artboard");
+		expect(glyphOf({ ...layer, geometry: { kind: "ellipse" } })).toBe("ellipse");
+		expect(glyphOf(layer)).toBe("rectangle");
+	});
+
+	it("draws a path, an unsupported layer, and a lost layer with the rectangle glyph", () => {
+		const layer = rectangle("1@1", "#000000");
+
+		expect(glyphOf({ ...layer, geometry: { kind: "path", d: "M0 0" } })).toBe("rectangle");
+		expect(glyphOf({ ...layer, geometry: { kind: "unsupported" } })).toBe("rectangle");
+		expect(glyphOf(null)).toBe("rectangle");
+	});
+});
+
+describe("inspectorHeading", () => {
+	it("heads the page when nothing is selected", () => {
+		expect(inspectorHeading(null)).toEqual({
+			glyph: "page",
+			name: "Page",
+			kind: "Nothing is selected",
+		});
+	});
+
+	it("heads a layer with its name and its kind", () => {
+		expect(inspectorHeading({ ...artboard("1@1"), name: "Phone" })).toEqual({
+			glyph: "artboard",
+			name: "Phone",
+			kind: "Artboard",
+		});
+		expect(
+			inspectorHeading({ ...rectangle("2@1", "#000000"), geometry: { kind: "ellipse" } }),
+		).toEqual({
+			glyph: "ellipse",
+			name: "Ellipse",
+			kind: "Ellipse",
+		});
 	});
 });

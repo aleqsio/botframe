@@ -4,6 +4,7 @@ import { launchApp } from "./support";
 import type { Drag } from "./support";
 
 const ELLIPSE_DRAG: Drag = { from: { x: 260, y: 460 }, to: { x: 380, y: 560 } };
+const LAYER_CENTER = { x: 540, y: 340 };
 
 interface Box {
 	x: number;
@@ -19,6 +20,34 @@ async function boxOf(locator: Locator): Promise<Box> {
 	}
 	return box;
 }
+
+function placementOf(locator: Locator): Promise<{ right: number; top: number; width: number }> {
+	return locator.evaluate((element) => {
+		const box = element.getBoundingClientRect();
+		return { right: globalThis.innerWidth - box.right, top: box.top, width: box.width };
+	});
+}
+
+test("the inspector heads the page with nothing selected and stays in its place for a layer", async () => {
+	const { app, window } = await launchApp();
+	const inspector = window.getByRole("complementary", { name: "Inspector" });
+	const placement = { right: 10, top: 52, width: 248 };
+
+	await expect(window.locator(".layer")).toHaveCount(1);
+	await expect(inspector.locator(".inspector-name")).toHaveText("Page");
+	await expect(inspector.locator(".inspector-kind")).toHaveText("Nothing is selected");
+	await expect(inspector.locator(".inspector-body")).toHaveText("Layers1");
+	expect(await placementOf(inspector)).toEqual(placement);
+
+	await window.mouse.click(LAYER_CENTER.x, LAYER_CENTER.y);
+
+	await expect(inspector.locator(".inspector-name")).toHaveText("Rectangle");
+	await expect(inspector.locator(".inspector-kind")).toHaveText("Rectangle");
+	await expect(inspector.getByLabel("Name", { exact: true })).toHaveValue("");
+	expect(await placementOf(inspector)).toEqual(placement);
+
+	await app.close();
+});
 
 test("the Layers button of the file pill takes the layer card away and brings it back", async () => {
 	const { app, window } = await launchApp();
