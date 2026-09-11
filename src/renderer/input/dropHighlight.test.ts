@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import type { LayerMove } from "../state/userState";
 import { droppedInto } from "./dropHighlight";
@@ -14,6 +15,7 @@ const SHAPE: Layer = {
 	y: 0,
 	width: 100,
 	height: 100,
+	...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 	rotation: 0,
 	fill: "#000000",
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
