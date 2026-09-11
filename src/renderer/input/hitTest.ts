@@ -11,7 +11,7 @@ export interface HitElement {
 	getAttribute: (name: string) => string | null;
 }
 
-function isLayerId(value: string): value is LayerId {
+export function isLayerId(value: string): value is LayerId {
 	return LAYER_ID.test(value);
 }
 

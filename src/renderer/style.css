@@ -324,6 +324,36 @@ body {
 	gap: 1px;
 }
 
+.layer-line[data-mark="dragged"] {
+	opacity: 0.45;
+}
+
+.layer-line[data-mark="inside"] {
+	border-radius: 6px;
+	box-shadow: inset 0 0 0 1px var(--selection);
+	background-color: var(--panel-hover);
+}
+
+.layer-line[data-mark="before"]::after,
+.layer-line[data-mark="after"]::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	left: 0;
+	height: 2px;
+	border-radius: 1px;
+	background-color: var(--selection);
+	pointer-events: none;
+}
+
+.layer-line[data-mark="before"]::after {
+	top: -1px;
+}
+
+.layer-line[data-mark="after"]::after {
+	bottom: -1px;
+}
+
 .layer-chevron {
 	flex: none;
 	display: flex;

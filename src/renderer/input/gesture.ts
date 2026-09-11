@@ -1,6 +1,8 @@
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Point } from "../state/camera";
 
 const TAP_LIMIT = 4;
+const TOUCH_POINTER = "touch";
 
 export interface PointerSample {
 	pointerId: number;
@@ -34,6 +36,15 @@ interface Pinch {
 	second: TrackedPointer;
 	center: Point;
 	spread: number;
+}
+
+export function sampleOf(event: ReactPointerEvent<HTMLElement>): PointerSample {
+	return {
+		pointerId: event.pointerId,
+		x: event.clientX,
+		y: event.clientY,
+		touch: event.pointerType === TOUCH_POINTER,
+	};
 }
 
 function pointOf(sample: PointerSample): Point {
