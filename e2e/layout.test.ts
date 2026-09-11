@@ -9,6 +9,7 @@ const ROOT_ARTBOARD: Drag = { from: { x: 240, y: 460 }, to: { x: 520, y: 640 } }
 const NESTED_ARTBOARD: Drag = { from: { x: 280, y: 500 }, to: { x: 400, y: 600 } };
 const WINDOW_ORIGIN = { x: 0, y: 0 };
 const SELECTION_BLUE = "rgb(13, 153, 255)";
+const TOP_OF_CANVAS = { x: 600, y: 12 };
 
 interface Box {
 	x: number;
@@ -218,6 +219,29 @@ test("the zoom pill steps the zoom of the canvas in and out", async () => {
 
 	await expect(zoom.locator("output")).toHaveText("100%");
 	await expect(viewport).toHaveAttribute("style", /scale\(1\)/u);
+
+	await app.close();
+});
+
+test("the window drags by the file pill, and the top edge of the canvas takes presses", async () => {
+	const { app, window } = await launchApp();
+	const regionsAt = (point: { x: number; y: number }): Promise<string[]> =>
+		window.evaluate(
+			(spot) =>
+				document
+					.elementsFromPoint(spot.x, spot.y)
+					.map((element) => getComputedStyle(element).getPropertyValue("-webkit-app-region"))
+					.filter((region) => region !== "none"),
+			point,
+		);
+
+	await expect(window.locator(".layer")).toHaveCount(1);
+	const name = await boxOf(window.locator("#file-bar .file-name"));
+	const toggle = await boxOf(window.locator("#file-bar .pill-button"));
+
+	expect(await regionsAt(TOP_OF_CANVAS)).toEqual([]);
+	expect((await regionsAt({ x: name.x + 2, y: name.y + 2 }))[0]).toBe("drag");
+	expect((await regionsAt({ x: toggle.x + 4, y: toggle.y + 4 }))[0]).toBe("no-drag");
 
 	await app.close();
 });

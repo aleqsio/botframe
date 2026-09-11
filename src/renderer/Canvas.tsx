@@ -16,7 +16,6 @@ export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }):
 	return (
 		<>
 			<Stage doc={doc} stage={stage} user={user} />
-			<div id="title-bar" />
 			<FileBar layersOpen={user.layersOpen} />
 			<LayersCard doc={doc} user={user} />
 			<ZoomBar camera={user.camera} stage={stage} />

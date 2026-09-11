@@ -1,6 +1,5 @@
 :root {
 	color-scheme: light dark;
-	--title-bar: 36px;
 	--edge: 10px;
 	--card-top: 52px;
 	--layers-width: 210px;
@@ -59,15 +58,6 @@ body {
 		sans-serif;
 	user-select: none;
 	-webkit-user-select: none;
-}
-
-#title-bar {
-	position: fixed;
-	top: 0;
-	right: 0;
-	left: 0;
-	height: var(--title-bar);
-	-webkit-app-region: drag;
 }
 
 #stage {
@@ -491,7 +481,6 @@ body {
 	-webkit-backdrop-filter: blur(16px) saturate(150%);
 	box-shadow: var(--panel-shadow);
 	color: var(--panel-text);
-	-webkit-app-region: no-drag;
 }
 
 #file-bar,
@@ -507,6 +496,7 @@ body {
 
 #file-bar {
 	left: var(--edge);
+	-webkit-app-region: drag;
 	min-width: var(--layers-width);
 	padding: 0 4px 0 78px;
 }
@@ -562,6 +552,7 @@ body {
 	font-size: 12px;
 	cursor: default;
 	transition: background-color 120ms ease;
+	-webkit-app-region: no-drag;
 }
 
 .pill-button .icon {
