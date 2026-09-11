@@ -25,6 +25,11 @@ export const IDENTITY_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 export const MIN_ZOOM = 0.02;
 export const MAX_ZOOM = 64;
 
+export type ZoomDirection = "in" | "out";
+
+const ZOOM_LEVELS = [MIN_ZOOM, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, MAX_ZOOM] as const;
+const SAME_ZOOM = 1e-6;
+
 function clampZoom(zoom: number): number {
 	return Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
 }
@@ -56,6 +61,17 @@ export function zoomCameraAt(camera: Camera, stagePoint: Point, scale: number): 
 
 export function applyViewportDelta(camera: Camera, at: Point, delta: ViewportDelta): Camera {
 	return zoomCameraAt(moveCamera(camera, delta.pan), at, delta.scale);
+}
+
+export function steppedZoom(zoom: number, direction: ZoomDirection): number {
+	if (direction === "in") {
+		return ZOOM_LEVELS.find((level) => level > zoom * (1 + SAME_ZOOM)) ?? MAX_ZOOM;
+	}
+	return ZOOM_LEVELS.findLast((level) => level < zoom * (1 - SAME_ZOOM)) ?? MIN_ZOOM;
+}
+
+export function zoomPercent(zoom: number): string {
+	return `${Math.round(zoom * 100)}%`;
 }
 
 export function cameraTransform(camera: Camera): string {

@@ -42,6 +42,7 @@ export class UserState {
 	readonly move = new Slot<LayerMove | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
+	readonly layersOpen = new Slot<boolean>(true);
 }
 
 export function toggleCollapsed(collapsed: Slot<ReadonlySet<LayerId>>, id: LayerId): void {

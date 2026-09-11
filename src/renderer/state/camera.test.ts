@@ -6,9 +6,11 @@ import {
 	applyViewportDelta,
 	cameraTransform,
 	moveCamera,
+	steppedZoom,
 	toCanvasPoint,
 	viewportCenter,
 	zoomCameraAt,
+	zoomPercent,
 } from "./camera";
 import type { Camera, Point } from "./camera";
 
@@ -149,5 +151,36 @@ describe("viewportCenter", () => {
 			x: 250,
 			y: 175,
 		});
+	});
+});
+
+describe("steppedZoom", () => {
+	it("goes to the next level above or below a zoom between two levels", () => {
+		expect(steppedZoom(1.6, "in")).toBe(2);
+		expect(steppedZoom(1.6, "out")).toBe(1);
+	});
+
+	it("goes past the level that the zoom already holds", () => {
+		expect(steppedZoom(1, "in")).toBe(2);
+		expect(steppedZoom(1, "out")).toBe(0.5);
+		expect(steppedZoom(0.25, "out")).toBe(0.1);
+	});
+
+	it("counts a zoom a rounding error away from a level as that level", () => {
+		expect(steppedZoom(1.999_999_999_999, "in")).toBe(4);
+		expect(steppedZoom(2.000_000_000_001, "out")).toBe(1);
+	});
+
+	it("stops at the ends", () => {
+		expect(steppedZoom(64, "in")).toBe(64);
+		expect(steppedZoom(0.02, "out")).toBe(0.02);
+	});
+});
+
+describe("zoomPercent", () => {
+	it("writes the zoom as a whole percent", () => {
+		expect(zoomPercent(0.02)).toBe("2%");
+		expect(zoomPercent(1.6)).toBe("160%");
+		expect(zoomPercent(1.234_56)).toBe("123%");
 	});
 });

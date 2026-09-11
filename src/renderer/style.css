@@ -273,9 +273,45 @@ body {
 	stroke-linejoin: round;
 }
 
+#file-bar,
 #layers,
+#zoom,
 #properties {
 	position: fixed;
+	border: 1px solid var(--panel-border);
+	background: var(--panel-background);
+	backdrop-filter: blur(16px) saturate(150%);
+	-webkit-backdrop-filter: blur(16px) saturate(150%);
+	box-shadow: var(--panel-shadow);
+	color: var(--panel-text);
+	-webkit-app-region: no-drag;
+}
+
+#file-bar,
+#zoom {
+	top: var(--edge);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 34px;
+	margin: 0;
+	border-radius: 12px;
+}
+
+#file-bar {
+	left: var(--edge);
+	padding: 0 4px 0 78px;
+}
+
+#zoom {
+	right: var(--edge);
+	gap: 0;
+	min-inline-size: auto;
+	padding: 0 4px;
+}
+
+#layers,
+#properties {
 	top: var(--card-top);
 	display: flex;
 	flex-direction: column;
@@ -283,14 +319,7 @@ body {
 	max-height: calc(100% - var(--card-top) - var(--edge));
 	padding: 6px;
 	overflow-y: auto;
-	border: 1px solid var(--panel-border);
 	border-radius: 14px;
-	background: var(--panel-background);
-	backdrop-filter: blur(16px) saturate(150%);
-	-webkit-backdrop-filter: blur(16px) saturate(150%);
-	box-shadow: var(--panel-shadow);
-	color: var(--panel-text);
-	-webkit-app-region: no-drag;
 }
 
 #layers {
@@ -301,6 +330,63 @@ body {
 #properties {
 	right: var(--edge);
 	width: 248px;
+}
+
+.file-name {
+	padding-right: 4px;
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.pill-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-width: 26px;
+	height: 26px;
+	padding: 0 5px;
+	border: 0;
+	border-radius: 8px;
+	background-color: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 12px;
+	cursor: default;
+	transition: background-color 120ms ease;
+}
+
+.pill-button .icon {
+	width: 16px;
+	height: 16px;
+}
+
+.pill-button:hover {
+	background-color: var(--panel-hover);
+}
+
+.pill-button[aria-pressed="true"] {
+	background-color: var(--panel-selected);
+}
+
+.pill-button:focus-visible {
+	outline: 2px solid var(--panel-focus);
+	outline-offset: -2px;
+}
+
+.zoom-value {
+	min-width: 44px;
+	color: var(--panel-text);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pill-button {
+		transition: none;
+	}
 }
 
 .panel-title {

@@ -6,7 +6,7 @@ import { rowMarkOf } from "../input/rowDrop";
 import { useRowDrag } from "../input/useRowDrag";
 import type { RowHandlers } from "../input/useRowDrag";
 import { useSelected } from "../state/useSelected";
-import { usePicked } from "../state/useSlot";
+import { usePicked, useSlot } from "../state/useSlot";
 import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { useChildIds, useLayer, useRootIds } from "../useDocument";
@@ -107,15 +107,24 @@ function LayerRow({
 	);
 }
 
-export function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
+function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
 	const ids = useRootIds(doc);
 	const panel = useRef<HTMLElement>(null);
 	const rows = useRowDrag(doc, user, panel);
 
 	return (
-		<aside className="panel" id="layers" ref={panel}>
-			<h2 className="panel-title">Layers</h2>
+		<aside aria-label="Layers" id="layers" ref={panel}>
 			<LayerBranch doc={doc} ids={ids} rows={rows} user={user} />
 		</aside>
 	);
+}
+
+export function LayersCard({
+	doc,
+	user,
+}: {
+	doc: DesignDocument;
+	user: UserState;
+}): ReactElement | null {
+	return useSlot(user.layersOpen) ? <LayerList doc={doc} user={user} /> : null;
 }
