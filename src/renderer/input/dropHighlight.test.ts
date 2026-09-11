@@ -7,10 +7,10 @@ import type { RowDrag } from "./rowDrop";
 const LAYER: LayerId = "1@1";
 const ARTBOARD: LayerId = "2@1";
 
-function moveInto(parent: LayerId | null): LayerMove {
+function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMove {
 	return {
 		id: LAYER,
-		from: null,
+		from,
 		parent,
 		start: { x: 0, y: 0, rotation: 0 },
 		offset: { x: 0, y: 0 },
@@ -28,6 +28,10 @@ describe("droppedInto", () => {
 
 	it("gives no layer when the move drag holds the layer at the root", () => {
 		expect(droppedInto(moveInto(null), null)).toBeNull();
+	});
+
+	it("gives no layer when the move drag leaves the first parent alone", () => {
+		expect(droppedInto(moveInto(ARTBOARD, ARTBOARD), null)).toBeNull();
 	});
 
 	it("gives the row of a row drag that drops inside it", () => {
