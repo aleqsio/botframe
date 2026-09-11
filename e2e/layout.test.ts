@@ -61,6 +61,7 @@ test("the Layers button of the file pill takes the layer card away and brings it
 	await expect(window.locator("#file-bar .file-name")).toHaveText("Untitled");
 	await expect(toggle).toHaveAttribute("aria-pressed", "true");
 	await expect(card).toHaveCount(1);
+	expect((await boxOf(window.locator("#file-bar"))).width).toBe((await boxOf(card)).width);
 
 	await toggle.click();
 

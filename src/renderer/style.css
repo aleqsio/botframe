@@ -3,6 +3,7 @@
 	--title-bar: 36px;
 	--edge: 10px;
 	--card-top: 52px;
+	--layers-width: 210px;
 	--inspector-width: 248px;
 	--stage-background: light-dark(#f2f2f2, #1d1c22);
 	--stage-dots: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
@@ -506,6 +507,7 @@ body {
 
 #file-bar {
 	left: var(--edge);
+	min-width: var(--layers-width);
 	padding: 0 4px 0 78px;
 }
 
@@ -528,7 +530,7 @@ body {
 
 #layers {
 	left: var(--edge);
-	width: 210px;
+	width: var(--layers-width);
 	padding: 6px;
 }
 
@@ -538,7 +540,7 @@ body {
 }
 
 .file-name {
-	padding-right: 4px;
+	flex: 1;
 	font-size: 13px;
 	font-weight: 600;
 	white-space: nowrap;
