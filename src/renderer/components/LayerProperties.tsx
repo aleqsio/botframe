@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
-import { NumberField, PropertyField } from "./PropertyField";
+import { NumberChip } from "./NumberChip";
+import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
 import { fieldPatch, fieldsOf, swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
@@ -73,12 +74,14 @@ export function LayerProperties({
 			/>
 			<div className="property-grid">
 				{fieldsOf(layer).map((field) => (
-					<NumberField
+					<NumberChip
+						field={field}
 						key={field.label}
-						label={field.label}
-						onCommit={(value) => {
-							doc.update(layer.id, fieldPatch(field, value));
+						onCommit={() => {
 							doc.commit(field.message);
+						}}
+						onUpdate={(value) => {
+							doc.update(layer.id, fieldPatch(field, value));
 						}}
 						value={field.read(layer)}
 					/>

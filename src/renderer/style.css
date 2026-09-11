@@ -382,6 +382,82 @@ body {
 	outline: none;
 }
 
+.number-chip {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	min-width: 0;
+	padding: 4px 7px;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+	box-shadow: 0 0 0 0 transparent;
+	transition:
+		background-color 200ms ease,
+		box-shadow 200ms ease;
+}
+
+.number-chip:hover {
+	background-color: var(--panel-selected);
+}
+
+.number-chip:has(.property-input:focus) {
+	background-color: var(--panel-selected);
+	box-shadow: 0 0 0 1.5px var(--bar-focus);
+}
+
+.chip-handle {
+	position: relative;
+	display: flex;
+	flex: none;
+	align-items: center;
+	border-radius: 3px;
+}
+
+.chip-handle:has(.chip-grip:focus-visible) {
+	outline: 2px solid var(--bar-focus);
+	outline-offset: 2px;
+}
+
+.chip-name {
+	color: var(--panel-label);
+	font-size: 11px;
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.chip-grip {
+	position: absolute;
+	inset: -4px -4px;
+	width: auto;
+	height: auto;
+	margin: 0;
+	padding: 0;
+	opacity: 0;
+	cursor: ew-resize;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.number-chip .property-input {
+	text-align: right;
+}
+
+.chip-unit {
+	flex: none;
+	color: var(--panel-label);
+	font-size: 10px;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.number-chip {
+		transition: none;
+	}
+}
+
 .property-switch {
 	display: flex;
 	align-items: center;
