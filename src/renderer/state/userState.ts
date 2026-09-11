@@ -13,6 +13,14 @@ export interface Draw {
 	origin: Point;
 }
 
+export interface LayerMove {
+	id: LayerId;
+	from: LayerId | null;
+	parent: LayerId | null;
+	start: Point;
+	offset: Point;
+}
+
 export interface LayerMenu {
 	client: Point;
 	layerIds: readonly LayerId[];
@@ -26,4 +34,5 @@ export class UserState {
 	readonly zone = new Slot<ZoneKey | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);
+	readonly move = new Slot<LayerMove | null>(null);
 }

@@ -1,4 +1,5 @@
 import type { LayerId } from "../../document/layer";
+import type { Point } from "../state/camera";
 
 const LAYER_ID = /^\d+@\d+$/u;
 const LAYER_ATTRIBUTE = "data-layer-id";
@@ -23,6 +24,10 @@ export function layerIdsUnder(elements: Iterable<HitElement>): LayerId[] {
 		}
 	}
 	return ids;
+}
+
+export function layerIdsAt(client: Point): readonly LayerId[] {
+	return layerIdsUnder(document.elementsFromPoint(client.x, client.y));
 }
 
 function alphaOf(color: string): string | undefined {
