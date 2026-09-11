@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { Layer, LayerId } from "../document/layer";
+import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
 import { layerTransform } from "./layerStyle";
 import { useSelected } from "./state/useSelected";
@@ -99,6 +100,14 @@ function HighlightFrame({
 	);
 }
 
+function Drop({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
+	const id = droppedInto(useSlot(user.move), useSlot(user.rowDrag), (layerId) =>
+		doc.layer(layerId),
+	);
+
+	return id === null ? null : <LayerFrame className="drop-frame" doc={doc} id={id} />;
+}
+
 function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	const id = useSlot(user.highlight);
 
@@ -108,6 +117,7 @@ function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): Rea
 export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	return (
 		<>
+			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
 			<SelectionFrame doc={doc} user={user} />
 		</>

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
-import { glyphOf, inspectorHeading, isArtboard, layerEntry, nextLayerName } from "./layerEntry";
+import {
+	glyphOf,
+	inspectorHeading,
+	isArtboard,
+	isRootArtboard,
+	layerEntry,
+	nextLayerName,
+} from "./layerEntry";
 
 function rectangle(id: LayerId, fill: string): Layer {
 	return {
@@ -27,6 +34,24 @@ function artboard(id: LayerId): Layer {
 		clip: true,
 	};
 }
+
+describe("isRootArtboard", () => {
+	it("takes an artboard that sits at the root of the document", () => {
+		expect(isRootArtboard(artboard("1@1"))).toBe(true);
+	});
+
+	it("passes over an artboard inside a parent", () => {
+		expect(isRootArtboard({ ...artboard("1@1"), parent: "2@1" })).toBe(false);
+	});
+
+	it("passes over a shape at the root, and over no layer", () => {
+		expect(isRootArtboard(rectangle("1@1", "#000000"))).toBe(false);
+		expect(isRootArtboard({ ...rectangle("1@1", "#000000"), geometry: { kind: "ellipse" } })).toBe(
+			false,
+		);
+		expect(isRootArtboard(null)).toBe(false);
+	});
+});
 
 describe("layerEntry", () => {
 	it("gives a different entry for each of two stacked layers of one kind", () => {
