@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { Layer, LayerId } from "../document/layer";
-import { isRootArtboard } from "./components/layerEntry";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
 import { layerTransform } from "./layerStyle";
@@ -101,16 +100,12 @@ function HighlightFrame({
 	);
 }
 
-function DropFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
-	return isRootArtboard(useLayer(doc, id)) ? null : (
-		<LayerFrame className="drop-frame" doc={doc} id={id} />
-	);
-}
-
 function Drop({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
-	const id = droppedInto(useSlot(user.move), useSlot(user.rowDrag));
+	const id = droppedInto(useSlot(user.move), useSlot(user.rowDrag), (layerId) =>
+		doc.layer(layerId),
+	);
 
-	return id === null ? null : <DropFrame doc={doc} id={id} />;
+	return id === null ? null : <LayerFrame className="drop-frame" doc={doc} id={id} />;
 }
 
 function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
