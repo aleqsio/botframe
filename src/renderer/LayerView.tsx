@@ -1,10 +1,14 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
+import { canvasLabelStyle, hasCanvasLabel } from "./canvasLabel";
+import { layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
+
+const PRIMARY_BUTTON = 0;
 
 export function LayerView({
 	doc,
@@ -34,5 +38,41 @@ export function LayerView({
 				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
 			))}
 		</div>
+	);
+}
+
+export function ArtboardLabel({
+	doc,
+	id,
+	selection,
+}: {
+	doc: DesignDocument;
+	id: LayerId;
+	selection: Slot<readonly LayerId[]>;
+}): ReactElement | null {
+	const layer = useLayer(doc, id);
+	const selected = useSelected(selection, id);
+
+	if (layer === null || !hasCanvasLabel(layer)) {
+		return null;
+	}
+
+	return (
+		<button
+			className="artboard-label"
+			data-selected={selected ? "" : undefined}
+			onPointerDown={(event) => {
+				if (event.button !== PRIMARY_BUTTON) {
+					return;
+				}
+				event.stopPropagation();
+				selection.set([id]);
+			}}
+			style={canvasLabelStyle(layer)}
+			tabIndex={-1}
+			type="button"
+		>
+			{layerEntry(layer).label}
+		</button>
 	);
 }
