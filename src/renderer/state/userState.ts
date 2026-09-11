@@ -9,7 +9,7 @@ import { Slot } from "./slot";
 
 export const NOTHING_SELECTED: readonly LayerId[] = [];
 
-export const NOTHING_COLLAPSED: ReadonlySet<LayerId> = new Set();
+const NOTHING_COLLAPSED: ReadonlySet<LayerId> = new Set();
 
 export interface Draw {
 	id: LayerId;
