@@ -11,10 +11,9 @@ import {
 	toLayerPoint,
 } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
+import { ANGLE_SNAP, stepOf } from "./step";
 
 export const MIN_LAYER_SIZE = 1;
-export const ROTATE_STEP_ALT = 5;
-export const ROTATE_STEP_SHIFT = 15;
 
 function halfExtent(direction: number, half: number, moved: number, fromCenter: boolean): number {
 	if (direction === 0) {
@@ -81,13 +80,6 @@ export function scaledRect(start: Layer, factor: number): Rect {
 	return { x: center.x - width / 2, y: center.y - height / 2, width, height };
 }
 
-function snapStep(modifiers: Modifiers): number {
-	if (modifiers.shift) {
-		return ROTATE_STEP_SHIFT;
-	}
-	return modifiers.alt ? ROTATE_STEP_ALT : 0;
-}
-
 export function rotatedDegrees(
 	start: Layer,
 	origin: Point,
@@ -96,6 +88,6 @@ export function rotatedDegrees(
 ): number {
 	const center = centerOf(start);
 	const turned = start.rotation + angleFrom(center, point) - angleFrom(center, origin);
-	const step = snapStep(modifiers);
+	const step = stepOf(ANGLE_SNAP, modifiers);
 	return normalizeDegrees(step === 0 ? turned : Math.round(turned / step) * step);
 }
