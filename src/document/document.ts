@@ -195,6 +195,16 @@ export class DesignDocument {
 		this.#notifyStructure();
 	}
 
+	move(id: LayerId, parent: LayerId | null, index?: number): boolean {
+		if (!this.#canMove(id, parent)) {
+			return false;
+		}
+		this.#tree().move(id, parent ?? undefined, index);
+		this.#forget(id);
+		this.#notifyStructure();
+		return true;
+	}
+
 	subscribeStructure(listener: () => void): Unsubscribe {
 		return subscribeTo(this.#structureListeners, listener);
 	}
@@ -322,6 +332,27 @@ export class DesignDocument {
 				this.#invalidate(item.target);
 			}
 		}
+	}
+
+	#canMove(id: LayerId, parent: LayerId | null): boolean {
+		if (this.#liveNode(id) === null) {
+			return false;
+		}
+		if (parent === null) {
+			return true;
+		}
+		return this.#liveNode(parent) !== null && !this.#insideSubtree(id, parent);
+	}
+
+	#insideSubtree(id: LayerId, parent: LayerId): boolean {
+		let node = this.#tree().getNodeByID(parent);
+		while (node !== undefined) {
+			if (node.id === id) {
+				return true;
+			}
+			node = node.parent();
+		}
+		return false;
 	}
 
 	#forget(id: LayerId): void {
