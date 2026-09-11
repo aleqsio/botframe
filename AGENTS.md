@@ -46,6 +46,7 @@ Write each reply and each Markdown file in this repository in ASD-STE100, Simpli
 
 - Never change a lint limit, a tsconfig option, or a dependency rule to make a check pass.
 - Never use `--no-verify`.
+- Never run the e2e tests on the local computer.
 - Never add a dependency without a reason in the pull request.
 - Never load a font, an image, or a script from a different site. Each asset goes through the asset store.
 - Never open a pull request against a branch that is not `main`, except in a stack.
