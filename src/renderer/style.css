@@ -200,6 +200,15 @@ body {
 	cursor: inherit;
 }
 
+#stage[data-drop] {
+	cursor: copy;
+}
+
+#stage[data-drop] .layer,
+#stage[data-drop] .layer:active {
+	cursor: inherit;
+}
+
 .floating-bar {
 	position: fixed;
 	bottom: 24px;

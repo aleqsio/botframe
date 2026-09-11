@@ -1,11 +1,14 @@
+import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
-import type { LayerMove } from "../state/userState";
+import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldOffset } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
+
+const CANCEL_COMMIT = "cancel move";
 
 function parentUnder(
 	target: PointerTarget,
@@ -67,4 +70,19 @@ export function finishMove(target: PointerTarget, point: StagePoint, modifiers: 
 	applyMove(target, point, modifiers);
 	target.user.move.set(null);
 	target.doc.commit(COMMIT_MESSAGES.move);
+}
+
+export function changesParent(move: LayerMove | null): boolean {
+	return move !== null && move.parent !== move.from;
+}
+
+export function cancelMove(doc: DesignDocument, user: UserState): void {
+	const move = user.move.get();
+	if (move === null) {
+		return;
+	}
+	user.move.set(null);
+	doc.move(move.id, move.from);
+	doc.update(move.id, move.start);
+	doc.commit(CANCEL_COMMIT);
 }
