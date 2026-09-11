@@ -83,6 +83,9 @@ function LayerRow({
 					onClick={() => {
 						rows.onClick(id);
 					}}
+					onContextMenu={(event) => {
+						rows.onContextMenu(event, id);
+					}}
 					onPointerCancel={rows.onPointerCancel}
 					onPointerDown={(event) => {
 						rows.onPointerDown(event, id);

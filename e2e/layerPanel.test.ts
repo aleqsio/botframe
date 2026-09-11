@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Locator, Page } from "@playwright/test";
-import { drawWith, openStage } from "./support";
+import { EDIT_LABELS, drawWith, menuItem, openStage, pressRight } from "./support";
 import type { Drag, Point } from "./support";
 
 const ARTBOARD: Drag = { from: { x: 40, y: 40 }, to: { x: 240, y: 180 } };
@@ -220,6 +220,39 @@ test("a nest by drag holds the place of the layer on the canvas", async () => {
 	}
 	expect(Math.round(after.x)).toBe(Math.round(before.x));
 	expect(Math.round(after.y)).toBe(Math.round(before.y));
+
+	await app.close();
+});
+
+test("the secondary press on a row selects it and runs a menu command on it", async () => {
+	const { app, origin, window } = await openStage();
+	const rows = window.locator(".layer-row");
+	const lines = window.locator(".layer-line");
+	const menu = window.locator(".layer-menu");
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+
+	await pressRight(window, await bandOf(lines.nth(0), 0.5));
+
+	await expect(menu).toBeVisible();
+	await expect(menu.locator(".layer-menu-label")).toHaveText(EDIT_LABELS);
+	await expect(menu.getByRole("group", { name: "Layers under the pointer" })).toHaveCount(0);
+	await expect(rows.nth(0)).toHaveAttribute("aria-pressed", "true");
+
+	await menuItem(menu, "Duplicate").click();
+
+	await expect(menu).toBeHidden();
+	await expect(rows).toHaveText(["Rectangle", "Artboard 1", "Rectangle"]);
+	await expect(window.locator("#viewport .layer")).toHaveCount(3);
+
+	await pressRight(window, await bandOf(lines.nth(2), 0.5));
+	await expect(menu).toBeVisible();
+	await menuItem(menu, "Delete").click();
+
+	await expect(menu).toBeHidden();
+	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await expect(window.locator("#viewport .layer")).toHaveCount(2);
 
 	await app.close();
 });

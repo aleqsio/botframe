@@ -1,12 +1,21 @@
 import type { DesignDocument } from "../../document/document";
 import { copyAsHtml, copySelection, cutSelection, pasteFromClipboard } from "../clipboard";
+import { deleteSelection, duplicateSelection } from "../layerEdit";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import type { KeyStroke } from "./layerCommand";
 
-type EditCommandId = "undo" | "redo" | "cut" | "copy" | "copyAsHtml" | "paste";
+type EditCommandId =
+	| "undo"
+	| "redo"
+	| "cut"
+	| "copy"
+	| "copyAsHtml"
+	| "paste"
+	| "duplicate"
+	| "delete";
 
-type EditCommandGroup = "history" | "clipboard";
+type EditCommandGroup = "history" | "clipboard" | "layer";
 
 export interface EditCommand {
 	id: EditCommandId;
@@ -24,6 +33,8 @@ const REDO_KEY = "y";
 const CUT_KEY = "x";
 const COPY_KEY = "c";
 const PASTE_KEY = "v";
+const DUPLICATE_KEY = "d";
+const REMOVE_KEYS: ReadonlySet<string> = new Set(["Delete", "Backspace"]);
 
 export function onApple(): boolean {
 	return navigator.userAgent.includes("Mac");
@@ -52,6 +63,10 @@ function plainStroke(key: string): (stroke: KeyStroke) => boolean {
 
 function never(): boolean {
 	return false;
+}
+
+function removeStroke(stroke: KeyStroke): boolean {
+	return !heldWithAccelerator(stroke) && !stroke.altKey && REMOVE_KEYS.has(stroke.key);
 }
 
 function hasSelection(_doc: DesignDocument, user: UserState): boolean {
@@ -122,6 +137,24 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 		matches: plainStroke(PASTE_KEY),
 		apply: pasteFromClipboard,
 		enabled: (_doc, user) => user.pasteReady.get(),
+	},
+	{
+		id: "duplicate",
+		label: "Duplicate",
+		group: "layer",
+		accelerator: "CmdOrCtrl+D",
+		matches: plainStroke(DUPLICATE_KEY),
+		apply: duplicateSelection,
+		enabled: hasSelection,
+	},
+	{
+		id: "delete",
+		label: "Delete",
+		group: "layer",
+		accelerator: "Delete",
+		matches: removeStroke,
+		apply: deleteSelection,
+		enabled: hasSelection,
 	},
 ];
 

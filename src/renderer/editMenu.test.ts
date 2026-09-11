@@ -29,9 +29,18 @@ describe("the Edit menu", () => {
 	it("lists the commands in order and gives Copy as a submenu", () => {
 		const items = editMenuItems(DesignDocument.create(), new UserState());
 
-		expect(labelsOf(items)).toEqual(["Undo", "Redo", "Cut", "Copy", "Copy as", "Paste"]);
+		expect(labelsOf(items)).toEqual([
+			"Undo",
+			"Redo",
+			"Cut",
+			"Copy",
+			"Copy as",
+			"Paste",
+			"Duplicate",
+			"Delete",
+		]);
 		expect(labelsOf(named(items, "Copy as").submenu ?? [])).toEqual(["HTML"]);
-		expect(withSeparator(items)).toEqual(["Cut"]);
+		expect(withSeparator(items)).toEqual(["Cut", "Duplicate"]);
 	});
 
 	it("disables each command on a new document with no selection", () => {
@@ -44,6 +53,8 @@ describe("the Edit menu", () => {
 			Copy: false,
 			"Copy as": false,
 			Paste: false,
+			Duplicate: false,
+			Delete: false,
 		});
 	});
 
@@ -57,6 +68,8 @@ describe("the Edit menu", () => {
 			Copy: true,
 			"Copy as": true,
 			Paste: false,
+			Duplicate: true,
+			Delete: true,
 		});
 	});
 
@@ -81,12 +94,12 @@ describe("the Edit menu", () => {
 });
 
 describe("the context menu", () => {
-	it("lists the clipboard commands, gives Copy as a submenu, and holds no separator", () => {
+	it("lists the clipboard and layer commands and separates the two groups", () => {
 		const items = contextMenuItems(DesignDocument.create(), new UserState());
 
-		expect(labelsOf(items)).toEqual(["Cut", "Copy", "Copy as", "Paste"]);
+		expect(labelsOf(items)).toEqual(["Cut", "Copy", "Copy as", "Paste", "Duplicate", "Delete"]);
 		expect(labelsOf(named(items, "Copy as").submenu ?? [])).toEqual(["HTML"]);
-		expect(withSeparator(items)).toEqual([]);
+		expect(withSeparator(items)).toEqual(["Duplicate"]);
 	});
 
 	it("disables each command with no selection and an empty clipboard", () => {
@@ -97,6 +110,8 @@ describe("the context menu", () => {
 			Copy: false,
 			"Copy as": false,
 			Paste: false,
+			Duplicate: false,
+			Delete: false,
 		});
 	});
 
@@ -111,6 +126,8 @@ describe("the context menu", () => {
 			Copy: true,
 			"Copy as": true,
 			Paste: true,
+			Duplicate: true,
+			Delete: true,
 		});
 	});
 });

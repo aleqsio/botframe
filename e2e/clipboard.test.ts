@@ -102,7 +102,18 @@ test("a copy and a paste give a second layer with the same box", async () => {
 test("the Edit menu holds the clipboard commands and a Copy as submenu", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	expect(await editLabels(app)).toEqual(["Undo", "Redo", "", "Cut", "Copy", "Copy as", "Paste"]);
+	expect(await editLabels(app)).toEqual([
+		"Undo",
+		"Redo",
+		"",
+		"Cut",
+		"Copy",
+		"Copy as",
+		"Paste",
+		"",
+		"Duplicate",
+		"Delete",
+	]);
 	expect(await copyAsLabels(app)).toEqual(["HTML"]);
 
 	await drawRectangle(window, origin, ARTBOARD);

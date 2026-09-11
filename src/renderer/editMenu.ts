@@ -10,7 +10,7 @@ const COPY_AS = { id: "copyAs", label: "Copy as", accelerator: "" };
 
 const MENU_COMMANDS = EDIT_COMMANDS.filter((command) => command.isFormat !== true);
 
-const CLIPBOARD_COMMANDS = MENU_COMMANDS.filter((command) => command.group === "clipboard");
+const CONTEXT_COMMANDS = MENU_COMMANDS.filter((command) => command.group !== "history");
 
 type ReadState = (command: EditCommand) => boolean;
 
@@ -54,7 +54,7 @@ export function editMenuItems(doc: DesignDocument, user: UserState): readonly Ed
 }
 
 export function contextMenuItems(doc: DesignDocument, user: UserState): readonly EditMenuItem[] {
-	return itemsOf(CLIPBOARD_COMMANDS, stateOf(doc, user));
+	return itemsOf(CONTEXT_COMMANDS, stateOf(doc, user));
 }
 
 function pushMenu(shell: Bridge, doc: DesignDocument, user: UserState): void {

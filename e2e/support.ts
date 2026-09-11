@@ -24,6 +24,18 @@ export function stageOrigin(window: Page): Promise<Point> {
 	});
 }
 
+export const EDIT_LABELS = ["Cut", "Copy", "Copy as", "Paste", "Duplicate", "Delete"];
+
+export async function pressRight(window: Page, point: Point): Promise<void> {
+	await window.mouse.move(point.x, point.y);
+	await window.mouse.down({ button: "right" });
+	await window.mouse.up({ button: "right" });
+}
+
+export function menuItem(menu: Locator, label: string): Locator {
+	return menu.locator(".layer-menu-item", { hasText: label });
+}
+
 export function at(origin: Point, point: Point): Point {
 	return { x: origin.x + point.x, y: origin.y + point.y };
 }

@@ -1,4 +1,5 @@
 import { Menu } from "@base-ui-components/react/menu";
+import { Fragment } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { EditMenuItem } from "../../shared/editMenu";
@@ -9,6 +10,7 @@ import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 
 const SUBMENU_MARK = "›";
+const SECTION_LABEL = "Edit";
 
 interface ItemProps {
 	doc: DesignDocument;
@@ -67,6 +69,14 @@ function useContextItems(doc: DesignDocument, user: UserState): readonly EditMen
 	return contextMenuItems(doc, user);
 }
 
+function MenuEntry({ doc, item, user }: ItemProps): ReactElement {
+	return item.submenu === undefined ? (
+		<CommandItem doc={doc} item={item} user={user} />
+	) : (
+		<SubmenuItem doc={doc} item={item} user={user} />
+	);
+}
+
 export function EditMenuSection({
 	doc,
 	user,
@@ -77,14 +87,13 @@ export function EditMenuSection({
 	const items = useContextItems(doc, user);
 
 	return (
-		<Menu.Group aria-label="Clipboard" className="layer-menu-group">
-			{items.map((item) =>
-				item.submenu === undefined ? (
-					<CommandItem doc={doc} item={item} key={item.id} user={user} />
-				) : (
-					<SubmenuItem doc={doc} item={item} key={item.id} user={user} />
-				),
-			)}
+		<Menu.Group aria-label={SECTION_LABEL} className="layer-menu-group">
+			{items.map((item) => (
+				<Fragment key={item.id}>
+					{item.separatorBefore === true && <Menu.Separator className="layer-menu-separator" />}
+					<MenuEntry doc={doc} item={item} user={user} />
+				</Fragment>
+			))}
 		</Menu.Group>
 	);
 }
