@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
 import { centerOf, fromParentPoint } from "./layerSpace";
-import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
+import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf, rowTargetOf } from "./rowDrop";
 import type { RowPlace, RowTree } from "./rowDrop";
 
 const ROOT_IDS: readonly LayerId[] = ["1@1", "2@1", "3@1"];
@@ -30,6 +30,15 @@ const PARENTS: Readonly<Record<string, LayerId | null>> = {
 	[DEEP]: SHOOT,
 };
 
+const ARTBOARDS: ReadonlySet<LayerId> = new Set([BRANCH, LAST]);
+
+function geometryOf(id: LayerId): Layer["geometry"] {
+	if (!ARTBOARDS.has(id)) {
+		return { kind: "ellipse" };
+	}
+	return { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true };
+}
+
 function read(id: LayerId): Layer | null {
 	const parent = PARENTS[id];
 	if (parent === undefined) {
@@ -43,7 +52,7 @@ function read(id: LayerId): Layer | null {
 		height: 10,
 		rotation: 0,
 		fill: "#000000",
-		geometry: { kind: "ellipse" },
+		geometry: geometryOf(id),
 		name: "",
 		clip: false,
 		parent,
@@ -60,27 +69,47 @@ function moveOf(dragged: LayerId, id: LayerId, place: RowPlace) {
 }
 
 describe("rowPlaceOf", () => {
-	const HEIGHT = 24;
-
-	it("takes the top quarter of the row as before", () => {
-		expect(rowPlaceOf(0, HEIGHT)).toBe("before");
-		expect(rowPlaceOf(5.9, HEIGHT)).toBe("before");
+	it("takes the top quarter of a row that takes children as before", () => {
+		expect(rowPlaceOf(0, true)).toBe("before");
+		expect(rowPlaceOf(0.24, true)).toBe("before");
 	});
 
-	it("takes the middle half of the row as inside", () => {
-		expect(rowPlaceOf(6, HEIGHT)).toBe("inside");
-		expect(rowPlaceOf(12, HEIGHT)).toBe("inside");
-		expect(rowPlaceOf(17.9, HEIGHT)).toBe("inside");
+	it("takes the middle half of a row that takes children as inside", () => {
+		expect(rowPlaceOf(0.25, true)).toBe("inside");
+		expect(rowPlaceOf(0.5, true)).toBe("inside");
+		expect(rowPlaceOf(0.74, true)).toBe("inside");
 	});
 
-	it("takes the bottom quarter of the row as after", () => {
-		expect(rowPlaceOf(18, HEIGHT)).toBe("after");
-		expect(rowPlaceOf(HEIGHT, HEIGHT)).toBe("after");
+	it("takes the bottom quarter of a row that takes children as after", () => {
+		expect(rowPlaceOf(0.75, true)).toBe("after");
+		expect(rowPlaceOf(1, true)).toBe("after");
+	});
+
+	it("splits a row that takes no children in half, so it gives no inside", () => {
+		expect(rowPlaceOf(0, false)).toBe("before");
+		expect(rowPlaceOf(0.49, false)).toBe("before");
+		expect(rowPlaceOf(0.5, false)).toBe("after");
+		expect(rowPlaceOf(1, false)).toBe("after");
 	});
 
 	it("holds the ends when the pointer passes the row", () => {
-		expect(rowPlaceOf(-8, HEIGHT)).toBe("before");
-		expect(rowPlaceOf(40, HEIGHT)).toBe("after");
+		expect(rowPlaceOf(-0.33, true)).toBe("before");
+		expect(rowPlaceOf(1.67, true)).toBe("after");
+	});
+});
+
+describe("rowTargetOf", () => {
+	it("gives the middle of an artboard row as inside", () => {
+		expect(rowTargetOf({ id: BRANCH, part: 0.5 }, read)).toEqual({ id: BRANCH, place: "inside" });
+	});
+
+	it("gives the middle of a row that is no artboard as before or after", () => {
+		expect(rowTargetOf({ id: FIRST, part: 0.4 }, read)).toEqual({ id: FIRST, place: "before" });
+		expect(rowTargetOf({ id: FIRST, part: 0.6 }, read)).toEqual({ id: FIRST, place: "after" });
+	});
+
+	it("gives no inside for a row that the document lost", () => {
+		expect(rowTargetOf({ id: GONE, part: 0.5 }, read)).toEqual({ id: GONE, place: "after" });
 	});
 });
 
@@ -106,6 +135,11 @@ describe("rowMoveOf", () => {
 
 	it("takes a drop inside a row that holds no children", () => {
 		expect(moveOf(FIRST, LAST, "inside")).toEqual({ parent: LAST, index: 0 });
+	});
+
+	it("refuses a drop inside a row that is no artboard", () => {
+		expect(moveOf(LEAF, FIRST, "inside")).toBeNull();
+		expect(moveOf(FIRST, DEEP, "inside")).toBeNull();
 	});
 
 	it("refuses a drop on the dragged row itself", () => {

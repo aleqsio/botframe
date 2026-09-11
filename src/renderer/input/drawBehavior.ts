@@ -2,7 +2,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import { drawnFields, finishDraw, placeLayer } from "../components/layerDefaults";
 import type { DrawDefaults } from "../components/layerDefaults";
-import { nextLayerName } from "../components/layerEntry";
+import { isArtboard, nextLayerName } from "../components/layerEntry";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { Point } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
@@ -18,8 +18,12 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 	return doc.layerIds().map((id) => doc.layer(id));
 }
 
+function artboardChain(chain: readonly Layer[]): Layer[] {
+	return chain.slice(0, chain.findLastIndex((layer) => isArtboard(layer)) + 1);
+}
+
 function chainUnder(target: PointerTarget): Layer[] {
-	return layerChain((id) => target.doc.layer(id), target.layerIds[0] ?? null);
+	return artboardChain(layerChain((id) => target.doc.layer(id), target.layerIds[0] ?? null));
 }
 
 function stretch(target: PointerTarget, point: Point, modifiers: Modifiers): void {

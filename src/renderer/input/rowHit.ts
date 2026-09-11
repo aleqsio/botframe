@@ -1,11 +1,10 @@
 import type { Point } from "../state/camera";
 import { isLayerId } from "./hitTest";
-import { rowPlaceOf } from "./rowDrop";
-import type { RowTarget } from "./rowDrop";
+import type { RowHit } from "./rowDrop";
 
 const ROW_ATTRIBUTE = "data-row-id";
 
-export function rowTargetAt(client: Point): RowTarget | null {
+export function rowHitAt(client: Point): RowHit | null {
 	const row = document.elementFromPoint(client.x, client.y)?.closest(`[${ROW_ATTRIBUTE}]`) ?? null;
 	if (row === null) {
 		return null;
@@ -15,5 +14,5 @@ export function rowTargetAt(client: Point): RowTarget | null {
 		return null;
 	}
 	const box = row.getBoundingClientRect();
-	return { id, place: rowPlaceOf(client.y - box.top, box.height) };
+	return { id, part: (client.y - box.top) / box.height };
 }

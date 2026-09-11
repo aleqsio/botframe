@@ -14,6 +14,7 @@ const OVER_THE_ARTBOARD = { x: 440, y: 150 };
 const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOARD };
 const BEYOND_THE_CLIP = { x: 520, y: 150 };
 const CARRIED = { x: -100, y: -190 };
+const OVER_THE_SHAPE: Drag = { from: { x: 460, y: 300 }, to: { x: 560, y: 360 } };
 
 async function idOf(locator: Locator): Promise<string> {
 	const id = await locator.getAttribute("data-layer-id");
@@ -185,6 +186,20 @@ test("Escape during a move drag puts the layer back in the first parent", async 
 
 	await expect(layers).toHaveCount(2);
 	expect(await boxOf(layer)).toEqual(before);
+
+	await app.close();
+});
+
+test("a draw over a shape puts the new layer at the root, not in the shape", async () => {
+	const { app, layers, origin, window } = await openStage();
+	const rows = window.locator(".layer-row");
+
+	await drawWith(window, origin, "r", OVER_THE_SHAPE);
+
+	await expect(rows).toHaveText(["Rectangle", "Rectangle 2"]);
+	await expect(window.locator("#viewport > .layer")).toHaveCount(2);
+	await expect(layers.nth(1)).toHaveAttribute("style", /translate3d\(460px, 300px, 0px\)/u);
+	expect((await boxOf(rows.nth(1))).x).toBe((await boxOf(rows.nth(0))).x);
 
 	await app.close();
 });

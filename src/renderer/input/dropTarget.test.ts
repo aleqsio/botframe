@@ -44,37 +44,31 @@ function read(id: LayerId): Layer | null {
 	return WORLD.find((layer) => layer.id === id) ?? null;
 }
 
-function parentOf(ids: readonly LayerId[], alt: boolean): LayerId | null {
-	return dropParentOf(ids, read, DRAGGED.id, alt);
+function parentOf(ids: readonly LayerId[]): LayerId | null {
+	return dropParentOf(ids, read, DRAGGED.id);
 }
 
 describe("dropParentOf", () => {
 	it("takes the deepest artboard under the pointer", () => {
-		expect(parentOf([DRAGGED.id, ARTBOARD.id, OUTER.id], false)).toBe(ARTBOARD.id);
+		expect(parentOf([DRAGGED.id, ARTBOARD.id, OUTER.id])).toBe(ARTBOARD.id);
 	});
 
-	it("passes over a layer that is no artboard", () => {
-		expect(parentOf([RECTANGLE.id, ELLIPSE.id, ARTBOARD.id], false)).toBe(ARTBOARD.id);
-	});
-
-	it("takes the deepest rectangle under the pointer with alt", () => {
-		expect(parentOf([RECTANGLE.id, ARTBOARD.id], true)).toBe(RECTANGLE.id);
-		expect(parentOf([ELLIPSE.id, ARTBOARD.id], true)).toBe(ARTBOARD.id);
+	it("passes over a shape, so no shape takes the layer as a child", () => {
+		expect(parentOf([RECTANGLE.id, ELLIPSE.id, ARTBOARD.id])).toBe(ARTBOARD.id);
 	});
 
 	it("skips the dragged layer and each layer below it", () => {
-		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id, ARTBOARD.id], false)).toBe(ARTBOARD.id);
-		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id], false)).toBeNull();
-		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id], true)).toBeNull();
+		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id, ARTBOARD.id])).toBe(ARTBOARD.id);
+		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id])).toBeNull();
 	});
 
 	it("gives the root when no artboard is under the pointer", () => {
-		expect(parentOf([RECTANGLE.id, ELLIPSE.id], false)).toBeNull();
-		expect(parentOf([], false)).toBeNull();
+		expect(parentOf([RECTANGLE.id, ELLIPSE.id])).toBeNull();
+		expect(parentOf([])).toBeNull();
 	});
 
 	it("passes over a layer that the document lost", () => {
-		expect(parentOf(["9@9", ARTBOARD.id], false)).toBe(ARTBOARD.id);
+		expect(parentOf(["9@9", ARTBOARD.id])).toBe(ARTBOARD.id);
 	});
 });
 

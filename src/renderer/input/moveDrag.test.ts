@@ -3,7 +3,6 @@ import type { LayerFields, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { centerOf, fromParentPoint } from "./layerSpace";
 import { NO_MODIFIERS } from "./modifiers";
-import type { Modifiers } from "./modifiers";
 import { cancelMove, changesParent } from "./moveDrag";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
@@ -31,7 +30,6 @@ const RECTANGLE: LayerFields = {
 const GRAB = { x: 440, y: 280 };
 const OVER_THE_ARTBOARD = { x: 200, y: 160 };
 const EMPTY = { x: 700, y: 600 };
-const ALT: Modifiers = { shift: false, alt: true };
 const TURNED_GRAB = { x: 580, y: 270 };
 const ON_SCREEN = { x: 600, y: 240 };
 const PULL = { x: 30, y: 10 };
@@ -48,18 +46,16 @@ interface DropSpec {
 	press: Point;
 	release: Point;
 	hits: readonly LayerId[];
-	modifiers?: Modifiers;
 }
 
 function dropOver(scene: DropScene, spec: DropSpec): void {
 	const behavior = behaviorFor("select");
 	const camera = scene.target.user.camera.get();
-	const modifiers = spec.modifiers ?? NO_MODIFIERS;
 	const press = pointAt(camera, spec.press);
-	behavior.dragStart?.(scene.target, press, press, modifiers);
+	behavior.dragStart?.(scene.target, press, press, NO_MODIFIERS);
 	scene.setHits(spec.hits);
-	behavior.drag?.(scene.target, pointAt(camera, spec.release), modifiers);
-	behavior.dragEnd?.(scene.target, pointAt(camera, spec.release), modifiers);
+	behavior.drag?.(scene.target, pointAt(camera, spec.release), NO_MODIFIERS);
+	behavior.dragEnd?.(scene.target, pointAt(camera, spec.release), NO_MODIFIERS);
 }
 
 describe("a drop into a new parent", () => {
@@ -105,20 +101,7 @@ describe("a drop into a new parent", () => {
 		expect(doc.rootIds()).toContain(scene.layer);
 	});
 
-	it("takes a plain rectangle as the parent with alt", () => {
-		const scene = dropScene(RECTANGLE);
-
-		dropOver(scene, {
-			press: GRAB,
-			release: OVER_THE_ARTBOARD,
-			hits: [scene.layer, scene.into],
-			modifiers: ALT,
-		});
-
-		expect(scene.target.doc.layer(scene.layer)).toMatchObject({ parent: scene.into });
-	});
-
-	it("leaves the layer at the root over a plain rectangle with no alt", () => {
+	it("leaves the layer at the root over a plain rectangle", () => {
 		const scene = dropScene(RECTANGLE);
 
 		dropOver(scene, {
