@@ -39,6 +39,27 @@ export function targetOf(withLayer: boolean): PointerTarget {
 	};
 }
 
+export interface DropScene {
+	target: PointerTarget;
+	layer: LayerId;
+	into: LayerId;
+	setHits: (ids: readonly LayerId[]) => void;
+}
+
+export function dropScene(fields: LayerFields): DropScene {
+	const doc = DesignDocument.create();
+	const layer = firstId(doc);
+	let hits: readonly LayerId[] = [];
+	return {
+		target: { doc, user: new UserState(), layerIds: [layer], layerIdsAt: () => hits },
+		layer,
+		into: doc.createLayer(fields),
+		setHits: (ids) => {
+			hits = ids;
+		},
+	};
+}
+
 export function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {
 	const doc = DesignDocument.create();
 	const parent = firstId(doc);
