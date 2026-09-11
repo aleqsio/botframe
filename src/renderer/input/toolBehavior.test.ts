@@ -8,7 +8,7 @@ import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { Zone } from "./handles";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
+import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
@@ -426,5 +426,27 @@ describe("the hand tool", () => {
 		dragOver(behaviorFor("hand"), target, { press: PRESS, release: RELEASE });
 
 		expect(target.user.camera.get()).toEqual({ x: 100, y: 70, zoom: 2 });
+	});
+});
+
+describe("the handles of a layer inside an artboard", () => {
+	it("takes the resize handle of the layer at the canvas point of that handle", () => {
+		const { target, child } = nestedTarget(0);
+		const behavior = behaviorFor("select");
+		tapAt(behavior, target, { x: 450, y: 290 });
+
+		expect(behavior.hover?.(target, pointAt(target.user.camera.get(), { x: 500, y: 320 }))).toEqual(
+			{
+				mode: "resize",
+				handle: "se",
+			},
+		);
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 500, y: 320 },
+			release: { x: 520, y: 340 },
+		});
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20, width: 80, height: 60 });
 	});
 });
