@@ -1,6 +1,6 @@
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
-import type { Layer } from "../../document/layer";
+import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
@@ -16,9 +16,39 @@ export interface DragSpec {
 	modifiers?: Modifiers;
 }
 
+const NESTED_CHILD: LayerFields = {
+	x: 20,
+	y: 20,
+	width: 60,
+	height: 40,
+	fill: "#d9d9d9",
+	name: "",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
+
+export const NO_HITS = (): readonly LayerId[] => [];
+
 export function targetOf(withLayer: boolean): PointerTarget {
 	const doc = DesignDocument.create();
-	return { doc, user: new UserState(), layerIds: withLayer ? [firstId(doc)] : [] };
+	return {
+		doc,
+		user: new UserState(),
+		layerIds: withLayer ? [firstId(doc)] : [],
+		layerIdsAt: NO_HITS,
+	};
+}
+
+export function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {
+	const doc = DesignDocument.create();
+	const parent = firstId(doc);
+	doc.update(parent, {
+		rotation,
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+	});
+	const child = doc.createLayer(NESTED_CHILD, parent);
+	const layerIdsAt = (): readonly LayerId[] => [child, parent];
+	return { target: { doc, user: new UserState(), layerIds: [child], layerIdsAt }, child };
 }
 
 export function drawnLayer(target: PointerTarget): Layer {
@@ -31,7 +61,7 @@ export function drawnLayer(target: PointerTarget): Layer {
 }
 
 export function pointAt(camera: Camera, stage: Point): StagePoint {
-	return { stage, canvas: toCanvasPoint(camera, stage) };
+	return { client: stage, stage, canvas: toCanvasPoint(camera, stage) };
 }
 
 export function tapAt(behavior: ToolBehavior, target: PointerTarget, stage: Point): void {

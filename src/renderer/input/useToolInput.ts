@@ -4,7 +4,7 @@ import type { LayerId } from "../../document/layer";
 import type { StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { zoneKey } from "./handles";
-import { visibleLayerIds } from "./hitTest";
+import { layerIdsAt, visibleLayerIds } from "./hitTest";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { StageInputHandlers } from "./useStageInput";
@@ -16,12 +16,22 @@ interface ToolGesture {
 	target: PointerTarget;
 }
 
+function visibleOf(doc: DesignDocument): (ids: readonly LayerId[]) => readonly LayerId[] {
+	return (ids) => visibleLayerIds(ids, (id) => doc.layer(id)?.fill ?? null);
+}
+
 function targetOf(
 	doc: DesignDocument,
 	user: UserState,
 	layerIds: readonly LayerId[],
 ): PointerTarget {
-	return { doc, user, layerIds: visibleLayerIds(layerIds, (id) => doc.layer(id)?.fill ?? null) };
+	const visible = visibleOf(doc);
+	return {
+		doc,
+		user,
+		layerIds: visible(layerIds),
+		layerIdsAt: (point) => visible(layerIdsAt(point.client)),
+	};
 }
 
 export function useToolInput(doc: DesignDocument, user: UserState): StageInputHandlers {
