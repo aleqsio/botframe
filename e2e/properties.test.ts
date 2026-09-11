@@ -3,6 +3,8 @@ import type { Locator, Page } from "@playwright/test";
 import { openStage } from "./support";
 
 const PRESET = { name: "iPhone 16", width: 393, height: 852 };
+const DRAG = 40;
+const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
 
 async function placePreset(window: Page, name: string): Promise<void> {
 	await window.keyboard.press("a");
@@ -21,6 +23,22 @@ async function typeInto(window: Page, label: string, text: string): Promise<void
 	const field = window.getByLabel(label, { exact: true });
 	await field.fill(text);
 	await field.press("Enter");
+}
+
+function chipHandle(window: Page, label: string): Locator {
+	return window.getByLabel(label, { exact: true });
+}
+
+function chipValue(window: Page, label: string): Locator {
+	return window.getByLabel(`${label} value`, { exact: true });
+}
+
+async function dragBy(window: Page, handle: Locator, pixels: number): Promise<void> {
+	const start = await centerOf(handle);
+	await window.mouse.move(start.x, start.y);
+	await window.mouse.down();
+	await window.mouse.move(start.x + pixels, start.y, { steps: 8 });
+	await window.mouse.up();
 }
 
 test("a preset places an artboard of that size at the middle of the stage", async () => {
@@ -43,14 +61,14 @@ test("a preset places an artboard of that size at the middle of the stage", asyn
 	await app.close();
 });
 
-test("the orientation button exchanges the width and the height", async () => {
+test("the orientation control exchanges the width and the height", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
 	const preset = window.getByLabel("Preset", { exact: true });
 	await expect(preset).toHaveValue(PRESET.name);
 
-	await window.getByRole("button", { name: "Swap the orientation" }).click();
+	await window.getByRole("button", { name: "Landscape" }).click();
 
 	await expect(drawn).toHaveCSS("width", `${PRESET.height}px`);
 	await expect(drawn).toHaveCSS("height", `${PRESET.width}px`);
@@ -115,7 +133,7 @@ test("the panel keeps a fill and a width that the stage can paint", async () => 
 	await typeInto(window, "Fill", "#ff0000");
 	await expect(drawn).toHaveCSS("background-color", "rgb(255, 0, 0)");
 
-	await typeInto(window, "W", "-50");
+	await typeInto(window, "W value", "-50");
 	await expect(drawn).toHaveCSS("width", "1px");
 
 	await app.close();
@@ -126,11 +144,71 @@ test("the box fields move and resize the layer", async () => {
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
 
-	await typeInto(window, "X", "40");
-	await typeInto(window, "H", "120");
+	await typeInto(window, "X value", "40");
+	await typeInto(window, "H value", "120");
 
 	await expect(drawn).toHaveAttribute("style", /translate3d\(40px, /u);
 	await expect(drawn).toHaveCSS("height", "120px");
+
+	await app.close();
+});
+
+test("a drag of the width handle resizes the layer, and one undo returns the first width", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+
+	await dragBy(window, chipHandle(window, "W"), DRAG);
+
+	await expect(drawn).toHaveCSS("width", `${PRESET.width + DRAG}px`);
+	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width + DRAG));
+	expect(await window.evaluate(() => String(globalThis.getSelection()))).toBe("");
+
+	await window.keyboard.press(UNDO);
+
+	await expect(drawn).toHaveCSS("width", `${PRESET.width}px`);
+
+	await app.close();
+});
+
+test("the keyboard reaches the handle and the value of a chip", async () => {
+	const { app, layers, window } = await openStage();
+	await placePreset(window, PRESET.name);
+	const drawn = layers.nth(1);
+	const handle = chipHandle(window, "X");
+	const value = chipValue(window, "X");
+
+	await window.getByLabel("Name", { exact: true }).focus();
+	await window.keyboard.press("Tab");
+	await expect(handle).toBeFocused();
+
+	const before = Number(await value.inputValue());
+	await window.keyboard.press("ArrowRight");
+	await expect(value).toHaveValue(String(before + 1));
+
+	await window.keyboard.press("Tab");
+	await expect(value).toBeFocused();
+	await value.fill("40");
+	await window.keyboard.press("Enter");
+
+	await expect(drawn).toHaveAttribute("style", /translate3d\(40px, /u);
+
+	await app.close();
+});
+
+test("shift makes a large drag step and alt makes a small one", async () => {
+	const { app, window } = await openStage();
+	await placePreset(window, PRESET.name);
+
+	await window.keyboard.down("Shift");
+	await dragBy(window, chipHandle(window, "W"), 2);
+	await window.keyboard.up("Shift");
+	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width + 20));
+
+	await window.keyboard.down("Alt");
+	await dragBy(window, chipHandle(window, "W"), 10);
+	await window.keyboard.up("Alt");
+	await expect(chipValue(window, "W")).toHaveValue(String(PRESET.width + 21));
 
 	await app.close();
 });
