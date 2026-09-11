@@ -6,6 +6,7 @@ import { BLACK, formatColor, parseColor } from "./color";
 import type { Rgba } from "./color";
 
 const POPUP_GAP = 10;
+const PROBE = "#010203";
 
 export interface ColorFieldProps {
 	label: string;
@@ -19,8 +20,10 @@ function cssColor(text: string): string {
 	if (context === null) {
 		return "";
 	}
+	context.fillStyle = PROBE;
 	context.fillStyle = text;
-	return typeof context.fillStyle === "string" ? context.fillStyle : "";
+	const painted = typeof context.fillStyle === "string" ? context.fillStyle : "";
+	return painted === PROBE ? "" : painted;
 }
 
 function colorOf(text: string): Rgba | null {

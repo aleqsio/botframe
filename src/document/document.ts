@@ -3,8 +3,8 @@ import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-
 import { DocumentHistory } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
-import { NO_BASIS, hasRelativeLength, pixelFallback } from "./length";
-import type { Basis } from "./length";
+import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
+import type { Basis, LayerLengths, Size } from "./length";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
 
@@ -47,6 +47,10 @@ function subscribeTo(listeners: Set<() => void>, listener: () => void): Unsubscr
 	};
 }
 
+function sizeOf(layer: Layer): Size {
+	return { width: layer.width, height: layer.height };
+}
+
 function notify(listeners: Iterable<() => void>): void {
 	for (const listener of listeners) {
 		listener();
@@ -62,6 +66,7 @@ export class DesignDocument {
 	readonly #structureListeners = new Set<() => void>();
 	readonly #historyListeners = new Set<() => void>();
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
+	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
 	#ids: readonly LayerId[] | null = null;
 	#roots: readonly LayerId[] | null = null;
 
@@ -130,10 +135,13 @@ export class DesignDocument {
 			return null;
 		}
 		const parent = node.parent()?.id ?? null;
-		const basis = this.#basisOf(parent);
-		const layer: Layer = { id, parent, basis, ...readLayerData(node.data, basis) };
+		const layer: Layer = { id, parent, ...readLayerData(node.data, this.#basisOf(parent)) };
 		this.#layers.set(id, layer);
 		return layer;
+	}
+
+	basisOf(id: LayerId): Basis {
+		return this.#basisOf(this.layer(id)?.parent ?? null);
 	}
 
 	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
@@ -169,7 +177,7 @@ export class DesignDocument {
 		this.#forget(id);
 		this.#notifyStructure();
 		if (before !== null) {
-			this.#holdPixels(id, before);
+			this.#settleUnits(id, before);
 		}
 		return true;
 	}
@@ -199,6 +207,7 @@ export class DesignDocument {
 	}
 
 	commit(message: string): void {
+		this.#wantedLengths.clear();
 		this.#doc.commit({ message });
 		this.#refreshHistory();
 	}
@@ -240,13 +249,18 @@ export class DesignDocument {
 		return this.#doc.exportJsonUpdates().changes.length;
 	}
 
-	#holdPixels(id: LayerId, before: Layer): void {
+	#settleUnits(id: LayerId, before: Layer): void {
 		const node = this.#liveNode(id);
 		if (node === null) {
 			return;
 		}
+		const wanted = this.#wantedLengths.get(id) ?? before.lengths;
+		if (hasRelativeLength(wanted)) {
+			this.#wantedLengths.set(id, wanted);
+		}
 		const basis = this.#basisOf(node.parent()?.id ?? null);
-		this.update(id, { lengths: pixelFallback(before.lengths, before, basis) });
+		const box = { lengths: before.lengths, pixels: before };
+		this.update(id, { lengths: settledLengths(wanted, box, basis) });
 	}
 
 	#basisOf(parent: LayerId | null): Basis {
@@ -254,8 +268,19 @@ export class DesignDocument {
 		if (container === null) {
 			return NO_BASIS;
 		}
-		const size = { width: container.width, height: container.height };
-		return { container: size, root: container.parent === null ? size : container.basis.root };
+		return { container: sizeOf(container), root: this.#rootSize(container) };
+	}
+
+	#rootSize(container: Layer): Size {
+		let held = container;
+		while (held.parent !== null) {
+			const above = this.layer(held.parent);
+			if (above === null) {
+				break;
+			}
+			held = above;
+		}
+		return sizeOf(held);
 	}
 
 	#applyHistory(step: () => boolean): boolean {
@@ -270,6 +295,7 @@ export class DesignDocument {
 	#forgetEveryCache(): void {
 		this.#layers.clear();
 		this.#children.clear();
+		this.#wantedLengths.clear();
 		for (const listeners of this.#listeners.values()) {
 			notify(listeners);
 		}
@@ -409,21 +435,12 @@ export class DesignDocument {
 
 	#dropRelativeBelow(node: LoroTreeNode | undefined): void {
 		for (const child of node?.children() ?? []) {
-			this.#refreshBasis(child.id);
+			const cached = this.#layers.get(child.id);
+			if (cached !== undefined && hasRelativeLength(cached.lengths)) {
+				this.#invalidate(child.id);
+			}
 			this.#dropRelativeBelow(child);
 		}
-	}
-
-	#refreshBasis(id: LayerId): void {
-		const cached = this.#layers.get(id);
-		if (cached === undefined) {
-			return;
-		}
-		if (hasRelativeLength(cached.lengths)) {
-			this.#invalidate(id);
-			return;
-		}
-		this.#layers.set(id, { ...cached, basis: this.#basisOf(cached.parent) });
 	}
 
 	#invalidate(id: LayerId): void {

@@ -62,7 +62,7 @@ describe("a length that is not in pixels", () => {
 	it("gives a layer at the root no container and no artboard", () => {
 		const { doc, root } = scene();
 
-		expect(doc.layer(root)?.basis).toEqual({
+		expect(doc.basisOf(root)).toEqual({
 			container: { width: 0, height: 0 },
 			root: { width: 0, height: 0 },
 		});
@@ -139,6 +139,39 @@ describe("a length when the tree changes", () => {
 		expect(doc.layer(child)).toMatchObject({ width: 120 });
 	});
 
+	it("gives the unit back when a drag brings the layer home", () => {
+		const { doc, root, child } = scene();
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+
+		doc.move(child, null);
+		doc.move(child, root);
+
+		expect(doc.layer(child)?.lengths.width).toEqual({ value: 50, unit: "%" });
+		expect(doc.layer(child)).toMatchObject({ width: 120 });
+	});
+
+	it("holds the pixels of a layer that stays at the root when the change commits", () => {
+		const { doc, child } = scene();
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+
+		doc.move(child, null);
+		doc.commit("move layer");
+
+		expect(doc.layer(child)?.lengths.width).toEqual({ value: 120, unit: "px" });
+	});
+
+	it("takes the unit away when a later drag leaves the container", () => {
+		const { doc, root, child } = scene();
+		doc.update(child, { lengths: { width: { value: 50, unit: "%" } } });
+		doc.move(child, null);
+		doc.move(child, root);
+		doc.commit("move layer");
+
+		doc.move(child, null);
+
+		expect(doc.layer(child)?.lengths.width).toEqual({ value: 120, unit: "px" });
+	});
+
 	it("keeps a percentage that the new container can hold", () => {
 		const { doc, root, child } = scene();
 		const other = doc.createLayer({ ...CHILD, width: 480 }, root);
@@ -177,7 +210,7 @@ describe("a length when the tree changes", () => {
 
 		doc.update(root, { width: 480 });
 
-		expect(doc.layer(child)?.basis.container).toEqual({ width: 480, height: 160 });
+		expect(doc.basisOf(child).container).toEqual({ width: 480, height: 160 });
 	});
 
 	it("gives back the unit that an undo takes away", () => {

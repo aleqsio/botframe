@@ -1,6 +1,6 @@
 import type { DesignDocument } from "./document";
 import type { Layer, LayerFields, LayerId, Rect } from "./layer";
-import { NO_BASIS, PIXELS } from "./length";
+import { PIXELS } from "./length";
 import type { LayerLengths } from "./length";
 
 export function firstId(doc: DesignDocument): LayerId {
@@ -31,6 +31,6 @@ export function pixelLengths(rect: Rect): LayerLengths {
 	};
 }
 
-export function pixelBox(rect: Rect): Pick<Layer, "lengths" | "basis"> {
-	return { lengths: pixelLengths(rect), basis: NO_BASIS };
+export function pixelBox(rect: Rect): Pick<Layer, "lengths"> {
+	return { lengths: pixelLengths(rect) };
 }

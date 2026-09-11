@@ -13,7 +13,7 @@ export interface Length {
 
 export type LayerLengths = Record<BoxKey, Length>;
 
-interface Size {
+export interface Size {
 	width: number;
 	height: number;
 }
@@ -88,18 +88,27 @@ export function parseLength(text: string, fallback: Unit): Length | null {
 	return isUnit(unit) ? { value, unit } : null;
 }
 
-export function pixelFallback(
-	lengths: LayerLengths,
-	pixels: Readonly<Record<BoxKey, number>>,
+export interface Box {
+	lengths: LayerLengths;
+	pixels: Readonly<Record<BoxKey, number>>;
+}
+
+export function settledLengths(
+	wanted: LayerLengths,
+	box: Box,
 	basis: Basis,
 ): Partial<LayerLengths> {
-	const held: Partial<LayerLengths> = {};
+	const settled: Partial<LayerLengths> = {};
 	for (const key of BOX_KEYS) {
-		if (pixelsPerHundred(lengths[key].unit, AXIS_OF[key], basis) === 0) {
-			held[key] = { value: pixels[key], unit: PIXELS };
+		const held = box.lengths[key];
+		const next = holdsUnit(wanted[key].unit, AXIS_OF[key], basis)
+			? wanted[key]
+			: { value: box.pixels[key], unit: PIXELS };
+		if (next.unit !== held.unit || next.value !== held.value) {
+			settled[key] = next;
 		}
 	}
-	return held;
+	return settled;
 }
 
 export function holdsUnit(unit: Unit, axis: Axis, basis: Basis): boolean {

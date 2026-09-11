@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import type { Size } from "../../document/length";
 import { isArtboard } from "../components/layerEntry";
 import {
 	centerOf,
@@ -43,9 +44,10 @@ export function heldPlacement(
 	layer: Layer,
 	from: readonly Layer[],
 	to: readonly Layer[],
+	size: Size,
 ): Placement {
 	const center = toParentPoint(to, fromParentPoint(from, centerOf(layer)));
-	const half = halfSizeOf(layer);
+	const half = halfSizeOf(size);
 	return {
 		x: center.x - half.x,
 		y: center.y - half.y,

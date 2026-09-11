@@ -76,6 +76,26 @@ describe("a drop into a new parent", () => {
 		expect(scene.target.doc.childIds(scene.into)).toEqual([scene.layer]);
 	});
 
+	it("holds the layer under the pointer when the new parent changes its size", () => {
+		const scene = dropScene(ARTBOARD);
+		const doc = scene.target.doc;
+		const wider = doc.createLayer({ ...ARTBOARD, x: 700, y: 100, width: 600 });
+		doc.move(scene.layer, scene.into);
+		doc.update(scene.layer, { lengths: { width: { value: 50, unit: "%" } } });
+		doc.commit("set width");
+		const start = canvasCenterOf(scene.target, scene.layer);
+
+		dropOver(scene, {
+			press: start,
+			release: { x: start.x + PULL.x, y: start.y + PULL.y },
+			hits: [scene.layer, wider],
+		});
+
+		expect(doc.layer(scene.layer)).toMatchObject({ parent: wider, width: 300 });
+		expect(canvasCenterOf(scene.target, scene.layer).x).toBeCloseTo(start.x + PULL.x);
+		expect(canvasCenterOf(scene.target, scene.layer).y).toBeCloseTo(start.y + PULL.y);
+	});
+
 	it("commits the whole gesture one time", () => {
 		const scene = dropScene(ARTBOARD);
 		const changes = scene.target.doc.changeCount();

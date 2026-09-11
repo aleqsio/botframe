@@ -75,7 +75,7 @@ describe("dropParentOf", () => {
 });
 
 function placed(layer: Layer, from: readonly Layer[], to: readonly Layer[]): Layer {
-	return { ...layer, ...heldPlacement(layer, from, to) };
+	return { ...layer, ...heldPlacement(layer, from, to, layer) };
 }
 
 describe("heldPlacement", () => {

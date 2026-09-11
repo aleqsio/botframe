@@ -1,5 +1,5 @@
 import type { TreeID } from "loro-crdt";
-import type { Basis, LayerLengths } from "./length";
+import type { LayerLengths } from "./length";
 
 export type LayerId = TreeID;
 
@@ -27,10 +27,9 @@ export interface Layer extends Rect {
 	clip: boolean;
 	parent: LayerId | null;
 	lengths: LayerLengths;
-	basis: Basis;
 }
 
-export type LayerTraits = Omit<Layer, "id" | "parent" | "basis">;
+export type LayerTraits = Omit<Layer, "id" | "parent">;
 
 export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { Layer, LayerFields } from "../../document/layer";
+import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import { NO_BASIS } from "../../document/length";
+import type { Basis } from "../../document/length";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
@@ -30,8 +31,8 @@ function layerOf(doc: DesignDocument): Layer {
 	return layer;
 }
 
-function fieldNamed(layer: Layer, label: string): LayerField {
-	const field = fieldsOf(layer).find((entry) => entry.label === label);
+function fieldNamed(layer: Layer, label: string, basis: Basis = NO_BASIS): LayerField {
+	const field = fieldsOf(layer, basis).find((entry) => entry.label === label);
 	if (field === undefined) {
 		throw new Error(`no field is named ${label}`);
 	}
@@ -50,7 +51,7 @@ function applied(label: string, value: number): Layer {
 describe("the layer fields", () => {
 	it("reads the box and the angle of a layer", () => {
 		const layer = layerOf(DesignDocument.create());
-		const box = fieldsOf(layer).filter((field) => BOX_LABELS.includes(field.label));
+		const box = fieldsOf(layer, NO_BASIS).filter((field) => BOX_LABELS.includes(field.label));
 		expect(box.map((field) => [field.label, field.read(layer)])).toEqual([
 			["X", 420],
 			["Y", 260],
@@ -62,7 +63,7 @@ describe("the layer fields", () => {
 
 	it("gives each field a unit", () => {
 		const layer = layerOf(DesignDocument.create());
-		expect(fieldsOf(layer).map((field) => [field.label, field.unit])).toEqual([
+		expect(fieldsOf(layer, NO_BASIS).map((field) => [field.label, field.unit])).toEqual([
 			["X", "px"],
 			["Y", "px"],
 			["W", "px"],
@@ -104,7 +105,7 @@ describe("the layer fields", () => {
 
 	it("gives each field a step that shift makes large and alt makes small", () => {
 		const layer = layerOf(DesignDocument.create());
-		for (const field of fieldsOf(layer)) {
+		for (const field of fieldsOf(layer, NO_BASIS)) {
 			expect(stepOf(field.step, ALT)).toBeLessThan(stepOf(field.step, NO_MODIFIERS));
 			expect(stepOf(field.step, SHIFT)).toBeGreaterThan(stepOf(field.step, NO_MODIFIERS));
 		}
@@ -124,7 +125,7 @@ describe("the layer fields", () => {
 
 describe("fieldGroupsOf", () => {
 	it("groups the fields of a rectangle", () => {
-		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
+		const groups = fieldGroupsOf(layerOf(DesignDocument.create()), NO_BASIS);
 		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
 			["Position", ["X", "Y"]],
 			["Size", ["W", "H"]],
@@ -137,10 +138,10 @@ describe("fieldGroupsOf", () => {
 		const doc = DesignDocument.create();
 		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });
 
-		const groups = fieldGroupsOf(layerOf(doc));
+		const groups = fieldGroupsOf(layerOf(doc), NO_BASIS);
 
 		expect(groups.map((group) => group.name)).toEqual(["Position", "Size", "Rotation"]);
-		expect(fieldsOf(layerOf(doc)).map((field) => field.label)).toEqual(BOX_LABELS);
+		expect(fieldsOf(layerOf(doc), NO_BASIS).map((field) => field.label)).toEqual(BOX_LABELS);
 	});
 
 	it("reads and writes the corner radius and the corner smoothing", () => {
@@ -169,18 +170,25 @@ describe("swappedBox", () => {
 	});
 });
 
-function childOf(doc: DesignDocument): Layer {
-	const parent = layerOf(doc);
-	const child = doc.createLayer({ ...CHILD_FIELDS }, parent.id);
-	const layer = doc.layer(child);
+function childOf(doc: DesignDocument): { layer: Layer; basis: Basis } {
+	const id = doc.createLayer({ ...CHILD_FIELDS }, layerOf(doc).id);
+	const layer = doc.layer(id);
 	if (layer === null) {
 		throw new Error("the document lost the child");
 	}
-	return layer;
+	return { layer, basis: doc.basisOf(id) };
 }
 
-function choiceOf(layer: Layer, label: string): UnitChoice {
-	const { choice } = fieldNamed(layer, label);
+function heldChild(doc: DesignDocument, id: LayerId): { layer: Layer; basis: Basis } {
+	const layer = doc.layer(id);
+	if (layer === null) {
+		throw new Error("the document lost the child");
+	}
+	return { layer, basis: doc.basisOf(id) };
+}
+
+function choiceOf(held: { layer: Layer; basis: Basis }, label: string): UnitChoice {
+	const { choice } = fieldNamed(held.layer, label, held.basis);
 	if (choice === null) {
 		throw new Error(`the field ${label} takes one unit only`);
 	}
@@ -189,8 +197,8 @@ function choiceOf(layer: Layer, label: string): UnitChoice {
 
 describe("the unit of a box field", () => {
 	it("offers pixels only to a layer that stands at the root", () => {
-		const layer = layerOf(DesignDocument.create());
-		expect(choiceOf(layer, "W").units).toEqual(["px"]);
+		const doc = DesignDocument.create();
+		expect(choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W").units).toEqual(["px"]);
 	});
 
 	it("offers each unit to a layer inside a container", () => {
@@ -201,8 +209,8 @@ describe("the unit of a box field", () => {
 	it("offers the unit a layer holds, even when the layer has no basis for it", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.id, choiceOf(child, "W").convert("%"));
-		const orphan = { ...(doc.layer(child.id) ?? child), basis: NO_BASIS };
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
 
 		expect(choiceOf(orphan, "W").units).toEqual(["%", "px"]);
 	});
@@ -217,31 +225,31 @@ describe("the unit of a box field", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
 
-		doc.update(child.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
 
-		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 50, unit: "%" });
-		expect(doc.layer(child.id)).toMatchObject({ width: 120 });
+		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 50, unit: "%" });
+		expect(doc.layer(child.layer.id)).toMatchObject({ width: 120 });
 	});
 
 	it("reads the unit a person types in the value", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
 
-		doc.update(child.id, typedPatch(fieldNamed(child, "W"), "25%") ?? {});
+		doc.update(child.layer.id, typedPatch(fieldNamed(child.layer, "W", child.basis), "25%") ?? {});
 
-		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
-		expect(doc.layer(child.id)).toMatchObject({ width: 60 });
+		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
+		expect(doc.layer(child.layer.id)).toMatchObject({ width: 60 });
 	});
 
 	it("keeps the unit of the field when the text names no unit", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.id, choiceOf(child, "W").convert("%"));
-		const relative = doc.layer(child.id);
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		const held = heldChild(doc, child.layer.id);
 
-		doc.update(child.id, typedPatch(fieldNamed(relative ?? child, "W"), "25") ?? {});
+		doc.update(child.layer.id, typedPatch(fieldNamed(held.layer, "W", held.basis), "25") ?? {});
 
-		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
+		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
 	});
 
 	it("refuses a unit that the layer cannot take, and text that is not a length", () => {
@@ -254,8 +262,9 @@ describe("the unit of a box field", () => {
 	it("steps a percentage by one, and by five with shift", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.id, choiceOf(child, "W").convert("%"));
-		const field = fieldNamed(doc.layer(child.id) ?? child, "W");
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		const held = heldChild(doc, child.layer.id);
+		const field = fieldNamed(held.layer, "W", held.basis);
 
 		expect(stepOf(field.step, NO_MODIFIERS)).toBe(1);
 		expect(stepOf(field.step, SHIFT)).toBe(5);
@@ -265,11 +274,11 @@ describe("the unit of a box field", () => {
 	it("holds a relative size above zero and a relative position inside the limit", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.id, choiceOf(child, "W").convert("%"));
-		const relative = doc.layer(child.id) ?? child;
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		const held = heldChild(doc, child.layer.id);
 
-		doc.update(child.id, typedPatch(fieldNamed(relative, "W"), "-5%") ?? {});
+		doc.update(child.layer.id, typedPatch(fieldNamed(held.layer, "W", held.basis), "-5%") ?? {});
 
-		expect(doc.layer(child.id)?.lengths.width).toEqual({ value: 0.1, unit: "%" });
+		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 0.1, unit: "%" });
 	});
 });

@@ -1,6 +1,6 @@
 import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
 import { AXIS_OF, PIXELS, availableUnits, lengthIn, parseLength } from "../../document/length";
-import type { BoxKey, Length, Unit } from "../../document/length";
+import type { Basis, BoxKey, Length, Unit } from "../../document/length";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
 import type { StepRule } from "../input/step";
@@ -69,14 +69,14 @@ function boxPatch(key: BoxKey, length: Length): LayerPatch {
 	return { lengths: { [key]: { value, unit: length.unit } } };
 }
 
-function unitChoice(key: BoxKey, layer: Layer): UnitChoice {
+function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
 	const axis = AXIS_OF[key];
 	const held = layer.lengths[key].unit;
-	const offered = availableUnits(axis, layer.basis);
+	const offered = availableUnits(axis, basis);
 	const units = offered.includes(held) ? offered : [held, ...offered];
 	return {
 		units,
-		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, layer.basis)),
+		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
 		parse: (text) => {
 			const typed = parseLength(text, held);
 			return typed === null || !units.includes(typed.unit) ? null : boxPatch(key, typed);
@@ -84,12 +84,12 @@ function unitChoice(key: BoxKey, layer: Layer): UnitChoice {
 	};
 }
 
-function boxField(label: string, key: BoxKey, layer: Layer): LayerField {
+function boxField(label: string, key: BoxKey, layer: Layer, basis: Basis): LayerField {
 	const { unit } = layer.lengths[key];
 	return {
 		label,
 		unit,
-		choice: unitChoice(key, layer),
+		choice: unitChoice(key, layer, basis),
 		bound: boundOf(key, unit),
 		step: unit === PIXELS ? LENGTH_STEP : PERCENT_STEP,
 		message: placeKey(key) ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
@@ -123,10 +123,16 @@ const TURN_FIELD: LayerField = {
 	patch: (value) => ({ rotation: value }),
 };
 
-function boxGroups(layer: Layer): readonly FieldGroup[] {
+function boxGroups(layer: Layer, basis: Basis): readonly FieldGroup[] {
 	return [
-		{ name: "Position", fields: [boxField("X", "x", layer), boxField("Y", "y", layer)] },
-		{ name: "Size", fields: [boxField("W", "width", layer), boxField("H", "height", layer)] },
+		{
+			name: "Position",
+			fields: [boxField("X", "x", layer, basis), boxField("Y", "y", layer, basis)],
+		},
+		{
+			name: "Size",
+			fields: [boxField("W", "width", layer, basis), boxField("H", "height", layer, basis)],
+		},
 		{ name: "Rotation", fields: [TURN_FIELD] },
 	];
 }
@@ -141,14 +147,14 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 	};
 }
 
-export function fieldGroupsOf(layer: Layer): readonly FieldGroup[] {
-	const groups = boxGroups(layer);
+export function fieldGroupsOf(layer: Layer, basis: Basis): readonly FieldGroup[] {
+	const groups = boxGroups(layer, basis);
 	const { geometry } = layer;
 	return geometry.kind === "rectangle" ? [...groups, cornerGroup(geometry)] : groups;
 }
 
-export function fieldsOf(layer: Layer): readonly LayerField[] {
-	return fieldGroupsOf(layer).flatMap((group) => group.fields);
+export function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
+	return fieldGroupsOf(layer, basis).flatMap((group) => group.fields);
 }
 
 export function fieldPatch(field: LayerField, value: number): LayerPatch {

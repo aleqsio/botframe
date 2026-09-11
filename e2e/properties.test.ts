@@ -187,6 +187,11 @@ test("the fill field reads a color that a person names and writes it as hex", as
 	await expect(drawn).toHaveCSS("background-color", "rgb(102, 51, 153)");
 	await expect(window.getByLabel("Fill", { exact: true })).toHaveValue("#663399");
 
+	await typeInto(window, "Fill", "inherit");
+
+	await expect(drawn).toHaveCSS("background-color", "rgb(102, 51, 153)");
+	await expect(window.getByLabel("Fill", { exact: true })).toHaveValue("#663399");
+
 	await app.close();
 });
 

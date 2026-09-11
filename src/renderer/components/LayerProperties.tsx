@@ -86,7 +86,7 @@ export function LayerProperties({
 				}}
 				value={layer.name}
 			/>
-			{fieldGroupsOf(layer).map((group) => (
+			{fieldGroupsOf(layer, doc.basisOf(layer.id)).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
 			<ColorField

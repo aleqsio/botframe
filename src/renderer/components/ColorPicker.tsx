@@ -82,6 +82,7 @@ function SaturationArea({ color, onCommit, onMove }: AreaProps): ReactElement {
 				event.currentTarget.setPointerCapture(event.pointerId);
 				moveTo(event);
 			}}
+			onPointerCancel={onCommit}
 			onPointerMove={(event) => {
 				if (event.currentTarget.hasPointerCapture(event.pointerId)) {
 					moveTo(event);

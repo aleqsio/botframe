@@ -28,9 +28,10 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): vo
 	if (!target.doc.move(move.id, parent)) {
 		return;
 	}
-	const placement = heldPlacement(layer, from, parentChainOf(target, move.id));
+	const moved = target.doc.layer(move.id) ?? layer;
+	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
 	target.doc.update(move.id, placement);
-	const offset = offsetOf(target, { ...layer, ...placement, parent }, point.canvas);
+	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
 	target.user.move.set({ ...move, parent, offset });
 }
 
