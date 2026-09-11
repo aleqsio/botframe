@@ -1,16 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { at, openStage } from "./support";
-
-interface Point {
-	x: number;
-	y: number;
-}
-
-interface Drag {
-	from: Point;
-	to: Point;
-}
+import { at, boxOf, dragOn, drawWith, openStage, pressInto } from "./support";
+import type { Drag, Point } from "./support";
 
 const ARTBOARD: Drag = { from: { x: 40, y: 40 }, to: { x: 240, y: 180 } };
 const INSIDE: Drag = { from: { x: 80, y: 80 }, to: { x: 180, y: 140 } };
@@ -23,17 +14,6 @@ const OVER_THE_ARTBOARD = { x: 200, y: 150 };
 const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOARD };
 const BEYOND_THE_CLIP = { x: 280, y: 150 };
 const CARRIED = { x: -340, y: -190 };
-
-async function pressInto(window: Page, origin: Point, drag: Drag): Promise<void> {
-	await window.mouse.move(at(origin, drag.from).x, at(origin, drag.from).y);
-	await window.mouse.down();
-	await window.mouse.move(at(origin, drag.to).x, at(origin, drag.to).y, { steps: 8 });
-}
-
-async function dragOn(window: Page, origin: Point, drag: Drag): Promise<void> {
-	await pressInto(window, origin, drag);
-	await window.mouse.up();
-}
 
 async function idOf(locator: Locator): Promise<string> {
 	const id = await locator.getAttribute("data-layer-id");
@@ -55,19 +35,6 @@ function layerIdAt(window: Page, point: Point): Promise<string | null> {
 			] ?? null,
 		point,
 	);
-}
-
-async function drawWith(window: Page, origin: Point, key: string, drag: Drag): Promise<void> {
-	await window.keyboard.press(key);
-	await dragOn(window, origin, drag);
-}
-
-async function boxOf(locator: Locator): Promise<{ x: number; y: number }> {
-	const box = await locator.boundingBox();
-	if (box === null) {
-		throw new Error("the layer has no box");
-	}
-	return { x: box.x, y: box.y };
 }
 
 test("a draw inside an artboard puts the new layer in the artboard", async () => {

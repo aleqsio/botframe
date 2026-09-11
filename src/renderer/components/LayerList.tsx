@@ -2,9 +2,31 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import { useSelected } from "../state/useSelected";
+import { usePicked } from "../state/useSlot";
+import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { useChildIds, useLayer, useRootIds } from "../useDocument";
 import { isArtboard, layerEntry } from "./layerEntry";
+
+function LayerChevron({
+	collapsed,
+	label,
+	onPress,
+}: {
+	collapsed: boolean;
+	label: string;
+	onPress: () => void;
+}): ReactElement {
+	return (
+		<button
+			aria-expanded={!collapsed}
+			aria-label={`${collapsed ? "Expand" : "Collapse"} ${label}`}
+			className="layer-chevron"
+			onClick={onPress}
+			type="button"
+		/>
+	);
+}
 
 function LayerBranch({
 	doc,
@@ -36,22 +58,39 @@ function LayerRow({
 	const layer = useLayer(doc, id);
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(user.selection, id);
-	const glyph = isArtboard(layer) ? "artboard" : "rectangle";
+	const collapsed = usePicked(user.collapsed, (ids) => ids.has(id));
+	const entry = layerEntry(layer);
+	const branch = childIds.length > 0;
 
 	return (
-		<li>
-			<button
-				aria-pressed={selected}
-				className="layer-row"
-				onClick={() => {
-					user.selection.set([id]);
-				}}
-				type="button"
-			>
-				<span className={`layer-glyph layer-glyph-${glyph}`} />
-				{layerEntry(layer).label}
-			</button>
-			{childIds.length === 0 ? null : <LayerBranch doc={doc} ids={childIds} user={user} />}
+		<li className="layer-item">
+			<div className="layer-line">
+				{branch ? (
+					<LayerChevron
+						collapsed={collapsed}
+						label={entry.label}
+						onPress={() => {
+							toggleCollapsed(user.collapsed, id);
+						}}
+					/>
+				) : (
+					<span className="layer-chevron" />
+				)}
+				<button
+					aria-pressed={selected}
+					className="layer-row"
+					onClick={() => {
+						user.selection.set([id]);
+					}}
+					type="button"
+				>
+					<span
+						className={`layer-glyph layer-glyph-${isArtboard(layer) ? "artboard" : "rectangle"}`}
+					/>
+					{entry.label}
+				</button>
+			</div>
+			{branch && !collapsed ? <LayerBranch doc={doc} ids={childIds} user={user} /> : null}
 		</li>
 	);
 }

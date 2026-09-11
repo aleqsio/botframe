@@ -317,7 +317,47 @@ body {
 	padding-left: 14px;
 }
 
+.layer-line {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 1px;
+}
+
+.layer-chevron {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 13px;
+	height: 13px;
+	padding: 0;
+	border: 0;
+	border-radius: 3px;
+	background-color: transparent;
+	color: var(--panel-label);
+	cursor: default;
+}
+
+button.layer-chevron:hover {
+	color: var(--panel-text);
+}
+
+button.layer-chevron::before {
+	content: "";
+	width: 0;
+	height: 0;
+	border-top: 3.5px solid currentcolor;
+	border-right: 3px solid transparent;
+	border-left: 3px solid transparent;
+}
+
+button.layer-chevron[aria-expanded="false"]::before {
+	transform: rotate(-90deg);
+}
+
 .layer-row {
+	flex: 1;
 	display: flex;
 	align-items: center;
 	gap: 7px;
