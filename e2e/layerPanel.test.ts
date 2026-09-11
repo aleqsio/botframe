@@ -192,3 +192,34 @@ test("a collapsed row takes a drop as its last child", async () => {
 
 	await app.close();
 });
+
+test("a nest by drag holds the place of the layer on the canvas", async () => {
+	const { app, layers, origin, window } = await openStage();
+	const rows = window.locator(".layer-row");
+	const lines = window.locator(".layer-line");
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	const seed = layers.nth(0);
+	const seedId = await seed.getAttribute("data-layer-id");
+	const before = await seed.boundingBox();
+	if (before === null) {
+		throw new Error("the layer has no box");
+	}
+
+	await pressRow(window, lines.nth(0));
+	await moveOnto(window, lines.nth(1), 0.5);
+	await window.mouse.up();
+
+	const child = window.locator(`.layer[data-layer-id="${seedId ?? ""}"]`);
+	await expect(child).toHaveCount(1);
+	await expect(rows).toHaveText(["Artboard 1", "Rectangle"]);
+	const after = await child.boundingBox();
+	if (after === null) {
+		throw new Error("the child has no box");
+	}
+	expect(Math.round(after.x)).toBe(Math.round(before.x));
+	expect(Math.round(after.y)).toBe(Math.round(before.y));
+
+	await app.close();
+});
