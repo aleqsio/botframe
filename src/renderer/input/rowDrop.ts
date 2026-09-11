@@ -14,6 +14,11 @@ export interface RowTarget {
 	place: RowPlace;
 }
 
+export interface RowHit {
+	id: LayerId;
+	part: number;
+}
+
 export interface RowDrag {
 	id: LayerId;
 	target: RowTarget | null;
@@ -32,8 +37,7 @@ export interface RowTree {
 const EDGE_PART = 0.25;
 const HALF = 0.5;
 
-export function rowPlaceOf(offset: number, height: number, takesChildren: boolean): RowPlace {
-	const part = offset / height;
+export function rowPlaceOf(part: number, takesChildren: boolean): RowPlace {
 	if (!takesChildren) {
 		return part < HALF ? "before" : "after";
 	}
@@ -41,6 +45,10 @@ export function rowPlaceOf(offset: number, height: number, takesChildren: boolea
 		return "before";
 	}
 	return part < 1 - EDGE_PART ? "inside" : "after";
+}
+
+export function rowTargetOf(hit: RowHit, read: ReadLayer): RowTarget {
+	return { id: hit.id, place: rowPlaceOf(hit.part, isArtboard(read(hit.id))) };
 }
 
 function indexAfterLift(siblings: readonly LayerId[], dragged: LayerId, slot: number): number {

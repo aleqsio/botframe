@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Layer, LayerId } from "../../document/layer";
 import { centerOf, fromParentPoint } from "./layerSpace";
-import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf } from "./rowDrop";
+import { carriedPlacement, rowMarkOf, rowMoveOf, rowPlaceOf, rowTargetOf } from "./rowDrop";
 import type { RowPlace, RowTree } from "./rowDrop";
 
 const ROOT_IDS: readonly LayerId[] = ["1@1", "2@1", "3@1"];
@@ -69,34 +69,47 @@ function moveOf(dragged: LayerId, id: LayerId, place: RowPlace) {
 }
 
 describe("rowPlaceOf", () => {
-	const HEIGHT = 24;
-
 	it("takes the top quarter of a row that takes children as before", () => {
-		expect(rowPlaceOf(0, HEIGHT, true)).toBe("before");
-		expect(rowPlaceOf(5.9, HEIGHT, true)).toBe("before");
+		expect(rowPlaceOf(0, true)).toBe("before");
+		expect(rowPlaceOf(0.24, true)).toBe("before");
 	});
 
 	it("takes the middle half of a row that takes children as inside", () => {
-		expect(rowPlaceOf(6, HEIGHT, true)).toBe("inside");
-		expect(rowPlaceOf(12, HEIGHT, true)).toBe("inside");
-		expect(rowPlaceOf(17.9, HEIGHT, true)).toBe("inside");
+		expect(rowPlaceOf(0.25, true)).toBe("inside");
+		expect(rowPlaceOf(0.5, true)).toBe("inside");
+		expect(rowPlaceOf(0.74, true)).toBe("inside");
 	});
 
 	it("takes the bottom quarter of a row that takes children as after", () => {
-		expect(rowPlaceOf(18, HEIGHT, true)).toBe("after");
-		expect(rowPlaceOf(HEIGHT, HEIGHT, true)).toBe("after");
+		expect(rowPlaceOf(0.75, true)).toBe("after");
+		expect(rowPlaceOf(1, true)).toBe("after");
 	});
 
 	it("splits a row that takes no children in half, so it gives no inside", () => {
-		expect(rowPlaceOf(0, HEIGHT, false)).toBe("before");
-		expect(rowPlaceOf(11.9, HEIGHT, false)).toBe("before");
-		expect(rowPlaceOf(12, HEIGHT, false)).toBe("after");
-		expect(rowPlaceOf(HEIGHT, HEIGHT, false)).toBe("after");
+		expect(rowPlaceOf(0, false)).toBe("before");
+		expect(rowPlaceOf(0.49, false)).toBe("before");
+		expect(rowPlaceOf(0.5, false)).toBe("after");
+		expect(rowPlaceOf(1, false)).toBe("after");
 	});
 
 	it("holds the ends when the pointer passes the row", () => {
-		expect(rowPlaceOf(-8, HEIGHT, true)).toBe("before");
-		expect(rowPlaceOf(40, HEIGHT, true)).toBe("after");
+		expect(rowPlaceOf(-0.33, true)).toBe("before");
+		expect(rowPlaceOf(1.67, true)).toBe("after");
+	});
+});
+
+describe("rowTargetOf", () => {
+	it("gives the middle of an artboard row as inside", () => {
+		expect(rowTargetOf({ id: BRANCH, part: 0.5 }, read)).toEqual({ id: BRANCH, place: "inside" });
+	});
+
+	it("gives the middle of a row that is no artboard as before or after", () => {
+		expect(rowTargetOf({ id: FIRST, part: 0.4 }, read)).toEqual({ id: FIRST, place: "before" });
+		expect(rowTargetOf({ id: FIRST, part: 0.6 }, read)).toEqual({ id: FIRST, place: "after" });
+	});
+
+	it("gives no inside for a row that the document lost", () => {
+		expect(rowTargetOf({ id: GONE, part: 0.5 }, read)).toEqual({ id: GONE, place: "after" });
 	});
 });
 

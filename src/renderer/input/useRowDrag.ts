@@ -11,9 +11,9 @@ import type { UserState } from "../state/userState";
 import { GestureRecognizer, sampleOf } from "./gesture";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import { scrollStepOf } from "./panelScroll";
-import { carriedPlacement, rowMoveOf } from "./rowDrop";
+import { carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
-import { rowTargetAt } from "./rowHit";
+import { rowHitAt } from "./rowHit";
 
 type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
@@ -69,11 +69,13 @@ function sameTarget(one: RowTarget | null, other: RowTarget | null): boolean {
 }
 
 function targetUnder(session: RowSession, dragged: LayerId): RowTarget | null {
-	const target = rowTargetAt(session.input.pointer, treeOf(session.doc).read);
-	if (target === null || rowMoveOf(dragged, target, treeOf(session.doc)) === null) {
+	const tree = treeOf(session.doc);
+	const hit = rowHitAt(session.input.pointer);
+	if (hit === null) {
 		return null;
 	}
-	return target;
+	const target = rowTargetOf(hit, tree.read);
+	return rowMoveOf(dragged, target, tree) === null ? null : target;
 }
 
 function scrollPanel(session: RowSession): void {
