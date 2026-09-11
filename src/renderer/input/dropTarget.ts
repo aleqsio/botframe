@@ -9,12 +9,6 @@ import {
 } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
 
-type TakesChild = (layer: Layer | null) => boolean;
-
-function isRectangle(layer: Layer | null): boolean {
-	return layer?.geometry.kind === "rectangle";
-}
-
 export function insideSubtree(read: ReadLayer, id: LayerId, root: LayerId): boolean {
 	let next: LayerId | null = id;
 	while (next !== null) {
@@ -30,11 +24,9 @@ export function dropParentOf(
 	ids: readonly LayerId[],
 	read: ReadLayer,
 	dragged: LayerId,
-	alt: boolean,
 ): LayerId | null {
-	const takesChild: TakesChild = alt ? isRectangle : isArtboard;
 	for (const id of ids) {
-		if (!insideSubtree(read, id, dragged) && takesChild(read(id))) {
+		if (!insideSubtree(read, id, dragged) && isArtboard(read(id))) {
 			return id;
 		}
 	}

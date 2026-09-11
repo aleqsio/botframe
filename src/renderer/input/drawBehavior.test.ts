@@ -1,14 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { cancelDraw } from "./drawBehavior";
 import { NO_MODIFIERS } from "./modifiers";
+import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
+import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const CENTER = { x: 540, y: 340 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
+const ARTBOARD_GEOMETRY = {
+	kind: "rectangle",
+	cornerRadius: 0,
+	cornerSmoothing: 0,
+	artboard: true,
+} as const;
+
+function artboardTarget(): PointerTarget {
+	const target = targetOf(true);
+	target.doc.update(firstId(target.doc), { geometry: ARTBOARD_GEOMETRY });
+	return target;
+}
 
 describe("the draw tools", () => {
 	it("draws an artboard, selects it, and gives the stage back to the select tool", () => {
@@ -98,8 +111,8 @@ describe("the draw tools", () => {
 		expect(target.user.tool.get()).toBe("select");
 	});
 
-	it("draws the new layer inside the layer under the press, in the space of that layer", () => {
-		const target = targetOf(true);
+	it("draws the new layer inside the artboard under the press, in the space of that artboard", () => {
+		const target = artboardTarget();
 		const parent = firstId(target.doc);
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
@@ -110,8 +123,8 @@ describe("the draw tools", () => {
 		expect(target.doc.rootIds()).toEqual([parent]);
 	});
 
-	it("places the box of a tap inside the layer under the tap", () => {
-		const target = targetOf(true);
+	it("places the box of a tap inside the artboard under the tap", () => {
+		const target = artboardTarget();
 		const parent = firstId(target.doc);
 
 		tapAt(behaviorFor("rectangle"), target, PRESS);
@@ -120,7 +133,7 @@ describe("the draw tools", () => {
 	});
 
 	it("holds the box in the space of the parent when the parent moves during the draw", () => {
-		const target = targetOf(true);
+		const target = artboardTarget();
 		const parent = firstId(target.doc);
 		const behavior = behaviorFor("rectangle");
 		const camera = target.user.camera.get();
@@ -135,7 +148,7 @@ describe("the draw tools", () => {
 	});
 
 	it("draws inside a turned parent in the space of that parent", () => {
-		const target = targetOf(true);
+		const target = artboardTarget();
 		const parent = firstId(target.doc);
 		target.doc.update(parent, { rotation: 90 });
 
@@ -150,6 +163,35 @@ describe("the draw tools", () => {
 		expect(drawn.y).toBeCloseTo(20);
 		expect(drawn.width).toBeCloseTo(60);
 		expect(drawn.height).toBeCloseTo(50);
+	});
+
+	it("draws at the root when a shape, and no artboard, is under the press", () => {
+		const target = targetOf(true);
+		const under = firstId(target.doc);
+
+		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
+
+		expect(drawnLayer(target)).toMatchObject({
+			parent: null,
+			x: 440,
+			y: 280,
+			width: 60,
+			height: 50,
+		});
+		expect(target.doc.childIds(under)).toEqual([]);
+	});
+
+	it("draws inside the artboard when a shape in that artboard is under the press", () => {
+		const { target, child } = nestedTarget(0);
+		const parent = firstId(target.doc);
+
+		dragOver(behaviorFor("rectangle"), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 480, y: 320 },
+		});
+
+		expect(drawnLayer(target)).toMatchObject({ parent, x: 30, y: 30, width: 30, height: 30 });
+		expect(target.doc.childIds(child)).toEqual([]);
 	});
 
 	it("gives the stage back to the select tool when a cancel finds no draw", () => {

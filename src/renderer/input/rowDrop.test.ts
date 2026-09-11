@@ -30,6 +30,15 @@ const PARENTS: Readonly<Record<string, LayerId | null>> = {
 	[DEEP]: SHOOT,
 };
 
+const ARTBOARDS: ReadonlySet<LayerId> = new Set([BRANCH, LAST]);
+
+function geometryOf(id: LayerId): Layer["geometry"] {
+	if (!ARTBOARDS.has(id)) {
+		return { kind: "ellipse" };
+	}
+	return { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true };
+}
+
 function read(id: LayerId): Layer | null {
 	const parent = PARENTS[id];
 	if (parent === undefined) {
@@ -43,7 +52,7 @@ function read(id: LayerId): Layer | null {
 		height: 10,
 		rotation: 0,
 		fill: "#000000",
-		geometry: { kind: "ellipse" },
+		geometry: geometryOf(id),
 		name: "",
 		clip: false,
 		parent,
@@ -62,25 +71,32 @@ function moveOf(dragged: LayerId, id: LayerId, place: RowPlace) {
 describe("rowPlaceOf", () => {
 	const HEIGHT = 24;
 
-	it("takes the top quarter of the row as before", () => {
-		expect(rowPlaceOf(0, HEIGHT)).toBe("before");
-		expect(rowPlaceOf(5.9, HEIGHT)).toBe("before");
+	it("takes the top quarter of a row that takes children as before", () => {
+		expect(rowPlaceOf(0, HEIGHT, true)).toBe("before");
+		expect(rowPlaceOf(5.9, HEIGHT, true)).toBe("before");
 	});
 
-	it("takes the middle half of the row as inside", () => {
-		expect(rowPlaceOf(6, HEIGHT)).toBe("inside");
-		expect(rowPlaceOf(12, HEIGHT)).toBe("inside");
-		expect(rowPlaceOf(17.9, HEIGHT)).toBe("inside");
+	it("takes the middle half of a row that takes children as inside", () => {
+		expect(rowPlaceOf(6, HEIGHT, true)).toBe("inside");
+		expect(rowPlaceOf(12, HEIGHT, true)).toBe("inside");
+		expect(rowPlaceOf(17.9, HEIGHT, true)).toBe("inside");
 	});
 
-	it("takes the bottom quarter of the row as after", () => {
-		expect(rowPlaceOf(18, HEIGHT)).toBe("after");
-		expect(rowPlaceOf(HEIGHT, HEIGHT)).toBe("after");
+	it("takes the bottom quarter of a row that takes children as after", () => {
+		expect(rowPlaceOf(18, HEIGHT, true)).toBe("after");
+		expect(rowPlaceOf(HEIGHT, HEIGHT, true)).toBe("after");
+	});
+
+	it("splits a row that takes no children in half, so it gives no inside", () => {
+		expect(rowPlaceOf(0, HEIGHT, false)).toBe("before");
+		expect(rowPlaceOf(11.9, HEIGHT, false)).toBe("before");
+		expect(rowPlaceOf(12, HEIGHT, false)).toBe("after");
+		expect(rowPlaceOf(HEIGHT, HEIGHT, false)).toBe("after");
 	});
 
 	it("holds the ends when the pointer passes the row", () => {
-		expect(rowPlaceOf(-8, HEIGHT)).toBe("before");
-		expect(rowPlaceOf(40, HEIGHT)).toBe("after");
+		expect(rowPlaceOf(-8, HEIGHT, true)).toBe("before");
+		expect(rowPlaceOf(40, HEIGHT, true)).toBe("after");
 	});
 });
 
@@ -106,6 +122,11 @@ describe("rowMoveOf", () => {
 
 	it("takes a drop inside a row that holds no children", () => {
 		expect(moveOf(FIRST, LAST, "inside")).toEqual({ parent: LAST, index: 0 });
+	});
+
+	it("refuses a drop inside a row that is no artboard", () => {
+		expect(moveOf(LEAF, FIRST, "inside")).toBeNull();
+		expect(moveOf(FIRST, DEEP, "inside")).toBeNull();
 	});
 
 	it("refuses a drop on the dragged row itself", () => {

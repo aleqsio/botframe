@@ -4,19 +4,13 @@ import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import type { Modifiers } from "./modifiers";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 const CANCEL_COMMIT = "cancel move";
 
-function parentUnder(
-	target: PointerTarget,
-	move: LayerMove,
-	point: StagePoint,
-	alt: boolean,
-): LayerId | null {
-	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id, alt);
+function parentUnder(target: PointerTarget, move: LayerMove, point: StagePoint): LayerId | null {
+	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id);
 }
 
 function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
@@ -24,8 +18,8 @@ function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return { x: origin.x - layer.x, y: origin.y - layer.y };
 }
 
-function retarget(target: PointerTarget, move: LayerMove, point: StagePoint, alt: boolean): void {
-	const parent = parentUnder(target, move, point, alt);
+function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): void {
+	const parent = parentUnder(target, move, point);
 	const layer = target.doc.layer(move.id);
 	if (parent === move.parent || layer === null) {
 		return;
@@ -55,20 +49,20 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 	});
 }
 
-export function applyMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
+export function applyMove(target: PointerTarget, point: StagePoint): void {
 	const move = target.user.move.get();
 	if (move === null) {
 		return;
 	}
 	carryLayer(target, move, point.canvas);
-	retarget(target, move, point, modifiers.alt);
+	retarget(target, move, point);
 }
 
-export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
+export function finishMove(target: PointerTarget, point: StagePoint): void {
 	if (target.user.move.get() === null) {
 		return;
 	}
-	applyMove(target, point, modifiers);
+	applyMove(target, point);
 	target.user.move.set(null);
 	target.doc.commit(COMMIT_MESSAGES.move);
 }

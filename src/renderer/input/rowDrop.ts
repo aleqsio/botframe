@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import { isArtboard } from "../components/layerEntry";
 import { heldPlacement, insideSubtree } from "./dropTarget";
 import type { Placement } from "./dropTarget";
 import { layerChain, parentChain } from "./layerSpace";
@@ -29,9 +30,13 @@ export interface RowTree {
 }
 
 const EDGE_PART = 0.25;
+const HALF = 0.5;
 
-export function rowPlaceOf(offset: number, height: number): RowPlace {
+export function rowPlaceOf(offset: number, height: number, takesChildren: boolean): RowPlace {
 	const part = offset / height;
+	if (!takesChildren) {
+		return part < HALF ? "before" : "after";
+	}
 	if (part < EDGE_PART) {
 		return "before";
 	}
@@ -63,9 +68,10 @@ export function rowMoveOf(dragged: LayerId, target: RowTarget, tree: RowTree): R
 	if (row === null || insideSubtree(tree.read, target.id, dragged)) {
 		return null;
 	}
-	return target.place === "inside"
-		? insideMove(dragged, row.id, tree)
-		: siblingMove(dragged, row, target.place, tree);
+	if (target.place !== "inside") {
+		return siblingMove(dragged, row, target.place, tree);
+	}
+	return isArtboard(row) ? insideMove(dragged, row.id, tree) : null;
 }
 
 export function rowMarkOf(drag: RowDrag | null, id: LayerId): RowMark | null {

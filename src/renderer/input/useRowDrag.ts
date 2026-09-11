@@ -69,7 +69,7 @@ function sameTarget(one: RowTarget | null, other: RowTarget | null): boolean {
 }
 
 function targetUnder(session: RowSession, dragged: LayerId): RowTarget | null {
-	const target = rowTargetAt(session.input.pointer);
+	const target = rowTargetAt(session.input.pointer, treeOf(session.doc).read);
 	if (target === null || rowMoveOf(dragged, target, treeOf(session.doc)) === null) {
 		return null;
 	}
