@@ -8,7 +8,10 @@ const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
 
 async function placePreset(window: Page, name: string): Promise<void> {
 	await window.keyboard.press("a");
-	await window.getByRole("button", { name }).click();
+	await window
+		.getByRole("toolbar", { name: "Artboard options" })
+		.getByRole("button", { name })
+		.click();
 }
 
 async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {

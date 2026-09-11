@@ -1,3 +1,5 @@
+import type { Size } from "./layerFields";
+
 export interface ArtboardPreset {
 	name: string;
 	width: number;
@@ -62,4 +64,12 @@ export function presetNamed(name: string): ArtboardPreset | null {
 export function presetNameFor(width: number, height: number): string {
 	const match = PRESETS.find((preset) => preset.width === width && preset.height === height);
 	return match?.name ?? CUSTOM_PRESET;
+}
+
+export function thumbnailOf(size: Size, box: number): Size {
+	const scale = box / Math.max(size.width, size.height);
+	return {
+		width: Math.max(1, Math.round(size.width * scale)),
+		height: Math.max(1, Math.round(size.height * scale)),
+	};
 }

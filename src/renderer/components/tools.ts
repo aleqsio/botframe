@@ -17,6 +17,36 @@ export const TOOLS = [
 	{ id: "image", label: "Image", icon: "image", key: "i" },
 ] as const satisfies readonly ToolDefinition[];
 
-export type ToolId = (typeof TOOLS)[number]["id"];
+export type Tool = (typeof TOOLS)[number];
+
+export type ToolId = Tool["id"];
+
+export type ToolGroup = readonly [Tool, ...Tool[]];
+
+export type ToolOptions = "artboard" | "shape" | "none";
 
 export const DEFAULT_TOOL: ToolId = "select";
+
+const [SELECT, ARTBOARD, RECTANGLE, ELLIPSE, HAND, TEXT, IMAGE] = TOOLS;
+
+export const SHAPE_TOOLS = [RECTANGLE, ELLIPSE] as const satisfies ToolGroup;
+
+export const TOOL_GROUPS: readonly ToolGroup[] = [
+	[SELECT],
+	[ARTBOARD],
+	SHAPE_TOOLS,
+	[HAND],
+	[TEXT],
+	[IMAGE],
+];
+
+export function groupTool(group: ToolGroup, active: ToolId): Tool {
+	return group.find((tool) => tool.id === active) ?? group[0];
+}
+
+export function toolOptionsOf(tool: ToolId): ToolOptions {
+	if (tool === ARTBOARD.id) {
+		return "artboard";
+	}
+	return SHAPE_TOOLS.some((shape) => shape.id === tool) ? "shape" : "none";
+}

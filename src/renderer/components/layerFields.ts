@@ -106,6 +106,8 @@ export function fieldPatch(field: LayerField, value: number): LayerPatch {
 	return field.patch(boundValue(field.bound, value));
 }
 
-export function swappedBox(layer: Layer): Pick<Rect, "width" | "height"> {
-	return { width: layer.height, height: layer.width };
+export type Size = Pick<Rect, "width" | "height">;
+
+export function swappedBox(box: Size): Size {
+	return { width: box.height, height: box.width };
 }

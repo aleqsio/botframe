@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TOOL, TOOLS } from "./tools";
+import { DEFAULT_TOOL, SHAPE_TOOLS, TOOLS, TOOL_GROUPS, groupTool, toolOptionsOf } from "./tools";
 
 describe("TOOLS", () => {
 	it("gives each tool its own id, label, icon, and key", () => {
@@ -22,5 +22,37 @@ describe("TOOLS", () => {
 
 	it("selects a tool that the bar shows", () => {
 		expect(TOOLS.map((tool) => tool.id)).toContain(DEFAULT_TOOL);
+	});
+});
+
+describe("TOOL_GROUPS", () => {
+	it("holds each tool in exactly one group", () => {
+		const grouped = TOOL_GROUPS.flat().map((tool) => tool.id);
+
+		expect(grouped.toSorted()).toEqual(TOOLS.map((tool) => tool.id).toSorted());
+	});
+});
+
+describe("groupTool", () => {
+	it("shows the active tool when the group holds it, and the first tool of the group if not", () => {
+		expect(groupTool(SHAPE_TOOLS, "ellipse").id).toBe("ellipse");
+		expect(groupTool(SHAPE_TOOLS, "rectangle").id).toBe("rectangle");
+		expect(groupTool(SHAPE_TOOLS, "hand").id).toBe("rectangle");
+	});
+});
+
+describe("toolOptionsOf", () => {
+	it("gives the artboard options, the shape options, or no options for each tool", () => {
+		const options = Object.fromEntries(TOOLS.map((tool) => [tool.id, toolOptionsOf(tool.id)]));
+
+		expect(options).toEqual({
+			select: "none",
+			artboard: "artboard",
+			rectangle: "shape",
+			ellipse: "shape",
+			hand: "none",
+			text: "none",
+			image: "none",
+		});
 	});
 });

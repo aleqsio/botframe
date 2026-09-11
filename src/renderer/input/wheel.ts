@@ -27,6 +27,11 @@ function pixelsOf(wheel: WheelInput): Point {
 	return { x: wheel.deltaX * step, y: wheel.deltaY * step };
 }
 
+export function sidewaysPixels(wheel: WheelInput): number {
+	const pixels = pixelsOf(wheel);
+	return Math.abs(pixels.y) > Math.abs(pixels.x) ? pixels.y : 0;
+}
+
 export function wheelDelta(wheel: WheelInput, tool: ToolId): ViewportDelta {
 	const pixels = pixelsOf(wheel);
 	if (wheel.ctrlKey || tool === "hand") {
