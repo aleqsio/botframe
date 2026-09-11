@@ -15,7 +15,7 @@ export function ShapeOptions({ tool }: { tool: Slot<ToolId> }): ReactElement {
 		<FloatingBar label="Shape options">
 			{SHAPE_TOOLS.map((shape) => (
 				<Toolbar.Button
-					className="option-button"
+					className="tool-button option-button"
 					key={shape.id}
 					render={
 						<Toggle

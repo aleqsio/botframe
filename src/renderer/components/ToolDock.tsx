@@ -6,37 +6,22 @@ import { ArtboardOptions } from "./ArtboardOptions";
 import { ShapeOptions } from "./ShapeOptions";
 import { ToolBar } from "./ToolBar";
 import { toolOptionsOf } from "./tools";
-import type { ToolOptions } from "./tools";
 
-interface DockProps {
-	doc: DesignDocument;
-	stage: RefObject<HTMLElement | null>;
-	user: UserState;
-}
-
-function OptionsBar({
-	kind,
+export function ToolDock({
 	doc,
 	stage,
 	user,
-}: DockProps & { kind: Exclude<ToolOptions, "none"> }): ReactElement {
-	return kind === "artboard" ? (
-		<ArtboardOptions doc={doc} stage={stage} user={user} />
-	) : (
-		<ShapeOptions tool={user.tool} />
-	);
-}
-
-export function ToolDock({ doc, stage, user }: DockProps): ReactElement {
+}: {
+	doc: DesignDocument;
+	stage: RefObject<HTMLElement | null>;
+	user: UserState;
+}): ReactElement {
 	const options = usePicked(user.tool, toolOptionsOf);
 
 	return (
 		<div id="dock">
-			{options === "none" ? null : (
-				<div className="tool-options" key={options}>
-					<OptionsBar doc={doc} kind={options} stage={stage} user={user} />
-				</div>
-			)}
+			{options === "artboard" ? <ArtboardOptions doc={doc} stage={stage} user={user} /> : null}
+			{options === "shape" ? <ShapeOptions tool={user.tool} /> : null}
 			<ToolBar tool={user.tool} />
 		</div>
 	);

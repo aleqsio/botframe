@@ -8,12 +8,13 @@
 	--stage-dots: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
 	--panel-background: light-dark(rgb(255 255 255 / 0.9), rgb(44 43 52 / 0.92));
 	--panel-border: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
-	--panel-shadow: 0 18px 40px rgb(20 19 27 / 0.14), 0 2px 6px rgb(20 19 27 / 0.08);
+	--panel-shadow:
+		0 18px 40px light-dark(rgb(20 19 27 / 0.14), rgb(0 0 0 / 0.36)),
+		0 2px 6px light-dark(rgb(20 19 27 / 0.08), rgb(0 0 0 / 0.24));
 	--panel-text: light-dark(rgb(0 0 0 / 0.88), rgb(255 255 255 / 0.92));
 	--panel-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.55));
 	--panel-hover: light-dark(rgb(0 0 0 / 0.05), rgb(255 255 255 / 0.08));
 	--panel-selected: light-dark(rgb(0 0 0 / 0.09), rgb(255 255 255 / 0.16));
-	--panel-divider: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
 	--panel-focus: light-dark(rgb(13 153 255 / 0.9), rgb(138 168 255 / 0.9));
 	--canvas-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.5));
 	--bar-background: rgb(44 43 54 / 0.8);
@@ -30,12 +31,6 @@
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3C/svg%3E")
 			12 12,
 		crosshair;
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--panel-shadow: 0 18px 40px rgb(0 0 0 / 0.36), 0 2px 6px rgb(0 0 0 / 0.24);
-	}
 }
 
 * {
@@ -238,8 +233,7 @@ body {
 	pointer-events: auto;
 }
 
-.tool-options {
-	display: flex;
+#dock > :not(:last-child) {
 	animation: options-enter 160ms ease-out;
 }
 
@@ -290,7 +284,8 @@ body {
 	color: var(--bar-icon-selected);
 }
 
-.tool-button:focus-visible {
+.tool-button:focus-visible,
+.preset-button:focus-visible {
 	outline: 2px solid var(--bar-focus);
 	outline-offset: -2px;
 }
@@ -305,36 +300,11 @@ body {
 
 .option-button {
 	display: flex;
-	align-items: center;
 	gap: 6px;
-	height: 36px;
+	width: auto;
 	padding: 0 12px 0 8px;
-	border: 0;
-	border-radius: 12px;
-	background-color: transparent;
-	color: var(--bar-icon);
 	font: inherit;
 	font-size: 12px;
-	cursor: default;
-	transition:
-		background-color 120ms ease,
-		color 120ms ease;
-}
-
-.option-button:hover {
-	background-color: var(--bar-hover);
-	color: var(--bar-icon-selected);
-}
-
-.option-button[data-pressed] {
-	background-color: var(--bar-selected);
-	color: var(--bar-icon-selected);
-}
-
-.option-button:focus-visible,
-.preset-button:focus-visible {
-	outline: 2px solid var(--bar-focus);
-	outline-offset: -2px;
 }
 
 .preset-row {
@@ -351,10 +321,6 @@ body {
 		#000 calc(100% - 12px),
 		transparent
 	);
-}
-
-.preset-row::-webkit-scrollbar {
-	display: none;
 }
 
 .preset-group {
@@ -444,13 +410,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
 	.tool-button,
-	.option-button,
 	.preset-button,
 	.preset-thumbnail > span {
 		transition: none;
 	}
 
-	.tool-options {
+	#dock > :not(:last-child) {
 		animation: none;
 	}
 }
@@ -473,7 +438,6 @@ body {
 	border: 1px solid var(--panel-border);
 	background: var(--panel-background);
 	backdrop-filter: blur(16px) saturate(150%);
-	-webkit-backdrop-filter: blur(16px) saturate(150%);
 	box-shadow: var(--panel-shadow);
 	color: var(--panel-text);
 }
@@ -722,7 +686,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 	align-items: center;
 	gap: 8px;
 	padding: 11px 12px 10px;
-	border-bottom: 1px solid var(--panel-divider);
+	border-bottom: 1px solid var(--panel-border);
 	background: var(--panel-background);
 }
 
@@ -942,7 +906,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 	gap: 8px;
 	margin-top: 2px;
 	padding-top: 8px;
-	border-top: 1px solid var(--panel-divider);
+	border-top: 1px solid var(--panel-border);
 }
 
 .footer-select {
