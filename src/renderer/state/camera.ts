@@ -74,6 +74,26 @@ export function zoomPercent(zoom: number): string {
 	return `${Math.round(zoom * 100)}%`;
 }
 
+export interface DotGrid {
+	spacing: number;
+	offset: Point;
+}
+
+const DOT_SPACING = 20;
+
+function wrap(value: number, period: number): number {
+	return ((value % period) + period) % period;
+}
+
+export function dotGrid(camera: Camera): DotGrid {
+	const octave = Math.ceil(-Math.log2(camera.zoom) - SAME_ZOOM);
+	const spacing = DOT_SPACING * camera.zoom * 2 ** octave;
+	return {
+		spacing,
+		offset: { x: wrap(camera.x - spacing / 2, spacing), y: wrap(camera.y - spacing / 2, spacing) },
+	};
+}
+
 export function cameraTransform(camera: Camera): string {
 	return `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`;
 }

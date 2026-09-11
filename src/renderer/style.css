@@ -60,9 +60,14 @@ body {
 	inset: 0;
 	overflow: hidden;
 	background-color: var(--stage-background);
-	background-image: radial-gradient(var(--stage-dots) 1px, transparent 1.2px);
-	background-size: 20px 20px;
 	touch-action: none;
+}
+
+#dot-grid {
+	position: absolute;
+	inset: 0;
+	background-image: radial-gradient(var(--stage-dots) 1px, transparent 1.2px);
+	pointer-events: none;
 }
 
 #viewport {
