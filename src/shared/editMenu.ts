@@ -6,4 +6,6 @@ export interface EditMenuItem {
 	label: string;
 	accelerator: string;
 	enabled: boolean;
+	separatorBefore?: boolean;
+	submenu?: readonly EditMenuItem[];
 }

@@ -699,3 +699,29 @@ body {
 	border: 1px solid var(--bar-border);
 	border-radius: 3px;
 }
+
+.layer-menu-group-label {
+	padding: 4px 10px;
+	color: var(--bar-icon);
+	font-size: 11px;
+}
+
+.layer-menu-separator {
+	height: 1px;
+	margin: 4px 6px;
+	background: var(--bar-border);
+}
+
+.layer-menu-label {
+	flex: 1;
+}
+
+.layer-menu-accelerator {
+	flex: none;
+	color: var(--bar-icon);
+}
+
+.layer-menu-item[data-disabled] {
+	color: var(--bar-icon);
+	opacity: 0.5;
+}

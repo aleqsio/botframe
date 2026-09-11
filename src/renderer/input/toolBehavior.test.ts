@@ -160,12 +160,12 @@ describe("the behavior of each tool", () => {
 		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [id, below] });
 	});
 
-	it("opens no menu on the empty canvas", () => {
+	it("opens the menu with no layer on the empty canvas", () => {
 		const target = targetOf(false);
 
 		behaviorFor("select").context?.(target, CLIENT);
 
-		expect(target.user.menu.get()).toBeNull();
+		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [] });
 	});
 
 	it("gives no answer to the secondary press for a tool that draws later", () => {

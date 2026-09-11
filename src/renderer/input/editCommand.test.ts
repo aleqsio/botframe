@@ -53,15 +53,22 @@ describe("commandById", () => {
 		expect(commandById("redo")?.label).toBe("Redo");
 	});
 
+	it("gives the command of each clipboard id", () => {
+		expect(commandById("cut")?.label).toBe("Cut");
+		expect(commandById("copy")?.label).toBe("Copy");
+		expect(commandById("paste")?.label).toBe("Paste");
+	});
+
 	it("gives null for a name that no command has", () => {
-		expect(commandById("paste")).toBeNull();
+		expect(commandById("sabotage")).toBeNull();
+		expect(commandById("copyAs")).toBeNull();
 		expect(commandById("")).toBeNull();
 	});
 
-	it("gives an accelerator and a label for each command in the table", () => {
+	it("gives a label for each command, and an accelerator for each one but a format", () => {
 		for (const command of EDIT_COMMANDS) {
-			expect(command.accelerator.length).toBeGreaterThan(0);
 			expect(command.label.length).toBeGreaterThan(0);
+			expect(command.accelerator.length).toBeGreaterThan(command.isFormat === true ? -1 : 0);
 		}
 	});
 });
