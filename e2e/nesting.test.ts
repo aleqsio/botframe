@@ -1,16 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { at, openStage } from "./support";
-
-interface Point {
-	x: number;
-	y: number;
-}
-
-interface Drag {
-	from: Point;
-	to: Point;
-}
+import { at, boxOf, dragOn, drawWith, openStage, pressInto } from "./support";
+import type { Drag, Point } from "./support";
 
 const ARTBOARD: Drag = { from: { x: 40, y: 40 }, to: { x: 240, y: 180 } };
 const INSIDE: Drag = { from: { x: 80, y: 80 }, to: { x: 180, y: 140 } };
@@ -20,25 +11,30 @@ const OUTSIDE_THE_CLIP = { x: 270, y: 210 };
 const CLIPPED_DRAG: Drag = { from: OUTSIDE_THE_CLIP, to: { x: 300, y: 230 } };
 const SELECTION_BLUE = "rgb(13, 153, 255)";
 const OVER_THE_ARTBOARD = { x: 200, y: 150 };
+const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOARD };
+const BEYOND_THE_CLIP = { x: 280, y: 150 };
+const CARRIED = { x: -340, y: -190 };
 
-async function dragOn(window: Page, origin: Point, drag: Drag): Promise<void> {
-	await window.mouse.move(at(origin, drag.from).x, at(origin, drag.from).y);
-	await window.mouse.down();
-	await window.mouse.move(at(origin, drag.to).x, at(origin, drag.to).y, { steps: 8 });
-	await window.mouse.up();
-}
-
-async function drawWith(window: Page, origin: Point, key: string, drag: Drag): Promise<void> {
-	await window.keyboard.press(key);
-	await dragOn(window, origin, drag);
-}
-
-async function boxOf(locator: Locator): Promise<{ x: number; y: number }> {
-	const box = await locator.boundingBox();
-	if (box === null) {
-		throw new Error("the layer has no box");
+async function idOf(locator: Locator): Promise<string> {
+	const id = await locator.getAttribute("data-layer-id");
+	if (id === null) {
+		throw new Error("the layer has no id");
 	}
-	return { x: box.x, y: box.y };
+	return id;
+}
+
+function layerById(window: Page, id: string): Locator {
+	return window.locator(`.layer[data-layer-id="${id}"]`);
+}
+
+function layerIdAt(window: Page, point: Point): Promise<string | null> {
+	return window.evaluate(
+		(spot: Point) =>
+			document.elementFromPoint(spot.x, spot.y)?.closest<HTMLElement>(".layer")?.dataset[
+				"layerId"
+			] ?? null,
+		point,
+	);
 }
 
 test("a draw inside an artboard puts the new layer in the artboard", async () => {
@@ -98,13 +94,27 @@ test("an artboard clips the part of a child outside its box", async () => {
 	await window.mouse.click(at(origin, OUTSIDE_THE_CLIP).x, at(origin, OUTSIDE_THE_CLIP).y);
 	await expect(child).toHaveAttribute("data-selected", "");
 
-	const before = await boxOf(child);
-	await dragOn(window, origin, CLIPPED_DRAG);
-
-	expect(await boxOf(child)).toEqual({ x: before.x + 30, y: before.y + 20 });
+	await window.mouse.click(at(origin, OVER_THE_ARTBOARD).x, at(origin, OVER_THE_ARTBOARD).y);
 	await expect(child).toHaveAttribute("data-selected", "");
 
-	await window.mouse.click(at(origin, OVER_THE_ARTBOARD).x, at(origin, OVER_THE_ARTBOARD).y);
+	await app.close();
+});
+
+test("a drag from outside the artboard takes the clipped child to the root", async () => {
+	const { app, layers, origin, window } = await openStage();
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "r", OVER_THE_EDGE);
+	const child = layers.nth(2);
+	await window.mouse.click(at(origin, OUTSIDE_THE_CLIP).x, at(origin, OUTSIDE_THE_CLIP).y);
+	await expect(child).toHaveAttribute("data-selected", "");
+	const before = await boxOf(child);
+
+	await dragOn(window, origin, CLIPPED_DRAG);
+
+	await expect(layers.nth(1).locator("> .layer")).toHaveCount(0);
+	await expect(window.locator("#viewport > .layer")).toHaveCount(3);
+	expect(await boxOf(child)).toEqual({ x: before.x + 30, y: before.y + 20 });
 	await expect(child).toHaveAttribute("data-selected", "");
 
 	await app.close();
@@ -122,6 +132,59 @@ test("the selection border draws outside the clip of the artboard", async () => 
 	await expect(child).toHaveCSS("outline-style", "none");
 	await expect(selection).toHaveCSS("outline-style", "solid");
 	await expect(selection).toHaveCSS("outline-color", SELECTION_BLUE);
+
+	await app.close();
+});
+
+test("a drag into a clipped artboard gives the layer the new parent during the drag", async () => {
+	const { app, layers, origin, stage, window } = await openStage();
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	const artboard = layerById(window, await idOf(layers.nth(1)));
+	const dragged = await idOf(layers.nth(0));
+	const before = await boxOf(layerById(window, dragged));
+
+	await pressInto(window, origin, INTO_THE_ARTBOARD);
+
+	const child = artboard.locator("> .layer");
+	await expect(child).toHaveCount(1);
+	await expect(stage).toHaveAttribute("data-drop", "");
+	await expect(stage).toHaveCSS("cursor", "copy");
+	await expect(child).toHaveCSS("cursor", "copy");
+	await expect.poll(() => layerIdAt(window, at(origin, OVER_THE_ARTBOARD))).toBe(dragged);
+	await expect.poll(() => layerIdAt(window, at(origin, BEYOND_THE_CLIP))).toBeNull();
+
+	await window.mouse.up();
+
+	await expect(child).toHaveCount(1);
+	await expect(child).toHaveAttribute("style", /translate3d\(40px, 30px, 0px\)/u);
+	await expect(stage).not.toHaveAttribute("data-drop", "");
+	expect(await boxOf(child)).toEqual({ x: before.x + CARRIED.x, y: before.y + CARRIED.y });
+
+	await app.close();
+});
+
+test("Escape during a move drag puts the layer back in the first parent", async () => {
+	const { app, layers, origin, stage, window } = await openStage();
+
+	await drawWith(window, origin, "a", ARTBOARD);
+	const artboard = layerById(window, await idOf(layers.nth(1)));
+	const layer = layerById(window, await idOf(layers.nth(0)));
+	const before = await boxOf(layer);
+
+	await pressInto(window, origin, INTO_THE_ARTBOARD);
+	await expect(artboard.locator("> .layer")).toHaveCount(1);
+
+	await window.keyboard.press("Escape");
+
+	await expect(artboard.locator("> .layer")).toHaveCount(0);
+	await expect(stage).not.toHaveAttribute("data-drop", "");
+	await expect(layer).toHaveAttribute("style", /translate3d\(420px, 260px, 0px\)/u);
+
+	await window.mouse.up();
+
+	await expect(layers).toHaveCount(2);
+	expect(await boxOf(layer)).toEqual(before);
 
 	await app.close();
 });

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import { TOOLS } from "../components/tools";
 import type { ToolId } from "../components/tools";
@@ -9,8 +8,7 @@ import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { Zone } from "./handles";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, pointAt, tapAt, targetOf } from "./toolFixtures";
-import { UserState } from "../state/userState";
+import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
@@ -27,26 +25,6 @@ const SE_ZONE = { mode: "resize", handle: "se" };
 const DRAW_TOOLS: readonly ToolId[] = ["rectangle", "artboard"];
 const SHIFT: Modifiers = { shift: true, alt: false };
 const ALT: Modifiers = { shift: false, alt: true };
-
-function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {
-	const doc = DesignDocument.create();
-	const parent = firstId(doc);
-	doc.update(parent, { rotation: rotation });
-	const child = doc.createLayer(
-		{
-			x: 20,
-			y: 20,
-			width: 60,
-			height: 40,
-			fill: "#d9d9d9",
-			name: "",
-			clip: false,
-			geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
-		},
-		parent,
-	);
-	return { target: { doc, user: new UserState(), layerIds: [child] }, child };
-}
 
 function selectedTarget(): PointerTarget {
 	const target = targetOf(true);
@@ -451,32 +429,7 @@ describe("the hand tool", () => {
 	});
 });
 
-describe("a layer inside a parent", () => {
-	it("moves the layer in the space of its parent", () => {
-		const { target, child } = nestedTarget(0);
-
-		dragOver(behaviorFor("select"), target, {
-			press: { x: 450, y: 290 },
-			release: { x: 470, y: 310 },
-		});
-
-		expect(target.doc.layer(child)).toMatchObject({ x: 40, y: 40 });
-		expect(target.user.selection.get()).toEqual([child]);
-	});
-
-	it("moves the layer along the axes of a turned parent", () => {
-		const { target, child } = nestedTarget(90);
-
-		dragOver(behaviorFor("select"), target, {
-			press: { x: 580, y: 270 },
-			release: { x: 580, y: 290 },
-		});
-
-		const moved = target.doc.layer(child);
-		expect(moved?.x).toBeCloseTo(40);
-		expect(moved?.y).toBeCloseTo(20);
-	});
-
+describe("the handles of a layer inside an artboard", () => {
 	it("takes the resize handle of the layer at the canvas point of that handle", () => {
 		const { target, child } = nestedTarget(0);
 		const behavior = behaviorFor("select");

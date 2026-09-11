@@ -9,6 +9,7 @@ export interface PointerTarget {
 	doc: DesignDocument;
 	user: UserState;
 	layerIds: readonly LayerId[];
+	layerIdsAt: (point: StagePoint) => readonly LayerId[];
 }
 
 export interface ToolBehavior {

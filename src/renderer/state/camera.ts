@@ -10,6 +10,7 @@ export interface Camera {
 }
 
 export interface StagePoint {
+	client: Point;
 	stage: Point;
 	canvas: Point;
 }
