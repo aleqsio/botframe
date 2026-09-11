@@ -165,6 +165,17 @@ describe("runEditCommand", () => {
 		expect(doc.layer(id)).not.toBeNull();
 	});
 
+	it("refuses to delete in the middle of a row drag", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		const id = firstId(doc);
+		user.selection.set([id]);
+		user.rowDrag.set({ id, target: null });
+
+		expect(runEditCommand(commandOf("delete"), doc, user)).toBe(false);
+		expect(doc.layer(id)).not.toBeNull();
+	});
+
 	it("duplicates the selection and selects the copy", () => {
 		const doc = DesignDocument.create();
 		const user = new UserState();

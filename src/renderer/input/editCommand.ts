@@ -151,7 +151,7 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 		id: "delete",
 		label: "Delete",
 		group: "layer",
-		accelerator: "Delete",
+		accelerator: onApple() ? "Backspace" : "Delete",
 		matches: removeStroke,
 		apply: deleteSelection,
 		enabled: hasSelection,
@@ -171,7 +171,7 @@ export function runEditCommand(
 	doc: DesignDocument,
 	user: UserState,
 ): boolean {
-	if (user.dragging.get() || user.draw.get() !== null) {
+	if (user.dragging.get() || user.draw.get() !== null || user.rowDrag.get() !== null) {
 		return false;
 	}
 	if (command.apply(doc, user)) {
