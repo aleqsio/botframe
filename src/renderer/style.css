@@ -113,12 +113,14 @@ body {
 }
 
 #stage[data-tool="artboard"],
-#stage[data-tool="rectangle"] {
+#stage[data-tool="rectangle"],
+#stage[data-tool="ellipse"] {
 	cursor: crosshair;
 }
 
 #stage[data-tool="artboard"] .layer,
-#stage[data-tool="rectangle"] .layer {
+#stage[data-tool="rectangle"] .layer,
+#stage[data-tool="ellipse"] .layer {
 	cursor: inherit;
 }
 

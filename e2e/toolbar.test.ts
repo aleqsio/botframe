@@ -38,7 +38,7 @@ test("the floating bar sits at the bottom center and holds one selected tool", a
 	await expect(bar.getByLabel("Ellipse")).toHaveAttribute("data-pressed", "");
 	await expect(bar.getByLabel("Select")).not.toHaveAttribute("data-pressed", "");
 	await expect(stage).toHaveAttribute("data-tool", "ellipse");
-	await expect(layer).toHaveCSS("cursor", "auto");
+	await expect(layer).toHaveCSS("cursor", "crosshair");
 
 	await app.close();
 });
