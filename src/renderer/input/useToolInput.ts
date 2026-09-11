@@ -41,10 +41,11 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 		return { behavior: behaviorFor(user.tool.get()), target: targetOf(doc, user, layerIds) };
 	}
 
-	function hoverZone(point: StagePoint): void {
-		const current = begin(NO_LAYERS);
-		const zone = current.behavior.hover?.(current.target, point) ?? null;
+	function trackHover(point: StagePoint): void {
+		const { behavior, target } = begin(NO_LAYERS);
+		const zone = behavior.hover?.(target, point) ?? null;
 		user.zone.set(zone === null ? null : zoneKey(zone));
+		user.highlight.set(behavior.highlight?.(target, point) ?? null);
 	}
 
 	return {
@@ -69,7 +70,10 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 			current.behavior.tap?.(current.target, point);
 		},
 		onHover(point) {
-			hoverZone(point);
+			trackHover(point);
+		},
+		onLeave() {
+			user.highlight.set(null);
 		},
 		onContextMenu(client, layerIds) {
 			const current = begin(layerIds);

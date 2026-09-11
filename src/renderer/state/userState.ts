@@ -35,6 +35,7 @@ export class UserState {
 	readonly selection = new Slot<readonly LayerId[]>(NOTHING_SELECTED);
 	readonly menu = new Slot<LayerMenu | null>(null);
 	readonly zone = new Slot<ZoneKey | null>(null);
+	readonly highlight = new Slot<LayerId | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);
 	readonly pointer = new Slot<Point | null>(null);

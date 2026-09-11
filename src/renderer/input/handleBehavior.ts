@@ -1,5 +1,5 @@
-import type { Layer } from "../../document/layer";
-import type { Point } from "../state/camera";
+import type { Layer, LayerId } from "../../document/layer";
+import type { Point, StagePoint } from "../state/camera";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
@@ -29,6 +29,11 @@ function aimAt(target: PointerTarget, canvas: Point): Aim | null {
 
 function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
 	return aimAt(target, canvas)?.zone ?? null;
+}
+
+function heldLayerId(target: PointerTarget, point: StagePoint): LayerId | null {
+	const aim = aimAt(target, point.canvas);
+	return aim === null || aim.zone === null ? null : aim.layer.id;
 }
 
 function gripFor(aim: Aim | null): Grip | null {
@@ -66,6 +71,7 @@ export function createHandleBehavior(): ToolBehavior {
 		hover(target, point) {
 			return zoneUnder(target, point.canvas);
 		},
+		highlight: heldLayerId,
 		tap(target, point) {
 			return zoneUnder(target, point.canvas) !== null;
 		},

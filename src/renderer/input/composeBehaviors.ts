@@ -1,16 +1,13 @@
-import type { StagePoint } from "../state/camera";
-import type { Zone } from "./handles";
-import type { PointerTarget, ToolBehavior } from "./tool";
+import type { ToolBehavior } from "./tool";
 
-function firstZone(
+function firstAnswer<T>(
 	behaviors: readonly ToolBehavior[],
-	target: PointerTarget,
-	point: StagePoint,
-): Zone | null {
+	ask: (behavior: ToolBehavior) => T | null,
+): T | null {
 	for (const behavior of behaviors) {
-		const zone = behavior.hover?.(target, point) ?? null;
-		if (zone !== null) {
-			return zone;
+		const answer = ask(behavior);
+		if (answer !== null) {
+			return answer;
 		}
 	}
 	return null;
@@ -21,7 +18,10 @@ export function composeBehaviors(behaviors: readonly ToolBehavior[]): ToolBehavi
 
 	return {
 		hover(target, point) {
-			return firstZone(behaviors, target, point);
+			return firstAnswer(behaviors, (behavior) => behavior.hover?.(target, point) ?? null);
+		},
+		highlight(target, point) {
+			return firstAnswer(behaviors, (behavior) => behavior.highlight?.(target, point) ?? null);
 		},
 		tap(target, point) {
 			return behaviors.some((behavior) => behavior.tap?.(target, point) === true);

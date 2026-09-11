@@ -1,5 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
-import type { Point } from "../state/camera";
+import type { Point, StagePoint } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { containsPoint } from "./layerSpace";
@@ -48,8 +48,13 @@ function selectForMenu(target: PointerTarget): void {
 	}
 }
 
+function layerIdUnder(target: PointerTarget, point: StagePoint): LayerId | null {
+	return target.layerIdsAt(point)[0] ?? null;
+}
+
 export function createPickBehavior(): ToolBehavior {
 	return {
+		highlight: layerIdUnder,
 		tap(target, point) {
 			layerOfPress(target, point.canvas);
 			return true;
