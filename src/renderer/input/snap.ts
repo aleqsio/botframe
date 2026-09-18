@@ -11,6 +11,7 @@ interface SnapTarget {
 	axis: GuideAxis;
 	at: number;
 	other: number | null;
+	curve: Curve | null;
 }
 
 interface SnapMatch {
@@ -60,13 +61,15 @@ function byPosition(first: SnapTarget, second: SnapTarget): number {
 
 function pointTargets(points: readonly Point[], axis: GuideAxis): SnapTarget[] {
 	const other = otherAxis(axis);
-	return points.map((point) => ({ axis, at: point[axis], other: point[other] }));
+	return points.map((point) => ({ axis, at: point[axis], other: point[other], curve: null }));
 }
 
 function lineTargets(span: Size, guides: readonly Guide[], axis: GuideAxis): SnapTarget[] {
 	const extent = axis === "x" ? span.width : span.height;
-	const edges = [0, extent / 2, extent].map((at) => ({ axis, at, other: null }));
-	const lines = guides.flatMap((guide) => (guide.axis === axis ? [{ ...guide, other: null }] : []));
+	const edges = [0, extent / 2, extent].map((at) => ({ axis, at, other: null, curve: null }));
+	const lines = guides.flatMap((guide) =>
+		guide.axis === axis ? [{ ...guide, other: null, curve: null }] : [],
+	);
 	return [...edges, ...lines];
 }
 
@@ -229,7 +232,12 @@ function curveTargets(
 	const other = point[otherAxis(axis)];
 	return curves.flatMap((bounded) =>
 		withinBox(bounded, axis, point, reach)
-			? crossingsOf(bounded.curve, axis, other).map((at) => ({ axis, at, other }))
+			? crossingsOf(bounded.curve, axis, other).map((at) => ({
+					axis,
+					at,
+					other,
+					curve: bounded.curve,
+				}))
 			: [],
 	);
 }
@@ -258,8 +266,47 @@ function matchAlong(
 	return best;
 }
 
+function crossingMatch(
+	match: SnapMatch,
+	curve: Curve,
+	shift: number,
+	reach: number,
+): SnapMatch | null {
+	const { axis } = match.target;
+	const wanted = match.point[axis];
+	const other = match.point[otherAxis(axis)] + shift;
+	const [at] = crossingsOf(curve, axis, other).toSorted(
+		(first, second) => Math.abs(first - wanted) - Math.abs(second - wanted),
+	);
+	if (at === undefined || Math.abs(at - wanted) > reach) {
+		return null;
+	}
+	return { delta: at - wanted, target: { axis, at, other, curve }, point: match.point };
+}
+
+function settled(snap: Snap, reach: number): Snap {
+	const { x, y } = snap;
+	if (x === null || y === null) {
+		return snap;
+	}
+	if (x.target.curve !== null && y.target.curve !== null) {
+		return Math.abs(x.delta) <= Math.abs(y.delta) ? { x, y: null } : { x: null, y };
+	}
+	if (x.target.curve !== null) {
+		return { x: crossingMatch(x, x.target.curve, y.delta, reach), y };
+	}
+	if (y.target.curve !== null) {
+		return { x, y: crossingMatch(y, y.target.curve, x.delta, reach) };
+	}
+	return snap;
+}
+
 export function snapTo(field: SnapField, points: readonly Point[], reach: number): Snap {
-	return { x: matchAlong(field, "x", points, reach), y: matchAlong(field, "y", points, reach) };
+	const matched = {
+		x: matchAlong(field, "x", points, reach),
+		y: matchAlong(field, "y", points, reach),
+	};
+	return settled(matched, reach);
 }
 
 export function snappedPoint(wanted: Point, snap: Snap): Point {

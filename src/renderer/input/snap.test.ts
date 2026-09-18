@@ -38,6 +38,11 @@ function rising(values: readonly number[]): number[] {
 	return values.toSorted((first, second) => first - second);
 }
 
+function offCircle(point: Point): number {
+	const gap = { x: point.x - CIRCLE.center.x, y: point.y - CIRCLE.center.y };
+	return gap.x ** 2 + gap.y ** 2 - CIRCLE.radii.x ** 2;
+}
+
 describe("crossingsOf", () => {
 	it("cuts a diagonal segment where the other axis holds the value", () => {
 		expect(crossingsOf(DIAGONAL, "x", 4)).toEqual([4]);
@@ -144,12 +149,44 @@ describe("snapTo", () => {
 		expect(snapTo(field, [{ x: 300, y: 100 }])).toEqual({ x: null, y: null });
 		expect(snapTo(field, [{ x: 158, y: 100 }])).toEqual({ x: null, y: null });
 	});
+
+	it("solves the crossing again at the coordinate that the other axis snaps to", () => {
+		const field = fieldWith({ points: [{ x: 0, y: 97 }], curves: [CIRCLE] });
+		const dragged = { x: 148, y: 100 };
+
+		const snap = snapTo(field, [dragged]);
+
+		expect(snap.y?.delta).toBe(-3);
+		expect(snap.x?.target.other).toBe(97);
+		expect(snap.x?.target.at).toBeCloseTo(149.90991);
+		expect(offCircle(snappedPoint(dragged, snap))).toBeCloseTo(0, 6);
+	});
+
+	it("keeps only the nearer axis when both of them match a curve", () => {
+		const snap = snapTo(fieldWith({ curves: [CIRCLE] }), [{ x: 138, y: 136 }]);
+
+		expect(snap.y).toBeNull();
+		expect(snap.x?.delta).toBeCloseTo(-3.3013);
+	});
+
+	it("drops the curve axis when the new crossing lies beyond the reach", () => {
+		const field = fieldWith({ points: [{ x: 0, y: 5 }], curves: [DIAGONAL] });
+
+		const snap = snapTo(field, [{ x: 10.5, y: 9 }]);
+
+		expect(snap.x).toBeNull();
+		expect(snap.y?.delta).toBe(-4);
+	});
 });
 
 describe("snappedPoint", () => {
 	it("moves the wanted point by the delta of each match", () => {
 		const snap: Snap = {
-			x: { delta: 2, target: { axis: "x", at: 10, other: null }, point: { x: 8, y: 0 } },
+			x: {
+				delta: 2,
+				target: { axis: "x", at: 10, other: null, curve: null },
+				point: { x: 8, y: 0 },
+			},
 			y: null,
 		};
 		expect(snappedPoint({ x: 30, y: 40 }, snap)).toEqual({ x: 32, y: 40 });
