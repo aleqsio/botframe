@@ -91,7 +91,7 @@ export function CellPicker({
 	return (
 		<div
 			aria-disabled={cell.mode === "auto"}
-			className={cell.mode === "auto" ? "layout-cells layout-dim" : "layout-cells"}
+			className={cell.mode === "auto" ? "layout-cells layout-cells-auto" : "layout-cells"}
 			onPointerCancel={settle}
 			onPointerDown={begin}
 			onPointerMove={extend}

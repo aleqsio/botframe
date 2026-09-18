@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import type { Distribute } from "../../../document/layout";
-import { DistributeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
 
@@ -18,7 +17,6 @@ const OPTIONS: readonly SegmentOption<Distribute>[] = (
 ).map((distribute) => ({
 	value: distribute,
 	label: LABEL[distribute],
-	icon: <DistributeIcon distribute={distribute} />,
 	title: LABEL[distribute],
 }));
 
@@ -29,10 +27,8 @@ export function DistributeChips({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
-	const turned = layer.layout.display === "column";
-
 	return (
-		<div className={turned ? "layout-dist layout-dist-turn" : "layout-dist"}>
+		<div className="layout-row">
 			<Segmented
 				label="Distribute"
 				onPick={(next) => {

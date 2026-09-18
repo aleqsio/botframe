@@ -1,11 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import type { DisplayMode, Distribute, SizeMode } from "../../../document/layout";
-
-const SIZE_PATH: Readonly<Record<SizeMode, string>> = {
-	fixed: "M1.6 2.6v6.8M10.4 2.6v6.8M2.6 6h6.8",
-	hug: "M1.6 2.6v6.8M10.4 2.6v6.8M2.8 6h2.2M3.9 4.9 5.1 6 3.9 7.1M9.2 6H7M8.1 4.9 6.9 6l1.2 1.1",
-	fill: "M1.6 2.6v6.8M10.4 2.6v6.8M5 6H2.8M4.1 4.9 2.9 6l1.2 1.1M7 6h2.2M7.9 4.9 9.1 6 7.9 7.1",
-};
+import type { DisplayMode } from "../../../document/layout";
 
 const DISPLAY_GLYPH: Readonly<Record<DisplayMode, ReactNode>> = {
 	block: (
@@ -60,42 +54,8 @@ function Glyph({ children, size }: { children: ReactNode; size: number }): React
 	);
 }
 
-export function SizeModeIcon({ mode }: { mode: SizeMode }): ReactElement {
-	return (
-		<Glyph size={12}>
-			<path d={SIZE_PATH[mode]} stroke="currentColor" strokeLinecap="round" strokeWidth="1" />
-		</Glyph>
-	);
-}
-
 export function DisplayIcon({ display }: { display: DisplayMode }): ReactElement {
 	return <Glyph size={14}>{DISPLAY_GLYPH[display]}</Glyph>;
-}
-
-const SPREAD_AT: Readonly<Record<Distribute, readonly number[]>> = {
-	pack: [1.5, 3.5, 5.5],
-	between: [1.5, 5, 8.5],
-	around: [2, 5, 8],
-	evenly: [2.25, 5, 7.75],
-};
-
-export function DistributeIcon({ distribute }: { distribute: Distribute }): ReactElement {
-	return (
-		<Glyph size={12}>
-			<rect
-				height="11"
-				rx="1.5"
-				stroke="currentColor"
-				strokeOpacity="0.5"
-				width="11"
-				x="0.5"
-				y="0.5"
-			/>
-			{SPREAD_AT[distribute].map((x) => (
-				<rect fill="currentColor" height="2" key={x} rx="0.4" width="2" x={x} y="5" />
-			))}
-		</Glyph>
-	);
 }
 
 export function WrapIcon(): ReactElement {

@@ -8,7 +8,6 @@ import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { ChipBox } from "./ChipBox";
 import { ChipGrip } from "./ChipGrip";
-import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
 
@@ -25,7 +24,6 @@ function sizeOptions(blocked: boolean): readonly SegmentOption<SizeMode>[] {
 	return SIZE_MODES.map((mode) => ({
 		value: mode,
 		label: SIZE_LABEL[mode],
-		icon: <SizeModeIcon mode={mode} />,
 		muted: mode === "fill" && blocked,
 		title: mode === "fill" && blocked ? FILL_TIP : undefined,
 	}));
@@ -57,7 +55,7 @@ export function SizeRow({
 	};
 
 	return (
-		<div className={`layout-row layout-size layout-size-${axis}`}>
+		<div className="layout-row layout-size">
 			<ChipGrip field={field} onCommit={commit} onPatch={write} value={field.read(layer)} />
 			<Segmented
 				label={`${AXIS_LABEL[axis]} size`}

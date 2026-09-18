@@ -20,7 +20,7 @@ function ChipGroup({
 	layer: Layer;
 }): ReactElement {
 	return (
-		<div className="field-group">
+		<div className="field-group layout-section">
 			<span className="group-label">{group.name}</span>
 			<div className="chip-row">
 				{group.fields.map((field) => (
