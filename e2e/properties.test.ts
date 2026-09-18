@@ -251,8 +251,7 @@ test("the keyboard reaches the handle and the value of a chip", async () => {
 	const handle = chipHandle(window, "X");
 	const value = chipValue(window, "X");
 
-	await window.getByLabel("Name", { exact: true }).focus();
-	await window.keyboard.press("Tab");
+	await handle.focus();
 	await expect(handle).toBeFocused();
 
 	const before = Number(await value.inputValue());

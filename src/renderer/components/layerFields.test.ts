@@ -6,7 +6,7 @@ import type { Basis } from "../../document/length";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
-import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox, typedPatch } from "./layerFields";
+import { boxField, fieldGroupsOf, fieldPatch, swappedBox, typedPatch } from "./layerFields";
 import type { LayerField, UnitChoice } from "./layerFields";
 
 const ALT = { shift: false, alt: true };
@@ -29,6 +29,16 @@ function layerOf(doc: DesignDocument): Layer {
 		throw new Error("the document has no layer");
 	}
 	return layer;
+}
+
+function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
+	return [
+		boxField("X", "x", layer, basis),
+		boxField("Y", "y", layer, basis),
+		boxField("W", "width", layer, basis),
+		boxField("H", "height", layer, basis),
+		...fieldGroupsOf(layer).flatMap((group) => group.fields),
+	];
 }
 
 function fieldNamed(layer: Layer, label: string, basis: Basis = NO_BASIS): LayerField {
@@ -124,11 +134,9 @@ describe("the layer fields", () => {
 });
 
 describe("fieldGroupsOf", () => {
-	it("groups the fields of a rectangle", () => {
-		const groups = fieldGroupsOf(layerOf(DesignDocument.create()), NO_BASIS);
+	it("groups the fields that the chip rows draw", () => {
+		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
 		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
-			["Position", ["X", "Y"]],
-			["Size", ["W", "H"]],
 			["Rotation", ["Rotation"]],
 			["Corners", ["Radius", "Smoothing"]],
 		]);
@@ -138,9 +146,9 @@ describe("fieldGroupsOf", () => {
 		const doc = DesignDocument.create();
 		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });
 
-		const groups = fieldGroupsOf(layerOf(doc), NO_BASIS);
+		const groups = fieldGroupsOf(layerOf(doc));
 
-		expect(groups.map((group) => group.name)).toEqual(["Position", "Size", "Rotation"]);
+		expect(groups.map((group) => group.name)).toEqual(["Rotation"]);
 		expect(fieldsOf(layerOf(doc), NO_BASIS).map((field) => field.label)).toEqual(BOX_LABELS);
 	});
 

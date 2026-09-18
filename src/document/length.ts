@@ -73,7 +73,11 @@ export function availableUnits(axis: Axis, basis: Basis): readonly Unit[] {
 	return UNITS.filter((unit) => pixelsPerHundred(unit, axis, basis) > 0);
 }
 
-export function parseLength(text: string, fallback: Unit): Length | null {
+export function parseUnitText<U extends string>(
+	text: string,
+	units: readonly U[],
+	fallback: U,
+): { value: number; unit: U } | null {
 	const match = LENGTH_TEXT.exec(text.trim());
 	if (match === null) {
 		return null;
@@ -86,8 +90,12 @@ export function parseLength(text: string, fallback: Unit): Length | null {
 	if (written === "") {
 		return { value, unit: fallback };
 	}
-	const unit = written.toLowerCase();
-	return isUnit(unit) ? { value, unit } : null;
+	const unit = units.find((known) => known === written.toLowerCase());
+	return unit === undefined ? null : { value, unit };
+}
+
+export function parseLength(text: string, fallback: Unit): Length | null {
+	return parseUnitText(text, UNITS, fallback);
 }
 
 export interface Box {
