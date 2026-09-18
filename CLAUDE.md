@@ -1,5 +1,7 @@
 @AGENTS.md
 
+INTERFACES.md gives the rules for a control on the screen.
+
 # Claude Code
 
 - The hooks in `.claude/settings.json` format and lint each changed file. They also run the typecheck and the lint before the turn ends. A hook failure stops the work.
