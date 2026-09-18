@@ -18,6 +18,7 @@ export function LayerView({
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
+	const parent = useLayer(doc, layer?.parent ?? null);
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
 
@@ -30,7 +31,7 @@ export function LayerView({
 			className="layer"
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			style={layerStyle(layer)}
+			style={layerStyle(layer, parent)}
 		>
 			{childIds.map((childId) => (
 				<LayerView doc={doc} id={childId} key={childId} selection={selection} />

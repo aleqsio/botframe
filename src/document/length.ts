@@ -1,4 +1,4 @@
-export const UNITS = ["px", "%", "vw", "vh"] as const;
+export const UNITS = ["px", "rem", "%", "vw", "vh"] as const;
 
 export type Unit = (typeof UNITS)[number];
 
@@ -24,6 +24,7 @@ export interface Basis {
 }
 
 const PERCENT = 100;
+const REM_PIXELS = 16;
 const DECIMALS = 100;
 const LENGTH_TEXT = /^([+-]?(?:\d+\.?\d*|\.\d+))\s*([a-z%]*)$/iu;
 const UNIT_NAMES: ReadonlySet<string> = new Set(UNITS);
@@ -41,6 +42,7 @@ export const AXIS_OF: Readonly<Record<BoxKey, Axis>> = {
 
 const HUNDRED_PIXELS: Readonly<Record<Unit, (basis: Basis, axis: Axis) => number>> = {
 	px: () => PERCENT,
+	rem: () => REM_PIXELS * PERCENT,
 	"%": (basis, axis) => basis.container[axis],
 	vw: (basis) => basis.root.width,
 	vh: (basis) => basis.root.height,

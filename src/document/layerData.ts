@@ -1,5 +1,7 @@
-import type { LoroMap } from "loro-crdt";
+import { LoroMap } from "loro-crdt";
 import type { Geometry, LayerPatch, LayerTraits, Rect } from "./layer";
+import { DEFAULT_LAYOUT, layoutOf } from "./layout";
+import type { LayerLayout, LayoutPatch } from "./layout";
 import {
 	AXIS_OF,
 	BOX_KEYS,
@@ -15,10 +17,15 @@ import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
+const LAYOUT = "layout";
 const UNIT_SUFFIX = "Unit";
 const BLACK = "#000000";
 
 type BoxPixels = Readonly<Record<BoxKey, number | undefined>>;
+
+const DEFAULT_LAYOUT_TEXT: ReadonlyMap<string, string> = new Map(
+	Object.entries(DEFAULT_LAYOUT).map(([key, value]) => [key, JSON.stringify(value)]),
+);
 
 const GEOMETRY_READERS: Readonly<
 	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
@@ -64,11 +71,17 @@ function resolveBox(lengths: LayerLengths, basis: Basis): Rect {
 	};
 }
 
+function readLayout(data: LoroMap): LayerLayout {
+	const held = data.get(LAYOUT);
+	return layoutOf(held instanceof LoroMap ? held.toJSON() : undefined);
+}
+
 export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 	const lengths = readLengths(data);
 	return {
 		...resolveBox(lengths, basis),
 		lengths,
+		layout: readLayout(data),
 		rotation: readNumber(data, "rotation", 0),
 		fill: readString(data, "fill", BLACK),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
@@ -115,8 +128,22 @@ function writeLengths(
 	}
 }
 
+function writeLayoutKey(map: LoroMap, key: string, value: unknown): void {
+	if (JSON.stringify(value) !== DEFAULT_LAYOUT_TEXT.get(key)) {
+		map.set(key, value);
+	} else if (map.get(key) !== undefined) {
+		map.delete(key);
+	}
+}
+
+function writeLayout(map: LoroMap, patch: LayoutPatch): void {
+	for (const [key, value] of Object.entries(patch)) {
+		writeLayoutKey(map, key, value);
+	}
+}
+
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, lengths, x, y, width, height, ...plain } = patch;
+	const { geometry, layout, lengths, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -124,5 +151,8 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	writeLengths(data, lengths, basis);
 	if (geometry !== undefined) {
 		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
+	}
+	if (layout !== undefined) {
+		writeLayout(data.ensureMergeableMap(LAYOUT), layout);
 	}
 }

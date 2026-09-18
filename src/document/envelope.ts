@@ -1,4 +1,7 @@
+import { bagOf, isList, listOf } from "./bag";
+import type { Bag } from "./bag";
 import type { LayerFields, WritableGeometry } from "./layer";
+import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
 import type { LayerLengths, Length } from "./length";
 import { PLAIN_RECTANGLE } from "./subtree";
@@ -7,29 +10,10 @@ import type { LayerNode } from "./subtree";
 const KIND = "botframe/layers";
 const VERSION = 1;
 const DEFAULT_FILL = "#000000";
-const NO_FIELDS: Bag = {};
-
-type Bag = Readonly<Record<string, unknown>>;
 
 export interface LayerEnvelope {
 	sourceParent: string | null;
 	layers: readonly LayerNode[];
-}
-
-function isBag(value: unknown): value is Bag {
-	return typeof value === "object" && value !== null;
-}
-
-function isList(value: unknown): value is readonly unknown[] {
-	return Array.isArray(value);
-}
-
-function bagOf(value: unknown): Bag {
-	return isBag(value) ? value : NO_FIELDS;
-}
-
-function listOf(value: unknown): readonly unknown[] {
-	return isList(value) ? value : [];
 }
 
 function count(bag: Bag, key: string): number {
@@ -100,6 +84,7 @@ function nodeOf(value: unknown): LayerNode {
 		fields,
 		rotation: count(bag, "rotation"),
 		lengths: lengthsOf(bag["lengths"], fields),
+		layout: layoutOf(bag["layout"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

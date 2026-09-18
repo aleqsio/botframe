@@ -1,4 +1,5 @@
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch, WritableGeometry } from "./layer";
+import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
 import type { LayerLengths } from "./length";
 
@@ -6,6 +7,7 @@ export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
 	lengths: LayerLengths;
+	layout: LayerLayout;
 	children: readonly LayerNode[];
 }
 
@@ -49,13 +51,20 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		return null;
 	}
 	const children = source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
-	return { fields: fieldsOf(layer), rotation: layer.rotation, lengths: layer.lengths, children };
+	return {
+		fields: fieldsOf(layer),
+		rotation: layer.rotation,
+		lengths: layer.lengths,
+		layout: layer.layout,
+		children,
+	};
 }
 
 function copyPatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
+		layout: node.layout,
 	};
 }
 

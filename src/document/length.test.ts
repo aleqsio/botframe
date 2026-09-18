@@ -29,6 +29,11 @@ describe("resolveLength", () => {
 		expect(resolveLength({ value: 50, unit: "%" }, "height", BASIS)).toBe(50);
 	});
 
+	it("gives a rem as sixteen pixels on each axis", () => {
+		expect(resolveLength({ value: 2, unit: "rem" }, "width", NO_BASIS)).toBe(32);
+		expect(resolveLength({ value: 2, unit: "rem" }, "height", NO_BASIS)).toBe(32);
+	});
+
 	it("takes vw from the width of the root and vh from its height", () => {
 		expect(resolveLength({ value: 10, unit: "vw" }, "height", BASIS)).toBe(40);
 		expect(resolveLength({ value: 10, unit: "vh" }, "width", BASIS)).toBe(80);
@@ -60,11 +65,11 @@ describe("lengthIn", () => {
 
 describe("availableUnits", () => {
 	it("offers each unit that has a basis", () => {
-		expect(availableUnits("width", BASIS)).toEqual(["px", "%", "vw", "vh"]);
+		expect(availableUnits("width", BASIS)).toEqual(["px", "rem", "%", "vw", "vh"]);
 	});
 
-	it("offers pixels only to a layer that has no container", () => {
-		expect(availableUnits("width", NO_BASIS)).toEqual(["px"]);
+	it("offers only the units that need no container to a layer that has none", () => {
+		expect(availableUnits("width", NO_BASIS)).toEqual(["px", "rem"]);
 	});
 });
 
@@ -90,7 +95,8 @@ describe("parseLength", () => {
 describe("isUnit", () => {
 	it("names the units the document writes", () => {
 		expect(isUnit("vh")).toBe(true);
-		expect(isUnit("rem")).toBe(false);
+		expect(isUnit("rem")).toBe(true);
+		expect(isUnit("em")).toBe(false);
 	});
 });
 

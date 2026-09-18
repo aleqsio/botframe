@@ -13,7 +13,7 @@ const ESCAPES: Readonly<Record<string, string>> = {
 };
 
 function styledLayerOf(node: LayerNode): StyledLayer {
-	return { ...node.fields, rotation: node.rotation };
+	return { ...node.fields, rotation: node.rotation, layout: node.layout };
 }
 
 function propertyName(key: string): string {
@@ -33,12 +33,13 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
-export function layerMarkup(node: LayerNode): string {
-	const style = escaped(
-		declarations(layerStyle(styledLayerOf(node)))
-			.toSorted()
-			.join("; "),
-	);
-	const children = node.children.map((child) => layerMarkup(child)).join("");
+function markupOf(node: LayerNode, parent: StyledLayer | null): string {
+	const self = styledLayerOf(node);
+	const style = escaped(declarations(layerStyle(self, parent)).toSorted().join("; "));
+	const children = node.children.map((child) => markupOf(child, self)).join("");
 	return `<div style="${style}">${children}</div>`;
+}
+
+export function layerMarkup(node: LayerNode): string {
+	return markupOf(node, null);
 }

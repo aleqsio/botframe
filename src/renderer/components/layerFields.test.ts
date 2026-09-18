@@ -196,15 +196,15 @@ function choiceOf(held: { layer: Layer; basis: Basis }, label: string): UnitChoi
 }
 
 describe("the unit of a box field", () => {
-	it("makes pixels the only possible unit of a layer that stands at the root", () => {
+	it("makes the absolute units the possible units of a layer that stands at the root", () => {
 		const doc = DesignDocument.create();
 		const choice = choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W");
-		expect(choice.possible).toEqual(new Set(["px"]));
+		expect(choice.possible).toEqual(new Set(["px", "rem"]));
 	});
 
 	it("makes each unit possible for a layer inside a container", () => {
 		const child = childOf(DesignDocument.create());
-		expect(choiceOf(child, "X").possible).toEqual(new Set(["px", "%", "vw", "vh"]));
+		expect(choiceOf(child, "X").possible).toEqual(new Set(["px", "rem", "%", "vw", "vh"]));
 	});
 
 	it("makes the unit a layer holds possible, even when the layer has no basis for it", () => {
@@ -213,7 +213,7 @@ describe("the unit of a box field", () => {
 		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
 		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
 
-		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px"]));
+		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px", "rem"]));
 	});
 
 	it("gives a unit choice to the box fields only, also at the root", () => {

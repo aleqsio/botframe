@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pixelLengths } from "../document/documentFixtures";
+import { DEFAULT_LAYOUT } from "../document/layout";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -18,7 +19,13 @@ const FIELDS: LayerFields = {
 
 function nodeOf(fields: Partial<LayerFields>, children: readonly LayerNode[] = []): LayerNode {
 	const merged = { ...FIELDS, ...fields };
-	return { fields: merged, rotation: 0, lengths: pixelLengths(merged), children };
+	return {
+		fields: merged,
+		rotation: 0,
+		lengths: pixelLengths(merged),
+		layout: DEFAULT_LAYOUT,
+		children,
+	};
 }
 
 describe("layerMarkup", () => {
@@ -29,7 +36,8 @@ describe("layerMarkup", () => {
 
 	it("writes the style properties in one order that does not follow the order of the object", () => {
 		expect(layerMarkup(nodeOf({}))).toBe(
-			'<div style="background: #123456; border-radius: 4px; height: 40px;' +
+			'<div style="background: #123456; border-radius: 4px; display: block;' +
+				" height: 40px;" +
 				' transform: translate3d(10px, 20px, 0); width: 30px"></div>',
 		);
 	});
@@ -38,7 +46,9 @@ describe("layerMarkup", () => {
 		const node = nodeOf({ clip: true, geometry: { kind: "ellipse" } });
 		const markup = layerMarkup(node);
 
-		for (const [key, value] of Object.entries(layerStyle({ ...node.fields, rotation: 0 }))) {
+		for (const [key, value] of Object.entries(
+			layerStyle({ ...node.fields, rotation: 0, layout: node.layout }, null),
+		)) {
 			expect(markup).toContain(String(value));
 			expect(key.length).toBeGreaterThan(0);
 		}
@@ -63,6 +73,7 @@ describe("layerMarkup", () => {
 			fields: FIELDS,
 			rotation: 30,
 			lengths: pixelLengths(FIELDS),
+			layout: DEFAULT_LAYOUT,
 			children: [],
 		};
 		expect(layerMarkup(node)).toContain("rotate(30deg)");
