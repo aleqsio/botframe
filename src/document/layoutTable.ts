@@ -72,7 +72,9 @@ export class LayoutTable {
 	#compute(container: Layer): ReadonlyMap<LayerId, Placement> {
 		const children = this.#source.childIds(container.id).flatMap((id) => {
 			const traits = this.#source.traitsOf(id, container.id);
-			return traits === null ? [] : [{ id, ...traits }];
+			return traits === null
+				? []
+				: [{ id, width: traits.width, height: traits.height, cell: traits.cell }];
 		});
 		const placements = placeChildren(container, container.layout, children);
 		this.#placements.set(container.id, placements);

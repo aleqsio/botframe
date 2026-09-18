@@ -9,6 +9,7 @@ import type { Basis, LayerLengths } from "./length";
 import { sameCell } from "./layout";
 import { LayoutTable } from "./layoutTable";
 import { canMove } from "./moveRules";
+import type { MoveRules } from "./moveRules";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
 
@@ -76,6 +77,10 @@ export class DesignDocument {
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
 	readonly #layouts: LayoutTable;
+	readonly #rules: MoveRules = {
+		live: (id) => this.#liveNode(id),
+		siblings: (parent) => this.siblingIds(parent),
+	};
 	#ids: readonly LayerId[] | null = null;
 	#roots: readonly LayerId[] | null = null;
 
@@ -205,11 +210,7 @@ export class DesignDocument {
 	}
 
 	move(id: LayerId, parent: LayerId | null, index?: number): boolean {
-		const rules = {
-			live: (held: LayerId) => this.#liveNode(held),
-			siblings: (held: LayerId | null) => this.siblingIds(held),
-		};
-		if (!canMove(rules, id, parent, index)) {
+		if (!canMove(this.#rules, id, parent, index)) {
 			return false;
 		}
 		const before = this.layer(id);
@@ -427,8 +428,7 @@ export class DesignDocument {
 	#refreshLayer(id: LayerId): void {
 		const stale = this.#layers.get(id);
 		this.#invalidate(id);
-		const node = this.#liveNode(id);
-		const next = node === null ? null : this.layer(id);
+		const next = this.layer(id);
 		if (next === null) {
 			return;
 		}
@@ -436,7 +436,7 @@ export class DesignDocument {
 			this.#layouts.refresh(next.parent);
 		}
 		if (stale !== undefined && resized(stale, next)) {
-			this.#dropRelativeBelow(node ?? undefined);
+			this.#dropRelativeBelow(this.#tree().getNodeByID(id));
 		}
 	}
 

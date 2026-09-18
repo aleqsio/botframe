@@ -1,7 +1,7 @@
 import type { Layer, LayerPatch } from "../../document/layer";
 import { PIXELS } from "../../document/length";
 import { gridTracks } from "../../document/layout";
-import type { Cell, Direction, GuideAxis, Layout, LayoutKind } from "../../document/layout";
+import type { Cell, Direction, Guide, GuideAxis, Layout, LayoutKind } from "../../document/layout";
 import { LENGTH_STEP } from "../input/step";
 import type { SegmentOption } from "./Segmented";
 import type { FieldGroup, LayerField } from "./layerFields";
@@ -129,11 +129,9 @@ export function cellGroupOf(layer: Layer, container: Layer | null): FieldGroup |
 	};
 }
 
-export function guideField(layer: Layer, index: number): LayerField {
-	const guide = layer.guides[index];
-	const label = guide === undefined ? "Guide" : GUIDE_LABELS[guide.axis];
+export function guideField(layer: Layer, index: number, guide: Guide): LayerField {
 	return {
-		label,
+		label: GUIDE_LABELS[guide.axis],
 		unit: PIXELS,
 		choice: null,
 		bound: { kind: "clamp", min: -SPACE_LIMIT, max: SPACE_LIMIT },

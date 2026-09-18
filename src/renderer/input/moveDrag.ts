@@ -23,21 +23,23 @@ function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return { x: origin.x - layer.x, y: origin.y - layer.y };
 }
 
-function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): void {
+function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
 	const parent = parentUnder(target, move, point);
 	const layer = target.doc.layer(move.id);
 	if (parent === move.parent || layer === null) {
-		return;
+		return move;
 	}
 	const from = parentChainOf(target, move.id);
 	if (!target.doc.move(move.id, parent)) {
-		return;
+		return move;
 	}
 	const moved = target.doc.layer(move.id) ?? layer;
 	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
 	target.doc.update(move.id, placement);
 	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
-	target.user.move.set({ ...move, parent, offset, field: snapFieldAround(target, move.id) });
+	const next = { ...move, parent, offset, field: snapFieldAround(target, move.id) };
+	target.user.move.set(next);
+	return next;
 }
 
 function snappedPlace(target: PointerTarget, move: LayerMove, layer: Layer, wanted: Point): Point {
@@ -54,15 +56,15 @@ function carryLayer(
 	canvas: Point,
 	modifiers: Modifiers,
 ): void {
-	const layer = target.doc.layer(move.id);
-	if (layer === null) {
-		return;
-	}
 	const point = parentPointOf(target, move.id, canvas);
 	const wanted = { x: point.x - move.offset.x, y: point.y - move.offset.y };
 	if (modifiers.control) {
 		target.user.snap.set(null);
 		target.doc.update(move.id, wanted);
+		return;
+	}
+	const layer = target.doc.layer(move.id);
+	if (layer === null) {
 		return;
 	}
 	target.doc.update(move.id, snappedPlace(target, move, layer, wanted));
@@ -92,9 +94,8 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 	if (!isLaidOut(target, move.parent)) {
 		carryLayer(target, move, point.canvas, modifiers);
 	}
-	retarget(target, move, point);
-	const held = target.user.move.get();
-	if (held !== null && isLaidOut(target, held.parent)) {
+	const held = retarget(target, move, point);
+	if (isLaidOut(target, held.parent)) {
 		target.user.snap.set(null);
 		settleInLayout(target, held.id, point.canvas);
 	}
@@ -121,9 +122,7 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	}
 	user.move.set(null);
 	user.snap.set(null);
-	if (!doc.move(move.id, move.from, move.index)) {
-		doc.move(move.id, move.from);
-	}
+	doc.move(move.id, move.from, move.index);
 	doc.update(move.id, move.start);
 	doc.commit(CANCEL_COMMIT);
 }

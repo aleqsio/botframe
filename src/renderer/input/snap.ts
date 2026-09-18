@@ -118,13 +118,14 @@ function nearestTarget(
 	}
 	const other = point[otherAxis(axis)];
 	let best = found;
-	for (let index = firstEqual(sorted, nearest, found.at); ; index += 1) {
+	for (let index = firstEqual(sorted, nearest, found.at); index < sorted.length; index += 1) {
 		const held = sorted[index];
 		if (held === undefined || held.at !== found.at) {
-			return best;
+			break;
 		}
 		best = otherGap(held, other) < otherGap(best, other) ? held : best;
 	}
+	return best;
 }
 
 function matchAlong(

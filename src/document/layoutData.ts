@@ -17,7 +17,7 @@ function tracksOf(fields: FieldSource | null, key: string): number {
 	return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 }
 
-function indexOf(fields: FieldSource, key: string): number {
+function trackIndexOf(fields: FieldSource, key: string): number {
 	const value = readNumber(fields, key, 0);
 	return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }
@@ -48,7 +48,7 @@ export function layoutOf(kind: string, fields: FieldSource | null): Layout {
 export function cellOf(fields: FieldSource | null): Cell | null {
 	return fields === null
 		? null
-		: { column: indexOf(fields, "column"), row: indexOf(fields, "row") };
+		: { column: trackIndexOf(fields, "column"), row: trackIndexOf(fields, "row") };
 }
 
 function guideOf(value: unknown): Guide | null {

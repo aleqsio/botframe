@@ -7,7 +7,8 @@ import { parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 export function isLaidOut(target: PointerTarget, parent: LayerId | null): boolean {
-	return parent !== null && target.doc.layer(parent)?.layout.kind !== "free";
+	const container = parent === null ? null : target.doc.layer(parent);
+	return container !== null && container.layout.kind !== "free";
 }
 
 export function flexSlotOf(direction: Direction, others: readonly Layer[], point: Point): number {
@@ -30,14 +31,13 @@ function recell(target: PointerTarget, layer: Layer, cell: Cell): void {
 	}
 }
 
-function containerOf(target: PointerTarget, layer: Layer | null): Layer | null {
-	return layer === null || layer.parent === null ? null : target.doc.layer(layer.parent);
-}
-
 export function settleInLayout(target: PointerTarget, id: LayerId, canvas: Point): void {
 	const layer = target.doc.layer(id);
-	const container = containerOf(target, layer);
-	if (layer === null || container === null) {
+	if (layer === null || layer.parent === null) {
+		return;
+	}
+	const container = target.doc.layer(layer.parent);
+	if (container === null) {
 		return;
 	}
 	const point = parentPointOf(target, id, canvas);

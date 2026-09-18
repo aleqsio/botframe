@@ -105,7 +105,7 @@ describe("guides", () => {
 				{ axis: "y", at: 2 },
 			],
 		});
-		const field = guideField(layerOf(doc, id), 1);
+		const field = guideField(layerOf(doc, id), 1, { axis: "y", at: 2 });
 		expect(field.label).toBe("Horizontal");
 		expect(field.read(layerOf(doc, id))).toBe(2);
 		expect(field.patch(9)).toEqual({
