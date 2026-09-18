@@ -5,7 +5,7 @@ import type { LayerLayout, Placement } from "../../../document/layout";
 import { CellPicker } from "./CellPicker";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
-import { anchorOf, placedAt } from "./cellPlacement";
+import { anchorOf, clampPlacement, placedAt } from "./cellPlacement";
 import { placementText } from "./selfText";
 
 const CELL_MODES: readonly SegmentOption<Placement["mode"]>[] = [
@@ -22,7 +22,7 @@ export function CellSection({
 	layer: Layer;
 	tracks: LayerLayout["tracks"];
 }): ReactElement {
-	const { cell } = layer.layout;
+	const cell = clampPlacement(layer.layout.cell, tracks.columns.length, tracks.rows.length);
 
 	return (
 		<>
@@ -40,7 +40,7 @@ export function CellSection({
 					value={cell.mode}
 				/>
 			</div>
-			<CellPicker doc={doc} layer={layer} tracks={tracks} />
+			<CellPicker cell={cell} doc={doc} layer={layer} tracks={tracks} />
 			<p className="layout-note">{placementText(cell)}</p>
 		</>
 	);

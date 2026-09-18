@@ -58,7 +58,13 @@ export function SizeRow({
 
 	return (
 		<div className={`layout-row layout-size layout-size-${axis}`}>
-			<ChipGrip field={field} onCommit={commit} onPatch={write} value={field.read(layer)} />
+			<ChipGrip
+				disabled={!fixed}
+				field={field}
+				onCommit={commit}
+				onPatch={write}
+				value={field.read(layer)}
+			/>
 			<Segmented
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {

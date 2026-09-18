@@ -8,6 +8,7 @@ import type {
 	LayerLayout,
 	MarginSide,
 	Placement,
+	PositionMode,
 	Side,
 	Spacing,
 	Span,
@@ -107,14 +108,20 @@ export function layerTransform(layer: StyledLayer): string {
 	return layer.rotation === 0 ? place : `${place} ${turnAbout(layer)}`;
 }
 
-function flowOf(layout: LayerLayout, parent: LayerLayout | null): ParentFlow {
-	const display = parent?.display ?? "block";
-	return { display, outOfFlow: display === "block" || layout.position === "absolute" };
+export function outOfFlow(parentDisplay: DisplayMode | null, position: PositionMode): boolean {
+	return parentDisplay === null || parentDisplay === "block" || position === "absolute";
+}
+
+function flowOf(layout: LayerLayout, parentDisplay: DisplayMode | null): ParentFlow {
+	return {
+		display: parentDisplay ?? "block",
+		outOfFlow: outOfFlow(parentDisplay, layout.position),
+	};
 }
 
 function placeStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	if (flow.outOfFlow) {
-		return { transform: layerTransform(layer) };
+		return { position: "absolute", transform: layerTransform(layer) };
 	}
 	return {
 		position: "relative",
@@ -138,12 +145,20 @@ function fillStyle(axis: Axis, flow: ParentFlow): CSSProperties {
 	return onMainAxis(axis, flow.display) ? { flex: "1 1 0%" } : { alignSelf: "stretch" };
 }
 
+function shrinkStyle(axis: Axis, flow: ParentFlow): CSSProperties {
+	if (flow.outOfFlow || flow.display === "grid" || !onMainAxis(axis, flow.display)) {
+		return {};
+	}
+	return { flexShrink: 0 };
+}
+
 function axisStyle(axis: Axis, layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	const mode = layer.layout[axis];
-	if (mode === "fixed") {
-		return SIZE_TEXT[axis](`${layer[axis]}px`);
+	if (mode === "fill") {
+		return fillStyle(axis, flow);
 	}
-	return mode === "hug" ? SIZE_TEXT[axis]("fit-content") : fillStyle(axis, flow);
+	const text = mode === "fixed" ? `${layer[axis]}px` : "fit-content";
+	return { ...SIZE_TEXT[axis](text), ...shrinkStyle(axis, flow) };
 }
 
 function spanText(span: Span): string {
@@ -151,7 +166,7 @@ function spanText(span: Span): string {
 }
 
 function cellStyle(cell: Placement, flow: ParentFlow): CSSProperties {
-	if (flow.display !== "grid" || cell.mode === "auto") {
+	if (flow.outOfFlow || flow.display !== "grid" || cell.mode === "auto") {
 		return {};
 	}
 	return { gridColumn: spanText(cell.column), gridRow: spanText(cell.row) };
@@ -165,7 +180,7 @@ function marginText(side: MarginSide): string | null {
 }
 
 function marginStyle(margin: Record<Side, MarginSide>, flow: ParentFlow): CSSProperties {
-	if (flow.display === "block") {
+	if (flow.outOfFlow) {
 		return {};
 	}
 	const style: CSSProperties = {};
@@ -178,8 +193,8 @@ function marginStyle(margin: Record<Side, MarginSide>, flow: ParentFlow): CSSPro
 	return style;
 }
 
-function selfStyle(layer: StyledLayer, parent: LayerLayout | null): CSSProperties {
-	const flow = flowOf(layer.layout, parent);
+function selfStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSProperties {
+	const flow = flowOf(layer.layout, parentDisplay);
 	return {
 		...placeStyle(layer, flow),
 		...axisStyle("width", layer, flow),
@@ -253,9 +268,9 @@ function containerStyle(layout: LayerLayout): CSSProperties {
 	return { ...displayStyle(layout), ...children, ...paddingStyle(layout.padding) };
 }
 
-export function layerStyle(layer: StyledLayer, parent: StyledLayer | null): CSSProperties {
+export function layerStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSProperties {
 	return {
-		...selfStyle(layer, parent?.layout ?? null),
+		...selfStyle(layer, parentDisplay),
 		...containerStyle(layer.layout),
 		background: layer.fill,
 		overflow: layer.clip ? "hidden" : undefined,

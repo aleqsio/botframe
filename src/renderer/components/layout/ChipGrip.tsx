@@ -33,6 +33,7 @@ interface ChipDrag {
 type DragRef = RefObject<ChipDrag | null>;
 
 export interface ChipGripProps {
+	disabled?: boolean | undefined;
 	field: LayerField;
 	value: number;
 	onPatch: (patch: LayerPatch) => void;
@@ -60,7 +61,7 @@ function applyValue(props: ChipGripProps, value: number): void {
 }
 
 function beginDrag(held: DragRef, props: ChipGripProps, event: ReactPointerEvent<HTMLElement>) {
-	if (event.button !== PRIMARY_BUTTON) {
+	if (event.button !== PRIMARY_BUTTON || props.disabled === true) {
 		return;
 	}
 	event.preventDefault();
@@ -106,13 +107,21 @@ function endDrag(held: DragRef, props: ChipGripProps): void {
 	props.onCommit();
 }
 
+export function steppedByKey(props: ChipGripProps, key: string, held: Modifiers): number | null {
+	const sign = ARROW_SIGN[key];
+	if (sign === undefined || props.disabled === true) {
+		return null;
+	}
+	return steppedValue(props.field, props.value, sign, held);
+}
+
 function stepByKey(props: ChipGripProps, event: ReactKeyboardEvent<HTMLElement>): void {
-	const sign = ARROW_SIGN[event.key];
-	if (sign === undefined) {
+	const next = steppedByKey(props, event.key, modifiersOf(event));
+	if (next === null) {
 		return;
 	}
 	event.preventDefault();
-	applyValue(props, steppedValue(props.field, props.value, sign, modifiersOf(event)));
+	applyValue(props, next);
 	props.onCommit();
 }
 
@@ -139,7 +148,7 @@ function useChipHandlers(props: ChipGripProps): ChipHandlers {
 }
 
 export function ChipGrip(props: ChipGripProps): ReactElement {
-	const { field, value } = props;
+	const { disabled = false, field, value } = props;
 	const handlers = useChipHandlers(props);
 
 	return (
@@ -151,6 +160,7 @@ export function ChipGrip(props: ChipGripProps): ReactElement {
 				aria-valuemin={field.bound.min}
 				aria-valuenow={value}
 				className="chip-grip"
+				disabled={disabled}
 				max={field.bound.max}
 				min={field.bound.min}
 				onKeyDown={handlers.onKeyDown}

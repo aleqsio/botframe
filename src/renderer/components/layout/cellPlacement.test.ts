@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anchorOf, holdsCell, placedAt } from "./cellPlacement";
+import { anchorOf, clampPlacement, holdsCell, placedAt } from "./cellPlacement";
 
 const PLACED = { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } } as const;
 
@@ -49,5 +49,36 @@ describe("holdsCell", () => {
 
 	it("holds no cell under auto placement", () => {
 		expect(holdsCell({ mode: "auto" }, { column: 1, row: 1 })).toBe(false);
+	});
+});
+
+describe("clampPlacement", () => {
+	it("moves a span that sits past the end to the last cell", () => {
+		const past = {
+			mode: "place",
+			column: { start: 3, end: 4 },
+			row: { start: 3, end: 4 },
+		} as const;
+		expect(clampPlacement(past, 2, 2)).toEqual({
+			mode: "place",
+			column: { start: 2, end: 3 },
+			row: { start: 2, end: 3 },
+		});
+	});
+
+	it("shortens a span that reaches past the end", () => {
+		expect(clampPlacement(PLACED, 2, 2)).toEqual({
+			mode: "place",
+			column: { start: 2, end: 3 },
+			row: { start: 1, end: 3 },
+		});
+	});
+
+	it("keeps a span that the tracks hold", () => {
+		expect(clampPlacement(PLACED, 3, 2)).toEqual(PLACED);
+	});
+
+	it("keeps automatic placement", () => {
+		expect(clampPlacement({ mode: "auto" }, 2, 2)).toEqual({ mode: "auto" });
 	});
 });

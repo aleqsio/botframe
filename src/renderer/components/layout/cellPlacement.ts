@@ -23,6 +23,18 @@ export function placedAt(anchor: Cell, at: Cell): Placement {
 	};
 }
 
+function clampSpan(span: Span, count: number): Span {
+	const last = Math.max(count, 1);
+	return { start: Math.min(span.start, last), end: Math.min(span.end, last + 1) };
+}
+
+export function clampPlacement(cell: Placement, columns: number, rows: number): Placement {
+	if (cell.mode === "auto") {
+		return cell;
+	}
+	return { mode: "place", column: clampSpan(cell.column, columns), row: clampSpan(cell.row, rows) };
+}
+
 function inSpan(span: Span, line: number): boolean {
 	return line >= span.start && line < span.end;
 }

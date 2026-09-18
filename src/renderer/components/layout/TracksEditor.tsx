@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { CSSProperties, ReactElement, RefObject } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
+import { dismissPlan } from "./dismiss";
 import { TrackChips } from "./TrackChips";
 import { TrackBar } from "./TrackBar";
 import { TrackStencil } from "./TrackStencil";
@@ -16,7 +17,18 @@ function listenForDismiss(root: PadRef, onDismiss: () => void): () => void {
 		if (!(target instanceof Element)) {
 			return;
 		}
-		if (root.current?.contains(target) !== true && target.closest(".unit-menu") === null) {
+		const focused = document.activeElement;
+		const active = focused instanceof HTMLElement ? focused : null;
+		const plan = dismissPlan({
+			active,
+			inMenu: target.closest(".unit-menu") !== null,
+			root: root.current,
+			target,
+		});
+		if (plan.blur) {
+			active?.blur();
+		}
+		if (plan.dismiss) {
 			onDismiss();
 		}
 	};
@@ -34,7 +46,17 @@ function listenForDismiss(root: PadRef, onDismiss: () => void): () => void {
 }
 
 function useDismiss(root: PadRef, open: boolean, onDismiss: () => void): void {
-	useEffect(() => (open ? listenForDismiss(root, onDismiss) : undefined), [onDismiss, open, root]);
+	const dismiss = useEffectEvent(onDismiss);
+
+	useEffect(
+		() =>
+			open
+				? listenForDismiss(root, () => {
+						dismiss();
+					})
+				: undefined,
+		[open, root],
+	);
 }
 
 function ColumnBracket({

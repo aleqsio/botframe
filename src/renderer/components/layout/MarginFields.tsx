@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { MARGIN_UNITS } from "../../../document/layout";
-import type { MarginSide, Side } from "../../../document/layout";
+import type { DisplayMode, MarginSide, Side } from "../../../document/layout";
+import { outOfFlow } from "../../layerStyle";
 import { SideFields } from "./SideFields";
 import { marginMeasure, marginSideOf } from "./measure";
 import type { Measure, MarginUnit } from "./measure";
@@ -23,20 +24,21 @@ function measuresOf(margin: Margins): Record<Side, Measure<MarginUnit>> {
 }
 
 export function MarginFields({
-	blocked,
+	display,
 	doc,
 	layer,
 }: {
-	blocked: boolean;
+	display: DisplayMode;
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
 	const { margin } = layer.layout;
+	const dim = outOfFlow(display, layer.layout.position);
 
 	return (
 		<div
-			className={blocked ? "layout-sides layout-margin layout-dim" : "layout-sides layout-margin"}
-			title={blocked ? MARGIN_TIP : undefined}
+			className={dim ? "layout-sides layout-margin layout-dim" : "layout-sides layout-margin"}
+			title={dim ? MARGIN_TIP : undefined}
 		>
 			<SideFields
 				group="Margin"

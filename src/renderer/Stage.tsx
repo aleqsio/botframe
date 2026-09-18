@@ -35,7 +35,7 @@ export function Stage({
 		>
 			<Viewport camera={user.camera}>
 				{ids.map((id) => (
-					<LayerView doc={doc} id={id} key={id} selection={user.selection} />
+					<LayerView doc={doc} id={id} key={id} parentDisplay={null} selection={user.selection} />
 				))}
 				{ids.map((id) => (
 					<ArtboardLabel doc={doc} id={id} key={id} selection={user.selection} />

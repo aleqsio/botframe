@@ -45,7 +45,7 @@ export function SelfSection({
 				</>
 			) : null}
 			<span className="layout-sub">Margin</span>
-			<MarginFields blocked={blocked} doc={doc} layer={layer} />
+			<MarginFields display={display} doc={doc} layer={layer} />
 			<p className="layout-note">{SELF_NOTE}</p>
 		</section>
 	);

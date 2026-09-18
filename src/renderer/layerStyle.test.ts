@@ -4,6 +4,7 @@ import { pixelBox } from "../document/documentFixtures";
 import type { Geometry, Layer } from "../document/layer";
 import { DEFAULT_LAYOUT } from "../document/layout";
 import type {
+	DisplayMode,
 	LayoutPatch,
 	MarginSide,
 	PositionMode,
@@ -12,12 +13,15 @@ import type {
 	Spacing,
 	SpacingUnit,
 } from "../document/layout";
-import { layerStyle } from "./layerStyle";
+import { layerStyle, outOfFlow } from "./layerStyle";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
-const ROW: LayoutPatch = { display: "row" };
-const COLUMN: LayoutPatch = { display: "column" };
-const GRID: LayoutPatch = { display: "grid" };
+const ROW: DisplayMode = "row";
+const COLUMN: DisplayMode = "column";
+const GRID: DisplayMode = "grid";
+const PLACED: LayoutPatch = {
+	cell: { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } },
+};
 const TURNED = "translate(15px, 20px) rotate(30deg) translate(-15px, -20px)";
 
 function layerWith(geometry: Geometry): Layer {
@@ -38,15 +42,15 @@ function layerOf(layout: LayoutPatch): Layer {
 	return { ...layerWith({ kind: "ellipse" }), layout: { ...DEFAULT_LAYOUT, ...layout } };
 }
 
-function styleIn(layout: LayoutPatch, parent: LayoutPatch | null): CSSProperties {
-	return layerStyle(layerOf(layout), parent === null ? null : layerOf(parent));
+function styleIn(layout: LayoutPatch, parent: DisplayMode | null): CSSProperties {
+	return layerStyle(layerOf(layout), parent);
 }
 
-function positionIn(position: PositionMode, parent: LayoutPatch | null): CSSProperties {
+function positionIn(position: PositionMode, parent: DisplayMode | null): CSSProperties {
 	return styleIn({ position }, parent);
 }
 
-function sizeIn(width: SizeMode, height: SizeMode, parent: LayoutPatch | null): CSSProperties {
+function sizeIn(width: SizeMode, height: SizeMode, parent: DisplayMode | null): CSSProperties {
 	return styleIn({ width, height }, parent);
 }
 
@@ -130,8 +134,13 @@ describe("the position of a layer", () => {
 	it("keeps the document transform for a layer that a block parent holds", () => {
 		const style = positionIn("offset", null);
 		expect(style.transform).toBe("translate3d(10px, 20px, 0)");
-		expect(style.position).toBeUndefined();
 		expect(style.left).toBeUndefined();
+	});
+
+	it("writes position absolute for each layer that is out of the flow", () => {
+		expect(positionIn("offset", null).position).toBe("absolute");
+		expect(positionIn("absolute", ROW).position).toBe("absolute");
+		expect(positionIn("absolute", GRID).position).toBe("absolute");
 	});
 
 	it("keeps the document transform for an absolute layer under a flex parent", () => {
@@ -150,7 +159,7 @@ describe("the position of a layer", () => {
 
 	it("writes no left or top for an offset of zero and no transform without an angle", () => {
 		const flat = layerOf({});
-		const style = layerStyle({ ...flat, x: 0, y: 0 }, layerOf(GRID));
+		const style = layerStyle({ ...flat, x: 0, y: 0 }, GRID);
 		expect(style.left).toBeUndefined();
 		expect(style.top).toBeUndefined();
 		expect(style.transform).toBeUndefined();
@@ -158,7 +167,7 @@ describe("the position of a layer", () => {
 
 	it("turns a layer in the flow around its center and does not move it", () => {
 		const turned = { ...layerOf({}), rotation: 30 };
-		expect(layerStyle(turned, layerOf(ROW)).transform).toBe(TURNED);
+		expect(layerStyle(turned, ROW).transform).toBe(TURNED);
 	});
 });
 
@@ -209,18 +218,18 @@ describe("the size of a layer", () => {
 
 describe("the cell of a layer", () => {
 	it("writes the grid lines of a placed cell under a grid parent", () => {
-		const cell: LayoutPatch = {
-			cell: { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } },
-		};
-		expect(styleIn(cell, GRID)).toMatchObject({ gridColumn: "2 / 4", gridRow: "1 / 3" });
+		expect(styleIn(PLACED, GRID)).toMatchObject({ gridColumn: "2 / 4", gridRow: "1 / 3" });
 	});
 
 	it("writes no grid lines for an automatic cell or under a parent that is not a grid", () => {
 		expect(styleIn({}, GRID).gridColumn).toBeUndefined();
-		const placed: LayoutPatch = {
-			cell: { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } },
-		};
-		expect(styleIn(placed, ROW).gridColumn).toBeUndefined();
+		expect(styleIn(PLACED, ROW).gridColumn).toBeUndefined();
+	});
+
+	it("writes no grid lines for an absolute child of a grid parent", () => {
+		const style = styleIn({ ...PLACED, position: "absolute" }, GRID);
+		expect(style.gridColumn).toBeUndefined();
+		expect(style.gridRow).toBeUndefined();
 	});
 });
 
@@ -239,5 +248,55 @@ describe("the margin of a layer", () => {
 
 	it("writes no margin under a block parent", () => {
 		expect(styleIn(sides("left", { unit: "auto" }), null).marginLeft).toBeUndefined();
+	});
+
+	it("writes no margin for an absolute child of a flex or a grid parent", () => {
+		const held = { ...sides("left", { unit: "auto" }), position: "absolute" } as const;
+		expect(styleIn(held, ROW).marginLeft).toBeUndefined();
+		expect(styleIn({ ...held, ...sides("top", spacing(8, "px")) }, GRID).marginTop).toBeUndefined();
+	});
+});
+
+describe("the shrink of a child in a flex parent", () => {
+	it("holds a fixed child and a hug child at the size the document gives", () => {
+		expect(sizeIn("fixed", "fixed", ROW).flexShrink).toBe(0);
+		expect(sizeIn("hug", "hug", ROW).flexShrink).toBe(0);
+		expect(sizeIn("fixed", "fixed", COLUMN).flexShrink).toBe(0);
+		expect(sizeIn("hug", "hug", COLUMN).flexShrink).toBe(0);
+	});
+
+	it("leaves a fill child on the flex factor", () => {
+		expect(sizeIn("fill", "fixed", ROW).flex).toBe("1 1 0%");
+		expect(sizeIn("fill", "fixed", ROW).flexShrink).toBeUndefined();
+		expect(sizeIn("fixed", "fill", COLUMN).flex).toBe("1 1 0%");
+		expect(sizeIn("fixed", "fill", COLUMN).flexShrink).toBeUndefined();
+	});
+
+	it("writes no shrink under a grid or a block parent, or for an absolute child", () => {
+		expect(sizeIn("fixed", "fixed", GRID).flexShrink).toBeUndefined();
+		expect(sizeIn("fixed", "fixed", null).flexShrink).toBeUndefined();
+		expect(styleIn({ position: "absolute" }, ROW).flexShrink).toBeUndefined();
+	});
+});
+
+describe("outOfFlow", () => {
+	it("holds a child out of the flow under a block parent and when the child is absolute", () => {
+		expect(outOfFlow(null, "offset")).toBe(true);
+		expect(outOfFlow("block", "offset")).toBe(true);
+		expect(outOfFlow(ROW, "absolute")).toBe(true);
+		expect(outOfFlow(GRID, "absolute")).toBe(true);
+	});
+
+	it("keeps a child in the flow of a flex or a grid parent", () => {
+		expect(outOfFlow(ROW, "offset")).toBe(false);
+		expect(outOfFlow(COLUMN, "offset")).toBe(false);
+		expect(outOfFlow(GRID, "offset")).toBe(false);
+	});
+});
+
+describe("the parent of a layer", () => {
+	it("reads the display of the parent and nothing else", () => {
+		expect(styleIn({ width: "fill" }, ROW).flex).toBe("1 1 0%");
+		expect(styleIn({ width: "fill" }, null).width).toBe("100%");
 	});
 });

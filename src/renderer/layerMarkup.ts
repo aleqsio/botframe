@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
 import type { StyledLayer } from "./layerStyle";
@@ -33,10 +34,13 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
-function markupOf(node: LayerNode, parent: StyledLayer | null): string {
-	const self = styledLayerOf(node);
-	const style = escaped(declarations(layerStyle(self, parent)).toSorted().join("; "));
-	const children = node.children.map((child) => markupOf(child, self)).join("");
+function markupOf(node: LayerNode, parentDisplay: DisplayMode | null): string {
+	const style = escaped(
+		declarations(layerStyle(styledLayerOf(node), parentDisplay))
+			.toSorted()
+			.join("; "),
+	);
+	const children = node.children.map((child) => markupOf(child, node.layout.display)).join("");
 	return `<div style="${style}">${children}</div>`;
 }
 

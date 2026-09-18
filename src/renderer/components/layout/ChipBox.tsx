@@ -7,7 +7,6 @@ import { UnitMenu } from "./UnitMenu";
 import type { ChipGripProps } from "./ChipGrip";
 
 export interface ChipBoxProps extends ChipGripProps {
-	disabled?: boolean | undefined;
 	children?: ReactNode | undefined;
 }
 
