@@ -29,7 +29,6 @@
 
 	--layout-content: calc(var(--inspector-width) - 2 * var(--layout-space-4));
 	--layout-label: calc(var(--layout-content) / 4);
-	--layout-mode: calc(var(--layout-content) / 2);
 	--layout-gutter: calc(var(--layout-content) / 6);
 	--layout-pad: calc(2 * var(--layout-control) + 2 * var(--layout-space-3));
 	--layout-pad-box: calc(3 * var(--layout-control) + 4 * var(--layout-space-2));
@@ -175,18 +174,25 @@
 	outline-offset: calc(-1 * var(--layout-space-1));
 }
 
+.layout-size {
+	flex-wrap: wrap;
+}
+
 .layout-size .chip-handle {
-	width: var(--layout-icon);
+	width: var(--layout-icon-large);
 }
 
 .layout-size .layout-seg {
-	flex: none;
-	width: var(--layout-mode);
+	flex: 1;
 }
 
 .layout-size .number-chip {
-	flex: 1;
+	flex: 1 0 100%;
 	min-width: 0;
+}
+
+.layout-size-height .layout-glyph {
+	rotate: 90deg;
 }
 
 .layout-chip-off {
@@ -394,6 +400,18 @@
 .layout-wrapchip:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);
 	outline-offset: calc(-1 * var(--layout-space-1));
+}
+
+.layout-dist .layout-seg {
+	flex-wrap: wrap;
+}
+
+.layout-dist .layout-segment {
+	flex: 1 1 calc(50% - var(--layout-space-1));
+}
+
+.layout-dist-turn .layout-glyph {
+	rotate: 90deg;
 }
 
 .layout-padwrap {
