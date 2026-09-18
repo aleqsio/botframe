@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { ALIGNMENTS } from "../../../document/layout";
 import type { Alignment, LayerLayout } from "../../../document/layout";
 
 export interface PadCell {
@@ -6,17 +7,16 @@ export interface PadCell {
 	column: number;
 }
 
-const LINES: readonly Alignment[] = ["start", "center", "end"];
 const THIRD = 100 / 3;
 const BAR = 3;
 const EDGE = 1;
 
 function lineOf(alignment: Alignment): number {
-	return LINES.indexOf(alignment);
+	return ALIGNMENTS.indexOf(alignment);
 }
 
 function alignmentAt(index: number): Alignment {
-	return LINES[index] ?? "start";
+	return ALIGNMENTS[index] ?? "start";
 }
 
 function isVertical(layout: LayerLayout): boolean {

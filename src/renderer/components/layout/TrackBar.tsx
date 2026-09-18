@@ -1,44 +1,54 @@
 import type { ReactElement } from "react";
+import type { DesignDocument } from "../../../document/document";
+import type { Layer } from "../../../document/layer";
 import { TRACK_UNITS } from "../../../document/layout";
-import type { Track } from "../../../document/layout";
 import { LengthField } from "./LengthField";
-import { TRACK_WORD, trackLabel, trackMeasure, trackOf } from "./tracks";
-import type { TrackAxis } from "./tracks";
+import {
+	FRACTION,
+	TRACK_WORD,
+	removeTrack,
+	setTrack,
+	trackLabel,
+	trackList,
+	trackMeasure,
+	trackOf,
+	writeTracks,
+} from "./tracks";
+import type { TrackEdit } from "./tracks";
 
 const RESET_TIP = "Reset to 1fr";
 
 export function TrackBar({
-	axis,
-	count,
-	index,
-	onChange,
-	onRemove,
-	track,
+	doc,
+	edit,
+	layer,
+	onClose,
 }: {
-	axis: TrackAxis;
-	count: number;
-	index: number;
-	onChange: (track: Track) => void;
-	onRemove: () => void;
-	track: Track;
+	doc: DesignDocument;
+	edit: TrackEdit;
+	layer: Layer;
+	onClose: () => void;
 }): ReactElement {
-	const label = trackLabel(axis, index);
-	const tip = count < 2 ? RESET_TIP : `Remove ${TRACK_WORD[axis].toLowerCase()}`;
+	const list = trackList(layer.layout.tracks, edit.axis);
+	const tip = list.length < 2 ? RESET_TIP : `Remove ${TRACK_WORD[edit.axis].toLowerCase()}`;
 
 	return (
 		<div className="layout-tbar">
 			<LengthField
-				label={label}
+				label={trackLabel(edit.axis, edit.index)}
 				onChange={(next) => {
-					onChange(trackOf(next));
+					writeTracks(doc, layer, edit.axis, setTrack(list, edit.index, trackOf(next)));
 				}}
 				units={TRACK_UNITS}
-				value={trackMeasure(track)}
+				value={trackMeasure(list[edit.index] ?? FRACTION)}
 			/>
 			<button
 				aria-label={tip}
 				className="layout-tminus"
-				onClick={onRemove}
+				onClick={() => {
+					writeTracks(doc, layer, edit.axis, removeTrack(list, edit.index));
+					onClose();
+				}}
 				title={tip}
 				type="button"
 			>

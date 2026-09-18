@@ -94,10 +94,6 @@ export function parseUnitText<U extends string>(
 	return unit === undefined ? null : { value, unit };
 }
 
-export function parseLength(text: string, fallback: Unit): Length | null {
-	return parseUnitText(text, UNITS, fallback);
-}
-
 export interface Box {
 	lengths: LayerLengths;
 	pixels: Readonly<Record<BoxKey, number>>;

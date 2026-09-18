@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
+import { DISPLAY_MODES } from "../../../document/layout";
 import type { DisplayMode } from "../../../document/layout";
 import { DisplayRows } from "./DisplayRows";
 import { DisplayIcon, WrapIcon } from "./LayoutIcons";
@@ -17,9 +18,7 @@ const LABEL: Readonly<Record<DisplayMode, string>> = {
 	grid: "Grid",
 };
 
-const OPTIONS: readonly SegmentOption<DisplayMode>[] = (
-	["block", "row", "column", "grid"] as const
-).map((display) => ({
+const OPTIONS: readonly SegmentOption<DisplayMode>[] = DISPLAY_MODES.map((display) => ({
 	value: display,
 	label: LABEL[display],
 	icon: <DisplayIcon display={display} />,

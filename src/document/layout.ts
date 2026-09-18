@@ -57,11 +57,11 @@ export interface LayerLayout {
 
 export type LayoutPatch = Partial<LayerLayout>;
 
-const SIZE_MODES: readonly SizeMode[] = ["fixed", "hug", "fill"];
+export const SIZE_MODES: readonly SizeMode[] = ["fixed", "hug", "fill"];
 const POSITION_MODES: readonly PositionMode[] = ["offset", "absolute"];
-const DISPLAY_MODES: readonly DisplayMode[] = ["block", "row", "column", "grid"];
-const DISTRIBUTIONS: readonly Distribute[] = ["pack", "between", "around", "evenly"];
-const ALIGNMENTS: readonly Alignment[] = ["start", "center", "end"];
+export const DISPLAY_MODES: readonly DisplayMode[] = ["block", "row", "column", "grid"];
+export const DISTRIBUTIONS: readonly Distribute[] = ["pack", "between", "around", "evenly"];
+export const ALIGNMENTS: readonly Alignment[] = ["start", "center", "end"];
 const FIRST_LINE = 1;
 const SECOND_LINE = 2;
 const COLUMN_COUNT = 3;

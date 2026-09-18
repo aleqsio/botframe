@@ -3,12 +3,10 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { SPACING_UNITS } from "../../../document/layout";
-import type { SpacingUnit } from "../../../document/layout";
+import type { LayerLayout, SpacingUnit } from "../../../document/layout";
 import { LengthField } from "./LengthField";
 import { PaddingIcon, SidesIcon } from "./LayoutIcons";
 import { SideFields } from "./SideFields";
-import { spreadSides } from "./paddingForm";
-import type { Sides } from "./paddingForm";
 import { PERCENT_TIP } from "./selfText";
 
 const PADDING_TIPS: Partial<Record<SpacingUnit, string>> = { "%": PERCENT_TIP };
@@ -34,8 +32,8 @@ function PaddingBox({
 	onChange,
 	values,
 }: {
-	onChange: (next: Sides) => void;
-	values: Sides;
+	onChange: (next: LayerLayout["padding"]) => void;
+	values: LayerLayout["padding"];
 }): ReactElement {
 	return (
 		<div className="layout-pad-box">
@@ -62,7 +60,7 @@ export function PaddingSection({
 }): ReactElement {
 	const [open, setOpen] = useState(false);
 	const { padding } = layer.layout;
-	const write = (next: Sides): void => {
+	const write = (next: LayerLayout["padding"]): void => {
 		doc.update(layer.id, { layout: { padding: next } });
 		doc.commit("set padding");
 	};
@@ -81,7 +79,7 @@ export function PaddingSection({
 					<LengthField
 						label="Padding"
 						onChange={(next) => {
-							write(spreadSides(next));
+							write({ top: next, right: next, bottom: next, left: next });
 						}}
 						tips={PADDING_TIPS}
 						units={SPACING_UNITS}

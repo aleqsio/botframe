@@ -41,12 +41,6 @@ const FLEX_ALIGN: Readonly<Record<Alignment, string>> = {
 	end: "flex-end",
 };
 
-const GRID_ALIGN: Readonly<Record<Alignment, string>> = {
-	start: "start",
-	center: "center",
-	end: "end",
-};
-
 const SPREAD: Readonly<Record<Distribute, string | null>> = {
 	pack: null,
 	between: "space-between",
@@ -64,11 +58,6 @@ const DISPLAY_BASE: Readonly<Record<DisplayMode, CSSProperties>> = {
 const SIZE_TEXT: Readonly<Record<Axis, (text: string) => CSSProperties>> = {
 	width: (text) => ({ width: text }),
 	height: (text) => ({ height: text }),
-};
-
-const GRID_STRETCH: Readonly<Record<Axis, CSSProperties>> = {
-	width: { justifySelf: "stretch" },
-	height: { alignSelf: "stretch" },
 };
 
 const MARGIN_TEXT: Readonly<Record<Side, (text: string) => CSSProperties>> = {
@@ -144,7 +133,7 @@ function fillStyle(axis: Axis, flow: ParentFlow): CSSProperties {
 		return SIZE_TEXT[axis]("100%");
 	}
 	if (flow.display === "grid") {
-		return GRID_STRETCH[axis];
+		return axis === "width" ? { justifySelf: "stretch" } : { alignSelf: "stretch" };
 	}
 	return onMainAxis(axis, flow.display) ? { flex: "1 1 0%" } : { alignSelf: "stretch" };
 }
@@ -228,8 +217,8 @@ export function alignStyle(layout: LayerLayout): CSSProperties {
 	const spread = SPREAD[layout.distribute];
 	if (layout.display === "grid") {
 		const items = {
-			justifyItems: GRID_ALIGN[layout.align.main],
-			alignItems: GRID_ALIGN[layout.align.cross],
+			justifyItems: layout.align.main,
+			alignItems: layout.align.cross,
 		};
 		return spread === null ? items : { ...items, justifyContent: spread };
 	}

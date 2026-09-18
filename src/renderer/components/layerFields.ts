@@ -1,5 +1,12 @@
 import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
-import { AXIS_OF, PIXELS, availableUnits, lengthIn, parseLength } from "../../document/length";
+import {
+	AXIS_OF,
+	PIXELS,
+	UNITS,
+	availableUnits,
+	lengthIn,
+	parseUnitText,
+} from "../../document/length";
 import type { Basis, BoxKey, Length, Unit } from "../../document/length";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
@@ -77,7 +84,7 @@ function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
 		possible,
 		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
 		parse: (text) => {
-			const typed = parseLength(text, held);
+			const typed = parseUnitText(text, UNITS, held);
 			return typed === null || !possible.has(typed.unit) ? null : boxPatch(key, typed);
 		},
 	};

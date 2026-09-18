@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
 import type { Axis } from "../../../document/length";
+import { SIZE_MODES } from "../../../document/layout";
 import type { SizeMode } from "../../../document/layout";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
@@ -12,7 +13,6 @@ import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
 
-const SIZE_MODES: readonly SizeMode[] = ["fixed", "hug", "fill"];
 const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
 	fixed: "Fixed",
 	hug: "Hug",

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
+import { DISTRIBUTIONS } from "../../../document/layout";
 import type { Distribute } from "../../../document/layout";
 import { DistributeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
@@ -13,9 +14,7 @@ const LABEL: Readonly<Record<Distribute, string>> = {
 	evenly: "Evenly",
 };
 
-const OPTIONS: readonly SegmentOption<Distribute>[] = (
-	["pack", "between", "around", "evenly"] as const
-).map((distribute) => ({
+const OPTIONS: readonly SegmentOption<Distribute>[] = DISTRIBUTIONS.map((distribute) => ({
 	value: distribute,
 	label: LABEL[distribute],
 	icon: <DistributeIcon distribute={distribute} />,

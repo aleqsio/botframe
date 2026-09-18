@@ -3,7 +3,7 @@ import type { CSSProperties, ReactElement, RefObject } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { TrackChips } from "./TrackChips";
-import { TrackEditorBar } from "./TrackEditorBar";
+import { TrackBar } from "./TrackBar";
 import { TrackStencil } from "./TrackStencil";
 import { MAX_TRACKS, TRACK_WORD, addTrack, factorTemplate, trackList, writeTracks } from "./tracks";
 import type { TrackAxis, TrackEdit } from "./tracks";
@@ -99,7 +99,7 @@ export function TracksEditor({ doc, layer }: { doc: DesignDocument; layer: Layer
 	const rows = { gridTemplateRows: factorTemplate(tracks.rows) };
 	const onColumn = edit?.axis === "columns" ? edit.index : null;
 	const bar =
-		edit === null ? null : <TrackEditorBar doc={doc} edit={edit} layer={layer} onClose={close} />;
+		edit === null ? null : <TrackBar doc={doc} edit={edit} layer={layer} onClose={close} />;
 
 	return (
 		<>

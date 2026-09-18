@@ -218,10 +218,6 @@
 	font-size: var(--layout-text-chip);
 }
 
-.layout-pad-row {
-	align-items: center;
-}
-
 .layout-pad-row .number-chip {
 	flex: 1;
 	min-width: 0;

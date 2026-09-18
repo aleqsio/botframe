@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
 	NO_BASIS,
+	UNITS,
 	availableUnits,
 	hasRelativeLength,
 	isUnit,
 	lengthIn,
-	parseLength,
+	parseUnitText,
 	resolveLength,
 } from "./length";
 import type { Basis, LayerLengths } from "./length";
@@ -73,22 +74,22 @@ describe("availableUnits", () => {
 	});
 });
 
-describe("parseLength", () => {
+describe("parseUnitText", () => {
 	it("reads the unit a person types", () => {
-		expect(parseLength("5%", "px")).toEqual({ value: 5, unit: "%" });
-		expect(parseLength("12px", "%")).toEqual({ value: 12, unit: "px" });
-		expect(parseLength(" 3 VW ", "px")).toEqual({ value: 3, unit: "vw" });
+		expect(parseUnitText("5%", UNITS, "px")).toEqual({ value: 5, unit: "%" });
+		expect(parseUnitText("12px", UNITS, "%")).toEqual({ value: 12, unit: "px" });
+		expect(parseUnitText(" 3 VW ", UNITS, "px")).toEqual({ value: 3, unit: "vw" });
 	});
 
 	it("keeps the unit of the field when the text names no unit", () => {
-		expect(parseLength("40", "%")).toEqual({ value: 40, unit: "%" });
-		expect(parseLength("-2.5", "px")).toEqual({ value: -2.5, unit: "px" });
+		expect(parseUnitText("40", UNITS, "%")).toEqual({ value: 40, unit: "%" });
+		expect(parseUnitText("-2.5", UNITS, "px")).toEqual({ value: -2.5, unit: "px" });
 	});
 
 	it("refuses text that is not a length", () => {
-		expect(parseLength("wide", "px")).toBeNull();
-		expect(parseLength("5em", "px")).toBeNull();
-		expect(parseLength("", "px")).toBeNull();
+		expect(parseUnitText("wide", UNITS, "px")).toBeNull();
+		expect(parseUnitText("5em", UNITS, "px")).toBeNull();
+		expect(parseUnitText("", UNITS, "px")).toBeNull();
 	});
 });
 

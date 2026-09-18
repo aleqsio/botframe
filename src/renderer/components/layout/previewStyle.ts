@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { LayerLayout, Track } from "../../../document/layout";
 import { alignStyle } from "../../layerStyle";
+import { isFlex } from "./selfText";
 import { trackFactor } from "./tracks";
 
 export interface BlockSize {
@@ -44,7 +45,7 @@ export function previewCellStyle(layout: LayerLayout): CSSProperties {
 }
 
 export function isWrapped(layout: LayerLayout): boolean {
-	return layout.wrap && (layout.display === "row" || layout.display === "column");
+	return layout.wrap && isFlex(layout.display);
 }
 
 export function blockSize(layout: LayerLayout, index: number): BlockSize {
