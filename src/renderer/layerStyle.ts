@@ -200,7 +200,7 @@ function selfStyle(layer: StyledLayer, parent: LayerLayout | null): CSSPropertie
 	};
 }
 
-function trackText(track: Track): string {
+export function trackText(track: Track): string {
 	return track.unit === "auto" ? "auto" : `${track.value}${track.unit}`;
 }
 
@@ -224,7 +224,7 @@ function displayStyle(layout: LayerLayout): CSSProperties {
 	return layout.wrap && layout.display !== "block" ? { ...base, flexWrap: "wrap" } : base;
 }
 
-function alignStyle(layout: LayerLayout): CSSProperties {
+export function alignStyle(layout: LayerLayout): CSSProperties {
 	const spread = SPREAD[layout.distribute];
 	if (layout.display === "grid") {
 		const items = {

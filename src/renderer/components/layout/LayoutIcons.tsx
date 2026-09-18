@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import type { DisplayMode, SizeMode } from "../../../document/layout";
+import type { DisplayMode, Distribute, SizeMode } from "../../../document/layout";
 
 const SIZE_PATH: Readonly<Record<SizeMode, string>> = {
 	fixed: "M1.6 2.6v6.8M10.4 2.6v6.8M2.6 6h6.8",
@@ -70,6 +70,48 @@ export function SizeModeIcon({ mode }: { mode: SizeMode }): ReactElement {
 
 export function DisplayIcon({ display }: { display: DisplayMode }): ReactElement {
 	return <Glyph size={14}>{DISPLAY_GLYPH[display]}</Glyph>;
+}
+
+const SPREAD_AT: Readonly<Record<Distribute, readonly number[]>> = {
+	pack: [1.5, 3.5, 5.5],
+	between: [1.5, 5, 8.5],
+	around: [2, 5, 8],
+	evenly: [2.25, 5, 7.75],
+};
+
+export function DistributeIcon({ distribute }: { distribute: Distribute }): ReactElement {
+	return (
+		<Glyph size={12}>
+			<rect
+				height="11"
+				rx="1.5"
+				stroke="currentColor"
+				strokeOpacity="0.5"
+				width="11"
+				x="0.5"
+				y="0.5"
+			/>
+			{SPREAD_AT[distribute].map((x) => (
+				<rect fill="currentColor" height="2" key={x} rx="0.4" width="2" x={x} y="5" />
+			))}
+		</Glyph>
+	);
+}
+
+export function WrapIcon(): ReactElement {
+	return (
+		<Glyph size={14}>
+			<rect fill="currentColor" height="3.6" rx="1" width="5.2" x="1" y="2" />
+			<rect fill="currentColor" height="3.6" rx="1" width="5.2" x="7.4" y="2" />
+			<rect fill="currentColor" height="3.6" rx="1" width="5.2" x="1" y="8.2" />
+			<path
+				d="M9 9.4h2.6M10.3 8.3 11.6 9.4l-1.3 1.1"
+				stroke="currentColor"
+				strokeLinecap="round"
+				strokeWidth="1.1"
+			/>
+		</Glyph>
+	);
 }
 
 export function PaddingIcon(): ReactElement {
