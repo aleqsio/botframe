@@ -1,10 +1,14 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
+import { basisOf } from "./basis";
 import { DocumentHistory } from "./history";
-import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
+import type { Layer, LayerFields, LayerId, LayerPatch, LayerTraits } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
-import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
-import type { Basis, LayerLengths, Size } from "./length";
+import { hasRelativeLength, settledLengths } from "./length";
+import type { Basis, LayerLengths } from "./length";
+import { sameCell } from "./layout";
+import { LayoutTable } from "./layoutTable";
+import { canMove } from "./moveRules";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
 
@@ -47,8 +51,12 @@ function subscribeTo(listeners: Set<() => void>, listener: () => void): Unsubscr
 	};
 }
 
-function sizeOf(layer: Layer): Size {
-	return { width: layer.width, height: layer.height };
+function resized(stale: Layer, next: Layer): boolean {
+	return next.width !== stale.width || next.height !== stale.height;
+}
+
+function flowChanged(stale: Layer, next: Layer): boolean {
+	return resized(stale, next) || !sameCell(stale.cell, next.cell);
 }
 
 function notify(listeners: Iterable<() => void>): void {
@@ -67,12 +75,24 @@ export class DesignDocument {
 	readonly #historyListeners = new Set<() => void>();
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
+	readonly #layouts: LayoutTable;
 	#ids: readonly LayerId[] | null = null;
 	#roots: readonly LayerId[] | null = null;
 
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
 		this.#history = new DocumentHistory(doc);
+		this.#layouts = new LayoutTable({
+			layer: (id) => this.layer(id),
+			childIds: (parent) => this.childIds(parent),
+			traitsOf: (id, parent) => {
+				const node = this.#liveNode(id);
+				return node === null ? null : this.#traitsOf(node, parent);
+			},
+			invalidate: (id) => {
+				this.#invalidate(id);
+			},
+		});
 		this.#doc.subscribe((event) => {
 			const items = treeItems(event);
 			if (items.length === 0) {
@@ -82,6 +102,9 @@ export class DesignDocument {
 				this.#dropStale(items);
 			}
 			this.#notifyStructure();
+			if (event.by !== "local") {
+				this.#layouts.refreshAround(items);
+			}
 		});
 	}
 
@@ -111,6 +134,10 @@ export class DesignDocument {
 		return this.#roots;
 	}
 
+	siblingIds(parent: LayerId | null): readonly LayerId[] {
+		return parent === null ? this.rootIds() : this.childIds(parent);
+	}
+
 	childIds(parent: LayerId): readonly LayerId[] {
 		const cached = this.#children.get(parent);
 		if (cached !== undefined) {
@@ -135,7 +162,12 @@ export class DesignDocument {
 			return null;
 		}
 		const parent = node.parent()?.id ?? null;
-		const layer: Layer = { id, parent, ...readLayerData(node.data, this.#basisOf(parent)) };
+		const layer: Layer = {
+			id,
+			parent,
+			...this.#traitsOf(node, parent),
+			...this.#layouts.placementOf(parent, id),
+		};
 		this.#layers.set(id, layer);
 		return layer;
 	}
@@ -148,6 +180,7 @@ export class DesignDocument {
 		const node = this.#tree().createNode(parent ?? undefined);
 		writePatch(node.data, fields, this.#basisOf(parent));
 		this.#notifyStructure();
+		this.#layouts.refresh(parent);
 		return node.id;
 	}
 
@@ -160,22 +193,31 @@ export class DesignDocument {
 	}
 
 	deleteLayer(id: LayerId): void {
-		if (this.#liveNode(id) === null) {
+		const node = this.#liveNode(id);
+		if (node === null) {
 			return;
 		}
+		const parent = node.parent()?.id ?? null;
 		this.#tree().delete(id);
 		this.#forget(id);
 		this.#notifyStructure();
+		this.#layouts.refresh(parent);
 	}
 
 	move(id: LayerId, parent: LayerId | null, index?: number): boolean {
-		if (!this.#canMove(id, parent, index)) {
+		const rules = {
+			live: (held: LayerId) => this.#liveNode(held),
+			siblings: (held: LayerId | null) => this.siblingIds(held),
+		};
+		if (!canMove(rules, id, parent, index)) {
 			return false;
 		}
 		const before = this.layer(id);
 		this.#tree().move(id, parent ?? undefined, index);
 		this.#forget(id);
 		this.#notifyStructure();
+		this.#layouts.refresh(before?.parent ?? null);
+		this.#layouts.refresh(parent);
 		if (before !== null) {
 			this.#settleUnits(id, before);
 		}
@@ -264,23 +306,11 @@ export class DesignDocument {
 	}
 
 	#basisOf(parent: LayerId | null): Basis {
-		const container = parent === null ? null : this.layer(parent);
-		if (container === null) {
-			return NO_BASIS;
-		}
-		return { container: sizeOf(container), root: this.#rootSize(container) };
+		return basisOf((id) => this.layer(id), parent);
 	}
 
-	#rootSize(container: Layer): Size {
-		let held = container;
-		while (held.parent !== null) {
-			const above = this.layer(held.parent);
-			if (above === null) {
-				break;
-			}
-			held = above;
-		}
-		return sizeOf(held);
+	#traitsOf(node: LoroTreeNode, parent: LayerId | null): LayerTraits {
+		return readLayerData(node.data, this.#basisOf(parent));
 	}
 
 	#applyHistory(step: () => boolean): boolean {
@@ -296,6 +326,7 @@ export class DesignDocument {
 		this.#layers.clear();
 		this.#children.clear();
 		this.#wantedLengths.clear();
+		this.#layouts.clear();
 		for (const listeners of this.#listeners.values()) {
 			notify(listeners);
 		}
@@ -347,33 +378,6 @@ export class DesignDocument {
 		}
 	}
 
-	#canMove(id: LayerId, parent: LayerId | null, index: number | undefined): boolean {
-		if (this.#liveNode(id) === null) {
-			return false;
-		}
-		if (parent !== null && (this.#liveNode(parent) === null || this.#insideSubtree(id, parent))) {
-			return false;
-		}
-		return index === undefined || this.#fitsIndex(id, parent, index);
-	}
-
-	#fitsIndex(id: LayerId, parent: LayerId | null, index: number): boolean {
-		const siblings = parent === null ? this.rootIds() : this.childIds(parent);
-		const room = siblings.length - (siblings.includes(id) ? 1 : 0);
-		return Number.isInteger(index) && index >= 0 && index <= room;
-	}
-
-	#insideSubtree(id: LayerId, parent: LayerId): boolean {
-		let node = this.#tree().getNodeByID(parent);
-		while (node !== undefined) {
-			if (node.id === id) {
-				return true;
-			}
-			node = node.parent();
-		}
-		return false;
-	}
-
 	#forget(id: LayerId): void {
 		this.#forgetNode(this.#tree().getNodeByID(id));
 	}
@@ -423,14 +427,17 @@ export class DesignDocument {
 	#refreshLayer(id: LayerId): void {
 		const stale = this.#layers.get(id);
 		this.#invalidate(id);
-		if (stale !== undefined && this.#resized(stale, id)) {
-			this.#dropRelativeBelow(this.#tree().getNodeByID(id));
+		const node = this.#liveNode(id);
+		const next = node === null ? null : this.layer(id);
+		if (next === null) {
+			return;
 		}
-	}
-
-	#resized(stale: Layer, id: LayerId): boolean {
-		const next = this.layer(id);
-		return next !== null && (next.width !== stale.width || next.height !== stale.height);
+		if (stale === undefined || flowChanged(stale, next)) {
+			this.#layouts.refresh(next.parent);
+		}
+		if (stale !== undefined && resized(stale, next)) {
+			this.#dropRelativeBelow(node ?? undefined);
+		}
 	}
 
 	#dropRelativeBelow(node: LoroTreeNode | undefined): void {
@@ -446,5 +453,6 @@ export class DesignDocument {
 	#invalidate(id: LayerId): void {
 		this.#layers.delete(id);
 		notify(this.#listeners.get(id) ?? []);
+		this.#layouts.refresh(id);
 	}
 }

@@ -52,7 +52,7 @@ function isAccelerator(stroke: KeyStroke): boolean {
 }
 
 function withoutLayoutAlt(modifiers: Modifiers): Modifiers {
-	return { shift: modifiers.shift, alt: false };
+	return { ...modifiers, alt: false };
 }
 
 export function commandFor(stroke: KeyStroke): LayerCommand | null {

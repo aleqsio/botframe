@@ -21,8 +21,8 @@ const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_ZONE = { mode: "resize", handle: "se" };
 const DRAW_TOOLS: readonly ToolId[] = ["rectangle", "artboard"];
-const SHIFT: Modifiers = { shift: true, alt: false };
-const ALT: Modifiers = { shift: false, alt: true };
+const SHIFT: Modifiers = { shift: true, alt: false, control: false };
+const ALT: Modifiers = { shift: false, alt: true, control: false };
 
 function selectedTarget(): PointerTarget {
 	const target = targetOf(true);

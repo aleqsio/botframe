@@ -6,8 +6,8 @@ import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP } from "./step";
 import { MIN_LAYER_SIZE, resizedRect, rotatedDegrees, scaledRect } from "./transform";
 
-const ALT: Modifiers = { shift: false, alt: true };
-const SHIFT: Modifiers = { shift: true, alt: false };
+const ALT: Modifiers = { shift: false, alt: true, control: false };
+const SHIFT: Modifiers = { shift: true, alt: false, control: false };
 
 function layerAt(rotation: number): Layer {
 	return {
@@ -87,7 +87,9 @@ describe("resizedRect", () => {
 			width: 400,
 			height: 300,
 		});
-		expect(resizedRect(FLAT, "e", { x: 400, y: 300 }, { shift: true, alt: true })).toEqual({
+		expect(
+			resizedRect(FLAT, "e", { x: 400, y: 300 }, { shift: true, alt: true, control: false }),
+		).toEqual({
 			x: 0,
 			y: 50,
 			width: 400,

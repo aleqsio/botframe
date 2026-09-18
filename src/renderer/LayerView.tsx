@@ -1,12 +1,17 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
+import type { Guide } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootArtboard, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
+
+function guideStyle(guide: Guide): CSSProperties {
+	return guide.axis === "x" ? { left: `${guide.at}px` } : { top: `${guide.at}px` };
+}
 
 export function LayerView({
 	doc,
@@ -34,6 +39,9 @@ export function LayerView({
 		>
 			{childIds.map((childId) => (
 				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
+			))}
+			{Array.from(layer.guides.entries(), ([index, guide]) => (
+				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />
 			))}
 		</div>
 	);

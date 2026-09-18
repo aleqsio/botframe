@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pixelLengths } from "../document/documentFixtures";
+import { nodeBox } from "../document/documentFixtures";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -18,7 +18,7 @@ const FIELDS: LayerFields = {
 
 function nodeOf(fields: Partial<LayerFields>, children: readonly LayerNode[] = []): LayerNode {
 	const merged = { ...FIELDS, ...fields };
-	return { fields: merged, rotation: 0, lengths: pixelLengths(merged), children };
+	return { fields: merged, rotation: 0, ...nodeBox(merged), children };
 }
 
 describe("layerMarkup", () => {
@@ -62,7 +62,7 @@ describe("layerMarkup", () => {
 		const node: LayerNode = {
 			fields: FIELDS,
 			rotation: 30,
-			lengths: pixelLengths(FIELDS),
+			...nodeBox(FIELDS),
 			children: [],
 		};
 		expect(layerMarkup(node)).toContain("rotate(30deg)");

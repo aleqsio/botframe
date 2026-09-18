@@ -2,6 +2,8 @@ import type { DesignDocument } from "./document";
 import type { Layer, LayerFields, LayerId, Rect } from "./layer";
 import { PIXELS } from "./length";
 import type { LayerLengths } from "./length";
+import { FREE_LAYOUT, NO_GUIDES } from "./layout";
+import type { LayerNode } from "./subtree";
 
 export function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -22,7 +24,7 @@ export const DRAWN: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
 };
 
-export function pixelLengths(rect: Rect): LayerLengths {
+function pixelLengths(rect: Rect): LayerLengths {
 	return {
 		x: { value: rect.x, unit: PIXELS },
 		y: { value: rect.y, unit: PIXELS },
@@ -31,6 +33,12 @@ export function pixelLengths(rect: Rect): LayerLengths {
 	};
 }
 
-export function pixelBox(rect: Rect): Pick<Layer, "lengths"> {
-	return { lengths: pixelLengths(rect) };
+export function nodeBox(rect: Rect): Pick<LayerNode, "lengths" | "layout" | "cell" | "guides"> {
+	return { lengths: pixelLengths(rect), layout: FREE_LAYOUT, cell: null, guides: NO_GUIDES };
+}
+
+export function pixelBox(
+	rect: Rect,
+): Pick<Layer, "lengths" | "layout" | "cell" | "slot" | "guides"> {
+	return { ...nodeBox(rect), slot: null };
 }

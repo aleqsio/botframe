@@ -1,0 +1,77 @@
+import { FREE_LAYOUT, NO_GUIDES } from "./layout";
+import type { Cell, Direction, Guide, Layout, LayoutKind } from "./layout";
+import { isBag, readNumber, readString } from "./read";
+import type { FieldSource } from "./read";
+
+const ROW: Direction = "row";
+const COLUMN: Direction = "column";
+const ONE_TRACK = 1;
+const NO_SPACE = 0;
+
+function directionOf(fields: FieldSource | null): Direction {
+	return readString(fields, "direction", ROW) === COLUMN ? COLUMN : ROW;
+}
+
+function spaceOf(fields: FieldSource | null, key: string): number {
+	const value = readNumber(fields, key, NO_SPACE);
+	return Number.isFinite(value) ? Math.max(NO_SPACE, value) : NO_SPACE;
+}
+
+function tracksOf(fields: FieldSource | null, key: string): number {
+	const value = readNumber(fields, key, ONE_TRACK);
+	return Number.isFinite(value) ? Math.max(ONE_TRACK, Math.floor(value)) : ONE_TRACK;
+}
+
+function indexOf(fields: FieldSource, key: string): number {
+	const value = readNumber(fields, key, 0);
+	return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+export const LAYOUT_READERS: Readonly<Record<LayoutKind, (fields: FieldSource | null) => Layout>> =
+	{
+		free: () => FREE_LAYOUT,
+		flex: (fields) => ({
+			kind: "flex",
+			direction: directionOf(fields),
+			gap: spaceOf(fields, "gap"),
+			padding: spaceOf(fields, "padding"),
+		}),
+		grid: (fields) => ({
+			kind: "grid",
+			columns: tracksOf(fields, "columns"),
+			rows: tracksOf(fields, "rows"),
+			gap: spaceOf(fields, "gap"),
+			padding: spaceOf(fields, "padding"),
+		}),
+	};
+
+export function layoutOf(kind: string, fields: FieldSource | null): Layout {
+	const readers: Readonly<Record<string, (fields: FieldSource | null) => Layout>> = LAYOUT_READERS;
+	return readers[kind]?.(fields) ?? FREE_LAYOUT;
+}
+
+export function cellOf(fields: FieldSource | null): Cell | null {
+	return fields === null
+		? null
+		: { column: indexOf(fields, "column"), row: indexOf(fields, "row") };
+}
+
+function guideOf(value: unknown): Guide | null {
+	if (!isBag(value)) {
+		return null;
+	}
+	const axis = value["axis"];
+	const at = value["at"];
+	if ((axis !== "x" && axis !== "y") || typeof at !== "number" || !Number.isFinite(at)) {
+		return null;
+	}
+	return { axis, at };
+}
+
+export function guidesOf(value: unknown): readonly Guide[] {
+	if (!Array.isArray(value)) {
+		return NO_GUIDES;
+	}
+	const guides = value.flatMap((item: unknown) => guideOf(item) ?? []);
+	return guides.length === 0 ? NO_GUIDES : guides;
+}

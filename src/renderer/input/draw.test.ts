@@ -5,9 +5,9 @@ import { DEFAULT_DRAW_SIZE, drawnRect, tappedRect } from "./draw";
 import { MIN_LAYER_SIZE } from "./transform";
 
 const ORIGIN = { x: 100, y: 100 };
-const SHIFT: Modifiers = { shift: true, alt: false };
-const ALT: Modifiers = { shift: false, alt: true };
-const SHIFT_ALT: Modifiers = { shift: true, alt: true };
+const SHIFT: Modifiers = { shift: true, alt: false, control: false };
+const ALT: Modifiers = { shift: false, alt: true, control: false };
+const SHIFT_ALT: Modifiers = { shift: true, alt: true, control: false };
 
 describe("drawnRect", () => {
 	it("draws the box from the origin to the point", () => {

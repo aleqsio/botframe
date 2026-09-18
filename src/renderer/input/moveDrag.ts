@@ -4,6 +4,11 @@ import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
+import { isLaidOut, settleInLayout } from "./layoutDrag";
+import type { Modifiers } from "./modifiers";
+import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
+import { snapFieldAround } from "./snapField";
+import { snapPointsOf } from "./snapPoints";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -32,39 +37,76 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): vo
 	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
 	target.doc.update(move.id, placement);
 	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
-	target.user.move.set({ ...move, parent, offset });
+	target.user.move.set({ ...move, parent, offset, field: snapFieldAround(target, move.id) });
 }
 
-function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void {
+function snappedPlace(target: PointerTarget, move: LayerMove, layer: Layer, wanted: Point): Point {
+	const reach = SNAP_REACH / target.user.camera.get().zoom;
+	const snap = snapTo(move.field, snapPointsOf({ ...layer, ...wanted }), reach);
+	const segments = snapSegmentsOf(snap, move.field.span);
+	target.user.snap.set(segments.length === 0 ? null : { parent: layer.parent, segments });
+	return snappedPoint(wanted, snap);
+}
+
+function carryLayer(
+	target: PointerTarget,
+	move: LayerMove,
+	canvas: Point,
+	modifiers: Modifiers,
+): void {
+	const layer = target.doc.layer(move.id);
+	if (layer === null) {
+		return;
+	}
 	const point = parentPointOf(target, move.id, canvas);
-	target.doc.update(move.id, { x: point.x - move.offset.x, y: point.y - move.offset.y });
+	const wanted = { x: point.x - move.offset.x, y: point.y - move.offset.y };
+	if (modifiers.control) {
+		target.user.snap.set(null);
+		target.doc.update(move.id, wanted);
+		return;
+	}
+	target.doc.update(move.id, snappedPlace(target, move, layer, wanted));
 }
 
 export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): void {
 	target.user.move.set({
 		id: layer.id,
 		from: layer.parent,
+		index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		parent: layer.parent,
-		start: { x: layer.x, y: layer.y, rotation: layer.rotation },
+		start: {
+			rotation: layer.rotation,
+			cell: layer.cell,
+			lengths: { x: layer.lengths.x, y: layer.lengths.y },
+		},
 		offset: offsetOf(target, layer, canvas),
+		field: snapFieldAround(target, layer.id),
 	});
 }
 
-export function applyMove(target: PointerTarget, point: StagePoint): void {
+export function applyMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
 	const move = target.user.move.get();
 	if (move === null) {
 		return;
 	}
-	carryLayer(target, move, point.canvas);
+	if (!isLaidOut(target, move.parent)) {
+		carryLayer(target, move, point.canvas, modifiers);
+	}
 	retarget(target, move, point);
+	const held = target.user.move.get();
+	if (held !== null && isLaidOut(target, held.parent)) {
+		target.user.snap.set(null);
+		settleInLayout(target, held.id, point.canvas);
+	}
 }
 
-export function finishMove(target: PointerTarget, point: StagePoint): void {
+export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
 	if (target.user.move.get() === null) {
 		return;
 	}
-	applyMove(target, point);
+	applyMove(target, point, modifiers);
 	target.user.move.set(null);
+	target.user.snap.set(null);
 	target.doc.commit(COMMIT_MESSAGES.move);
 }
 
@@ -78,7 +120,10 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 		return;
 	}
 	user.move.set(null);
-	doc.move(move.id, move.from);
+	user.snap.set(null);
+	if (!doc.move(move.id, move.from, move.index)) {
+		doc.move(move.id, move.from);
+	}
 	doc.update(move.id, move.start);
 	doc.commit(CANCEL_COMMIT);
 }

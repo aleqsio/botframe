@@ -27,6 +27,8 @@
 	--bar-focus: rgb(138 168 255 / 0.9);
 	--selection: #0d99ff;
 	--highlight: rgb(13 153 255 / 0.75);
+	--snap: #f24822;
+	--guide: rgb(242 72 34 / 0.55);
 	--handle-fill: #ffffff;
 	--rotate-cursor:
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 14a7.5 7.5 0 1 1 3 5'/%3E%3Cpath d='M1.5 10.5 5 14.5 9 11'/%3E%3C/g%3E%3C/svg%3E")
@@ -166,6 +168,23 @@ body {
 .drop-frame {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 	outline-offset: calc(1px / var(--zoom));
+}
+
+.snap-line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	transform-origin: 0 0;
+	background-color: var(--snap);
+}
+
+.snap-line[data-axis="x"] {
+	width: calc(1px / var(--zoom));
+}
+
+.snap-line[data-axis="y"] {
+	height: calc(1px / var(--zoom));
 }
 
 .selection-handle {
@@ -969,10 +988,76 @@ button.layer-chevron[aria-expanded="false"]::before {
 	font-size: 11px;
 }
 
+.guide-line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	background-color: var(--guide);
+}
+
+.guide-line[data-axis="x"] {
+	bottom: 0;
+	width: calc(1px / var(--zoom));
+}
+
+.guide-line[data-axis="y"] {
+	right: 0;
+	height: calc(1px / var(--zoom));
+}
+
+.guide-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.guide-row .number-chip {
+	flex: 1;
+	min-width: 0;
+}
+
+.guide-button {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	min-width: 24px;
+	height: 24px;
+	padding: 0 6px;
+	border: 0;
+	border-radius: 6px;
+	background-color: var(--panel-hover);
+	color: var(--panel-label);
+	font: inherit;
+	font-size: 11px;
+	cursor: default;
+}
+
+.guide-button:hover {
+	background-color: var(--panel-selected);
+	color: var(--panel-text);
+}
+
+.guide-button:focus-visible {
+	outline: 2px solid var(--panel-focus);
+	outline-offset: -2px;
+}
+
+.guide-button .icon {
+	width: 14px;
+	height: 14px;
+}
+
+.guide-add {
+	flex: 1;
+}
+
 .segmented {
 	position: relative;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(var(--count, 2), 1fr);
 	min-width: 0;
 	margin: 0;
 	padding: 2px;
@@ -986,14 +1071,11 @@ button.layer-chevron[aria-expanded="false"]::before {
 	top: 2px;
 	bottom: 2px;
 	left: 2px;
-	width: calc(50% - 2px);
+	width: calc((100% - 4px) / var(--count, 2));
 	border-radius: 6px;
 	background-color: var(--panel-selected);
 	transition: translate 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.segmented[data-active="Landscape"] .segment-pill {
-	translate: 100% 0;
+	translate: calc(var(--active, 0) * 100%) 0;
 }
 
 .segment {

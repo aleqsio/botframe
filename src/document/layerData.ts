@@ -11,10 +11,16 @@ import {
 	roundNumber,
 } from "./length";
 import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
-import { readBoolean, readNumber, readString, readVariant } from "./read";
+import { FREE_LAYOUT } from "./layout";
+import type { Cell, Guide, Layout } from "./layout";
+import { LAYOUT_READERS, cellOf, guidesOf } from "./layoutData";
+import { readBoolean, readMap, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
+const LAYOUT = "layout";
+const CELL = "cell";
+const GUIDES = "guides";
 const UNIT_SUFFIX = "Unit";
 const BLACK = "#000000";
 
@@ -74,6 +80,10 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
 		clip: readBoolean(data, "clip", false),
+		layout: readVariant<Layout>(data.get(LAYOUT), LAYOUT_READERS, FREE_LAYOUT),
+		cell: cellOf(readMap(data, CELL)),
+		slot: null,
+		guides: guidesOf(data.get(GUIDES)),
 	};
 }
 
@@ -115,8 +125,29 @@ function writeLengths(
 	}
 }
 
+function writeCell(data: LoroMap, cell: Cell | null): void {
+	if (cell === null) {
+		data.delete(CELL);
+		return;
+	}
+	const held = data.ensureMergeableMap(CELL);
+	held.set("column", cell.column);
+	held.set("row", cell.row);
+}
+
+function writeGuides(data: LoroMap, guides: readonly Guide[]): void {
+	if (guides.length === 0) {
+		data.delete(GUIDES);
+		return;
+	}
+	data.set(
+		GUIDES,
+		guides.map(({ axis, at }) => ({ axis, at })),
+	);
+}
+
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, lengths, x, y, width, height, ...plain } = patch;
+	const { geometry, lengths, layout, cell, guides, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -124,5 +155,14 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	writeLengths(data, lengths, basis);
 	if (geometry !== undefined) {
 		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
+	}
+	if (layout !== undefined) {
+		writeVariant(data.ensureMergeableMap(LAYOUT), layout);
+	}
+	if (cell !== undefined) {
+		writeCell(data, cell);
+	}
+	if (guides !== undefined) {
+		writeGuides(data, guides);
 	}
 }

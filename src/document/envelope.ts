@@ -1,6 +1,9 @@
 import type { LayerFields, WritableGeometry } from "./layer";
 import { PIXELS, isUnit } from "./length";
 import type { LayerLengths, Length } from "./length";
+import { cellOf, guidesOf, layoutOf } from "./layoutData";
+import { isBag } from "./read";
+import type { FieldSource } from "./read";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
 
@@ -14,10 +17,6 @@ type Bag = Readonly<Record<string, unknown>>;
 export interface LayerEnvelope {
 	sourceParent: string | null;
 	layers: readonly LayerNode[];
-}
-
-function isBag(value: unknown): value is Bag {
-	return typeof value === "object" && value !== null;
 }
 
 function isList(value: unknown): value is readonly unknown[] {
@@ -93,13 +92,22 @@ function lengthsOf(value: unknown, fields: LayerFields): LayerLengths {
 	};
 }
 
+function sourceOf(bag: Bag): FieldSource {
+	return { get: (key) => bag[key] };
+}
+
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
+	const layout = bagOf(bag["layout"]);
+	const cell = bag["cell"];
 	return {
 		fields,
 		rotation: count(bag, "rotation"),
 		lengths: lengthsOf(bag["lengths"], fields),
+		layout: layoutOf(words(layout, "kind", ""), sourceOf(layout)),
+		cell: isBag(cell) ? cellOf(sourceOf(cell)) : null,
+		guides: guidesOf(bag["guides"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

@@ -122,12 +122,13 @@ const TURN_FIELD: LayerField = {
 	patch: (value) => ({ rotation: value }),
 };
 
-function boxGroups(layer: Layer, basis: Basis): readonly FieldGroup[] {
+function boxGroups(layer: Layer, basis: Basis, placed: boolean): readonly FieldGroup[] {
+	const position = {
+		name: "Position",
+		fields: [boxField("X", "x", layer, basis), boxField("Y", "y", layer, basis)],
+	};
 	return [
-		{
-			name: "Position",
-			fields: [boxField("X", "x", layer, basis), boxField("Y", "y", layer, basis)],
-		},
+		...(placed ? [] : [position]),
 		{
 			name: "Size",
 			fields: [boxField("W", "width", layer, basis), boxField("H", "height", layer, basis)],
@@ -146,14 +147,14 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 	};
 }
 
-export function fieldGroupsOf(layer: Layer, basis: Basis): readonly FieldGroup[] {
-	const groups = boxGroups(layer, basis);
+export function fieldGroupsOf(layer: Layer, basis: Basis, placed: boolean): readonly FieldGroup[] {
+	const groups = boxGroups(layer, basis, placed);
 	const { geometry } = layer;
 	return geometry.kind === "rectangle" ? [...groups, cornerGroup(geometry)] : groups;
 }
 
 export function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
-	return fieldGroupsOf(layer, basis).flatMap((group) => group.fields);
+	return fieldGroupsOf(layer, basis, false).flatMap((group) => group.fields);
 }
 
 export function fieldPatch(field: LayerField, value: number): LayerPatch {

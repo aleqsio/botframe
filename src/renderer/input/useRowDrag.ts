@@ -57,7 +57,7 @@ const PRIMARY_BUTTON = 0;
 function treeOf(doc: DesignDocument): RowTree {
 	return {
 		read: (id) => doc.layer(id),
-		childIds: (parent) => (parent === null ? doc.rootIds() : doc.childIds(parent)),
+		childIds: (parent) => doc.siblingIds(parent),
 	};
 }
 

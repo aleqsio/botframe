@@ -9,8 +9,8 @@ import { firstId } from "../input/toolFixtures";
 import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox, typedPatch } from "./layerFields";
 import type { LayerField, UnitChoice } from "./layerFields";
 
-const ALT = { shift: false, alt: true };
-const SHIFT = { shift: true, alt: false };
+const ALT = { shift: false, alt: true, control: false };
+const SHIFT = { shift: true, alt: false, control: false };
 const BOX_LABELS = ["X", "Y", "W", "H", "Rotation"];
 const CHILD_FIELDS: LayerFields = {
 	x: 0,
@@ -125,7 +125,7 @@ describe("the layer fields", () => {
 
 describe("fieldGroupsOf", () => {
 	it("groups the fields of a rectangle", () => {
-		const groups = fieldGroupsOf(layerOf(DesignDocument.create()), NO_BASIS);
+		const groups = fieldGroupsOf(layerOf(DesignDocument.create()), NO_BASIS, false);
 		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
 			["Position", ["X", "Y"]],
 			["Size", ["W", "H"]],
@@ -138,7 +138,7 @@ describe("fieldGroupsOf", () => {
 		const doc = DesignDocument.create();
 		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });
 
-		const groups = fieldGroupsOf(layerOf(doc), NO_BASIS);
+		const groups = fieldGroupsOf(layerOf(doc), NO_BASIS, false);
 
 		expect(groups.map((group) => group.name)).toEqual(["Position", "Size", "Rotation"]);
 		expect(fieldsOf(layerOf(doc), NO_BASIS).map((field) => field.label)).toEqual(BOX_LABELS);

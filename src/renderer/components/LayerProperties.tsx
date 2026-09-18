@@ -1,57 +1,16 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import { useLayer } from "../useDocument";
 import { ArtboardFooter } from "./ArtboardFooter";
+import { ChipGroup } from "./ChipGroup";
 import { ColorField } from "./ColorField";
-import { NumberChip } from "./NumberChip";
+import { GuideList } from "./GuideList";
+import { LayoutSection } from "./LayoutSection";
 import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
-import type { FieldGroup, LayerField } from "./layerFields";
-
-function LayerChip({
-	doc,
-	field,
-	layer,
-}: {
-	doc: DesignDocument;
-	field: LayerField;
-	layer: Layer;
-}): ReactElement {
-	return (
-		<NumberChip
-			field={field}
-			onCommit={() => {
-				doc.commit(field.message);
-			}}
-			onPatch={(patch) => {
-				doc.update(layer.id, patch);
-			}}
-			value={field.read(layer)}
-		/>
-	);
-}
-
-function ChipGroup({
-	doc,
-	group,
-	layer,
-}: {
-	doc: DesignDocument;
-	group: FieldGroup;
-	layer: Layer;
-}): ReactElement {
-	return (
-		<div className="field-group">
-			<span className="group-label">{group.name}</span>
-			<div className="chip-row">
-				{group.fields.map((field) => (
-					<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
-				))}
-			</div>
-		</div>
-	);
-}
+import { cellGroupOf } from "./layoutFields";
 
 function ClipSwitch({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	return (
@@ -69,6 +28,16 @@ function ClipSwitch({ doc, layer }: { doc: DesignDocument; layer: Layer }): Reac
 	);
 }
 
+function ArtboardSections({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	return (
+		<>
+			<LayoutSection doc={doc} layer={layer} />
+			<GuideList doc={doc} layer={layer} />
+			<ArtboardFooter doc={doc} layer={layer} />
+		</>
+	);
+}
+
 export function LayerProperties({
 	doc,
 	layer,
@@ -76,6 +45,10 @@ export function LayerProperties({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
+	const container = useLayer(doc, layer.parent);
+	const placed = container !== null && container.layout.kind !== "free";
+	const cell = cellGroupOf(layer, container);
+
 	return (
 		<>
 			<PropertyField
@@ -86,7 +59,8 @@ export function LayerProperties({
 				}}
 				value={layer.name}
 			/>
-			{fieldGroupsOf(layer, doc.basisOf(layer.id)).map((group) => (
+			{cell === null ? null : <ChipGroup doc={doc} group={cell} layer={layer} />}
+			{fieldGroupsOf(layer, doc.basisOf(layer.id), placed).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
 			<ColorField
@@ -100,7 +74,7 @@ export function LayerProperties({
 				value={layer.fill}
 			/>
 			<ClipSwitch doc={doc} layer={layer} />
-			{isArtboard(layer) ? <ArtboardFooter doc={doc} layer={layer} /> : null}
+			{isArtboard(layer) ? <ArtboardSections doc={doc} layer={layer} /> : null}
 		</>
 	);
 }
