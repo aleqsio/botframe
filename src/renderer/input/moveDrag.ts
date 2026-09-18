@@ -8,7 +8,7 @@ import { isLaidOut, settleInLayout } from "./layoutDrag";
 import type { Modifiers } from "./modifiers";
 import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
 import { snapFieldAround } from "./snapField";
-import { snapPointsOf } from "./snapPoints";
+import { snapShapeOf } from "./snapShape";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -44,7 +44,7 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 
 function snappedPlace(target: PointerTarget, move: LayerMove, layer: Layer, wanted: Point): Point {
 	const reach = SNAP_REACH / target.user.camera.get().zoom;
-	const snap = snapTo(move.field, snapPointsOf({ ...layer, ...wanted }), reach);
+	const snap = snapTo(move.field, snapShapeOf({ ...layer, ...wanted }).points, reach);
 	const segments = snapSegmentsOf(snap, move.field.span);
 	target.user.snap.set(segments.length === 0 ? null : { parent: layer.parent, segments });
 	return snappedPoint(wanted, snap);

@@ -52,6 +52,12 @@ describe("a move drag near a sibling", () => {
 		expect(scene.target.user.snap.get()).toBeNull();
 	});
 
+	it("snaps to the outline of an ellipse, not to the extreme beyond it", () => {
+		const scene = dropScene({ ...SIBLING, y: 300, geometry: { kind: "ellipse" } });
+		dragOver(behaviorFor("select"), scene.target, { press: GRAB, release: NEAR_THE_SIBLING });
+		expect(scene.target.doc.layer(scene.layer)).toMatchObject({ x: 461.01, y: 252.94 });
+	});
+
 	it("does not snap while the control key is down", () => {
 		const scene = dropScene(SIBLING);
 		dragOver(behaviorFor("select"), scene.target, {
