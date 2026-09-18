@@ -1,7 +1,7 @@
 import type { Layer, LayerPatch } from "../../document/layer";
 import { PIXELS } from "../../document/length";
 import { gridTracks } from "../../document/layout";
-import type { Cell, Direction, Guide, GuideAxis, Layout, LayoutKind } from "../../document/layout";
+import type { Cell, Direction, GuideAxis, Layout, LayoutKind } from "../../document/layout";
 import { LENGTH_STEP } from "../input/step";
 import type { SegmentOption } from "./Segmented";
 import type { FieldGroup, LayerField } from "./layerFields";
@@ -61,8 +61,12 @@ function spaceField(label: string, key: SpaceKey, layout: Layout): LayerField {
 	};
 }
 
-function trackField(label: string, key: TrackKey, layout: Extract<Layout, { kind: "grid" }>) {
-	const field: LayerField = {
+function trackField(
+	label: string,
+	key: TrackKey,
+	layout: Extract<Layout, { kind: "grid" }>,
+): LayerField {
+	return {
 		label,
 		unit: NO_UNIT,
 		choice: null,
@@ -72,7 +76,6 @@ function trackField(label: string, key: TrackKey, layout: Extract<Layout, { kind
 		read: (layer) => (layer.layout.kind === "grid" ? layer.layout[key] : 1),
 		patch: (value) => ({ layout: { ...layout, [key]: Math.round(value) } }),
 	};
-	return field;
 }
 
 export function layoutGroupsOf(layout: Layout): readonly FieldGroup[] {
@@ -126,10 +129,6 @@ export function cellGroupOf(layer: Layer, container: Layer | null): FieldGroup |
 	};
 }
 
-function withGuides(guides: readonly Guide[]): LayerPatch {
-	return { guides };
-}
-
 export function guideField(layer: Layer, index: number): LayerField {
 	const guide = layer.guides[index];
 	const label = guide === undefined ? "Guide" : GUIDE_LABELS[guide.axis];
@@ -141,16 +140,17 @@ export function guideField(layer: Layer, index: number): LayerField {
 		step: LENGTH_STEP,
 		message: GUIDE_MESSAGE,
 		read: (held) => held.guides[index]?.at ?? 0,
-		patch: (value) =>
-			withGuides(layer.guides.map((held, at) => (at === index ? { ...held, at: value } : held))),
+		patch: (value) => ({
+			guides: layer.guides.map((held, at) => (at === index ? { ...held, at: value } : held)),
+		}),
 	};
 }
 
 export function addedGuide(layer: Layer, axis: GuideAxis): LayerPatch {
 	const at = axis === "x" ? layer.width / 2 : layer.height / 2;
-	return withGuides([...layer.guides, { axis, at: Math.round(at) }]);
+	return { guides: [...layer.guides, { axis, at: Math.round(at) }] };
 }
 
 export function removedGuide(layer: Layer, index: number): LayerPatch {
-	return withGuides(layer.guides.filter((_, at) => at !== index));
+	return { guides: layer.guides.filter((_, at) => at !== index) };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cellAt, gridTracks, placeChildren, sameCell, sameLayout } from "./layout";
+import { cellAt, gridTracks, placeChildren, sameCell } from "./layout";
 import type { GridLayout, LaidChild, Layout } from "./layout";
 
 const BOX = { width: 340, height: 200 };
@@ -70,20 +70,11 @@ describe("cellAt", () => {
 	});
 });
 
-describe("sameCell and sameLayout", () => {
+describe("sameCell", () => {
 	it("compares cells by value and null by identity", () => {
 		expect(sameCell({ column: 1, row: 2 }, { column: 1, row: 2 })).toBe(true);
 		expect(sameCell({ column: 1, row: 2 }, { column: 2, row: 2 })).toBe(false);
 		expect(sameCell(null, { column: 0, row: 0 })).toBe(false);
 		expect(sameCell(null, null)).toBe(true);
-	});
-
-	it("compares layouts by kind and by each field", () => {
-		expect(sameLayout(ROW, { ...ROW })).toBe(true);
-		expect(sameLayout(ROW, { ...ROW, gap: 11 })).toBe(false);
-		expect(sameLayout(GRID, { ...GRID, rows: 3 })).toBe(false);
-		expect(sameLayout(GRID, { ...GRID })).toBe(true);
-		expect(sameLayout(ROW, GRID)).toBe(false);
-		expect(sameLayout({ kind: "free" }, { kind: "free" })).toBe(true);
 	});
 });

@@ -3,23 +3,18 @@ import type { Cell, Direction, Guide, Layout, LayoutKind } from "./layout";
 import { isBag, readNumber, readString } from "./read";
 import type { FieldSource } from "./read";
 
-const ROW: Direction = "row";
-const COLUMN: Direction = "column";
-const ONE_TRACK = 1;
-const NO_SPACE = 0;
-
 function directionOf(fields: FieldSource | null): Direction {
-	return readString(fields, "direction", ROW) === COLUMN ? COLUMN : ROW;
+	return readString(fields, "direction", "row") === "column" ? "column" : "row";
 }
 
 function spaceOf(fields: FieldSource | null, key: string): number {
-	const value = readNumber(fields, key, NO_SPACE);
-	return Number.isFinite(value) ? Math.max(NO_SPACE, value) : NO_SPACE;
+	const value = readNumber(fields, key, 0);
+	return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
 function tracksOf(fields: FieldSource | null, key: string): number {
-	const value = readNumber(fields, key, ONE_TRACK);
-	return Number.isFinite(value) ? Math.max(ONE_TRACK, Math.floor(value)) : ONE_TRACK;
+	const value = readNumber(fields, key, 1);
+	return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 }
 
 function indexOf(fields: FieldSource, key: string): number {

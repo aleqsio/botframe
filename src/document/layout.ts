@@ -190,28 +190,3 @@ export function samePlacement(held: Placement | undefined, next: Placement | und
 	}
 	return held.x === next.x && held.y === next.y && sameCell(held.slot, next.slot);
 }
-
-function sameFlex(held: FlexLayout, next: FlexLayout): boolean {
-	return (
-		held.direction === next.direction && held.gap === next.gap && held.padding === next.padding
-	);
-}
-
-function sameGrid(held: GridLayout, next: GridLayout): boolean {
-	return (
-		held.columns === next.columns &&
-		held.rows === next.rows &&
-		held.gap === next.gap &&
-		held.padding === next.padding
-	);
-}
-
-export function sameLayout(held: Layout, next: Layout): boolean {
-	if (held.kind === "flex" && next.kind === "flex") {
-		return sameFlex(held, next);
-	}
-	if (held.kind === "grid" && next.kind === "grid") {
-		return sameGrid(held, next);
-	}
-	return held.kind === next.kind;
-}

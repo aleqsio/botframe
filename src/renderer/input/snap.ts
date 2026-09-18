@@ -2,10 +2,8 @@ import type { Size } from "../../document/length";
 import type { Guide, GuideAxis } from "../../document/layout";
 import type { Point } from "../state/camera";
 
-type SnapAxis = GuideAxis;
-
 interface SnapTarget {
-	axis: SnapAxis;
+	axis: GuideAxis;
 	at: number;
 	other: number | null;
 }
@@ -28,7 +26,7 @@ export interface SnapField {
 }
 
 export interface SnapSegment {
-	axis: SnapAxis;
+	axis: GuideAxis;
 	at: number;
 	from: number;
 	to: number;
@@ -36,9 +34,9 @@ export interface SnapSegment {
 
 export const SNAP_REACH = 8;
 
-const AXES: readonly SnapAxis[] = ["x", "y"];
+const AXES: readonly GuideAxis[] = ["x", "y"];
 
-function otherAxis(axis: SnapAxis): SnapAxis {
+function otherAxis(axis: GuideAxis): GuideAxis {
 	return axis === "x" ? "y" : "x";
 }
 
@@ -46,12 +44,12 @@ function byPosition(first: SnapTarget, second: SnapTarget): number {
 	return first.at - second.at;
 }
 
-function pointTargets(points: readonly Point[], axis: SnapAxis): SnapTarget[] {
+function pointTargets(points: readonly Point[], axis: GuideAxis): SnapTarget[] {
 	const other = otherAxis(axis);
 	return points.map((point) => ({ axis, at: point[axis], other: point[other] }));
 }
 
-function lineTargets(span: Size, guides: readonly Guide[], axis: SnapAxis): SnapTarget[] {
+function lineTargets(span: Size, guides: readonly Guide[], axis: GuideAxis): SnapTarget[] {
 	const extent = axis === "x" ? span.width : span.height;
 	const edges = [0, extent / 2, extent].map((at) => ({ axis, at, other: null }));
 	const lines = guides.flatMap((guide) => (guide.axis === axis ? [{ ...guide, other: null }] : []));
@@ -63,7 +61,7 @@ export interface FieldSpec {
 	container: { span: Size; guides: readonly Guide[] } | null;
 }
 
-function targetsOf(spec: FieldSpec, axis: SnapAxis): SnapTarget[] {
+function targetsOf(spec: FieldSpec, axis: GuideAxis): SnapTarget[] {
 	const lines =
 		spec.container === null ? [] : lineTargets(spec.container.span, spec.container.guides, axis);
 	return [...pointTargets(spec.points, axis), ...lines].toSorted(byPosition);
@@ -111,7 +109,7 @@ function firstEqual(sorted: readonly SnapTarget[], index: number, at: number): n
 function nearestTarget(
 	sorted: readonly SnapTarget[],
 	point: Point,
-	axis: SnapAxis,
+	axis: GuideAxis,
 ): SnapTarget | null {
 	const nearest = nearestIndex(sorted, point[axis]);
 	const found = sorted[nearest];
@@ -129,25 +127,23 @@ function nearestTarget(
 	}
 }
 
-function closer(held: SnapMatch | null, next: SnapMatch): boolean {
-	return held === null || Math.abs(next.delta) < Math.abs(held.delta);
-}
-
-interface Along {
-	field: SnapField;
-	axis: SnapAxis;
-	reach: number;
-}
-
-function matchAlong(along: Along, points: readonly Point[]): SnapMatch | null {
+function matchAlong(
+	sorted: readonly SnapTarget[],
+	axis: GuideAxis,
+	points: readonly Point[],
+	reach: number,
+): SnapMatch | null {
 	let best: SnapMatch | null = null;
 	for (const point of points) {
-		const target = nearestTarget(along.field[along.axis], point, along.axis);
+		const target = nearestTarget(sorted, point, axis);
 		if (target === null) {
 			continue;
 		}
-		const next = { delta: target.at - point[along.axis], target, point };
-		if (Math.abs(next.delta) <= along.reach && closer(best, next)) {
+		const next = { delta: target.at - point[axis], target, point };
+		if (
+			Math.abs(next.delta) <= reach &&
+			(best === null || Math.abs(next.delta) < Math.abs(best.delta))
+		) {
 			best = next;
 		}
 	}
@@ -155,24 +151,21 @@ function matchAlong(along: Along, points: readonly Point[]): SnapMatch | null {
 }
 
 export function snapTo(field: SnapField, points: readonly Point[], reach: number): Snap {
-	return {
-		x: matchAlong({ field, axis: "x", reach }, points),
-		y: matchAlong({ field, axis: "y", reach }, points),
-	};
+	return { x: matchAlong(field.x, "x", points, reach), y: matchAlong(field.y, "y", points, reach) };
 }
 
 export function snappedPoint(wanted: Point, snap: Snap): Point {
 	return { x: wanted.x + (snap.x?.delta ?? 0), y: wanted.y + (snap.y?.delta ?? 0) };
 }
 
-function spanAlong(span: Size | null, axis: SnapAxis): number {
+function spanAlong(span: Size | null, axis: GuideAxis): number {
 	if (span === null) {
 		return 0;
 	}
 	return axis === "x" ? span.height : span.width;
 }
 
-function segmentOf(snap: Snap, span: Size | null, axis: SnapAxis): SnapSegment | null {
+function segmentOf(snap: Snap, span: Size | null, axis: GuideAxis): SnapSegment | null {
 	const match = snap[axis];
 	if (match === null) {
 		return null;
