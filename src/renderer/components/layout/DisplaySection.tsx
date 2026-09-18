@@ -26,12 +26,13 @@ const OPTIONS: readonly SegmentOption<DisplayMode>[] = DISPLAY_MODES.map((displa
 }));
 
 function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
-	const { wrap } = layer.layout;
+	const { display, wrap } = layer.layout;
 
 	return (
 		<button
 			aria-pressed={wrap}
 			className="layout-wrapchip"
+			disabled={!isFlex(display)}
 			onClick={() => {
 				doc.update(layer.id, { layout: { wrap: !wrap } });
 				doc.commit("set wrap");
@@ -67,7 +68,7 @@ export function DisplaySection({
 					options={OPTIONS}
 					value={display}
 				/>
-				{isFlex(display) ? <WrapToggle doc={doc} layer={layer} /> : null}
+				<WrapToggle doc={doc} layer={layer} />
 			</div>
 			{display === "block" ? (
 				<p className="layout-note">{BLOCK_NOTE}</p>

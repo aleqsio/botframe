@@ -11,9 +11,11 @@ export interface LengthFieldProps<U extends string> {
 	units: readonly U[];
 	onChange: (next: Measure<U>) => void;
 	tips?: Partial<Record<U, string>> | undefined;
+	disabled?: boolean | undefined;
 }
 
 export function LengthField<U extends string>({
+	disabled = false,
 	label,
 	onChange,
 	text,
@@ -22,10 +24,10 @@ export function LengthField<U extends string>({
 	value,
 }: LengthFieldProps<U>): ReactElement {
 	return (
-		<div className="number-chip">
+		<div className={disabled ? "number-chip layout-chip-off" : "number-chip"}>
 			{text === undefined ? null : <span className="chip-name">{text}</span>}
 			<DraftInput
-				disabled={value.unit === "auto"}
+				disabled={disabled || value.unit === "auto"}
 				inputMode="numeric"
 				label={`${label} value`}
 				onCommit={(typed) => {
@@ -37,6 +39,7 @@ export function LengthField<U extends string>({
 				value={measureText(value)}
 			/>
 			<UnitMenu
+				disabled={disabled}
 				label={label}
 				onPick={(unit) => {
 					onChange({ value: value.value, unit });

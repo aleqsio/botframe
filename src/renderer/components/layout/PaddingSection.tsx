@@ -73,19 +73,16 @@ export function PaddingSection({
 					<PaddingIcon />
 					Sides
 				</span>
-				{open ? (
-					<span className="layout-spacer" />
-				) : (
-					<LengthField
-						label="Padding"
-						onChange={(next) => {
-							write({ top: next, right: next, bottom: next, left: next });
-						}}
-						tips={PADDING_TIPS}
-						units={SPACING_UNITS}
-						value={padding.top}
-					/>
-				)}
+				<LengthField
+					disabled={open}
+					label="Padding"
+					onChange={(next) => {
+						write({ top: next, right: next, bottom: next, left: next });
+					}}
+					tips={PADDING_TIPS}
+					units={SPACING_UNITS}
+					value={padding.top}
+				/>
 				<SidesToggle
 					onToggle={() => {
 						setOpen(!open);

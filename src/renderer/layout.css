@@ -29,6 +29,7 @@
 
 	--layout-content: calc(var(--inspector-width) - 2 * var(--layout-space-4));
 	--layout-label: calc(var(--layout-content) / 4);
+	--layout-value: calc(3 * var(--layout-control) + var(--layout-space-5));
 	--layout-gutter: calc(var(--layout-content) / 6);
 	--layout-pad: calc(2 * var(--layout-control) + 2 * var(--layout-space-3));
 	--layout-pad-box: calc(3 * var(--layout-control) + 4 * var(--layout-space-2));
@@ -113,10 +114,6 @@
 	width: var(--layout-label);
 }
 
-.layout-spacer {
-	flex: 1;
-}
-
 .layout-seg {
 	display: flex;
 	flex: 1;
@@ -144,6 +141,7 @@
 	color: var(--panel-label);
 	font: inherit;
 	font-size: var(--layout-text-chip);
+	letter-spacing: -0.025em;
 	white-space: nowrap;
 	cursor: default;
 	transition:
@@ -174,10 +172,6 @@
 	outline-offset: calc(-1 * var(--layout-space-1));
 }
 
-.layout-size {
-	flex-wrap: wrap;
-}
-
 .layout-size .chip-handle {
 	width: var(--layout-icon-large);
 }
@@ -187,8 +181,13 @@
 }
 
 .layout-size .number-chip {
-	flex: 1 0 100%;
+	flex: none;
+	width: var(--layout-value);
 	min-width: 0;
+}
+
+.layout-size .unit-trigger {
+	padding: 0 var(--layout-space-2);
 }
 
 .layout-size-height .layout-glyph {
@@ -382,7 +381,7 @@
 		color 200ms ease;
 }
 
-.layout-wrapchip:hover {
+.layout-wrapchip:hover:not(:disabled) {
 	background-color: var(--panel-selected);
 	color: var(--panel-text);
 }
@@ -393,17 +392,13 @@
 	color: var(--layout-accent-text);
 }
 
+.layout-wrapchip:disabled {
+	opacity: 0.35;
+}
+
 .layout-wrapchip:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);
 	outline-offset: calc(-1 * var(--layout-space-1));
-}
-
-.layout-dist .layout-seg {
-	flex-wrap: wrap;
-}
-
-.layout-dist .layout-segment {
-	flex: 1 1 calc(50% - var(--layout-space-1));
 }
 
 .layout-dist-turn .layout-glyph {
@@ -609,7 +604,7 @@
 .layout-tbar .number-chip {
 	flex: 1;
 	min-width: 0;
-	height: var(--layout-inner);
+	height: var(--layout-control);
 	padding: 0 var(--layout-space-3);
 }
 
@@ -617,8 +612,8 @@
 	display: grid;
 	flex: none;
 	place-items: center;
-	width: var(--layout-inner);
-	height: var(--layout-inner);
+	width: var(--layout-control);
+	height: var(--layout-control);
 	padding: 0;
 	border: 0;
 	border-radius: var(--layout-radius-inner);
