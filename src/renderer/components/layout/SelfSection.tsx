@@ -9,9 +9,6 @@ import { PositionRow } from "./PositionRow";
 import { SizeRow } from "./SizeRow";
 import { contextText } from "./selfText";
 
-const SELF_NOTE =
-	"No push. Margin is the per-child spacing control, auto pushes to the far end. Size and position read the parent's Display.";
-
 export function SelfSection({
 	doc,
 	layer,
@@ -46,7 +43,6 @@ export function SelfSection({
 			) : null}
 			<span className="layout-sub">Margin</span>
 			<MarginFields display={display} doc={doc} layer={layer} />
-			<p className="layout-note">{SELF_NOTE}</p>
 		</section>
 	);
 }
