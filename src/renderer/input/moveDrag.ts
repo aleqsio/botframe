@@ -1,11 +1,15 @@
 import type { DesignDocument } from "../../document/document";
-import type { Layer, LayerId } from "../../document/layer";
-import type { LayoutPatch } from "../../document/layout";
-import { outOfFlow } from "../layerStyle";
+import type { Layer, LayerId, LayerPatch } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
+import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf, heldPlacement } from "./dropTarget";
+import type { Placement as HeldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
+import type { Modifiers } from "./modifiers";
+import { settleInFlow } from "./flowDrag";
+import { carryLayer } from "./moveCarry";
+import { snapFieldAround } from "./snapField";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -20,37 +24,41 @@ function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return { x: origin.x - layer.x, y: origin.y - layer.y };
 }
 
-function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): void {
+function landedPatch(
+	target: PointerTarget,
+	move: LayerMove,
+	parent: LayerId | null,
+	held: HeldPlacement,
+): LayerPatch {
+	const display = parent === null ? null : target.doc.layer(parent)?.layout.display;
+	if (display !== undefined && display !== null && display !== "block") {
+		return { ...BACK_TO_FLOW, rotation: held.rotation };
+	}
+	return { ...held, layout: { position: move.start.position } };
+}
+
+function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
 	const parent = parentUnder(target, move, point);
 	const layer = target.doc.layer(move.id);
 	if (parent === move.parent || layer === null) {
-		return;
+		return move;
 	}
 	const from = parentChainOf(target, move.id);
 	if (!target.doc.move(move.id, parent)) {
-		return;
+		return move;
 	}
 	const moved = target.doc.layer(move.id) ?? layer;
-	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
-	target.doc.update(move.id, placement);
-	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
-	target.user.move.set({ ...move, parent, offset });
-}
-
-function liftedOut(target: PointerTarget, move: LayerMove): LayoutPatch | null {
-	if (move.start.position !== "default") {
-		return null;
-	}
-	const display =
-		move.parent === null ? null : (target.doc.layer(move.parent)?.layout.display ?? null);
-	return outOfFlow(display, "default") ? null : { position: "offset" };
-}
-
-function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void {
-	const point = parentPointOf(target, move.id, canvas);
-	const place = { x: point.x - move.offset.x, y: point.y - move.offset.y };
-	const layout = liftedOut(target, move);
-	target.doc.update(move.id, layout === null ? place : { ...place, layout });
+	const held = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
+	target.doc.update(move.id, landedPatch(target, move, parent, held));
+	const next = {
+		...move,
+		parent,
+		offset: offsetOf(target, target.doc.layer(move.id) ?? moved, point.canvas),
+		grab: parentPointOf(target, move.id, point.canvas),
+		field: snapFieldAround(target, move.id),
+	};
+	target.user.move.set(next);
+	return next;
 }
 
 export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): void {
@@ -58,26 +66,37 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 		id: layer.id,
 		from: layer.parent,
 		parent: layer.parent,
-		start: { x: layer.x, y: layer.y, rotation: layer.rotation, position: layer.layout.position },
+		start: {
+			x: layer.x,
+			y: layer.y,
+			rotation: layer.rotation,
+			position: layer.layout.position,
+			cell: layer.layout.cell,
+			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
+		},
 		offset: offsetOf(target, layer, canvas),
+		grab: parentPointOf(target, layer.id, canvas),
+		field: snapFieldAround(target, layer.id),
 	});
 }
 
-export function applyMove(target: PointerTarget, point: StagePoint): void {
+export function applyMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
 	const move = target.user.move.get();
 	if (move === null) {
 		return;
 	}
-	carryLayer(target, move, point.canvas);
-	retarget(target, move, point);
+	carryLayer(target, move, point, modifiers);
+	settleInFlow(target, retarget(target, move, point), point.canvas);
 }
 
-export function finishMove(target: PointerTarget, point: StagePoint): void {
+export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
 	if (target.user.move.get() === null) {
 		return;
 	}
-	applyMove(target, point);
+	applyMove(target, point, modifiers);
 	target.user.move.set(null);
+	target.user.snap.set(null);
+	target.user.lift.set(null);
 	target.doc.commit(COMMIT_MESSAGES.move);
 }
 
@@ -91,8 +110,10 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 		return;
 	}
 	user.move.set(null);
-	doc.move(move.id, move.from);
-	const { position, ...place } = move.start;
-	doc.update(move.id, { ...place, layout: { position } });
+	user.snap.set(null);
+	user.lift.set(null);
+	doc.move(move.id, move.from, move.start.index);
+	const { x, y, rotation, position, cell } = move.start;
+	doc.update(move.id, { x, y, rotation, layout: { position, cell } });
 	doc.commit(CANCEL_COMMIT);
 }

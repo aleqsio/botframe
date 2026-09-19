@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pixelLengths } from "./documentFixtures";
+import { pixelBox } from "./documentFixtures";
 import { DEFAULT_LAYOUT } from "./layout";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { LayerNode } from "./subtree";
@@ -17,8 +17,7 @@ const CHILD: LayerNode = {
 		geometry: { kind: "path", d: "M0 0 L1 1 Z" },
 	},
 	rotation: 15,
-	lengths: pixelLengths({ x: 1, y: 2, width: 3, height: 4 }),
-	layout: DEFAULT_LAYOUT,
+	...pixelBox({ x: 1, y: 2, width: 3, height: 4 }),
 	children: [],
 };
 
@@ -34,8 +33,7 @@ const ROOT: LayerNode = {
 		geometry: { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0.5, artboard: true },
 	},
 	rotation: 0,
-	lengths: pixelLengths({ x: 10, y: 20, width: 30, height: 40 }),
-	layout: DEFAULT_LAYOUT,
+	...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),
 	children: [CHILD],
 };
 
@@ -111,8 +109,7 @@ describe("parseEnvelope", () => {
 				geometry: PLAIN_RECTANGLE,
 			},
 			rotation: 0,
-			lengths: pixelLengths({ x: 0, y: 0, width: 0, height: 0 }),
-			layout: DEFAULT_LAYOUT,
+			...pixelBox({ x: 0, y: 0, width: 0, height: 0 }),
 			children: [],
 		});
 	});

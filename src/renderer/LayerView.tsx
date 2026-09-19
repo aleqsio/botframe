@@ -1,28 +1,44 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
+import type { Guide } from "../document/guides";
 import type { LayerId } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootArtboard, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
+import type { Lifted } from "./state/userState";
+import { useLift, NOT_LIFTED } from "./state/useLift";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
+
+function liftedStyle(style: CSSProperties, lift: string): CSSProperties {
+	return lift === NOT_LIFTED
+		? style
+		: { ...style, transform: `${lift} ${style.transform ?? ""}`.trimEnd() };
+}
+
+function guideStyle(guide: Guide): CSSProperties {
+	return guide.axis === "x" ? { left: `${guide.at}px` } : { top: `${guide.at}px` };
+}
 
 export function LayerView({
 	doc,
 	id,
+	lift,
 	parentDisplay,
 	selection,
 }: {
 	doc: DesignDocument;
 	id: LayerId;
+	lift: Slot<Lifted | null>;
 	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
+	const lifted = useLift(lift, id);
 
 	if (layer === null) {
 		return null;
@@ -31,18 +47,23 @@ export function LayerView({
 	return (
 		<div
 			className="layer"
+			data-dragging={lifted === NOT_LIFTED ? undefined : ""}
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			style={layerStyle(layer, parentDisplay)}
+			style={liftedStyle(layerStyle(layer, parentDisplay), lifted)}
 		>
 			{childIds.map((childId) => (
 				<LayerView
 					doc={doc}
 					id={childId}
 					key={childId}
+					lift={lift}
 					parentDisplay={layer.layout.display}
 					selection={selection}
 				/>
+			))}
+			{Array.from(layer.guides.entries(), ([index, guide]) => (
+				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />
 			))}
 		</div>
 	);

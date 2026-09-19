@@ -3,6 +3,7 @@ import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import type { LayerMove } from "../state/userState";
 import { droppedInto } from "./dropHighlight";
+import { snapFieldOf } from "./snap";
 import type { RowDrag } from "./rowDrop";
 
 const LAYER: LayerId = "1@1";
@@ -48,8 +49,10 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 		id: LAYER,
 		from,
 		parent,
-		start: { x: 0, y: 0, rotation: 0, position: "default" },
+		start: { x: 0, y: 0, rotation: 0, position: "default", cell: { mode: "auto" }, index: 0 },
 		offset: { x: 0, y: 0 },
+		grab: { x: 0, y: 0 },
+		field: snapFieldOf({ points: [], curves: [], container: null }),
 	};
 }
 

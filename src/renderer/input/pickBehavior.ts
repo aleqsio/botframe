@@ -90,20 +90,20 @@ export function createPickBehavior(): ToolBehavior {
 			layerOfPress(target, point.canvas);
 			return true;
 		},
-		dragStart(target, origin, point) {
+		dragStart(target, origin, point, modifiers) {
 			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
 			}
 			beginMove(target, layer, origin.canvas);
-			applyMove(target, point);
+			applyMove(target, point, modifiers);
 			return true;
 		},
-		drag(target, point) {
-			applyMove(target, point);
+		drag(target, point, modifiers) {
+			applyMove(target, point, modifiers);
 		},
-		dragEnd(target, point) {
-			finishMove(target, point);
+		dragEnd(target, point, modifiers) {
+			finishMove(target, point, modifiers);
 		},
 		context(target, client) {
 			selectForMenu(target);

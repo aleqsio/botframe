@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pixelLengths } from "../../document/documentFixtures";
+import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, Rect } from "../../document/layer";
 import { DEFAULT_LAYOUT } from "../../document/layout";
 import type { LayoutPatch } from "../../document/layout";
@@ -12,7 +12,7 @@ function layerOf(layout: LayoutPatch): Layer {
 	return {
 		id: "1@1",
 		...BOX,
-		lengths: pixelLengths(BOX),
+		...pixelBox(BOX),
 		layout: { ...DEFAULT_LAYOUT, ...layout },
 		rotation: 0,
 		fill: "#000000",

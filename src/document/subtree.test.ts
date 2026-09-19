@@ -1,8 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
-import { DRAWN, firstId, pixelLengths } from "./documentFixtures";
-import { DEFAULT_LAYOUT } from "./layout";
+import { DRAWN, firstId, pixelBox } from "./documentFixtures";
 import type { Layer, LayerFields, LayerId } from "./layer";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -63,20 +62,17 @@ describe("readSubtree", () => {
 		expect(doc.readSubtree(root)).toEqual({
 			fields: DRAWN,
 			rotation: 0,
-			lengths: pixelLengths(DRAWN),
-			layout: DEFAULT_LAYOUT,
+			...pixelBox(DRAWN),
 			children: [
 				{
 					fields: CHILD,
 					rotation: 45,
-					lengths: pixelLengths(CHILD),
-					layout: DEFAULT_LAYOUT,
+					...pixelBox(CHILD),
 					children: [
 						{
 							fields: GRANDCHILD,
 							rotation: 0,
-							lengths: pixelLengths(GRANDCHILD),
-							layout: DEFAULT_LAYOUT,
+							...pixelBox(GRANDCHILD),
 							children: [],
 						},
 					],

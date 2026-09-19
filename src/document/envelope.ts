@@ -1,6 +1,7 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
 import type { LayerFields, WritableGeometry } from "./layer";
+import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
 import type { LayerLengths, Length } from "./length";
@@ -85,6 +86,7 @@ function nodeOf(value: unknown): LayerNode {
 		rotation: count(bag, "rotation"),
 		lengths: lengthsOf(bag["lengths"], fields),
 		layout: layoutOf(bag["layout"]),
+		guides: guidesOf(bag["guides"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

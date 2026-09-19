@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { NO_MODIFIERS } from "./modifiers";
 import { ANGLE_SNAP, ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, stepOf } from "./step";
 
-const ALT = { shift: false, alt: true };
-const SHIFT = { shift: true, alt: false };
-const BOTH = { shift: true, alt: true };
+const ALT = { shift: false, alt: true, control: false };
+const SHIFT = { shift: true, alt: false, control: false };
+const BOTH = { shift: true, alt: true, control: false };
 
 describe("stepOf", () => {
 	it("gives the normal step when no modifier is held", () => {

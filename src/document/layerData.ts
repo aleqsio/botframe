@@ -1,5 +1,7 @@
 import { LoroMap } from "loro-crdt";
 import type { Geometry, LayerPatch, LayerTraits, Rect } from "./layer";
+import { guidesOf } from "./guides";
+import type { Guide } from "./guides";
 import { DEFAULT_LAYOUT, layoutOf } from "./layout";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import {
@@ -18,6 +20,7 @@ import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
 const LAYOUT = "layout";
+const GUIDES = "guides";
 const UNIT_SUFFIX = "Unit";
 const BLACK = "#000000";
 
@@ -82,6 +85,7 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		...resolveBox(lengths, basis),
 		lengths,
 		layout: readLayout(data),
+		guides: guidesOf(data.get(GUIDES)),
 		rotation: readNumber(data, "rotation", 0),
 		fill: readString(data, "fill", BLACK),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
@@ -136,6 +140,17 @@ function writeLayoutKey(map: LoroMap, key: string, value: unknown): void {
 	}
 }
 
+function writeGuides(data: LoroMap, guides: readonly Guide[]): void {
+	if (guides.length === 0) {
+		data.delete(GUIDES);
+		return;
+	}
+	data.set(
+		GUIDES,
+		guides.map(({ axis, at }) => ({ axis, at })),
+	);
+}
+
 function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	for (const [key, value] of Object.entries(patch)) {
 		writeLayoutKey(map, key, value);
@@ -143,7 +158,7 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 }
 
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, layout, lengths, x, y, width, height, ...plain } = patch;
+	const { geometry, guides, layout, lengths, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -154,5 +169,8 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	}
 	if (layout !== undefined) {
 		writeLayout(data.ensureMergeableMap(LAYOUT), layout);
+	}
+	if (guides !== undefined) {
+		writeGuides(data, guides);
 	}
 }

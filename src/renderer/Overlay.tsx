@@ -3,10 +3,11 @@ import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
+import type { SnapSegment } from "./input/snap";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useDrawnFrame } from "./useDocument";
+import { useDrawnFrame, useDrawnSpace } from "./useDocument";
 import type { DrawnFrame } from "./useDocument";
 
 declare module "react" {
@@ -101,12 +102,39 @@ function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): Rea
 	return id === null ? null : <HighlightFrame doc={doc} id={id} user={user} />;
 }
 
+function snapLineStyle(segment: SnapSegment): CSSProperties {
+	const along = `${segment.to - segment.from}px`;
+	if (segment.axis === "x") {
+		return { transform: `translate3d(${segment.at}px, ${segment.from}px, 0)`, height: along };
+	}
+	return { transform: `translate3d(${segment.from}px, ${segment.at}px, 0)`, width: along };
+}
+
+function SnapLines({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
+	const snap = useSlot(user.snap);
+	const space = useDrawnSpace(doc, snap?.parent ?? null);
+
+	return snap === null ? null : (
+		<div className="snap-space" style={{ transform: space }}>
+			{snap.segments.map((segment) => (
+				<span
+					className="snap-line"
+					data-axis={segment.axis}
+					key={segment.axis}
+					style={snapLineStyle(segment)}
+				/>
+			))}
+		</div>
+	);
+}
+
 export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	return (
 		<>
 			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
 			<SelectionFrame doc={doc} user={user} />
+			<SnapLines doc={doc} user={user} />
 		</>
 	);
 }

@@ -1,5 +1,6 @@
 import type { Layer, LayerId, Rect } from "../../document/layer";
-import type { DisplayMode } from "../../document/layout";
+import { SIDES } from "../../document/layout";
+import type { DisplayMode, Side } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { ReadLayer } from "./layerSpace";
 
@@ -19,8 +20,7 @@ export function drawnFrom(
 	};
 }
 
-const NO_PADDING = "0px 0px 0px 0px";
-const PADDING_SIDES = ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"] as const;
+const NO_INSET: Readonly<Record<Side, number>> = { top: 0, right: 0, bottom: 0, left: 0 };
 
 function elementOf(id: LayerId): HTMLElement | null {
 	if (typeof document === "undefined") {
@@ -30,13 +30,55 @@ function elementOf(id: LayerId): HTMLElement | null {
 	return element instanceof HTMLElement ? element : null;
 }
 
-export function drawnPadding(id: LayerId): string {
+function pixelsOf(text: string): number {
+	const value = Number.parseFloat(text);
+	return Number.isFinite(value) ? value : 0;
+}
+
+export function drawnInset(id: LayerId): Readonly<Record<Side, number>> {
 	const element = elementOf(id);
 	if (element === null) {
-		return NO_PADDING;
+		return NO_INSET;
 	}
 	const style = getComputedStyle(element);
-	return PADDING_SIDES.map((side) => style[side]).join(" ");
+	return {
+		top: pixelsOf(style.paddingTop),
+		right: pixelsOf(style.paddingRight),
+		bottom: pixelsOf(style.paddingBottom),
+		left: pixelsOf(style.paddingLeft),
+	};
+}
+
+export interface DrawnGrid {
+	columns: readonly number[];
+	rows: readonly number[];
+	columnGap: number;
+	rowGap: number;
+}
+
+const NO_GRID: DrawnGrid = { columns: [], rows: [], columnGap: 0, rowGap: 0 };
+
+function pixelList(text: string): number[] {
+	return text.split(" ").flatMap((part) => (part.endsWith("px") ? [pixelsOf(part)] : []));
+}
+
+export function drawnGrid(id: LayerId): DrawnGrid {
+	const element = elementOf(id);
+	if (element === null) {
+		return NO_GRID;
+	}
+	const style = getComputedStyle(element);
+	return {
+		columns: pixelList(style.gridTemplateColumns),
+		rows: pixelList(style.gridTemplateRows),
+		columnGap: pixelsOf(style.columnGap),
+		rowGap: pixelsOf(style.rowGap),
+	};
+}
+
+export function drawnPadding(id: LayerId): string {
+	const inset = drawnInset(id);
+	return SIDES.map((side) => `${inset[side]}px`).join(" ");
 }
 
 function boxOf(id: LayerId): Rect | null {

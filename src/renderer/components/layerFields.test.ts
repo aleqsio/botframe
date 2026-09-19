@@ -9,8 +9,8 @@ import { firstId } from "../input/toolFixtures";
 import { boxField, fieldGroupsOf, fieldPatch, swappedBox, typedPatch } from "./layerFields";
 import type { LayerField, UnitChoice } from "./layerFields";
 
-const ALT = { shift: false, alt: true };
-const SHIFT = { shift: true, alt: false };
+const ALT = { shift: false, alt: true, control: false };
+const SHIFT = { shift: true, alt: false, control: false };
 const BOX_LABELS = ["X", "Y", "W", "H", "Rotation"];
 const CHILD_FIELDS: LayerFields = {
 	x: 0,

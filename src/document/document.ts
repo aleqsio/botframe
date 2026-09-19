@@ -112,6 +112,10 @@ export class DesignDocument {
 		return this.#roots;
 	}
 
+	siblingIds(parent: LayerId | null): readonly LayerId[] {
+		return parent === null ? this.rootIds() : this.childIds(parent);
+	}
+
 	childIds(parent: LayerId): readonly LayerId[] {
 		const cached = this.#children.get(parent);
 		if (cached !== undefined) {
@@ -364,7 +368,7 @@ export class DesignDocument {
 	}
 
 	#fitsIndex(id: LayerId, parent: LayerId | null, index: number): boolean {
-		const siblings = parent === null ? this.rootIds() : this.childIds(parent);
+		const siblings = this.siblingIds(parent);
 		const room = siblings.length - (siblings.includes(id) ? 1 : 0);
 		return Number.isInteger(index) && index >= 0 && index <= room;
 	}

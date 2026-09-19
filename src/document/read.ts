@@ -1,20 +1,24 @@
 import { LoroMap } from "loro-crdt";
 
+export interface FieldSource {
+	get: (key: string) => unknown;
+}
+
 function asMap(value: unknown): LoroMap | null {
 	return value instanceof LoroMap ? value : null;
 }
 
-export function readNumber(data: LoroMap | null, key: string, fallback: number): number {
+export function readNumber(data: FieldSource | null, key: string, fallback: number): number {
 	const value = data?.get(key);
 	return typeof value === "number" ? value : fallback;
 }
 
-export function readBoolean(data: LoroMap | null, key: string, fallback: boolean): boolean {
+export function readBoolean(data: FieldSource | null, key: string, fallback: boolean): boolean {
 	const value = data?.get(key);
 	return typeof value === "boolean" ? value : fallback;
 }
 
-export function readString(data: LoroMap | null, key: string, fallback: string): string {
+export function readString(data: FieldSource | null, key: string, fallback: string): string {
 	const value = data?.get(key);
 	return typeof value === "string" ? value : fallback;
 }

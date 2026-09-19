@@ -1,6 +1,9 @@
 import type { DesignDocument } from "./document";
-import type { Layer, LayerFields, LayerId, Rect } from "./layer";
+import { NO_GUIDES } from "./guides";
+import type { Guide } from "./guides";
+import type { LayerFields, LayerId, Rect } from "./layer";
 import { DEFAULT_LAYOUT } from "./layout";
+import type { LayerLayout } from "./layout";
 import { PIXELS } from "./length";
 import type { LayerLengths } from "./length";
 
@@ -23,7 +26,7 @@ export const DRAWN: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
 };
 
-export function pixelLengths(rect: Rect): LayerLengths {
+function pixelLengths(rect: Rect): LayerLengths {
 	return {
 		x: { value: rect.x, unit: PIXELS },
 		y: { value: rect.y, unit: PIXELS },
@@ -32,6 +35,12 @@ export function pixelLengths(rect: Rect): LayerLengths {
 	};
 }
 
-export function pixelBox(rect: Rect): Pick<Layer, "lengths" | "layout"> {
-	return { lengths: pixelLengths(rect), layout: DEFAULT_LAYOUT };
+export interface PixelBox {
+	lengths: LayerLengths;
+	layout: LayerLayout;
+	guides: readonly Guide[];
+}
+
+export function pixelBox(rect: Rect): PixelBox {
+	return { lengths: pixelLengths(rect), layout: DEFAULT_LAYOUT, guides: NO_GUIDES };
 }

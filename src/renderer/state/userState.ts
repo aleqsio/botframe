@@ -1,9 +1,10 @@
 import type { Layer, LayerId } from "../../document/layer";
-import type { PositionMode } from "../../document/layout";
+import type { Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { ZoneKey } from "../input/handles";
 import type { RowDrag } from "../input/rowDrop";
+import type { SnapField, SnapSegment } from "../input/snap";
 import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";
 import { Slot } from "./slot";
@@ -17,12 +18,30 @@ export interface Draw {
 	origin: Point;
 }
 
+interface MoveStart extends Pick<Layer, "x" | "y" | "rotation"> {
+	position: PositionMode;
+	cell: Placement;
+	index: number;
+}
+
 export interface LayerMove {
 	id: LayerId;
 	from: LayerId | null;
 	parent: LayerId | null;
-	start: Pick<Layer, "x" | "y" | "rotation"> & { position: PositionMode };
+	start: MoveStart;
 	offset: Point;
+	grab: Point;
+	field: SnapField;
+}
+
+export interface Lifted {
+	id: LayerId;
+	at: Point;
+}
+
+export interface SnapGuides {
+	parent: LayerId | null;
+	segments: readonly SnapSegment[];
 }
 
 export interface LayerMenu {
@@ -42,6 +61,8 @@ export class UserState {
 	readonly pointer = new Slot<Point | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
+	readonly snap = new Slot<SnapGuides | null>(null);
+	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
 	readonly layersOpen = new Slot<boolean>(true);

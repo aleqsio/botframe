@@ -27,6 +27,8 @@
 	--bar-focus: rgb(138 168 255 / 0.9);
 	--selection: #0d99ff;
 	--highlight: rgb(13 153 255 / 0.75);
+	--snap: #f24822;
+	--guide: rgb(242 72 34 / 0.55);
 	--padding-tint: rgb(13 153 255 / 0.14);
 	--handle-fill: #ffffff;
 	--rotate-cursor:
@@ -165,6 +167,37 @@ body {
 .drop-frame {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 	outline-offset: calc(1px / var(--zoom));
+}
+
+.layer[data-dragging] {
+	opacity: 0.6;
+}
+
+.snap-space {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	pointer-events: none;
+}
+
+.snap-line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	transform-origin: 0 0;
+	background-color: var(--snap);
+}
+
+.snap-line[data-axis="x"] {
+	width: calc(1px / var(--zoom));
+	min-height: calc(8px / var(--zoom));
+}
+
+.snap-line[data-axis="y"] {
+	height: calc(1px / var(--zoom));
+	min-width: calc(8px / var(--zoom));
 }
 
 .selection-handle {
@@ -966,6 +999,24 @@ button.layer-chevron[aria-expanded="false"]::before {
 	border-radius: 6px;
 	color: var(--panel-label);
 	font-size: 11px;
+}
+
+.guide-line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	background-color: var(--guide);
+}
+
+.guide-line[data-axis="x"] {
+	bottom: 0;
+	width: calc(1px / var(--zoom));
+}
+
+.guide-line[data-axis="y"] {
+	right: 0;
+	height: calc(1px / var(--zoom));
 }
 
 .segmented {

@@ -7,6 +7,7 @@ import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
+import { GuideList } from "./layout/GuideList";
 import { LayerChip } from "./layout/LayerChip";
 import { LayoutPanel } from "./layout/LayoutPanel";
 
@@ -79,6 +80,7 @@ export function LayerProperties({
 				value={layer.fill}
 			/>
 			<ClipSwitch doc={doc} layer={layer} />
+			{isArtboard(layer) ? <GuideList doc={doc} layer={layer} /> : null}
 			{isArtboard(layer) ? <ArtboardFooter doc={doc} layer={layer} /> : null}
 		</>
 	);

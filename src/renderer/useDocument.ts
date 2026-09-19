@@ -47,15 +47,24 @@ export function useLayer(doc: DesignDocument, id: LayerId | null): Layer | null 
 	);
 }
 
+function drawnChain(doc: DesignDocument, id: LayerId | null): Layer[] {
+	return layerChain(
+		drawnRead((layerId) => doc.layer(layerId)),
+		id,
+	);
+}
+
+function spaceText(chain: readonly Layer[]): string {
+	return chain.map((layer) => layerTransform(layer)).join(" ");
+}
+
 function frameText(doc: DesignDocument, id: LayerId): string {
-	const read = (layerId: LayerId): Layer | null => doc.layer(layerId);
-	const chain = layerChain(drawnRead(read), id);
+	const chain = drawnChain(doc, id);
 	const drawn = chain.at(-1);
 	if (drawn === undefined) {
 		return NO_FRAME;
 	}
-	const transform = chain.map((layer) => layerTransform(layer)).join(" ");
-	return [drawn.width, drawn.height, drawnPadding(id), transform].join(FRAME_PART);
+	return [drawn.width, drawn.height, drawnPadding(id), spaceText(chain)].join(FRAME_PART);
 }
 
 function frameOf(text: string): DrawnFrame | null {
@@ -83,5 +92,12 @@ export function useDrawnFrame(doc: DesignDocument, id: LayerId): DrawnFrame | nu
 			useCallback((listener: () => void) => subscribeAfterCommit(doc, listener), [doc]),
 			useCallback(() => frameText(doc, id), [doc, id]),
 		),
+	);
+}
+
+export function useDrawnSpace(doc: DesignDocument, id: LayerId | null): string {
+	return useSyncExternalStore(
+		useCallback((listener: () => void) => subscribeAfterCommit(doc, listener), [doc]),
+		useCallback(() => spaceText(drawnChain(doc, id)), [doc, id]),
 	);
 }

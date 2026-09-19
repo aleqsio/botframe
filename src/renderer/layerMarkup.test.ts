@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pixelLengths } from "../document/documentFixtures";
+import { pixelBox } from "../document/documentFixtures";
 import { DEFAULT_LAYOUT } from "../document/layout";
 import type { LayerLayout } from "../document/layout";
 import type { LayerFields } from "../document/layer";
@@ -27,7 +27,7 @@ function nodeOf(
 	return {
 		fields: merged,
 		rotation: 0,
-		lengths: pixelLengths(merged),
+		...pixelBox(merged),
 		layout,
 		children,
 	};
@@ -86,7 +86,7 @@ describe("layerMarkup", () => {
 		const node: LayerNode = {
 			fields: FIELDS,
 			rotation: 30,
-			lengths: pixelLengths(FIELDS),
+			...pixelBox(FIELDS),
 			layout: DEFAULT_LAYOUT,
 			children: [],
 		};
