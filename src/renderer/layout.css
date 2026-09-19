@@ -149,7 +149,7 @@
 		color 200ms ease;
 }
 
-.layout-segment:hover:not(:disabled) {
+.layout-segment:hover:not([aria-disabled="true"]) {
 	color: var(--panel-text);
 }
 
@@ -158,10 +158,9 @@
 	color: var(--panel-text);
 }
 
-.layout-segment:disabled {
+.layout-segment[aria-disabled="true"] {
 	opacity: 0.35;
 }
-
 
 .layout-segment:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);

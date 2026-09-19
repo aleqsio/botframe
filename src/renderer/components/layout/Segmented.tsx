@@ -25,12 +25,14 @@ export function Segmented<V extends string>({
 		<fieldset aria-label={label} className="layout-seg">
 			{options.map((option) => (
 				<button
+					aria-disabled={option.disabled}
 					aria-pressed={option.value === value}
 					className="layout-segment"
-					disabled={option.disabled}
 					key={option.value}
 					onClick={() => {
-						onPick(option.value);
+						if (option.disabled !== true) {
+							onPick(option.value);
+						}
 					}}
 					title={option.title}
 					type="button"
