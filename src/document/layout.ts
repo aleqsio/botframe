@@ -1,192 +1,173 @@
-import type { Size } from "./length";
+import { bagOf, listOf } from "./bag";
 
-export type Direction = "row" | "column";
+export const SPACING_UNITS = ["px", "rem", "%"] as const;
 
-export type GuideAxis = "x" | "y";
+export type SpacingUnit = (typeof SPACING_UNITS)[number];
 
-type FlexLayout = { kind: "flex"; direction: Direction; gap: number; padding: number };
-
-export type GridLayout = {
-	kind: "grid";
-	columns: number;
-	rows: number;
-	gap: number;
-	padding: number;
-};
-
-export type Layout = { kind: "free" } | FlexLayout | GridLayout;
-
-export type LayoutKind = Layout["kind"];
-
-export interface Cell {
-	column: number;
-	row: number;
+export interface Spacing {
+	value: number;
+	unit: SpacingUnit;
 }
 
-export interface Guide {
-	axis: GuideAxis;
-	at: number;
+export const MARGIN_UNITS = ["px", "rem", "%", "auto"] as const;
+
+export type MarginSide = Spacing | { unit: "auto" };
+
+export const TRACK_UNITS = ["fr", "px", "rem", "%", "auto"] as const;
+
+export type TrackUnit = (typeof TRACK_UNITS)[number];
+
+export type Track = { value: number; unit: Exclude<TrackUnit, "auto"> } | { unit: "auto" };
+
+export type SizeMode = "fixed" | "hug" | "fill";
+
+export type PositionMode = "default" | "offset" | "absolute";
+
+export type DisplayMode = "block" | "row" | "column" | "grid";
+
+export type Distribute = "pack" | "between" | "around" | "evenly";
+
+export type Alignment = "start" | "center" | "end";
+
+export type Side = "top" | "right" | "bottom" | "left";
+
+export const SIDES: readonly Side[] = ["top", "right", "bottom", "left"];
+
+export interface Span {
+	start: number;
+	end: number;
 }
 
-export interface LaidChild<Id> extends Size {
-	id: Id;
-	cell: Cell | null;
+export type Placement = { mode: "auto" } | { mode: "place"; column: Span; row: Span };
+
+export interface LayerLayout {
+	width: SizeMode;
+	height: SizeMode;
+	position: PositionMode;
+	margin: Record<Side, MarginSide>;
+	padding: Record<Side, Spacing>;
+	cell: Placement;
+	display: DisplayMode;
+	wrap: boolean;
+	distribute: Distribute;
+	align: { main: Alignment; cross: Alignment };
+	gap: { column: Spacing; row: Spacing };
+	tracks: { columns: readonly Track[]; rows: readonly Track[] };
 }
 
-export interface Placement {
-	x: number;
-	y: number;
-	slot: Cell | null;
+export type LayoutPatch = Partial<LayerLayout>;
+
+export const SIZE_MODES: readonly SizeMode[] = ["fixed", "hug", "fill"];
+export const POSITION_MODES: readonly PositionMode[] = ["default", "offset", "absolute"];
+export const DISPLAY_MODES: readonly DisplayMode[] = ["block", "row", "column", "grid"];
+export const DISTRIBUTIONS: readonly Distribute[] = ["pack", "between", "around", "evenly"];
+export const ALIGNMENTS: readonly Alignment[] = ["start", "center", "end"];
+const FIRST_LINE = 1;
+const SECOND_LINE = 2;
+const COLUMN_COUNT = 3;
+const ROW_COUNT = 2;
+
+function oneOf<T extends string>(choices: readonly T[], value: unknown, fallback: T): T {
+	return choices.find((choice) => choice === value) ?? fallback;
 }
 
-export interface Point {
-	x: number;
-	y: number;
+function numberOf(value: unknown, fallback: number): number {
+	return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-export interface GridTracks {
-	columns: number;
-	rows: number;
-	cell: Size;
-	gap: number;
-	padding: number;
+function spacingOf(value: unknown): Spacing {
+	const bag = bagOf(value);
+	return { value: numberOf(bag["value"], 0), unit: oneOf(SPACING_UNITS, bag["unit"], "px") };
 }
 
-export const FREE_LAYOUT: Layout = { kind: "free" };
-export const NO_GUIDES: readonly Guide[] = [];
-const NO_PLACEMENTS: ReadonlyMap<never, Placement> = new Map<never, Placement>();
-
-function flexPlacements<Id>(
-	layout: FlexLayout,
-	children: readonly LaidChild<Id>[],
-): ReadonlyMap<Id, Placement> {
-	const placements = new Map<Id, Placement>();
-	const along = layout.direction === "row" ? "width" : "height";
-	let offset = layout.padding;
-	for (const child of children) {
-		const x = along === "width" ? offset : layout.padding;
-		const y = along === "width" ? layout.padding : offset;
-		placements.set(child.id, { x, y, slot: null });
-		offset += child[along] + layout.gap;
-	}
-	return placements;
+function marginOf(value: unknown): MarginSide {
+	const bag = bagOf(value);
+	const unit = oneOf(MARGIN_UNITS, bag["unit"], "px");
+	return unit === "auto" ? { unit } : { value: numberOf(bag["value"], 0), unit };
 }
 
-function trackSize(extent: number, count: number, layout: GridLayout): number {
-	return Math.max(0, (extent - 2 * layout.padding - layout.gap * (count - 1)) / count);
+function trackOf(value: unknown): Track {
+	const bag = bagOf(value);
+	const unit = oneOf(TRACK_UNITS, bag["unit"], "fr");
+	return unit === "auto" ? { unit } : { value: numberOf(bag["value"], 1), unit };
 }
 
-export function gridTracks(container: Size, layout: GridLayout): GridTracks {
-	const columns = Math.max(1, Math.floor(layout.columns));
-	const rows = Math.max(1, Math.floor(layout.rows));
+function trackRun(count: number): readonly Track[] {
+	return Array.from({ length: count }, (): Track => ({ value: 1, unit: "fr" }));
+}
+
+function trackListOf(value: unknown, count: number): readonly Track[] {
+	const list = listOf(value);
+	return list.length === 0 ? trackRun(count) : list.map((track) => trackOf(track));
+}
+
+function tracksOf(value: unknown): LayerLayout["tracks"] {
+	const bag = bagOf(value);
 	return {
-		columns,
-		rows,
-		cell: {
-			width: trackSize(container.width, columns, layout),
-			height: trackSize(container.height, rows, layout),
-		},
-		gap: layout.gap,
-		padding: layout.padding,
+		columns: trackListOf(bag["columns"], COLUMN_COUNT),
+		rows: trackListOf(bag["rows"], ROW_COUNT),
 	};
 }
 
-function clampIndex(index: number, count: number): number {
-	return Math.min(Math.max(0, Math.floor(index)), count - 1);
+function isLine(value: unknown): value is number {
+	return typeof value === "number" && Number.isInteger(value) && value >= FIRST_LINE;
 }
 
-function clampCell(cell: Cell, tracks: GridTracks): Cell {
+function spanOf(value: unknown): Span {
+	const bag = bagOf(value);
+	const start = bag["start"];
+	const end = bag["end"];
+	return isLine(start) && isLine(end) && end > start
+		? { start, end }
+		: { start: FIRST_LINE, end: SECOND_LINE };
+}
+
+function placementOf(value: unknown): Placement {
+	const bag = bagOf(value);
+	return bag["mode"] === "place"
+		? { mode: "place", column: spanOf(bag["column"]), row: spanOf(bag["row"]) }
+		: { mode: "auto" };
+}
+
+function sidesOf<T>(value: unknown, read: (side: unknown) => T): Record<Side, T> {
+	const bag = bagOf(value);
 	return {
-		column: clampIndex(cell.column, tracks.columns),
-		row: clampIndex(cell.row, tracks.rows),
+		top: read(bag["top"]),
+		right: read(bag["right"]),
+		bottom: read(bag["bottom"]),
+		left: read(bag["left"]),
 	};
 }
 
-function slotOf(cell: Cell, tracks: GridTracks): number {
-	return cell.row * tracks.columns + cell.column;
-}
-
-function cellOfSlot(slot: number, tracks: GridTracks): Cell {
-	return { column: slot % tracks.columns, row: Math.floor(slot / tracks.columns) };
-}
-
-function cellOrigin(cell: Cell, tracks: GridTracks): Point {
+function alignOf(value: unknown): LayerLayout["align"] {
+	const bag = bagOf(value);
 	return {
-		x: tracks.padding + cell.column * (tracks.cell.width + tracks.gap),
-		y: tracks.padding + cell.row * (tracks.cell.height + tracks.gap),
+		main: oneOf(ALIGNMENTS, bag["main"], "start"),
+		cross: oneOf(ALIGNMENTS, bag["cross"], "start"),
 	};
 }
 
-function nextFreeSlot(taken: ReadonlySet<number>, from: number): number {
-	let slot = from;
-	while (taken.has(slot)) {
-		slot += 1;
-	}
-	return slot;
+function gapOf(value: unknown): LayerLayout["gap"] {
+	const bag = bagOf(value);
+	return { column: spacingOf(bag["column"]), row: spacingOf(bag["row"]) };
 }
 
-function gridPlacements<Id>(
-	container: Size,
-	layout: GridLayout,
-	children: readonly LaidChild<Id>[],
-): ReadonlyMap<Id, Placement> {
-	const tracks = gridTracks(container, layout);
-	const cells = new Map<Id, Cell>();
-	const taken = new Set<number>();
-	for (const child of children) {
-		if (child.cell !== null) {
-			const cell = clampCell(child.cell, tracks);
-			cells.set(child.id, cell);
-			taken.add(slotOf(cell, tracks));
-		}
-	}
-	let cursor = 0;
-	for (const child of children) {
-		if (child.cell === null) {
-			cursor = nextFreeSlot(taken, cursor);
-			cells.set(child.id, cellOfSlot(cursor, tracks));
-			cursor += 1;
-		}
-	}
-	return new Map(
-		[...cells].map(([id, cell]) => [id, { ...cellOrigin(cell, tracks), slot: cell }] as const),
-	);
-}
-
-export function placeChildren<Id>(
-	container: Size,
-	layout: Layout,
-	children: readonly LaidChild<Id>[],
-): ReadonlyMap<Id, Placement> {
-	if (layout.kind === "flex") {
-		return flexPlacements(layout, children);
-	}
-	return layout.kind === "grid" ? gridPlacements(container, layout, children) : NO_PLACEMENTS;
-}
-
-function trackAt(offset: number, size: number, tracks: GridTracks, count: number): number {
-	const pitch = size + tracks.gap;
-	return pitch <= 0 ? 0 : clampIndex((offset - tracks.padding) / pitch, count);
-}
-
-export function cellAt(container: Size, layout: GridLayout, point: Point): Cell {
-	const tracks = gridTracks(container, layout);
+export function layoutOf(value: unknown): LayerLayout {
+	const bag = bagOf(value);
 	return {
-		column: trackAt(point.x, tracks.cell.width, tracks, tracks.columns),
-		row: trackAt(point.y, tracks.cell.height, tracks, tracks.rows),
+		width: oneOf(SIZE_MODES, bag["width"], "fixed"),
+		height: oneOf(SIZE_MODES, bag["height"], "fixed"),
+		position: oneOf(POSITION_MODES, bag["position"], "default"),
+		margin: sidesOf(bag["margin"], marginOf),
+		padding: sidesOf(bag["padding"], spacingOf),
+		cell: placementOf(bag["cell"]),
+		display: oneOf(DISPLAY_MODES, bag["display"], "block"),
+		wrap: bag["wrap"] === true,
+		distribute: oneOf(DISTRIBUTIONS, bag["distribute"], "pack"),
+		align: alignOf(bag["align"]),
+		gap: gapOf(bag["gap"]),
+		tracks: tracksOf(bag["tracks"]),
 	};
 }
 
-export function sameCell(held: Cell | null, next: Cell | null): boolean {
-	if (held === null || next === null) {
-		return held === next;
-	}
-	return held.column === next.column && held.row === next.row;
-}
-
-export function samePlacement(held: Placement | undefined, next: Placement | undefined): boolean {
-	if (held === undefined || next === undefined) {
-		return held === next;
-	}
-	return held.x === next.x && held.y === next.y && sameCell(held.slot, next.slot);
-}
+export const DEFAULT_LAYOUT: LayerLayout = layoutOf({});

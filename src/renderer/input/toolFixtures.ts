@@ -104,7 +104,7 @@ export function nestedTarget(rotation: number): { target: PointerTarget; child: 
 	return { target: { doc, user: new UserState(), layerIds: [child, parent], layerIdsAt }, child };
 }
 
-export function drawnLayer(target: PointerTarget): Layer {
+export function lastDrawn(target: PointerTarget): Layer {
 	const [id] = target.user.selection.get();
 	const layer = id === undefined ? null : target.doc.layer(id);
 	if (layer === null) {

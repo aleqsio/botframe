@@ -1,7 +1,8 @@
 import type { CSSProperties, ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
+import type { Guide } from "../document/guides";
 import type { LayerId } from "../document/layer";
-import type { Guide } from "../document/layout";
+import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootArtboard, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
@@ -16,10 +17,12 @@ function guideStyle(guide: Guide): CSSProperties {
 export function LayerView({
 	doc,
 	id,
+	parentDisplay,
 	selection,
 }: {
 	doc: DesignDocument;
 	id: LayerId;
+	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
@@ -35,10 +38,16 @@ export function LayerView({
 			className="layer"
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			style={layerStyle(layer)}
+			style={layerStyle(layer, parentDisplay)}
 		>
 			{childIds.map((childId) => (
-				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
+				<LayerView
+					doc={doc}
+					id={childId}
+					key={childId}
+					parentDisplay={layer.layout.display}
+					selection={selection}
+				/>
 			))}
 			{Array.from(layer.guides.entries(), ([index, guide]) => (
 				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />

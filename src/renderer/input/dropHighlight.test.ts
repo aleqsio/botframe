@@ -4,8 +4,6 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { LayerMove } from "../state/userState";
 import { droppedInto } from "./dropHighlight";
 import { snapFieldOf } from "./snap";
-
-const PIXEL = { value: 0, unit: "px" as const };
 import type { RowDrag } from "./rowDrop";
 
 const LAYER: LayerId = "1@1";
@@ -50,11 +48,11 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 	return {
 		id: LAYER,
 		from,
-		index: 0,
 		parent,
-		start: { rotation: 0, cell: null, lengths: { x: PIXEL, y: PIXEL } },
+		start: { x: 0, y: 0, rotation: 0, position: "default", cell: { mode: "auto" }, index: 0 },
 		offset: { x: 0, y: 0 },
 		field: snapFieldOf({ points: [], curves: [], container: null }),
+		lift: null,
 	};
 }
 

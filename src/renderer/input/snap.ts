@@ -1,5 +1,6 @@
 import type { Size } from "../../document/length";
-import type { Guide, GuideAxis } from "../../document/layout";
+import type { Guide, GuideAxis } from "../../document/guides";
+import type { Side } from "../../document/layout";
 import type { Point } from "../state/camera";
 import { normalizeDegrees, rotatePoint } from "./layerSpace";
 import type { Curve } from "./snapShape";
@@ -64,10 +65,22 @@ function pointTargets(points: readonly Point[], axis: GuideAxis): SnapTarget[] {
 	return points.map((point) => ({ axis, at: point[axis], other: point[other], curve: null }));
 }
 
-function lineTargets(span: Size, guides: readonly Guide[], axis: GuideAxis): SnapTarget[] {
-	const extent = axis === "x" ? span.width : span.height;
-	const edges = [0, extent / 2, extent].map((at) => ({ axis, at, other: null, curve: null }));
-	const lines = guides.flatMap((guide) =>
+interface SnapContainer {
+	span: Size;
+	inset: Readonly<Record<Side, number>>;
+	guides: readonly Guide[];
+}
+
+function insideEdges(container: SnapContainer, axis: GuideAxis): number[] {
+	const { inset, span } = container;
+	const near = axis === "x" ? inset.left : inset.top;
+	const far = axis === "x" ? span.width - inset.right : span.height - inset.bottom;
+	return [near, (near + far) / 2, far];
+}
+
+function lineTargets(container: SnapContainer, axis: GuideAxis): SnapTarget[] {
+	const edges = insideEdges(container, axis).map((at) => ({ axis, at, other: null, curve: null }));
+	const lines = container.guides.flatMap((guide) =>
 		guide.axis === axis ? [{ ...guide, other: null, curve: null }] : [],
 	);
 	return [...edges, ...lines];
@@ -76,12 +89,11 @@ function lineTargets(span: Size, guides: readonly Guide[], axis: GuideAxis): Sna
 export interface FieldSpec {
 	points: readonly Point[];
 	curves: readonly Curve[];
-	container: { span: Size; guides: readonly Guide[] } | null;
+	container: SnapContainer | null;
 }
 
 function targetsOf(spec: FieldSpec, axis: GuideAxis): SnapTarget[] {
-	const lines =
-		spec.container === null ? [] : lineTargets(spec.container.span, spec.container.guides, axis);
+	const lines = spec.container === null ? [] : lineTargets(spec.container, axis);
 	return [...pointTargets(spec.points, axis), ...lines].toSorted(byPosition);
 }
 

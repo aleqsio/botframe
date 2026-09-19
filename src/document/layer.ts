@@ -1,5 +1,6 @@
 import type { TreeID } from "loro-crdt";
-import type { Cell, Guide, Layout } from "./layout";
+import type { Guide } from "./guides";
+import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 
 export type LayerId = TreeID;
@@ -28,9 +29,7 @@ export interface Layer extends Rect {
 	clip: boolean;
 	parent: LayerId | null;
 	lengths: LayerLengths;
-	layout: Layout;
-	cell: Cell | null;
-	slot: Cell | null;
+	layout: LayerLayout;
 	guides: readonly Guide[];
 }
 
@@ -48,7 +47,6 @@ export interface LayerFields extends Rect {
 export type LayerPatch = Partial<LayerFields> & {
 	rotation?: number;
 	lengths?: Partial<LayerLengths>;
-	layout?: Layout;
-	cell?: Cell | null;
+	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 };

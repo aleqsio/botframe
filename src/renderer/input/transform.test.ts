@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
 import type { Layer } from "../../document/layer";
+import { DEFAULT_LAYOUT } from "../../document/layout";
+import type { LayoutPatch } from "../../document/layout";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP } from "./step";
-import { MIN_LAYER_SIZE, resizedRect, rotatedDegrees, scaledRect } from "./transform";
+import { MIN_LAYER_SIZE, resizePatch, resizedRect, rotatedDegrees, scaledRect } from "./transform";
 
 const ALT: Modifiers = { shift: false, alt: true, control: false };
 const SHIFT: Modifiers = { shift: true, alt: false, control: false };
@@ -166,5 +168,79 @@ describe("rotatedDegrees", () => {
 		expect(rotatedDegrees(FLAT, pointAround(0), pointAround(97), SHIFT)).toBeCloseTo(
 			ANGLE_SNAP.large * 6,
 		);
+	});
+});
+
+function layerWith(layout: LayoutPatch): Layer {
+	return { ...FLAT, layout: { ...DEFAULT_LAYOUT, ...layout } };
+}
+
+describe("resizePatch", () => {
+	it("writes the width alone for a fixed axis in the flow", () => {
+		const rect = { x: 60, y: 100, width: 240, height: 100 };
+		expect(resizePatch(layerWith({}), "row", rect)).toEqual({ width: 240, height: 100 });
+	});
+
+	it("writes the right margin of a fill axis by the delta of the right edge", () => {
+		const fill = layerWith({ width: "fill" });
+		const rect = { x: 100, y: 100, width: 160, height: 100 };
+
+		expect(resizePatch(fill, "row", rect)).toEqual({
+			height: 100,
+			layout: {
+				margin: {
+					top: { value: 0, unit: "px" },
+					right: { value: 40, unit: "px" },
+					bottom: { value: 0, unit: "px" },
+					left: { value: 0, unit: "px" },
+				},
+			},
+		});
+	});
+
+	it("adds the delta to a margin that already holds pixels", () => {
+		const held = layerWith({
+			width: "fill",
+			margin: { ...DEFAULT_LAYOUT.margin, right: { value: 10, unit: "px" } },
+		});
+		const rect = { x: 100, y: 100, width: 160, height: 100 };
+		const patch = resizePatch(held, "row", rect);
+
+		expect(patch.layout?.margin?.right).toEqual({ value: 50, unit: "px" });
+	});
+
+	it("drops a margin unit that is not pixels before it adds the delta", () => {
+		const held = layerWith({
+			width: "fill",
+			margin: { ...DEFAULT_LAYOUT.margin, left: { unit: "auto" } },
+		});
+		const rect = { x: 120, y: 100, width: 180, height: 100 };
+
+		expect(resizePatch(held, "row", rect).layout?.margin?.left).toEqual({ value: 20, unit: "px" });
+	});
+
+	it("makes a hug axis fixed and writes its place and size under a block parent", () => {
+		const hug = layerWith({ width: "hug" });
+		const rect = { x: 60, y: 100, width: 240, height: 120 };
+
+		expect(resizePatch(hug, "block", rect)).toEqual({ ...rect, layout: { width: "fixed" } });
+	});
+
+	it("writes the width and the bottom margin for a corner of a mixed layer in the flow", () => {
+		const mixed = layerWith({ width: "fixed", height: "fill" });
+		const rect = { x: 100, y: 100, width: 260, height: 130 };
+		const patch = resizePatch(mixed, "column", rect);
+
+		expect(patch.width).toBe(260);
+		expect(patch.height).toBeUndefined();
+		expect(patch.layout?.margin?.bottom).toEqual({ value: -30, unit: "px" });
+		expect(patch.layout?.margin?.top).toEqual({ value: 0, unit: "px" });
+	});
+
+	it("writes the place and the size of a fixed axis out of the flow", () => {
+		const loose = layerWith({ position: "absolute" });
+		const rect = { x: 60, y: 90, width: 240, height: 120 };
+
+		expect(resizePatch(loose, "row", rect)).toEqual(rect);
 	});
 });

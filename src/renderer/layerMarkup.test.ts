@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { nodeBox } from "../document/documentFixtures";
+import { pixelBox } from "../document/documentFixtures";
+import { DEFAULT_LAYOUT } from "../document/layout";
+import type { LayerLayout } from "../document/layout";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -16,9 +18,19 @@ const FIELDS: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, artboard: false },
 };
 
-function nodeOf(fields: Partial<LayerFields>, children: readonly LayerNode[] = []): LayerNode {
+function nodeOf(
+	fields: Partial<LayerFields>,
+	children: readonly LayerNode[] = [],
+	layout: LayerLayout = DEFAULT_LAYOUT,
+): LayerNode {
 	const merged = { ...FIELDS, ...fields };
-	return { fields: merged, rotation: 0, ...nodeBox(merged), children };
+	return {
+		fields: merged,
+		rotation: 0,
+		...pixelBox(merged),
+		layout,
+		children,
+	};
 }
 
 describe("layerMarkup", () => {
@@ -29,7 +41,8 @@ describe("layerMarkup", () => {
 
 	it("writes the style properties in one order that does not follow the order of the object", () => {
 		expect(layerMarkup(nodeOf({}))).toBe(
-			'<div style="background: #123456; border-radius: 4px; height: 40px;' +
+			'<div style="background: #123456; border-radius: 4px; display: block;' +
+				" height: 40px; position: absolute;" +
 				' transform: translate3d(10px, 20px, 0); width: 30px"></div>',
 		);
 	});
@@ -38,12 +51,23 @@ describe("layerMarkup", () => {
 		const node = nodeOf({ clip: true, geometry: { kind: "ellipse" } });
 		const markup = layerMarkup(node);
 
-		for (const [key, value] of Object.entries(layerStyle({ ...node.fields, rotation: 0 }))) {
+		for (const [key, value] of Object.entries(
+			layerStyle({ ...node.fields, rotation: 0, layout: node.layout }, null),
+		)) {
 			expect(markup).toContain(String(value));
 			expect(key.length).toBeGreaterThan(0);
 		}
 		expect(markup).toContain("border-radius: 50%");
 		expect(markup).toContain("overflow: hidden");
+	});
+
+	it("places a child of a flex parent in the flow and holds its size", () => {
+		const row: LayerLayout = { ...DEFAULT_LAYOUT, display: "row" };
+		const markup = layerMarkup(nodeOf({}, [nodeOf({ x: 1 })], row));
+		const child = markup.slice(markup.indexOf("<div", 1));
+		expect(child).toContain("position: relative");
+		expect(child).toContain("flex-shrink: 0");
+		expect(child).not.toContain("position: absolute");
 	});
 
 	it("keeps the shape of the tree", () => {
@@ -62,7 +86,8 @@ describe("layerMarkup", () => {
 		const node: LayerNode = {
 			fields: FIELDS,
 			rotation: 30,
-			...nodeBox(FIELDS),
+			...pixelBox(FIELDS),
+			layout: DEFAULT_LAYOUT,
 			children: [],
 		};
 		expect(layerMarkup(node)).toContain("rotate(30deg)");

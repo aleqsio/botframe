@@ -1,4 +1,6 @@
-import type { Layer, Rect } from "../../document/layer";
+import type { Layer, LayerPatch, Rect } from "../../document/layer";
+import type { DisplayMode, LayoutPatch, MarginSide, Side } from "../../document/layout";
+import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import { HANDLE_AXIS } from "./handles";
 import type { Axis, Handle } from "./handles";
@@ -90,4 +92,62 @@ export function rotatedDegrees(
 	const turned = start.rotation + angleFrom(center, point) - angleFrom(center, origin);
 	const step = stepOf(ANGLE_SNAP, modifiers);
 	return normalizeDegrees(step === 0 ? turned : Math.round(turned / step) * step);
+}
+
+interface EdgeDelta {
+	near: number;
+	far: number;
+}
+
+function deltaAlong(startPlace: number, startSize: number, place: number, size: number): EdgeDelta {
+	return { near: place - startPlace, far: startPlace + startSize - (place + size) };
+}
+
+function shiftSide(margin: Record<Side, MarginSide>, side: Side, delta: number): void {
+	const held = margin[side];
+	if (delta !== 0) {
+		margin[side] = { value: (held.unit === "px" ? held.value : 0) + delta, unit: "px" };
+	}
+}
+
+function resizedMargin(start: Layer, rect: Rect): Record<Side, MarginSide> {
+	const margin: Record<Side, MarginSide> = { ...start.layout.margin };
+	if (start.layout.width !== "fixed") {
+		const wide = deltaAlong(start.x, start.width, rect.x, rect.width);
+		shiftSide(margin, "left", wide.near);
+		shiftSide(margin, "right", wide.far);
+	}
+	if (start.layout.height !== "fixed") {
+		const tall = deltaAlong(start.y, start.height, rect.y, rect.height);
+		shiftSide(margin, "top", tall.near);
+		shiftSide(margin, "bottom", tall.far);
+	}
+	return margin;
+}
+
+function flowResize(start: Layer, rect: Rect): LayerPatch {
+	const wide = start.layout.width === "fixed";
+	const tall = start.layout.height === "fixed";
+	const size = { ...(wide ? { width: rect.width } : {}), ...(tall ? { height: rect.height } : {}) };
+	return wide && tall ? size : { ...size, layout: { margin: resizedMargin(start, rect) } };
+}
+
+function looseResize(start: Layer, rect: Rect): LayerPatch {
+	const wide = start.layout.width === "fixed";
+	const tall = start.layout.height === "fixed";
+	const layout: LayoutPatch = {
+		...(wide ? {} : { width: "fixed" as const }),
+		...(tall ? {} : { height: "fixed" as const }),
+	};
+	return wide && tall ? rect : { ...rect, layout };
+}
+
+export function resizePatch(
+	start: Layer,
+	parentDisplay: DisplayMode | null,
+	rect: Rect,
+): LayerPatch {
+	return outOfFlow(parentDisplay, start.layout.position)
+		? looseResize(start, rect)
+		: flowResize(start, rect);
 }

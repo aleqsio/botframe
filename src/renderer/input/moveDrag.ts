@@ -4,11 +4,9 @@ import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import { isLaidOut, settleInLayout } from "./layoutDrag";
 import type { Modifiers } from "./modifiers";
-import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
+import { carryLayer } from "./moveCarry";
 import { snapFieldAround } from "./snapField";
-import { snapShapeOf } from "./snapShape";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -42,47 +40,22 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 	return next;
 }
 
-function snappedPlace(target: PointerTarget, move: LayerMove, layer: Layer, wanted: Point): Point {
-	const reach = SNAP_REACH / target.user.camera.get().zoom;
-	const snap = snapTo(move.field, snapShapeOf({ ...layer, ...wanted }).points, reach);
-	const segments = snapSegmentsOf(snap, move.field.span);
-	target.user.snap.set(segments.length === 0 ? null : { parent: layer.parent, segments });
-	return snappedPoint(wanted, snap);
-}
-
-function carryLayer(
-	target: PointerTarget,
-	move: LayerMove,
-	canvas: Point,
-	modifiers: Modifiers,
-): void {
-	const point = parentPointOf(target, move.id, canvas);
-	const wanted = { x: point.x - move.offset.x, y: point.y - move.offset.y };
-	if (modifiers.control) {
-		target.user.snap.set(null);
-		target.doc.update(move.id, wanted);
-		return;
-	}
-	const layer = target.doc.layer(move.id);
-	if (layer === null) {
-		return;
-	}
-	target.doc.update(move.id, snappedPlace(target, move, layer, wanted));
-}
-
 export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): void {
 	target.user.move.set({
 		id: layer.id,
 		from: layer.parent,
-		index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		parent: layer.parent,
 		start: {
+			x: layer.x,
+			y: layer.y,
 			rotation: layer.rotation,
-			cell: layer.cell,
-			lengths: { x: layer.lengths.x, y: layer.lengths.y },
+			position: layer.layout.position,
+			cell: layer.layout.cell,
+			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		},
 		offset: offsetOf(target, layer, canvas),
 		field: snapFieldAround(target, layer.id),
+		lift: null,
 	});
 }
 
@@ -91,14 +64,8 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 	if (move === null) {
 		return;
 	}
-	if (!isLaidOut(target, move.parent)) {
-		carryLayer(target, move, point.canvas, modifiers);
-	}
-	const held = retarget(target, move, point);
-	if (isLaidOut(target, held.parent)) {
-		target.user.snap.set(null);
-		settleInLayout(target, held.id, point.canvas);
-	}
+	carryLayer(target, move, point, modifiers);
+	retarget(target, move, point);
 }
 
 export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
@@ -122,7 +89,8 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	}
 	user.move.set(null);
 	user.snap.set(null);
-	doc.move(move.id, move.from, move.index);
-	doc.update(move.id, move.start);
+	doc.move(move.id, move.from, move.start.index);
+	const { x, y, rotation, position, cell } = move.start;
+	doc.update(move.id, { x, y, rotation, layout: { position, cell } });
 	doc.commit(CANCEL_COMMIT);
 }

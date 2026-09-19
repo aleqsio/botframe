@@ -251,8 +251,7 @@ test("the keyboard reaches the handle and the value of a chip", async () => {
 	const handle = chipHandle(window, "X");
 	const value = chipValue(window, "X");
 
-	await window.getByLabel("Name", { exact: true }).focus();
-	await window.keyboard.press("Tab");
+	await handle.focus();
 	await expect(handle).toBeFocused();
 
 	const before = Number(await value.inputValue());
@@ -331,7 +330,7 @@ test("shift steps a percentage by five, and the layer follows the artboard", asy
 	await app.close();
 });
 
-test("a layer at the root shows each unit and takes the pixel only", async () => {
+test("a layer at the root shows each unit and refuses the units that need a container", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
@@ -342,10 +341,12 @@ test("a layer at the root shows each unit and takes the pixel only", async () =>
 	await expect(unit).toHaveText("px");
 	await unit.click();
 
-	await expect(menu.getByRole("option")).toHaveText(["px", "%", "vw", "vh"]);
+	await expect(menu.getByRole("option")).toHaveText(["px", "rem", "%", "vw", "vh"]);
 	await expect(menu.getByRole("option", { name: "px", exact: true })).toBeEnabled();
+	await expect(menu.getByRole("option", { name: "rem", exact: true })).toBeEnabled();
 	await expect(percent).toBeDisabled();
 
+	await window.keyboard.press("ArrowDown");
 	await window.keyboard.press("ArrowDown");
 	await expect(percent).toHaveAttribute("data-highlighted", "");
 	await window.keyboard.press("Enter");

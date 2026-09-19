@@ -1,14 +1,14 @@
 import type { Geometry, Layer, LayerFields, LayerId, LayerPatch, WritableGeometry } from "./layer";
+import type { Guide } from "./guides";
+import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
 import type { LayerLengths } from "./length";
-import type { Cell, Guide, Layout } from "./layout";
 
 export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
 	lengths: LayerLengths;
-	layout: Layout;
-	cell: Cell | null;
+	layout: LayerLayout;
 	guides: readonly Guide[];
 	children: readonly LayerNode[];
 }
@@ -58,7 +58,6 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		rotation: layer.rotation,
 		lengths: layer.lengths,
 		layout: layer.layout,
-		cell: layer.cell,
 		guides: layer.guides,
 		children,
 	};
@@ -68,8 +67,7 @@ function copyPatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
-		...(node.layout.kind === "free" ? {} : { layout: node.layout }),
-		...(node.cell === null ? {} : { cell: node.cell }),
+		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),
 	};
 }

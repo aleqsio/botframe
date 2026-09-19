@@ -7,7 +7,7 @@ import { cancelMove, changesParent } from "./moveDrag";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import { NO_HITS, dragOver, dropScene, nestedTarget, pointAt } from "./toolFixtures";
+import { NO_HITS, dragOver, dropScene, firstId, nestedTarget, pointAt } from "./toolFixtures";
 import type { DropScene } from "./toolFixtures";
 
 const ARTBOARD: LayerFields = {
@@ -297,5 +297,51 @@ describe("Escape during a move drag", () => {
 
 		expect(doc.layer(scene.layer)).toMatchObject({ parent: null, x: 420, y: 260 });
 		expect(doc.changeCount()).toBe(changes);
+	});
+});
+
+function rowScene(): { target: PointerTarget; child: LayerId } {
+	const scene = nestedTarget(0);
+	scene.target.doc.update(firstId(scene.target.doc), { layout: { display: "row" } });
+	scene.target.doc.commit("set display");
+	return scene;
+}
+
+describe("a move drag of a child that the parent lays out", () => {
+	it("offsets the child on the cross axis only, because the row places the main axis", () => {
+		const { target, child } = rowScene();
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 470, y: 310 },
+		});
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 40 });
+		expect(target.doc.layer(child)?.layout.position).toBe("offset");
+	});
+
+	it("leaves the child in the flow under a block parent", () => {
+		const { target, child } = nestedTarget(0);
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 470, y: 310 },
+		});
+
+		expect(target.doc.layer(child)?.layout.position).toBe("default");
+	});
+
+	it("gives the first position mode back when the gesture is cancelled", () => {
+		const { target, child } = rowScene();
+		const behavior = behaviorFor("select");
+		const press = pointAt(target.user.camera.get(), { x: 450, y: 290 });
+
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		expect(target.doc.layer(child)?.layout.position).toBe("offset");
+
+		cancelMove(target.doc, target.user);
+
+		expect(target.doc.layer(child)?.layout.position).toBe("default");
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
 	});
 });

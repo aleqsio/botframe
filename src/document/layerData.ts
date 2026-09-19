@@ -1,5 +1,9 @@
-import type { LoroMap } from "loro-crdt";
+import { LoroMap } from "loro-crdt";
 import type { Geometry, LayerPatch, LayerTraits, Rect } from "./layer";
+import { guidesOf } from "./guides";
+import type { Guide } from "./guides";
+import { DEFAULT_LAYOUT, layoutOf } from "./layout";
+import type { LayerLayout, LayoutPatch } from "./layout";
 import {
 	AXIS_OF,
 	BOX_KEYS,
@@ -11,20 +15,20 @@ import {
 	roundNumber,
 } from "./length";
 import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
-import { FREE_LAYOUT } from "./layout";
-import type { Cell, Guide, Layout } from "./layout";
-import { LAYOUT_READERS, cellOf, guidesOf } from "./layoutData";
-import { readBoolean, readMap, readNumber, readString, readVariant } from "./read";
+import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
 const LAYOUT = "layout";
-const CELL = "cell";
 const GUIDES = "guides";
 const UNIT_SUFFIX = "Unit";
 const BLACK = "#000000";
 
 type BoxPixels = Readonly<Record<BoxKey, number | undefined>>;
+
+const DEFAULT_LAYOUT_TEXT: ReadonlyMap<string, string> = new Map(
+	Object.entries(DEFAULT_LAYOUT).map(([key, value]) => [key, JSON.stringify(value)]),
+);
 
 const GEOMETRY_READERS: Readonly<
 	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
@@ -70,20 +74,23 @@ function resolveBox(lengths: LayerLengths, basis: Basis): Rect {
 	};
 }
 
+function readLayout(data: LoroMap): LayerLayout {
+	const held = data.get(LAYOUT);
+	return layoutOf(held instanceof LoroMap ? held.toJSON() : undefined);
+}
+
 export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 	const lengths = readLengths(data);
 	return {
 		...resolveBox(lengths, basis),
 		lengths,
+		layout: readLayout(data),
+		guides: guidesOf(data.get(GUIDES)),
 		rotation: readNumber(data, "rotation", 0),
 		fill: readString(data, "fill", BLACK),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
 		clip: readBoolean(data, "clip", false),
-		layout: readVariant<Layout>(data.get(LAYOUT), LAYOUT_READERS, FREE_LAYOUT),
-		cell: cellOf(readMap(data, CELL)),
-		slot: null,
-		guides: guidesOf(data.get(GUIDES)),
 	};
 }
 
@@ -125,14 +132,12 @@ function writeLengths(
 	}
 }
 
-function writeCell(data: LoroMap, cell: Cell | null): void {
-	if (cell === null) {
-		data.delete(CELL);
-		return;
+function writeLayoutKey(map: LoroMap, key: string, value: unknown): void {
+	if (JSON.stringify(value) !== DEFAULT_LAYOUT_TEXT.get(key)) {
+		map.set(key, value);
+	} else if (map.get(key) !== undefined) {
+		map.delete(key);
 	}
-	const held = data.ensureMergeableMap(CELL);
-	held.set("column", cell.column);
-	held.set("row", cell.row);
 }
 
 function writeGuides(data: LoroMap, guides: readonly Guide[]): void {
@@ -146,8 +151,14 @@ function writeGuides(data: LoroMap, guides: readonly Guide[]): void {
 	);
 }
 
+function writeLayout(map: LoroMap, patch: LayoutPatch): void {
+	for (const [key, value] of Object.entries(patch)) {
+		writeLayoutKey(map, key, value);
+	}
+}
+
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, lengths, layout, cell, guides, x, y, width, height, ...plain } = patch;
+	const { geometry, guides, layout, lengths, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -157,10 +168,7 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
 	}
 	if (layout !== undefined) {
-		writeVariant(data.ensureMergeableMap(LAYOUT), layout);
-	}
-	if (cell !== undefined) {
-		writeCell(data, cell);
+		writeLayout(data.ensureMergeableMap(LAYOUT), layout);
 	}
 	if (guides !== undefined) {
 		writeGuides(data, guides);

@@ -1,80 +1,163 @@
 import { describe, expect, it } from "vitest";
-import { cellAt, gridTracks, placeChildren, sameCell } from "./layout";
-import type { GridLayout, LaidChild, Layout } from "./layout";
+import {
+	DEFAULT_LAYOUT,
+	MARGIN_UNITS,
+	SIDES,
+	SPACING_UNITS,
+	TRACK_UNITS,
+	layoutOf,
+} from "./layout";
+import type { MarginSide, Spacing, Track } from "./layout";
 
-const BOX = { width: 340, height: 200 };
-const ROW: Layout = { kind: "flex", direction: "row", gap: 10, padding: 20 };
-const COLUMN: Layout = { kind: "flex", direction: "column", gap: 4, padding: 0 };
-const GRID: GridLayout = { kind: "grid", columns: 3, rows: 2, gap: 10, padding: 10 };
-
-function child(id: string, width: number, height: number): LaidChild<string> {
-	return { id, width, height, cell: null };
-}
-
-describe("placeChildren", () => {
-	it("gives no placement in a free layout", () => {
-		expect(placeChildren(BOX, { kind: "free" }, [child("a", 10, 10)]).size).toBe(0);
-	});
-
-	it("lays a row out after the padding with a gap between the children", () => {
-		const placed = placeChildren(BOX, ROW, [child("a", 50, 30), child("b", 70, 30)]);
-		expect(placed.get("a")).toEqual({ x: 20, y: 20, slot: null });
-		expect(placed.get("b")).toEqual({ x: 80, y: 20, slot: null });
-	});
-
-	it("lays a column out down the height of each child", () => {
-		const placed = placeChildren(BOX, COLUMN, [child("a", 50, 30), child("b", 70, 44)]);
-		expect(placed.get("a")).toEqual({ x: 0, y: 0, slot: null });
-		expect(placed.get("b")).toEqual({ x: 0, y: 34, slot: null });
-	});
-
-	it("flows the children without a cell into the free cells in order", () => {
-		const placed = placeChildren(BOX, GRID, [child("a", 10, 10), child("b", 10, 10)]);
-		expect(placed.get("a")).toEqual({ x: 10, y: 10, slot: { column: 0, row: 0 } });
-		expect(placed.get("b")).toEqual({ x: 120, y: 10, slot: { column: 1, row: 0 } });
-	});
-
-	it("puts a child with a cell into that cell and flows the others around it", () => {
-		const held: LaidChild<string> = { ...child("held", 10, 10), cell: { column: 0, row: 0 } };
-		const placed = placeChildren(BOX, GRID, [child("a", 10, 10), held, child("b", 10, 10)]);
-		expect(placed.get("held")?.slot).toEqual({ column: 0, row: 0 });
-		expect(placed.get("a")?.slot).toEqual({ column: 1, row: 0 });
-		expect(placed.get("b")?.slot).toEqual({ column: 2, row: 0 });
-	});
-
-	it("clamps a cell that lies outside the grid to the last track", () => {
-		const held: LaidChild<string> = { ...child("held", 10, 10), cell: { column: 9, row: 9 } };
-		expect(placeChildren(BOX, GRID, [held]).get("held")).toEqual({
-			x: 230,
-			y: 105,
-			slot: { column: 2, row: 1 },
+describe("DEFAULT_LAYOUT", () => {
+	it("holds a fixed size in the flow, no spacing, and a three by two grid", () => {
+		expect(DEFAULT_LAYOUT).toEqual({
+			width: "fixed",
+			height: "fixed",
+			position: "default",
+			margin: { top: zero(), right: zero(), bottom: zero(), left: zero() },
+			padding: { top: zero(), right: zero(), bottom: zero(), left: zero() },
+			cell: { mode: "auto" },
+			display: "block",
+			wrap: false,
+			distribute: "pack",
+			align: { main: "start", cross: "start" },
+			gap: { column: zero(), row: zero() },
+			tracks: { columns: [unit(), unit(), unit()], rows: [unit(), unit()] },
 		});
 	});
 });
 
-describe("gridTracks", () => {
-	it("divides the space that the padding and the gaps leave", () => {
-		expect(gridTracks(BOX, GRID).cell).toEqual({ width: 100, height: 85 });
+function zero(): Spacing {
+	return { value: 0, unit: "px" };
+}
+
+function unit(): Track {
+	return { value: 1, unit: "fr" };
+}
+
+describe("layoutOf", () => {
+	it("gives the default layout for a value that is not a bag", () => {
+		for (const held of [undefined, null, "row", 7]) {
+			expect(layoutOf(held)).toEqual(DEFAULT_LAYOUT);
+		}
 	});
 
-	it("gives at least one track and no negative size", () => {
-		const tracks = gridTracks({ width: 5, height: 5 }, { ...GRID, columns: 0, rows: 0 });
-		expect(tracks).toMatchObject({ columns: 1, rows: 1, cell: { width: 0, height: 0 } });
+	it("reads each name that a set holds and refuses a name outside it", () => {
+		expect(layoutOf({ display: "grid" }).display).toBe("grid");
+		expect(layoutOf({ display: "table" }).display).toBe("block");
+		expect(layoutOf({ width: "hug", height: "fill" })).toMatchObject({
+			width: "hug",
+			height: "fill",
+		});
+		expect(layoutOf({ width: "stretch" }).width).toBe("fixed");
+		expect(layoutOf({ position: "absolute" }).position).toBe("absolute");
+		expect(layoutOf({ position: "offset" }).position).toBe("offset");
+		expect(layoutOf({ position: "sticky" }).position).toBe("default");
+		expect(layoutOf({ distribute: "evenly" }).distribute).toBe("evenly");
+		expect(layoutOf({ distribute: "stretch" }).distribute).toBe("pack");
+	});
+
+	it("reads an alignment on each axis and refuses a name outside the set", () => {
+		expect(layoutOf({ align: { main: "end", cross: "center" } }).align).toEqual({
+			main: "end",
+			cross: "center",
+		});
+		expect(layoutOf({ align: { main: "stretch" } }).align).toEqual({
+			main: "start",
+			cross: "start",
+		});
+	});
+
+	it("takes the wrap flag only as a true boolean", () => {
+		expect(layoutOf({ wrap: true }).wrap).toBe(true);
+		expect(layoutOf({ wrap: "yes" }).wrap).toBe(false);
+		expect(layoutOf({ wrap: 1 }).wrap).toBe(false);
+	});
+
+	it("reads each spacing unit and refuses a unit that spacing does not take", () => {
+		for (const unitName of SPACING_UNITS) {
+			expect(layoutOf({ gap: { column: { value: 4, unit: unitName } } }).gap.column).toEqual({
+				value: 4,
+				unit: unitName,
+			});
+		}
+		expect(layoutOf({ gap: { column: { value: 4, unit: "auto" } } }).gap.column).toEqual({
+			value: 4,
+			unit: "px",
+		});
+	});
+
+	it("refuses a number that is not finite", () => {
+		expect(layoutOf({ gap: { row: { value: Number.NaN, unit: "px" } } }).gap.row.value).toBe(0);
+		expect(layoutOf({ gap: { row: { value: Number.POSITIVE_INFINITY } } }).gap.row.value).toBe(0);
+		expect(layoutOf({ gap: { row: { value: "8" } } }).gap.row.value).toBe(0);
+		expect(layoutOf({ gap: { row: { value: -8 } } }).gap.row.value).toBe(-8);
+	});
+
+	it("reads every side of the margin and the padding", () => {
+		const margin = { top: { value: 8, unit: "rem" }, left: { unit: "auto" } };
+		const read = layoutOf({ margin });
+		expect(read.margin.top).toEqual({ value: 8, unit: "rem" });
+		expect(read.margin.left).toEqual({ unit: "auto" });
+		expect(SIDES.map((side) => read.margin[side])).toHaveLength(4);
+		expect(read.margin.bottom).toEqual({ value: 0, unit: "px" });
+	});
+
+	it("takes auto on a margin side and not on a padding side", () => {
+		expect(MARGIN_UNITS).toContain("auto");
+		const auto: MarginSide = layoutOf({ margin: { right: { unit: "auto" } } }).margin.right;
+		expect(auto).toEqual({ unit: "auto" });
+		expect(layoutOf({ padding: { right: { value: 5, unit: "auto" } } }).padding.right).toEqual({
+			value: 5,
+			unit: "px",
+		});
+	});
+
+	it("reads a list of tracks and each track unit", () => {
+		const columns = TRACK_UNITS.map((unitName) => ({ value: 2, unit: unitName }));
+		expect(layoutOf({ tracks: { columns } }).tracks.columns).toEqual([
+			{ value: 2, unit: "fr" },
+			{ value: 2, unit: "px" },
+			{ value: 2, unit: "rem" },
+			{ value: 2, unit: "%" },
+			{ unit: "auto" },
+		]);
+	});
+
+	it("gives the default tracks for an axis that is not a list, or is empty", () => {
+		expect(layoutOf({ tracks: { columns: [], rows: "two" } }).tracks).toEqual(
+			DEFAULT_LAYOUT.tracks,
+		);
+	});
+
+	it("reads a track that holds no unit as one fraction", () => {
+		expect(layoutOf({ tracks: { rows: [{}, { unit: "px" }] } }).tracks.rows).toEqual([
+			{ value: 1, unit: "fr" },
+			{ value: 1, unit: "px" },
+		]);
+	});
+
+	it("places a cell only when the mode says place", () => {
+		expect(layoutOf({ cell: { mode: "place" } }).cell).toEqual({
+			mode: "place",
+			column: { start: 1, end: 2 },
+			row: { start: 1, end: 2 },
+		});
+		expect(layoutOf({ cell: { column: { start: 2, end: 4 } } }).cell).toEqual({ mode: "auto" });
+	});
+
+	it("takes a span of whole lines that starts at one and ends after its start", () => {
+		const held = { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } };
+		expect(layoutOf({ cell: held }).cell).toEqual(held);
+		expect(spanOf({ start: 0, end: 3 })).toEqual({ start: 1, end: 2 });
+		expect(spanOf({ start: 1.5, end: 3 })).toEqual({ start: 1, end: 2 });
+		expect(spanOf({ start: 3, end: 3 })).toEqual({ start: 1, end: 2 });
+		expect(spanOf({ start: 4, end: 2 })).toEqual({ start: 1, end: 2 });
 	});
 });
 
-describe("cellAt", () => {
-	it("gives the cell under a point and clamps a point outside the grid", () => {
-		expect(cellAt(BOX, GRID, { x: 150, y: 150 })).toEqual({ column: 1, row: 1 });
-		expect(cellAt(BOX, GRID, { x: -50, y: 900 })).toEqual({ column: 0, row: 1 });
-	});
-});
-
-describe("sameCell", () => {
-	it("compares cells by value and null by identity", () => {
-		expect(sameCell({ column: 1, row: 2 }, { column: 1, row: 2 })).toBe(true);
-		expect(sameCell({ column: 1, row: 2 }, { column: 2, row: 2 })).toBe(false);
-		expect(sameCell(null, { column: 0, row: 0 })).toBe(false);
-		expect(sameCell(null, null)).toBe(true);
-	});
-});
+function spanOf(column: unknown): unknown {
+	const cell = layoutOf({ cell: { mode: "place", column } }).cell;
+	return cell.mode === "place" ? cell.column : null;
+}

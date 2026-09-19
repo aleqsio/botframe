@@ -1,34 +1,20 @@
+import { bagOf, isList, listOf } from "./bag";
+import type { Bag } from "./bag";
 import type { LayerFields, WritableGeometry } from "./layer";
+import { guidesOf } from "./guides";
+import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
 import type { LayerLengths, Length } from "./length";
-import { cellOf, guidesOf, layoutOf } from "./layoutData";
-import { isBag } from "./read";
-import type { FieldSource } from "./read";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
 
 const KIND = "botframe/layers";
 const VERSION = 1;
 const DEFAULT_FILL = "#000000";
-const NO_FIELDS: Bag = {};
-
-type Bag = Readonly<Record<string, unknown>>;
 
 export interface LayerEnvelope {
 	sourceParent: string | null;
 	layers: readonly LayerNode[];
-}
-
-function isList(value: unknown): value is readonly unknown[] {
-	return Array.isArray(value);
-}
-
-function bagOf(value: unknown): Bag {
-	return isBag(value) ? value : NO_FIELDS;
-}
-
-function listOf(value: unknown): readonly unknown[] {
-	return isList(value) ? value : [];
 }
 
 function count(bag: Bag, key: string): number {
@@ -92,21 +78,14 @@ function lengthsOf(value: unknown, fields: LayerFields): LayerLengths {
 	};
 }
 
-function sourceOf(bag: Bag): FieldSource {
-	return { get: (key) => bag[key] };
-}
-
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
-	const layout = bagOf(bag["layout"]);
-	const cell = bag["cell"];
 	return {
 		fields,
 		rotation: count(bag, "rotation"),
 		lengths: lengthsOf(bag["lengths"], fields),
-		layout: layoutOf(words(layout, "kind", ""), sourceOf(layout)),
-		cell: isBag(cell) ? cellOf(sourceOf(cell)) : null,
+		layout: layoutOf(bag["layout"]),
 		guides: guidesOf(bag["guides"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};

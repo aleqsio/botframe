@@ -3,17 +3,12 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { Icon } from "./Icon";
-import { Segmented } from "./Segmented";
-import type { SegmentOption } from "./Segmented";
 import { swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
 
 type Orientation = "Portrait" | "Landscape";
 
-const ORIENTATIONS: readonly SegmentOption<Orientation>[] = [
-	{ value: "Portrait", label: "Portrait" },
-	{ value: "Landscape", label: "Landscape" },
-];
+const ORIENTATIONS: readonly Orientation[] = ["Portrait", "Landscape"];
 
 function orientationOf(layer: Layer): Orientation {
 	return layer.width > layer.height ? "Landscape" : "Portrait";
@@ -37,15 +32,25 @@ function turnTo(doc: DesignDocument, layer: Layer, wanted: Orientation): void {
 }
 
 function OrientationControl({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const held = orientationOf(layer);
+
 	return (
-		<Segmented
-			label="Orientation"
-			onPick={(name) => {
-				turnTo(doc, layer, name);
-			}}
-			options={ORIENTATIONS}
-			value={orientationOf(layer)}
-		/>
+		<fieldset aria-label="Orientation" className="segmented" data-active={held}>
+			<span aria-hidden="true" className="segment-pill" />
+			{ORIENTATIONS.map((name) => (
+				<button
+					aria-pressed={held === name}
+					className="segment"
+					key={name}
+					onClick={() => {
+						turnTo(doc, layer, name);
+					}}
+					type="button"
+				>
+					{name}
+				</button>
+			))}
+		</fieldset>
 	);
 }
 

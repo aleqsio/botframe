@@ -1,12 +1,17 @@
 import type { ReactElement } from "react";
-import type { DesignDocument } from "../../document/document";
-import type { Layer } from "../../document/layer";
-import type { Guide, GuideAxis } from "../../document/layout";
-import { LayerChip } from "./ChipGroup";
-import { Icon } from "./Icon";
-import { GUIDE_LABELS, GUIDE_MESSAGE, addedGuide, guideField, removedGuide } from "./layoutFields";
-
-const AXES: readonly GuideAxis[] = ["x", "y"];
+import type { DesignDocument } from "../../../document/document";
+import type { Guide } from "../../../document/guides";
+import type { Layer } from "../../../document/layer";
+import { Icon } from "../Icon";
+import { LayerChip } from "./LayerChip";
+import {
+	GUIDE_AXES,
+	GUIDE_LABELS,
+	GUIDE_MESSAGE,
+	addedGuide,
+	guideField,
+	removedGuide,
+} from "./guideFields";
 
 function GuideRow({
 	doc,
@@ -39,13 +44,13 @@ function GuideRow({
 
 export function GuideList({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	return (
-		<div className="field-group">
+		<div className="field-group layout-section">
 			<span className="group-label">Guides</span>
 			{Array.from(layer.guides.entries(), ([index, guide]) => (
 				<GuideRow doc={doc} guide={guide} index={index} key={index} layer={layer} />
 			))}
 			<div className="chip-row">
-				{AXES.map((axis) => (
+				{GUIDE_AXES.map((axis) => (
 					<button
 						className="guide-button guide-add"
 						key={axis}

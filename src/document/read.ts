@@ -4,16 +4,8 @@ export interface FieldSource {
 	get: (key: string) => unknown;
 }
 
-export function isBag(value: unknown): value is Readonly<Record<string, unknown>> {
-	return typeof value === "object" && value !== null;
-}
-
 function asMap(value: unknown): LoroMap | null {
 	return value instanceof LoroMap ? value : null;
-}
-
-export function readMap(data: LoroMap | null, key: string): LoroMap | null {
-	return asMap(data?.get(key));
 }
 
 export function readNumber(data: FieldSource | null, key: string, fallback: number): number {

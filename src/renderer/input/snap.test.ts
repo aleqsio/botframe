@@ -5,7 +5,12 @@ import type { FieldSpec, Snap, SnapField } from "./snap";
 import type { Curve } from "./snapShape";
 
 const REACH = 5;
-const CONTAINER = { span: { width: 300, height: 200 }, guides: [{ axis: "y" as const, at: 40 }] };
+const NO_INSET = { top: 0, right: 0, bottom: 0, left: 0 };
+const CONTAINER = {
+	span: { width: 300, height: 200 },
+	inset: NO_INSET,
+	guides: [{ axis: "y" as const, at: 40 }],
+};
 
 const DIAGONAL: Curve = { kind: "segment", from: { x: 0, y: 0 }, to: { x: 10, y: 10 } };
 const FLAT: Curve = { kind: "segment", from: { x: 0, y: 5 }, to: { x: 10, y: 5 } };

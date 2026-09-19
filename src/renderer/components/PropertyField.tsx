@@ -2,11 +2,13 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 
 export function DraftInput({
+	disabled = false,
 	inputMode,
 	label,
 	onCommit,
 	value,
 }: {
+	disabled?: boolean | undefined;
 	inputMode: "numeric" | "text";
 	label: string;
 	onCommit: (text: string) => void;
@@ -28,6 +30,7 @@ export function DraftInput({
 		<input
 			aria-label={label}
 			className="property-input"
+			disabled={disabled}
 			inputMode={inputMode}
 			onBlur={commit}
 			onChange={(event) => {

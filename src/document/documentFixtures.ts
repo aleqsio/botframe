@@ -1,9 +1,11 @@
 import type { DesignDocument } from "./document";
-import type { Layer, LayerFields, LayerId, Rect } from "./layer";
+import { NO_GUIDES } from "./guides";
+import type { Guide } from "./guides";
+import type { LayerFields, LayerId, Rect } from "./layer";
+import { DEFAULT_LAYOUT } from "./layout";
+import type { LayerLayout } from "./layout";
 import { PIXELS } from "./length";
 import type { LayerLengths } from "./length";
-import { FREE_LAYOUT, NO_GUIDES } from "./layout";
-import type { LayerNode } from "./subtree";
 
 export function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -33,12 +35,12 @@ function pixelLengths(rect: Rect): LayerLengths {
 	};
 }
 
-export function nodeBox(rect: Rect): Pick<LayerNode, "lengths" | "layout" | "cell" | "guides"> {
-	return { lengths: pixelLengths(rect), layout: FREE_LAYOUT, cell: null, guides: NO_GUIDES };
+export interface PixelBox {
+	lengths: LayerLengths;
+	layout: LayerLayout;
+	guides: readonly Guide[];
 }
 
-export function pixelBox(
-	rect: Rect,
-): Pick<Layer, "lengths" | "layout" | "cell" | "slot" | "guides"> {
-	return { ...nodeBox(rect), slot: null };
+export function pixelBox(rect: Rect): PixelBox {
+	return { lengths: pixelLengths(rect), layout: DEFAULT_LAYOUT, guides: NO_GUIDES };
 }

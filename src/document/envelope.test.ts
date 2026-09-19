@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { nodeBox } from "./documentFixtures";
+import { pixelBox } from "./documentFixtures";
+import { DEFAULT_LAYOUT } from "./layout";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { LayerNode } from "./subtree";
 import { PLAIN_RECTANGLE } from "./subtree";
@@ -16,7 +17,7 @@ const CHILD: LayerNode = {
 		geometry: { kind: "path", d: "M0 0 L1 1 Z" },
 	},
 	rotation: 15,
-	...nodeBox({ x: 1, y: 2, width: 3, height: 4 }),
+	...pixelBox({ x: 1, y: 2, width: 3, height: 4 }),
 	children: [],
 };
 
@@ -32,7 +33,7 @@ const ROOT: LayerNode = {
 		geometry: { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0.5, artboard: true },
 	},
 	rotation: 0,
-	...nodeBox({ x: 10, y: 20, width: 30, height: 40 }),
+	...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),
 	children: [CHILD],
 };
 
@@ -108,38 +109,24 @@ describe("parseEnvelope", () => {
 				geometry: PLAIN_RECTANGLE,
 			},
 			rotation: 0,
-			...nodeBox({ x: 0, y: 0, width: 0, height: 0 }),
+			...pixelBox({ x: 0, y: 0, width: 0, height: 0 }),
 			children: [],
 		});
+	});
+
+	it("reads the layout of a layer and falls back to the default for a layout that is broken", () => {
+		const held = { ...ROOT, layout: { ...DEFAULT_LAYOUT, display: "grid" as const } };
+		const kept = parseEnvelope(serializeEnvelope({ sourceParent: null, layers: [held] }));
+		expect(kept?.layers[0]?.layout.display).toBe("grid");
+
+		const broken = envelopeWith({ layers: [{ layout: { display: "masonry", wrap: "yes" } }] });
+		expect(parseEnvelope(broken)?.layers[0]?.layout).toEqual(DEFAULT_LAYOUT);
 	});
 
 	it("keeps the shape of a tree that holds a child under a child", () => {
 		const raw = envelopeWith({ layers: [{ children: [{ children: [{}] }] }] });
 		const [layer] = parseEnvelope(raw)?.layers ?? [];
 		expect(layer?.children[0]?.children).toHaveLength(1);
-	});
-
-	it("carries a layout, a cell, and the guides of a node, and drops the bad ones", () => {
-		const held: LayerNode = {
-			...ROOT,
-			layout: { kind: "grid", columns: 2, rows: 3, gap: 4, padding: 5 },
-			cell: { column: 1, row: 2 },
-			guides: [{ axis: "x", at: 10 }],
-			children: [],
-		};
-		expect(parseEnvelope(serializeEnvelope({ sourceParent: null, layers: [held] }))).toEqual({
-			sourceParent: null,
-			layers: [held],
-		});
-
-		const raw = envelopeWith({
-			layers: [{ ...held, layout: { kind: "stack" }, cell: 4, guides: [{ axis: "x" }] }],
-		});
-		expect(parseEnvelope(raw)?.layers[0]).toMatchObject({
-			layout: { kind: "free" },
-			cell: null,
-			guides: [],
-		});
 	});
 
 	it("gives null for a source parent that is not a string", () => {

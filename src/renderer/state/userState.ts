@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import type { Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { ZoneKey } from "../input/handles";
@@ -17,20 +18,20 @@ export interface Draw {
 	origin: Point;
 }
 
-interface MoveStart {
-	rotation: number;
-	cell: Layer["cell"];
-	lengths: Pick<Layer["lengths"], "x" | "y">;
+interface MoveStart extends Pick<Layer, "x" | "y" | "rotation"> {
+	position: PositionMode;
+	cell: Placement;
+	index: number;
 }
 
 export interface LayerMove {
 	id: LayerId;
 	from: LayerId | null;
-	index: number;
 	parent: LayerId | null;
 	start: MoveStart;
 	offset: Point;
 	field: SnapField;
+	lift: Point | null;
 }
 
 export interface SnapGuides {
