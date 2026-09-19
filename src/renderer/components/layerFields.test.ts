@@ -6,7 +6,7 @@ import type { Basis } from "../../document/length";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
-import { fieldGroupsOf, fieldPatch, fieldsOf, swappedBox, typedPatch } from "./layerFields";
+import { boxField, fieldGroupsOf, fieldPatch, swappedBox, typedPatch } from "./layerFields";
 import type { LayerField, UnitChoice } from "./layerFields";
 
 const ALT = { shift: false, alt: true };
@@ -29,6 +29,16 @@ function layerOf(doc: DesignDocument): Layer {
 		throw new Error("the document has no layer");
 	}
 	return layer;
+}
+
+function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
+	return [
+		boxField("X", "x", layer, basis),
+		boxField("Y", "y", layer, basis),
+		boxField("W", "width", layer, basis),
+		boxField("H", "height", layer, basis),
+		...fieldGroupsOf(layer).flatMap((group) => group.fields),
+	];
 }
 
 function fieldNamed(layer: Layer, label: string, basis: Basis = NO_BASIS): LayerField {
@@ -124,11 +134,9 @@ describe("the layer fields", () => {
 });
 
 describe("fieldGroupsOf", () => {
-	it("groups the fields of a rectangle", () => {
-		const groups = fieldGroupsOf(layerOf(DesignDocument.create()), NO_BASIS);
+	it("groups the fields that the chip rows draw", () => {
+		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
 		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
-			["Position", ["X", "Y"]],
-			["Size", ["W", "H"]],
 			["Rotation", ["Rotation"]],
 			["Corners", ["Radius", "Smoothing"]],
 		]);
@@ -138,9 +146,9 @@ describe("fieldGroupsOf", () => {
 		const doc = DesignDocument.create();
 		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });
 
-		const groups = fieldGroupsOf(layerOf(doc), NO_BASIS);
+		const groups = fieldGroupsOf(layerOf(doc));
 
-		expect(groups.map((group) => group.name)).toEqual(["Position", "Size", "Rotation"]);
+		expect(groups.map((group) => group.name)).toEqual(["Rotation"]);
 		expect(fieldsOf(layerOf(doc), NO_BASIS).map((field) => field.label)).toEqual(BOX_LABELS);
 	});
 
@@ -196,15 +204,15 @@ function choiceOf(held: { layer: Layer; basis: Basis }, label: string): UnitChoi
 }
 
 describe("the unit of a box field", () => {
-	it("makes pixels the only possible unit of a layer that stands at the root", () => {
+	it("makes the absolute units the possible units of a layer that stands at the root", () => {
 		const doc = DesignDocument.create();
 		const choice = choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W");
-		expect(choice.possible).toEqual(new Set(["px"]));
+		expect(choice.possible).toEqual(new Set(["px", "rem"]));
 	});
 
 	it("makes each unit possible for a layer inside a container", () => {
 		const child = childOf(DesignDocument.create());
-		expect(choiceOf(child, "X").possible).toEqual(new Set(["px", "%", "vw", "vh"]));
+		expect(choiceOf(child, "X").possible).toEqual(new Set(["px", "rem", "%", "vw", "vh"]));
 	});
 
 	it("makes the unit a layer holds possible, even when the layer has no basis for it", () => {
@@ -213,7 +221,7 @@ describe("the unit of a box field", () => {
 		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
 		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
 
-		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px"]));
+		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px", "rem"]));
 	});
 
 	it("gives a unit choice to the box fields only, also at the root", () => {

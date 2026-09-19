@@ -3,11 +3,13 @@ import { TOOLS } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { Modifiers } from "./modifiers";
 import { NO_MODIFIERS } from "./modifiers";
+import type { LayerId } from "../../document/layer";
+import type { SizeMode } from "../../document/layout";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import type { Zone } from "./handles";
 import { firstId } from "./toolFixtures";
-import { dragOver, drawnLayer, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
+import { dragOver, lastDrawn, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 440, y: 280 };
 const RELEASE = { x: 540, y: 350 };
@@ -17,6 +19,8 @@ const SE_CORNER = { x: 660, y: 420 };
 const GROWN_SE = { x: 700, y: 460 };
 const SE_REACH = { x: 678, y: 438 };
 const E_SIDE = { x: 660, y: 340 };
+const CHILD_EAST = { x: 500, y: 300 };
+const PULLED_EAST = { x: 460, y: 300 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_ZONE = { mode: "resize", handle: "se" };
@@ -246,7 +250,7 @@ describe("the handles under a draw tool", () => {
 		dragOver(behaviorFor("rectangle"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
 		expect(target.doc.layerIds()).toHaveLength(count + 1);
-		expect(drawnLayer(target)).toMatchObject({ x: 40, y: 40, width: 200, height: 140 });
+		expect(lastDrawn(target)).toMatchObject({ x: 40, y: 40, width: 200, height: 140 });
 	});
 
 	it("still draws a new layer away from the handles of the selected layer", () => {
@@ -260,7 +264,7 @@ describe("the handles under a draw tool", () => {
 		);
 
 		expect(target.doc.layerIds()).toHaveLength(count + 1);
-		expect(drawnLayer(target)).toMatchObject({ x: 40, y: 40, width: 200, height: 140 });
+		expect(lastDrawn(target)).toMatchObject({ x: 40, y: 40, width: 200, height: 140 });
 	});
 });
 
@@ -352,5 +356,34 @@ describe("the handles of a layer inside an artboard", () => {
 		});
 
 		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20, width: 80, height: 60 });
+	});
+});
+
+function rowChild(mode: SizeMode): { target: PointerTarget; child: LayerId } {
+	const scene = nestedTarget(0);
+	scene.target.doc.update(firstId(scene.target.doc), { layout: { display: "row" } });
+	scene.target.doc.update(scene.child, { layout: { width: mode } });
+	scene.target.doc.commit("set up the row");
+	scene.target.user.selection.set([scene.child]);
+	return scene;
+}
+
+describe("a resize handle of a child in a flex row", () => {
+	it("moves the right margin of a fill child and keeps its width", () => {
+		const { target, child } = rowChild("fill");
+
+		dragOver(behaviorFor("select"), target, { press: CHILD_EAST, release: PULLED_EAST });
+
+		expect(target.doc.layer(child)?.layout.margin.right).toEqual({ value: 40, unit: "px" });
+		expect(target.doc.layer(child)).toMatchObject({ width: 60 });
+	});
+
+	it("keeps writing the width of a fixed child and never its place", () => {
+		const { target, child } = rowChild("fixed");
+
+		dragOver(behaviorFor("select"), target, { press: CHILD_EAST, release: PULLED_EAST });
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, width: 20 });
+		expect(target.doc.layer(child)?.layout.margin.right).toEqual({ value: 0, unit: "px" });
 	});
 });

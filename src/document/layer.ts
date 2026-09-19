@@ -1,4 +1,5 @@
 import type { TreeID } from "loro-crdt";
+import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 
 export type LayerId = TreeID;
@@ -27,6 +28,7 @@ export interface Layer extends Rect {
 	clip: boolean;
 	parent: LayerId | null;
 	lengths: LayerLengths;
+	layout: LayerLayout;
 }
 
 export type LayerTraits = Omit<Layer, "id" | "parent">;
@@ -43,4 +45,5 @@ export interface LayerFields extends Rect {
 export type LayerPatch = Partial<LayerFields> & {
 	rotation?: number;
 	lengths?: Partial<LayerLengths>;
+	layout?: LayoutPatch;
 };

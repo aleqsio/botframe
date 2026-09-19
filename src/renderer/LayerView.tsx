@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
+import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootArtboard, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
@@ -11,10 +12,12 @@ import { useChildIds, useLayer } from "./useDocument";
 export function LayerView({
 	doc,
 	id,
+	parentDisplay,
 	selection,
 }: {
 	doc: DesignDocument;
 	id: LayerId;
+	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
@@ -30,10 +33,16 @@ export function LayerView({
 			className="layer"
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			style={layerStyle(layer)}
+			style={layerStyle(layer, parentDisplay)}
 		>
 			{childIds.map((childId) => (
-				<LayerView doc={doc} id={childId} key={childId} selection={selection} />
+				<LayerView
+					doc={doc}
+					id={childId}
+					key={childId}
+					parentDisplay={layer.layout.display}
+					selection={selection}
+				/>
 			))}
 		</div>
 	);

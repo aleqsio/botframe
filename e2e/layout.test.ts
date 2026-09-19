@@ -36,7 +36,7 @@ function placementOf(locator: Locator): Promise<{ right: number; top: number; wi
 test("the inspector heads the page with nothing selected and stays in its place for a layer", async () => {
 	const { app, window } = await launchApp();
 	const inspector = window.getByRole("complementary", { name: "Inspector" });
-	const placement = { right: 10, top: 52, width: 248 };
+	const placement = { right: 10, top: 52, width: 280 };
 
 	await expect(window.locator(".layer")).toHaveCount(1);
 	await expect(inspector.locator(".inspector-name")).toHaveText("Page");

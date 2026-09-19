@@ -1,13 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
-import type { Layer, LayerId } from "../document/layer";
+import type { LayerId } from "../document/layer";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
-import { layerTransform } from "./layerStyle";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useLayer } from "./useDocument";
+import { useDrawnFrame } from "./useDocument";
+import type { DrawnFrame } from "./useDocument";
 
 declare module "react" {
 	interface CSSProperties {
@@ -15,37 +15,13 @@ declare module "react" {
 	}
 }
 
-function frameStyle(layer: Layer): CSSProperties {
+function frameStyle(frame: DrawnFrame): CSSProperties {
 	return {
-		transform: layerTransform(layer),
-		width: `${layer.width}px`,
-		height: `${layer.height}px`,
+		transform: frame.transform,
+		width: `${frame.width}px`,
+		height: `${frame.height}px`,
 		"--handle-size": `${HANDLE_SIZE}px`,
 	};
-}
-
-function ParentSpace({
-	doc,
-	id,
-	children,
-}: {
-	doc: DesignDocument;
-	id: LayerId | null;
-	children: ReactNode;
-}): ReactNode {
-	const layer = useLayer(doc, id);
-
-	if (layer === null) {
-		return children;
-	}
-
-	return (
-		<ParentSpace doc={doc} id={layer.parent}>
-			<div className="layer-space" style={{ transform: layerTransform(layer) }}>
-				{children}
-			</div>
-		</ParentSpace>
-	);
 }
 
 function LayerFrame({
@@ -59,19 +35,29 @@ function LayerFrame({
 	id: LayerId;
 	children?: ReactNode;
 }): ReactNode {
-	const layer = useLayer(doc, id);
+	const frame = useDrawnFrame(doc, id);
 
-	if (layer === null) {
+	if (frame === null) {
 		return null;
 	}
 
 	return (
-		<ParentSpace doc={doc} id={layer.parent}>
-			<div className={className} style={frameStyle(layer)}>
-				{children}
-			</div>
-		</ParentSpace>
+		<div className={className} style={frameStyle(frame)}>
+			{children}
+		</div>
 	);
+}
+
+const NO_PADDING = "0px 0px 0px 0px";
+
+function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+	const frame = useDrawnFrame(doc, id);
+
+	if (frame === null || frame.padding === NO_PADDING) {
+		return null;
+	}
+
+	return <span className="selection-padding" style={{ borderWidth: frame.padding }} />;
 }
 
 function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
@@ -79,6 +65,7 @@ function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState })
 
 	return id === undefined ? null : (
 		<LayerFrame className="selection" doc={doc} id={id}>
+			<PaddingBand doc={doc} id={id} />
 			{CORNERS.map((corner) => (
 				<span className="selection-handle" data-corner={corner} key={corner} />
 			))}

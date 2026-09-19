@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
 import type { StyledLayer } from "./layerStyle";
@@ -13,7 +14,7 @@ const ESCAPES: Readonly<Record<string, string>> = {
 };
 
 function styledLayerOf(node: LayerNode): StyledLayer {
-	return { ...node.fields, rotation: node.rotation };
+	return { ...node.fields, rotation: node.rotation, layout: node.layout };
 }
 
 function propertyName(key: string): string {
@@ -33,12 +34,16 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
-export function layerMarkup(node: LayerNode): string {
+function markupOf(node: LayerNode, parentDisplay: DisplayMode | null): string {
 	const style = escaped(
-		declarations(layerStyle(styledLayerOf(node)))
+		declarations(layerStyle(styledLayerOf(node), parentDisplay))
 			.toSorted()
 			.join("; "),
 	);
-	const children = node.children.map((child) => layerMarkup(child)).join("");
+	const children = node.children.map((child) => markupOf(child, node.layout.display)).join("");
 	return `<div style="${style}">${children}</div>`;
+}
+
+export function layerMarkup(node: LayerNode): string {
+	return markupOf(node, null);
 }

@@ -2,6 +2,7 @@ import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
 import { DRAWN, firstId, pixelLengths } from "./documentFixtures";
+import { DEFAULT_LAYOUT } from "./layout";
 import type { Layer, LayerFields, LayerId } from "./layer";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -63,16 +64,19 @@ describe("readSubtree", () => {
 			fields: DRAWN,
 			rotation: 0,
 			lengths: pixelLengths(DRAWN),
+			layout: DEFAULT_LAYOUT,
 			children: [
 				{
 					fields: CHILD,
 					rotation: 45,
 					lengths: pixelLengths(CHILD),
+					layout: DEFAULT_LAYOUT,
 					children: [
 						{
 							fields: GRANDCHILD,
 							rotation: 0,
 							lengths: pixelLengths(GRANDCHILD),
+							layout: DEFAULT_LAYOUT,
 							children: [],
 						},
 					],
@@ -119,6 +123,17 @@ describe("createSubtree", () => {
 		expect(copy).not.toBe(root);
 		expect(doc.layer(copy)?.parent).toBe(seed);
 		expect(doc.readSubtree(copy)).toEqual(node);
+	});
+
+	it("keeps the layout of each layer that it creates", () => {
+		const doc = DesignDocument.create();
+		const { root, child } = threeLevels(doc);
+		doc.update(child, { layout: { display: "row", wrap: true } });
+		doc.commit("set layout");
+
+		const copy = doc.createSubtree(subtreeOf(doc, root), null);
+
+		expect(firstChildOf(doc, copy).layout).toMatchObject({ display: "row", wrap: true });
 	});
 
 	it("keeps the angle of each layer that it creates", () => {

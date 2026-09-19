@@ -1,5 +1,7 @@
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
+import type { LayoutPatch } from "../../document/layout";
+import { outOfFlow } from "../layerStyle";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldPlacement } from "./dropTarget";
@@ -35,9 +37,20 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): vo
 	target.user.move.set({ ...move, parent, offset });
 }
 
+function liftedOut(target: PointerTarget, move: LayerMove): LayoutPatch | null {
+	if (move.start.position !== "default") {
+		return null;
+	}
+	const display =
+		move.parent === null ? null : (target.doc.layer(move.parent)?.layout.display ?? null);
+	return outOfFlow(display, "default") ? null : { position: "offset" };
+}
+
 function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void {
 	const point = parentPointOf(target, move.id, canvas);
-	target.doc.update(move.id, { x: point.x - move.offset.x, y: point.y - move.offset.y });
+	const place = { x: point.x - move.offset.x, y: point.y - move.offset.y };
+	const layout = liftedOut(target, move);
+	target.doc.update(move.id, layout === null ? place : { ...place, layout });
 }
 
 export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): void {
@@ -45,7 +58,7 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 		id: layer.id,
 		from: layer.parent,
 		parent: layer.parent,
-		start: { x: layer.x, y: layer.y, rotation: layer.rotation },
+		start: { x: layer.x, y: layer.y, rotation: layer.rotation, position: layer.layout.position },
 		offset: offsetOf(target, layer, canvas),
 	});
 }
@@ -79,6 +92,7 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	}
 	user.move.set(null);
 	doc.move(move.id, move.from);
-	doc.update(move.id, move.start);
+	const { position, ...place } = move.start;
+	doc.update(move.id, { ...place, layout: { position } });
 	doc.commit(CANCEL_COMMIT);
 }

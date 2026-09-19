@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pixelLengths } from "./documentFixtures";
+import { DEFAULT_LAYOUT } from "./layout";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { LayerNode } from "./subtree";
 import { PLAIN_RECTANGLE } from "./subtree";
@@ -17,6 +18,7 @@ const CHILD: LayerNode = {
 	},
 	rotation: 15,
 	lengths: pixelLengths({ x: 1, y: 2, width: 3, height: 4 }),
+	layout: DEFAULT_LAYOUT,
 	children: [],
 };
 
@@ -33,6 +35,7 @@ const ROOT: LayerNode = {
 	},
 	rotation: 0,
 	lengths: pixelLengths({ x: 10, y: 20, width: 30, height: 40 }),
+	layout: DEFAULT_LAYOUT,
 	children: [CHILD],
 };
 
@@ -109,8 +112,18 @@ describe("parseEnvelope", () => {
 			},
 			rotation: 0,
 			lengths: pixelLengths({ x: 0, y: 0, width: 0, height: 0 }),
+			layout: DEFAULT_LAYOUT,
 			children: [],
 		});
+	});
+
+	it("reads the layout of a layer and falls back to the default for a layout that is broken", () => {
+		const held = { ...ROOT, layout: { ...DEFAULT_LAYOUT, display: "grid" as const } };
+		const kept = parseEnvelope(serializeEnvelope({ sourceParent: null, layers: [held] }));
+		expect(kept?.layers[0]?.layout.display).toBe("grid");
+
+		const broken = envelopeWith({ layers: [{ layout: { display: "masonry", wrap: "yes" } }] });
+		expect(parseEnvelope(broken)?.layers[0]?.layout).toEqual(DEFAULT_LAYOUT);
 	});
 
 	it("keeps the shape of a tree that holds a child under a child", () => {

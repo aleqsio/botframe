@@ -3,34 +3,12 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { ArtboardFooter } from "./ArtboardFooter";
 import { ColorField } from "./ColorField";
-import { NumberChip } from "./NumberChip";
 import { PropertyField } from "./PropertyField";
 import { isArtboard } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
-import type { FieldGroup, LayerField } from "./layerFields";
-
-function LayerChip({
-	doc,
-	field,
-	layer,
-}: {
-	doc: DesignDocument;
-	field: LayerField;
-	layer: Layer;
-}): ReactElement {
-	return (
-		<NumberChip
-			field={field}
-			onCommit={() => {
-				doc.commit(field.message);
-			}}
-			onPatch={(patch) => {
-				doc.update(layer.id, patch);
-			}}
-			value={field.read(layer)}
-		/>
-	);
-}
+import type { FieldGroup } from "./layerFields";
+import { LayerChip } from "./layout/LayerChip";
+import { LayoutPanel } from "./layout/LayoutPanel";
 
 function ChipGroup({
 	doc,
@@ -42,7 +20,7 @@ function ChipGroup({
 	layer: Layer;
 }): ReactElement {
 	return (
-		<div className="field-group">
+		<div className="field-group layout-section">
 			<span className="group-label">{group.name}</span>
 			<div className="chip-row">
 				{group.fields.map((field) => (
@@ -86,7 +64,8 @@ export function LayerProperties({
 				}}
 				value={layer.name}
 			/>
-			{fieldGroupsOf(layer, doc.basisOf(layer.id)).map((group) => (
+			<LayoutPanel doc={doc} layer={layer} />
+			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
 			<ColorField

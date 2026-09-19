@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import type { PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { ZoneKey } from "../input/handles";
@@ -20,7 +21,7 @@ export interface LayerMove {
 	id: LayerId;
 	from: LayerId | null;
 	parent: LayerId | null;
-	start: Pick<Layer, "x" | "y" | "rotation">;
+	start: Pick<Layer, "x" | "y" | "rotation"> & { position: PositionMode };
 	offset: Point;
 }
 

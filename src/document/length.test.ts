@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
 	NO_BASIS,
+	UNITS,
 	availableUnits,
 	hasRelativeLength,
 	isUnit,
 	lengthIn,
-	parseLength,
+	parseUnitText,
 	resolveLength,
 } from "./length";
 import type { Basis, LayerLengths } from "./length";
@@ -27,6 +28,11 @@ describe("resolveLength", () => {
 	it("takes a percentage from the container, along the axis of the field", () => {
 		expect(resolveLength({ value: 50, unit: "%" }, "width", BASIS)).toBe(100);
 		expect(resolveLength({ value: 50, unit: "%" }, "height", BASIS)).toBe(50);
+	});
+
+	it("gives a rem as sixteen pixels on each axis", () => {
+		expect(resolveLength({ value: 2, unit: "rem" }, "width", NO_BASIS)).toBe(32);
+		expect(resolveLength({ value: 2, unit: "rem" }, "height", NO_BASIS)).toBe(32);
 	});
 
 	it("takes vw from the width of the root and vh from its height", () => {
@@ -60,37 +66,38 @@ describe("lengthIn", () => {
 
 describe("availableUnits", () => {
 	it("offers each unit that has a basis", () => {
-		expect(availableUnits("width", BASIS)).toEqual(["px", "%", "vw", "vh"]);
+		expect(availableUnits("width", BASIS)).toEqual(["px", "rem", "%", "vw", "vh"]);
 	});
 
-	it("offers pixels only to a layer that has no container", () => {
-		expect(availableUnits("width", NO_BASIS)).toEqual(["px"]);
+	it("offers only the units that need no container to a layer that has none", () => {
+		expect(availableUnits("width", NO_BASIS)).toEqual(["px", "rem"]);
 	});
 });
 
-describe("parseLength", () => {
+describe("parseUnitText", () => {
 	it("reads the unit a person types", () => {
-		expect(parseLength("5%", "px")).toEqual({ value: 5, unit: "%" });
-		expect(parseLength("12px", "%")).toEqual({ value: 12, unit: "px" });
-		expect(parseLength(" 3 VW ", "px")).toEqual({ value: 3, unit: "vw" });
+		expect(parseUnitText("5%", UNITS, "px")).toEqual({ value: 5, unit: "%" });
+		expect(parseUnitText("12px", UNITS, "%")).toEqual({ value: 12, unit: "px" });
+		expect(parseUnitText(" 3 VW ", UNITS, "px")).toEqual({ value: 3, unit: "vw" });
 	});
 
 	it("keeps the unit of the field when the text names no unit", () => {
-		expect(parseLength("40", "%")).toEqual({ value: 40, unit: "%" });
-		expect(parseLength("-2.5", "px")).toEqual({ value: -2.5, unit: "px" });
+		expect(parseUnitText("40", UNITS, "%")).toEqual({ value: 40, unit: "%" });
+		expect(parseUnitText("-2.5", UNITS, "px")).toEqual({ value: -2.5, unit: "px" });
 	});
 
 	it("refuses text that is not a length", () => {
-		expect(parseLength("wide", "px")).toBeNull();
-		expect(parseLength("5em", "px")).toBeNull();
-		expect(parseLength("", "px")).toBeNull();
+		expect(parseUnitText("wide", UNITS, "px")).toBeNull();
+		expect(parseUnitText("5em", UNITS, "px")).toBeNull();
+		expect(parseUnitText("", UNITS, "px")).toBeNull();
 	});
 });
 
 describe("isUnit", () => {
 	it("names the units the document writes", () => {
 		expect(isUnit("vh")).toBe(true);
-		expect(isUnit("rem")).toBe(false);
+		expect(isUnit("rem")).toBe(true);
+		expect(isUnit("em")).toBe(false);
 	});
 });
 
