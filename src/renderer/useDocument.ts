@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId } from "../document/layer";
-import { drawnRead } from "./input/drawn";
+import { drawnPadding, drawnRead } from "./input/drawn";
 import { layerChain } from "./input/layerSpace";
 import { layerTransform } from "./layerStyle";
 
@@ -13,6 +13,7 @@ export interface DrawnFrame {
 	transform: string;
 	width: number;
 	height: number;
+	padding: string;
 }
 
 export function useRootIds(doc: DesignDocument): readonly LayerId[] {
@@ -54,15 +55,20 @@ function frameText(doc: DesignDocument, id: LayerId): string {
 		return NO_FRAME;
 	}
 	const transform = chain.map((layer) => layerTransform(layer)).join(" ");
-	return [drawn.width, drawn.height, transform].join(FRAME_PART);
+	return [drawn.width, drawn.height, drawnPadding(id), transform].join(FRAME_PART);
 }
 
 function frameOf(text: string): DrawnFrame | null {
-	const [width, height, ...rest] = text.split(FRAME_PART);
-	if (width === undefined || height === undefined) {
+	const [width, height, padding, ...rest] = text.split(FRAME_PART);
+	if (width === undefined || height === undefined || padding === undefined) {
 		return null;
 	}
-	return { width: Number(width), height: Number(height), transform: rest.join(FRAME_PART) };
+	return {
+		width: Number(width),
+		height: Number(height),
+		padding,
+		transform: rest.join(FRAME_PART),
+	};
 }
 
 function subscribeAfterCommit(doc: DesignDocument, listener: () => void): Unsubscribe {

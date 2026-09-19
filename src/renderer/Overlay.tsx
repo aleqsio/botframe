@@ -48,11 +48,24 @@ function LayerFrame({
 	);
 }
 
+const NO_PADDING = "0px 0px 0px 0px";
+
+function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+	const frame = useDrawnFrame(doc, id);
+
+	if (frame === null || frame.padding === NO_PADDING) {
+		return null;
+	}
+
+	return <span className="selection-padding" style={{ borderWidth: frame.padding }} />;
+}
+
 function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	const [id] = useSlot(user.selection);
 
 	return id === undefined ? null : (
 		<LayerFrame className="selection" doc={doc} id={id}>
+			<PaddingBand doc={doc} id={id} />
 			{CORNERS.map((corner) => (
 				<span className="selection-handle" data-corner={corner} key={corner} />
 			))}

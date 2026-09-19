@@ -19,12 +19,29 @@ export function drawnFrom(
 	};
 }
 
-function boxOf(id: LayerId): Rect | null {
+const NO_PADDING = "0px 0px 0px 0px";
+const PADDING_SIDES = ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"] as const;
+
+function elementOf(id: LayerId): HTMLElement | null {
 	if (typeof document === "undefined") {
 		return null;
 	}
 	const element = document.querySelector(`[data-layer-id="${id}"]`);
-	if (!(element instanceof HTMLElement)) {
+	return element instanceof HTMLElement ? element : null;
+}
+
+export function drawnPadding(id: LayerId): string {
+	const element = elementOf(id);
+	if (element === null) {
+		return NO_PADDING;
+	}
+	const style = getComputedStyle(element);
+	return PADDING_SIDES.map((side) => style[side]).join(" ");
+}
+
+function boxOf(id: LayerId): Rect | null {
+	const element = elementOf(id);
+	if (element === null) {
 		return null;
 	}
 	return {
