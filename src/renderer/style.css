@@ -9,6 +9,8 @@
 	--panel-background: light-dark(rgb(255 255 255 / 0.9), rgb(44 43 52 / 0.92));
 	--panel-border: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.09));
 	--panel-shadow:
+		0 0 0 1px light-dark(rgb(0 0 0 / 0.1), transparent),
+		inset 0 0 0 1px light-dark(transparent, rgb(255 255 255 / 0.1)),
 		0 18px 40px light-dark(rgb(20 19 27 / 0.14), rgb(0 0 0 / 0.36)),
 		0 2px 6px light-dark(rgb(20 19 27 / 0.08), rgb(0 0 0 / 0.24));
 	--panel-text: light-dark(rgb(0 0 0 / 0.88), rgb(255 255 255 / 0.92));
@@ -19,7 +21,9 @@
 	--canvas-label: light-dark(rgb(0 0 0 / 0.5), rgb(255 255 255 / 0.5));
 	--bar-background: rgb(44 43 54 / 0.8);
 	--bar-border: rgb(255 255 255 / 0.1);
-	--bar-shadow: 0 12px 32px rgb(20 19 27 / 0.24), 0 2px 6px rgb(20 19 27 / 0.18);
+	--bar-shadow:
+		inset 0 0 0 1px var(--bar-border), 0 12px 32px rgb(20 19 27 / 0.24),
+		0 2px 6px rgb(20 19 27 / 0.18);
 	--bar-icon: rgb(255 255 255 / 0.6);
 	--bar-icon-selected: #ffffff;
 	--bar-hover: rgb(255 255 255 / 0.08);
@@ -297,18 +301,22 @@ body {
 	}
 }
 
+.floating-bar,
+.unit-menu,
+.layer-menu {
+	background: var(--bar-background);
+	backdrop-filter: blur(10px) saturate(140%);
+	-webkit-backdrop-filter: blur(10px) saturate(140%);
+	box-shadow: var(--bar-shadow);
+}
+
 .floating-bar {
 	display: flex;
 	max-width: 100%;
 	align-items: center;
 	gap: 2px;
 	padding: 6px;
-	border: 1px solid var(--bar-border);
 	border-radius: 18px;
-	background: var(--bar-background);
-	backdrop-filter: blur(10px) saturate(140%);
-	-webkit-backdrop-filter: blur(10px) saturate(140%);
-	box-shadow: var(--bar-shadow);
 }
 
 .tool-button {
@@ -488,7 +496,6 @@ body {
 #zoom,
 #inspector {
 	position: fixed;
-	border: 1px solid var(--panel-border);
 	background: var(--panel-background);
 	backdrop-filter: blur(16px) saturate(150%);
 	box-shadow: var(--panel-shadow);
@@ -943,12 +950,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 .unit-menu {
 	min-width: 68px;
 	padding: 4px;
-	border: 1px solid var(--bar-border);
 	border-radius: 10px;
-	background: var(--bar-background);
-	backdrop-filter: blur(10px) saturate(140%);
-	-webkit-backdrop-filter: blur(10px) saturate(140%);
-	box-shadow: var(--bar-shadow);
 	color: var(--bar-icon-selected);
 	outline: none;
 }
@@ -1175,7 +1177,6 @@ button.layer-chevron[aria-expanded="false"]::before {
 	flex-direction: column;
 	gap: 10px;
 	padding: 10px;
-	border: 1px solid var(--bar-border);
 	border-radius: 12px;
 	background: light-dark(rgb(255 255 255), rgb(44 43 52));
 	box-shadow: var(--bar-shadow);
@@ -1303,12 +1304,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 .layer-menu {
 	min-width: 160px;
 	padding: 6px;
-	border: 1px solid var(--bar-border);
 	border-radius: 12px;
-	background: var(--bar-background);
-	backdrop-filter: blur(10px) saturate(140%);
-	-webkit-backdrop-filter: blur(10px) saturate(140%);
-	box-shadow: var(--bar-shadow);
 	color: var(--bar-icon-selected);
 	outline: none;
 }
