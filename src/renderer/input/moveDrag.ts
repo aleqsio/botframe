@@ -5,6 +5,7 @@ import type { LayerMove, UserState } from "../state/userState";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
+import { settleInFlow } from "./flowDrag";
 import { carryLayer } from "./moveCarry";
 import { snapFieldAround } from "./snapField";
 import { parentChainOf, parentPointOf } from "./targetSpace";
@@ -35,7 +36,8 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
 	target.doc.update(move.id, placement);
 	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
-	const next = { ...move, parent, offset, field: snapFieldAround(target, move.id) };
+	const grab = parentPointOf(target, move.id, point.canvas);
+	const next = { ...move, parent, offset, grab, field: snapFieldAround(target, move.id) };
 	target.user.move.set(next);
 	return next;
 }
@@ -54,8 +56,8 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		},
 		offset: offsetOf(target, layer, canvas),
+		grab: parentPointOf(target, layer.id, canvas),
 		field: snapFieldAround(target, layer.id),
-		lift: null,
 	});
 }
 
@@ -65,7 +67,7 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 		return;
 	}
 	carryLayer(target, move, point, modifiers);
-	retarget(target, move, point);
+	settleInFlow(target, retarget(target, move, point), point.canvas);
 }
 
 export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
@@ -75,6 +77,7 @@ export function finishMove(target: PointerTarget, point: StagePoint, modifiers: 
 	applyMove(target, point, modifiers);
 	target.user.move.set(null);
 	target.user.snap.set(null);
+	target.user.lift.set(null);
 	target.doc.commit(COMMIT_MESSAGES.move);
 }
 
@@ -89,6 +92,7 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	}
 	user.move.set(null);
 	user.snap.set(null);
+	user.lift.set(null);
 	doc.move(move.id, move.from, move.start.index);
 	const { x, y, rotation, position, cell } = move.start;
 	doc.update(move.id, { x, y, rotation, layout: { position, cell } });

@@ -307,8 +307,37 @@ function rowScene(): { target: PointerTarget; child: LayerId } {
 	return scene;
 }
 
+const ROW_CHILD: LayerFields = {
+	x: 10,
+	y: 20,
+	width: 60,
+	height: 40,
+	fill: "#d9d9d9",
+	name: "",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+};
+
+interface RowOfThree {
+	target: PointerTarget;
+	ids: readonly LayerId[];
+}
+
+function rowOfThree(): RowOfThree {
+	const { target } = rowScene();
+	const doc = target.doc;
+	const parent = firstId(doc);
+	for (const id of doc.childIds(parent)) {
+		doc.deleteLayer(id);
+	}
+	const ids = [10, 90, 170].map((at) => doc.createLayer({ ...ROW_CHILD, x: at }, parent));
+	doc.commit("fill the row");
+	const hits = [ids[0] ?? parent, parent];
+	return { target: { ...target, layerIds: hits, layerIdsAt: () => hits }, ids };
+}
+
 describe("a move drag of a child that the parent lays out", () => {
-	it("offsets the child on the cross axis only, because the row places the main axis", () => {
+	it("leaves the place of the child, because the row places it", () => {
 		const { target, child } = rowScene();
 
 		dragOver(behaviorFor("select"), target, {
@@ -316,8 +345,51 @@ describe("a move drag of a child that the parent lays out", () => {
 			release: { x: 470, y: 310 },
 		});
 
-		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 40 });
-		expect(target.doc.layer(child)?.layout.position).toBe("offset");
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
+		expect(target.doc.layer(child)?.layout.position).toBe("default");
+	});
+
+	it("gives the child the order under the pointer", () => {
+		const { target, ids } = rowOfThree();
+		const parent = firstId(target.doc);
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 545, y: 290 },
+		});
+
+		expect(target.doc.childIds(parent)).toEqual([ids[1], ids[0], ids[2]]);
+	});
+
+	it("moves the child one time for each change of the order", () => {
+		const { target } = rowOfThree();
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 450, y: 290 });
+		const moved = vi.spyOn(target.doc, "move");
+
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		for (const step of [540, 545, 550]) {
+			behavior.drag?.(target, pointAt(camera, { x: step, y: 290 }), NO_MODIFIERS);
+		}
+		behavior.dragEnd?.(target, pointAt(camera, { x: 550, y: 290 }), NO_MODIFIERS);
+
+		expect(moved).toHaveBeenCalledTimes(1);
+	});
+
+	it("lifts the child under the pointer while the row holds its slot", () => {
+		const { target } = rowOfThree();
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 450, y: 290 });
+
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+		behavior.drag?.(target, pointAt(camera, { x: 470, y: 300 }), NO_MODIFIERS);
+
+		expect(target.user.lift.get()?.at).toEqual({ x: 20, y: 10 });
+
+		behavior.dragEnd?.(target, pointAt(camera, { x: 470, y: 300 }), NO_MODIFIERS);
+		expect(target.user.lift.get()).toBeNull();
 	});
 
 	it("leaves the child in the flow under a block parent", () => {
@@ -331,17 +403,20 @@ describe("a move drag of a child that the parent lays out", () => {
 		expect(target.doc.layer(child)?.layout.position).toBe("default");
 	});
 
-	it("gives the first position mode back when the gesture is cancelled", () => {
-		const { target, child } = rowScene();
+	it("gives the first order back when the gesture is cancelled", () => {
+		const { target, ids } = rowOfThree();
+		const parent = firstId(target.doc);
 		const behavior = behaviorFor("select");
-		const press = pointAt(target.user.camera.get(), { x: 450, y: 290 });
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 450, y: 290 });
 
 		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
-		expect(target.doc.layer(child)?.layout.position).toBe("offset");
+		behavior.drag?.(target, pointAt(camera, { x: 545, y: 290 }), NO_MODIFIERS);
+		expect(target.doc.childIds(parent)).toEqual([ids[1], ids[0], ids[2]]);
 
 		cancelMove(target.doc, target.user);
 
-		expect(target.doc.layer(child)?.layout.position).toBe("default");
-		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
+		expect(target.doc.childIds(parent)).toEqual(ids);
+		expect(target.user.lift.get()).toBeNull();
 	});
 });

@@ -1,7 +1,6 @@
 import type { GuideAxis } from "../../document/guides";
-import type { Layer, LayerId, LayerPatch } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
-import { outOfFlow } from "../layerStyle";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove } from "../state/userState";
 import { drawnRead } from "./drawn";
@@ -19,13 +18,6 @@ interface DraggedBox {
 
 function displayOf(target: PointerTarget, parent: LayerId | null): DisplayMode | null {
 	return parent === null ? null : (target.doc.layer(parent)?.layout.display ?? null);
-}
-
-function liftedOut(target: PointerTarget, move: LayerMove): LayerPatch["layout"] {
-	if (move.start.position !== "default") {
-		return undefined;
-	}
-	return outOfFlow(displayOf(target, move.parent), "default") ? undefined : { position: "offset" };
 }
 
 function snappedPlace(
@@ -53,9 +45,10 @@ export function carryLayer(
 	if (layer === null || drawn === null) {
 		return;
 	}
-	const layout = liftedOut(target, move);
-	const position = layout?.position ?? layer.layout.position;
-	const box = { drawn, axes: freeAxesOf(displayOf(target, move.parent), position) };
+	const box = {
+		drawn,
+		axes: freeAxesOf(displayOf(target, move.parent), layer.layout.position),
+	};
 	const origin = parentPointOf(target, move.id, point.canvas);
 	const slot = { x: drawn.x - layer.x, y: drawn.y - layer.y };
 	const wanted = { x: origin.x - move.offset.x + slot.x, y: origin.y - move.offset.y + slot.y };
@@ -63,6 +56,7 @@ export function carryLayer(
 		target.user.snap.set(null);
 	}
 	const placed = modifiers.control ? wanted : snappedPlace(target, move, box, wanted);
-	const place = placedOn(box.axes, { x: placed.x - slot.x, y: placed.y - slot.y });
-	target.doc.update(move.id, layout === undefined ? place : { ...place, layout });
+	if (box.axes.length > 0) {
+		target.doc.update(move.id, placedOn(box.axes, { x: placed.x - slot.x, y: placed.y - slot.y }));
+	}
 }

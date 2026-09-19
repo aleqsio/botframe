@@ -30,8 +30,13 @@ export interface LayerMove {
 	parent: LayerId | null;
 	start: MoveStart;
 	offset: Point;
+	grab: Point;
 	field: SnapField;
-	lift: Point | null;
+}
+
+export interface Lifted {
+	id: LayerId;
+	at: Point;
 }
 
 export interface SnapGuides {
@@ -57,6 +62,7 @@ export class UserState {
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
+	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
 	readonly layersOpen = new Slot<boolean>(true);
