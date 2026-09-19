@@ -4,7 +4,7 @@ import type { Layer, LayerPatch } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
 import type { Axis } from "../../../document/length";
 import { SIZE_MODES } from "../../../document/layout";
-import type { SizeMode } from "../../../document/layout";
+import type { LayoutPatch, SizeMode } from "../../../document/layout";
 import { useDrawnFrame } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
@@ -12,6 +12,7 @@ import { ChipBox } from "./ChipBox";
 import { ChipGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
+import { resetChildren } from "./resetChildren";
 import type { SegmentOption } from "./Segmented";
 
 const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
@@ -21,17 +22,20 @@ const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
 };
 const AXIS_LABEL: Readonly<Record<Axis, string>> = { width: "W", height: "H" };
 const FILL_TIP = "parent is not flex, falls back to 100%";
-const HUG_TIP = "Hug needs Row, Column or Grid";
 
-function sizeOptions(blocked: boolean, hugless: boolean): readonly SegmentOption<SizeMode>[] {
+function sizeOptions(blocked: boolean): readonly SegmentOption<SizeMode>[] {
 	return SIZE_MODES.map((mode) => ({
 		value: mode,
 		label: SIZE_LABEL[mode],
 		icon: <SizeModeIcon mode={mode} />,
 		muted: mode === "fill" && blocked,
-		disabled: mode === "hug" && hugless,
-		title: mode === "fill" && blocked ? FILL_TIP : mode === "hug" && hugless ? HUG_TIP : undefined,
+		title: mode === "fill" && blocked ? FILL_TIP : undefined,
 	}));
+}
+
+export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch {
+	const hugsBlock = next === "hug" && layer.layout.display === "block";
+	return { [axis]: next, ...(hugsBlock ? { display: "row" } : {}) };
 }
 
 function resolvedField(field: LayerField): LayerField {
@@ -72,10 +76,14 @@ export function SizeRow({
 			<Segmented
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {
-					write({ layout: axis === "width" ? { width: next } : { height: next } });
+					const layout = hugPatch(layer, axis, next);
+					write({ layout });
+					if (layout.display !== undefined) {
+						resetChildren(doc, layer.id, "block");
+					}
 					doc.commit("set size");
 				}}
-				options={sizeOptions(blocked, layer.layout.display === "block")}
+				options={sizeOptions(blocked)}
 				value={mode}
 			/>
 			<ChipBox

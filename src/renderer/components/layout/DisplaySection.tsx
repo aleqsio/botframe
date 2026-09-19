@@ -7,8 +7,7 @@ import { DisplayRows } from "./DisplayRows";
 import { DisplayIcon, WrapIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
-import { resetChildren, unhugPatch } from "./resetChildren";
-import { drawnLayer } from "../../input/drawn";
+import { resetChildren } from "./resetChildren";
 import { isFlex } from "./selfText";
 
 const BLOCK_NOTE = "Block. Children position with X and Y.";
@@ -20,12 +19,17 @@ const LABEL: Readonly<Record<DisplayMode, string>> = {
 	grid: "Grid",
 };
 
-const OPTIONS: readonly SegmentOption<DisplayMode>[] = DISPLAY_MODES.map((display) => ({
-	value: display,
-	label: LABEL[display],
-	icon: <DisplayIcon display={display} />,
-	title: LABEL[display],
-}));
+const BLOCK_HUG_TIP = "Block cannot hug its children";
+
+function displayOptions(hugs: boolean): readonly SegmentOption<DisplayMode>[] {
+	return DISPLAY_MODES.map((display) => ({
+		value: display,
+		label: LABEL[display],
+		icon: <DisplayIcon display={display} />,
+		disabled: display === "block" && hugs,
+		title: display === "block" && hugs ? BLOCK_HUG_TIP : LABEL[display],
+	}));
+}
 
 function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	const { display, wrap } = layer.layout;
@@ -55,7 +59,7 @@ export function DisplaySection({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
-	const { display } = layer.layout;
+	const { display, width, height } = layer.layout;
 
 	return (
 		<section className="layout-section">
@@ -64,14 +68,11 @@ export function DisplaySection({
 				<Segmented
 					label="Display"
 					onPick={(next) => {
-						if (next === "block") {
-							doc.update(layer.id, unhugPatch(drawnLayer((id) => doc.layer(id), layer)));
-						}
 						doc.update(layer.id, { layout: { display: next } });
 						resetChildren(doc, layer.id, display);
 						doc.commit("set display");
 					}}
-					options={OPTIONS}
+					options={displayOptions(width === "hug" || height === "hug")}
 					value={display}
 				/>
 				<WrapToggle doc={doc} layer={layer} />
