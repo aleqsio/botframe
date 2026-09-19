@@ -15,18 +15,15 @@ const PLACE_KEYS: readonly { label: string; key: BoxKey }[] = [
 ];
 
 const POSITION_LABEL: Readonly<Record<PositionMode, string>> = {
-	flow: "Flow",
+	default: "Default",
 	offset: "Offset",
 	absolute: "Absolute",
 };
 
-function positionOptions(blocked: boolean): readonly SegmentOption<PositionMode>[] {
-	return POSITION_MODES.map((mode) => ({
-		value: mode,
-		label: POSITION_LABEL[mode],
-		disabled: blocked && mode !== "absolute",
-	}));
-}
+const POSITION_OPTIONS: readonly SegmentOption<PositionMode>[] = POSITION_MODES.map((mode) => ({
+	value: mode,
+	label: POSITION_LABEL[mode],
+}));
 
 export function PositionRow({
 	blocked,
@@ -42,18 +39,20 @@ export function PositionRow({
 
 	return (
 		<>
-			<div className="layout-row">
-				<Segmented
-					label="Position"
-					onPick={(next) => {
-						doc.update(layer.id, { layout: { position: next } });
-						doc.commit("set position");
-					}}
-					options={positionOptions(blocked)}
-					value={mode}
-				/>
-			</div>
-			{mode === "flow" ? null : (
+			{blocked ? null : (
+				<div className="layout-row">
+					<Segmented
+						label="Position"
+						onPick={(next) => {
+							doc.update(layer.id, { layout: { position: next } });
+							doc.commit("set position");
+						}}
+						options={POSITION_OPTIONS}
+						value={mode}
+					/>
+				</div>
+			)}
+			{mode === "default" ? null : (
 				<div className="chip-row">
 					{PLACE_KEYS.map(({ key, label }) => (
 						<LayerChip

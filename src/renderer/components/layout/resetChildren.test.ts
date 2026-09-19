@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../../document/document";
 import type { LayerFields, LayerId } from "../../../document/layer";
-import { flowChildren } from "./flowChildren";
+import { resetChildren } from "./resetChildren";
 
 const CHILD: LayerFields = {
 	x: 30,
@@ -32,25 +32,25 @@ function scene(): Scene {
 	return { doc, parent, offset, absolute };
 }
 
-describe("flowChildren", () => {
+describe("resetChildren", () => {
 	it("puts every child back in the flow when the parent leaves Block", () => {
 		const { doc, parent, offset, absolute } = scene();
 
-		flowChildren(doc, parent, "block");
+		resetChildren(doc, parent, "block");
 
 		expect(doc.layer(offset)).toMatchObject({ x: 0, y: 0 });
-		expect(doc.layer(offset)?.layout.position).toBe("flow");
+		expect(doc.layer(offset)?.layout.position).toBe("default");
 		expect(doc.layer(absolute)).toMatchObject({ x: 0, y: 0 });
-		expect(doc.layer(absolute)?.layout.position).toBe("flow");
+		expect(doc.layer(absolute)?.layout.position).toBe("default");
 	});
 
 	it("keeps an absolute child when the parent goes from one flex display to another", () => {
 		const { doc, parent, offset, absolute } = scene();
 
-		flowChildren(doc, parent, "row");
+		resetChildren(doc, parent, "row");
 
 		expect(doc.layer(offset)).toMatchObject({ x: 0, y: 0 });
-		expect(doc.layer(offset)?.layout.position).toBe("flow");
+		expect(doc.layer(offset)?.layout.position).toBe("default");
 		expect(doc.layer(absolute)).toMatchObject({ x: 30, y: 40 });
 		expect(doc.layer(absolute)?.layout.position).toBe("absolute");
 	});

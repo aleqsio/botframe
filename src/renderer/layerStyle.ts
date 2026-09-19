@@ -120,7 +120,7 @@ function flowOf(layout: LayerLayout, parentDisplay: DisplayMode | null): ParentF
 }
 
 function offsetStyle(layer: StyledLayer): CSSProperties {
-	if (layer.layout.position === "flow") {
+	if (layer.layout.position === "default") {
 		return {};
 	}
 	return {

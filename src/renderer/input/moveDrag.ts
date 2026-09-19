@@ -38,12 +38,12 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): vo
 }
 
 function liftedOut(target: PointerTarget, move: LayerMove): LayoutPatch | null {
-	if (move.start.position !== "flow") {
+	if (move.start.position !== "default") {
 		return null;
 	}
 	const display =
 		move.parent === null ? null : (target.doc.layer(move.parent)?.layout.display ?? null);
-	return outOfFlow(display, "flow") ? null : { position: "offset" };
+	return outOfFlow(display, "default") ? null : { position: "offset" };
 }
 
 function carryLayer(target: PointerTarget, move: LayerMove, canvas: Point): void {

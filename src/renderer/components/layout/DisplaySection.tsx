@@ -7,7 +7,7 @@ import { DisplayRows } from "./DisplayRows";
 import { DisplayIcon, WrapIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
-import { flowChildren } from "./flowChildren";
+import { resetChildren } from "./resetChildren";
 import { isFlex } from "./selfText";
 
 const BLOCK_NOTE = "Block. Children position with X and Y.";
@@ -64,7 +64,7 @@ export function DisplaySection({
 					label="Display"
 					onPick={(next) => {
 						doc.update(layer.id, { layout: { display: next } });
-						flowChildren(doc, layer.id, display);
+						resetChildren(doc, layer.id, display);
 						doc.commit("set display");
 					}}
 					options={OPTIONS}

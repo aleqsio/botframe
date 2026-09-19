@@ -14,7 +14,7 @@ describe("DEFAULT_LAYOUT", () => {
 		expect(DEFAULT_LAYOUT).toEqual({
 			width: "fixed",
 			height: "fixed",
-			position: "flow",
+			position: "default",
 			margin: { top: zero(), right: zero(), bottom: zero(), left: zero() },
 			padding: { top: zero(), right: zero(), bottom: zero(), left: zero() },
 			cell: { mode: "auto" },
@@ -53,7 +53,7 @@ describe("layoutOf", () => {
 		expect(layoutOf({ width: "stretch" }).width).toBe("fixed");
 		expect(layoutOf({ position: "absolute" }).position).toBe("absolute");
 		expect(layoutOf({ position: "offset" }).position).toBe("offset");
-		expect(layoutOf({ position: "sticky" }).position).toBe("flow");
+		expect(layoutOf({ position: "sticky" }).position).toBe("default");
 		expect(layoutOf({ distribute: "evenly" }).distribute).toBe("evenly");
 		expect(layoutOf({ distribute: "stretch" }).distribute).toBe("pack");
 	});

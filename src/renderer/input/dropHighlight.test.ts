@@ -48,7 +48,7 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 		id: LAYER,
 		from,
 		parent,
-		start: { x: 0, y: 0, rotation: 0, position: "flow" },
+		start: { x: 0, y: 0, rotation: 0, position: "default" },
 		offset: { x: 0, y: 0 },
 	};
 }

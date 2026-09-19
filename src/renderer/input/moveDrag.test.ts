@@ -328,7 +328,7 @@ describe("a move drag of a child that the parent lays out", () => {
 			release: { x: 470, y: 310 },
 		});
 
-		expect(target.doc.layer(child)?.layout.position).toBe("flow");
+		expect(target.doc.layer(child)?.layout.position).toBe("default");
 	});
 
 	it("gives the first position mode back when the gesture is cancelled", () => {
@@ -341,7 +341,7 @@ describe("a move drag of a child that the parent lays out", () => {
 
 		cancelMove(target.doc, target.user);
 
-		expect(target.doc.layer(child)?.layout.position).toBe("flow");
+		expect(target.doc.layer(child)?.layout.position).toBe("default");
 		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
 	});
 });

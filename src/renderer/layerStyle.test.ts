@@ -138,7 +138,7 @@ describe("the position of a layer", () => {
 	});
 
 	it("holds a flow child in the flow of a flex parent and writes no offset", () => {
-		const style = positionIn("flow", ROW);
+		const style = positionIn("default", ROW);
 		expect(style.position).toBe("relative");
 		expect(style.left).toBeUndefined();
 		expect(style.top).toBeUndefined();
