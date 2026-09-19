@@ -49,6 +49,33 @@ export function drawnInset(id: LayerId): Readonly<Record<Side, number>> {
 	};
 }
 
+export interface DrawnGrid {
+	columns: readonly number[];
+	rows: readonly number[];
+	columnGap: number;
+	rowGap: number;
+}
+
+const NO_GRID: DrawnGrid = { columns: [], rows: [], columnGap: 0, rowGap: 0 };
+
+function pixelList(text: string): number[] {
+	return text.split(" ").flatMap((part) => (part.endsWith("px") ? [pixelsOf(part)] : []));
+}
+
+export function drawnGrid(id: LayerId): DrawnGrid {
+	const element = elementOf(id);
+	if (element === null) {
+		return NO_GRID;
+	}
+	const style = getComputedStyle(element);
+	return {
+		columns: pixelList(style.gridTemplateColumns),
+		rows: pixelList(style.gridTemplateRows),
+		columnGap: pixelsOf(style.columnGap),
+		rowGap: pixelsOf(style.rowGap),
+	};
+}
+
 export function drawnPadding(id: LayerId): string {
 	const inset = drawnInset(id);
 	return SIDES.map((side) => `${inset[side]}px`).join(" ");

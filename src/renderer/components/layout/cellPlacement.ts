@@ -23,6 +23,17 @@ export function placedAt(anchor: Cell, at: Cell): Placement {
 	};
 }
 
+function sameSpan(one: Span, two: Span): boolean {
+	return one.start === two.start && one.end === two.end;
+}
+
+export function samePlacement(one: Placement, two: Placement): boolean {
+	if (one.mode !== "place" || two.mode !== "place") {
+		return one.mode === two.mode;
+	}
+	return sameSpan(one.column, two.column) && sameSpan(one.row, two.row);
+}
+
 function clampSpan(span: Span, count: number): Span {
 	const last = Math.max(count, 1);
 	return { start: Math.min(span.start, last), end: Math.min(span.end, last + 1) };

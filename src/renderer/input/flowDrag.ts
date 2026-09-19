@@ -4,6 +4,7 @@ import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import type { LayerMove } from "../state/userState";
 import { drawnRead } from "./drawn";
+import { recellInGrid } from "./gridDrag";
 import { parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -73,5 +74,7 @@ export function settleInFlow(target: PointerTarget, move: LayerMove, canvas: Poi
 	});
 	if (display === "row" || display === "column") {
 		reorderInFlow(target, layer, display, origin);
+	} else if (display === "grid" && move.parent !== null) {
+		recellInGrid(target, layer, move.parent, origin);
 	}
 }
