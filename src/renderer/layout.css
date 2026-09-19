@@ -162,10 +162,6 @@
 	opacity: 0.35;
 }
 
-.layout-segment-muted {
-	color: var(--panel-label);
-	opacity: 0.55;
-}
 
 .layout-segment:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);

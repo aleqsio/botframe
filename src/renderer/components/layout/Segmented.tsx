@@ -6,7 +6,6 @@ export interface SegmentOption<V extends string> {
 	icon?: ReactNode | undefined;
 	title?: string | undefined;
 	disabled?: boolean | undefined;
-	muted?: boolean | undefined;
 }
 
 export interface SegmentedProps<V extends string> {
@@ -14,10 +13,6 @@ export interface SegmentedProps<V extends string> {
 	options: readonly SegmentOption<V>[];
 	value: V;
 	onPick: (value: V) => void;
-}
-
-function segmentClass(option: SegmentOption<string>): string {
-	return option.muted === true ? "layout-segment layout-segment-muted" : "layout-segment";
 }
 
 export function Segmented<V extends string>({
@@ -31,7 +26,7 @@ export function Segmented<V extends string>({
 			{options.map((option) => (
 				<button
 					aria-pressed={option.value === value}
-					className={segmentClass(option)}
+					className="layout-segment"
 					disabled={option.disabled}
 					key={option.value}
 					onClick={() => {

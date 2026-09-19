@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
-import type { Axis } from "../../../document/length";
+import type { Axis, Unit } from "../../../document/length";
 import { SIZE_MODES } from "../../../document/layout";
 import type { LayoutPatch, SizeMode } from "../../../document/layout";
 import { useDrawnFrame } from "../../useDocument";
@@ -21,25 +21,21 @@ const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
 	fill: "Fill",
 };
 const AXIS_LABEL: Readonly<Record<Axis, string>> = { width: "W", height: "H" };
-const FILL_TIP = "parent is not flex, falls back to 100%";
+const FULL = 100;
 
-function sizeOptions(blocked: boolean): readonly SegmentOption<SizeMode>[] {
-	return SIZE_MODES.map((mode) => ({
-		value: mode,
-		label: SIZE_LABEL[mode],
-		icon: <SizeModeIcon mode={mode} />,
-		muted: mode === "fill" && blocked,
-		title: mode === "fill" && blocked ? FILL_TIP : undefined,
-	}));
-}
+const SIZE_OPTIONS: readonly SegmentOption<SizeMode>[] = SIZE_MODES.map((mode) => ({
+	value: mode,
+	label: SIZE_LABEL[mode],
+	icon: <SizeModeIcon mode={mode} />,
+}));
 
 export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch {
 	const hugsBlock = next === "hug" && layer.layout.display === "block";
 	return { [axis]: next, ...(hugsBlock ? { display: "row" } : {}) };
 }
 
-function resolvedField(field: LayerField): LayerField {
-	return { ...field, unit: PIXELS, choice: null };
+function resolvedField(field: LayerField, unit: Unit): LayerField {
+	return { ...field, unit, choice: null };
 }
 
 export function SizeRow({
@@ -55,6 +51,7 @@ export function SizeRow({
 }): ReactElement {
 	const mode = layer.layout[axis];
 	const fixed = mode === "fixed";
+	const full = mode === "fill" && blocked;
 	const drawn = useDrawnFrame(doc, layer.id);
 	const field = boxField(AXIS_LABEL[axis], axis, layer, doc.basisOf(layer.id));
 	const write = (patch: LayerPatch): void => {
@@ -83,15 +80,15 @@ export function SizeRow({
 					}
 					doc.commit("set size");
 				}}
-				options={sizeOptions(blocked)}
+				options={SIZE_OPTIONS}
 				value={mode}
 			/>
 			<ChipBox
 				disabled={!fixed}
-				field={fixed ? field : resolvedField(field)}
+				field={fixed ? field : resolvedField(field, full ? "%" : PIXELS)}
 				onCommit={commit}
 				onPatch={write}
-				value={fixed ? field.read(layer) : (drawn?.[axis] ?? layer[axis])}
+				value={fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis])}
 			/>
 		</div>
 	);
