@@ -403,6 +403,30 @@ describe("a move drag of a child that the parent lays out", () => {
 		expect(target.doc.layer(child)?.layout.position).toBe("default");
 	});
 
+	it("puts a layer that lands in a row into the flow at the order under the pointer", () => {
+		const { target, ids } = rowOfThree();
+		const parent = firstId(target.doc);
+		const outside = target.doc.createLayer({ ...ROW_CHILD, x: 700, y: 700 });
+		target.doc.update(outside, { layout: { position: "absolute" } });
+		target.doc.commit("add a loose layer");
+		const scene = {
+			...target,
+			layerIds: [outside],
+			layerIdsAt: () => [outside, parent],
+		};
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 1150, y: 990 });
+
+		behavior.dragStart?.(scene, press, press, NO_MODIFIERS);
+		behavior.drag?.(scene, pointAt(camera, { x: 545, y: 290 }), NO_MODIFIERS);
+		behavior.dragEnd?.(scene, pointAt(camera, { x: 545, y: 290 }), NO_MODIFIERS);
+
+		expect(target.doc.layer(outside)).toMatchObject({ parent, x: 0, y: 0 });
+		expect(target.doc.layer(outside)?.layout.position).toBe("default");
+		expect(target.doc.childIds(parent)).toEqual([ids[0], ids[1], outside, ids[2]]);
+	});
+
 	it("gives the first order back when the gesture is cancelled", () => {
 		const { target, ids } = rowOfThree();
 		const parent = firstId(target.doc);

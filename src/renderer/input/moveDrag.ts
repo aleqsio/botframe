@@ -1,8 +1,10 @@
 import type { DesignDocument } from "../../document/document";
-import type { Layer, LayerId } from "../../document/layer";
+import type { Layer, LayerId, LayerPatch } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
+import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf, heldPlacement } from "./dropTarget";
+import type { Placement as HeldPlacement } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
@@ -22,6 +24,19 @@ function offsetOf(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return { x: origin.x - layer.x, y: origin.y - layer.y };
 }
 
+function landedPatch(
+	target: PointerTarget,
+	move: LayerMove,
+	parent: LayerId | null,
+	held: HeldPlacement,
+): LayerPatch {
+	const display = parent === null ? null : target.doc.layer(parent)?.layout.display;
+	if (display !== undefined && display !== null && display !== "block") {
+		return { ...BACK_TO_FLOW, rotation: held.rotation };
+	}
+	return { ...held, layout: { position: move.start.position } };
+}
+
 function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
 	const parent = parentUnder(target, move, point);
 	const layer = target.doc.layer(move.id);
@@ -33,11 +48,15 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 		return move;
 	}
 	const moved = target.doc.layer(move.id) ?? layer;
-	const placement = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
-	target.doc.update(move.id, placement);
-	const offset = offsetOf(target, { ...moved, ...placement, parent }, point.canvas);
-	const grab = parentPointOf(target, move.id, point.canvas);
-	const next = { ...move, parent, offset, grab, field: snapFieldAround(target, move.id) };
+	const held = heldPlacement(layer, from, parentChainOf(target, move.id), moved);
+	target.doc.update(move.id, landedPatch(target, move, parent, held));
+	const next = {
+		...move,
+		parent,
+		offset: offsetOf(target, target.doc.layer(move.id) ?? moved, point.canvas),
+		grab: parentPointOf(target, move.id, point.canvas),
+		field: snapFieldAround(target, move.id),
+	};
 	target.user.move.set(next);
 	return next;
 }
