@@ -119,14 +119,23 @@ function flowOf(layout: LayerLayout, parentDisplay: DisplayMode | null): ParentF
 	};
 }
 
+function offsetStyle(layer: StyledLayer): CSSProperties {
+	if (layer.layout.position === "flow") {
+		return {};
+	}
+	return {
+		...(layer.x === 0 ? {} : { left: `${layer.x}px` }),
+		...(layer.y === 0 ? {} : { top: `${layer.y}px` }),
+	};
+}
+
 function placeStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	if (flow.outOfFlow) {
 		return { position: "absolute", transform: layerTransform(layer) };
 	}
 	return {
 		position: "relative",
-		...(layer.x === 0 ? {} : { left: `${layer.x}px` }),
-		...(layer.y === 0 ? {} : { top: `${layer.y}px` }),
+		...offsetStyle(layer),
 		transform: layer.rotation === 0 ? undefined : turnAbout(layer),
 	};
 }

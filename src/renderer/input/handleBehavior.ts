@@ -1,4 +1,5 @@
 import type { Layer, LayerId } from "../../document/layer";
+import type { DisplayMode } from "../../document/layout";
 import type { Point, StagePoint } from "../state/camera";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
@@ -6,7 +7,7 @@ import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { parentPointOf, selectedLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
-import { resizedRect, rotatedDegrees } from "./transform";
+import { resizePatch, resizedRect, rotatedDegrees } from "./transform";
 
 type Grip =
 	| { kind: "resize"; start: Layer; handle: Handle }
@@ -47,10 +48,17 @@ function gripFor(aim: Aim | null): Grip | null {
 	return { kind: "resize", start: layer, handle: zone.handle };
 }
 
+function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
+	const parent = start.parent === null ? null : target.doc.layer(start.parent);
+	return parent?.layout.display ?? "block";
+}
+
 function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: Modifiers): void {
 	const point = parentPointOf(target, grip.start.id, canvas);
 	if (grip.kind === "resize") {
-		target.doc.update(grip.start.id, resizedRect(grip.start, grip.handle, point, modifiers));
+		const rect = resizedRect(grip.start, grip.handle, point, modifiers);
+		const display = parentDisplayOf(target, grip.start);
+		target.doc.update(grip.start.id, resizePatch(grip.start, display, rect));
 		return;
 	}
 	target.doc.update(grip.start.id, {

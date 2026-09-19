@@ -64,6 +64,7 @@ export class DesignDocument {
 	readonly #listeners = new Map<LayerId, Set<() => void>>();
 	readonly #nodeSubscriptions = new Map<LayerId, Unsubscribe>();
 	readonly #structureListeners = new Set<() => void>();
+	readonly #changeListeners = new Set<() => void>();
 	readonly #historyListeners = new Set<() => void>();
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
@@ -184,6 +185,10 @@ export class DesignDocument {
 
 	subscribeStructure(listener: () => void): Unsubscribe {
 		return subscribeTo(this.#structureListeners, listener);
+	}
+
+	subscribeChanges(listener: () => void): Unsubscribe {
+		return subscribeTo(this.#changeListeners, listener);
 	}
 
 	subscribeLayer(id: LayerId, listener: () => void): Unsubscribe {
@@ -318,6 +323,7 @@ export class DesignDocument {
 		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#readRoots());
 		this.#refreshChildren();
 		notify(this.#structureListeners);
+		notify(this.#changeListeners);
 	}
 
 	#readRoots(): readonly LayerId[] {
@@ -446,5 +452,6 @@ export class DesignDocument {
 	#invalidate(id: LayerId): void {
 		this.#layers.delete(id);
 		notify(this.#listeners.get(id) ?? []);
+		notify(this.#changeListeners);
 	}
 }

@@ -21,7 +21,7 @@ export type Track = { value: number; unit: Exclude<TrackUnit, "auto"> } | { unit
 
 export type SizeMode = "fixed" | "hug" | "fill";
 
-export type PositionMode = "offset" | "absolute";
+export type PositionMode = "flow" | "offset" | "absolute";
 
 export type DisplayMode = "block" | "row" | "column" | "grid";
 
@@ -58,7 +58,7 @@ export interface LayerLayout {
 export type LayoutPatch = Partial<LayerLayout>;
 
 export const SIZE_MODES: readonly SizeMode[] = ["fixed", "hug", "fill"];
-const POSITION_MODES: readonly PositionMode[] = ["offset", "absolute"];
+export const POSITION_MODES: readonly PositionMode[] = ["flow", "offset", "absolute"];
 export const DISPLAY_MODES: readonly DisplayMode[] = ["block", "row", "column", "grid"];
 export const DISTRIBUTIONS: readonly Distribute[] = ["pack", "between", "around", "evenly"];
 export const ALIGNMENTS: readonly Alignment[] = ["start", "center", "end"];
@@ -157,7 +157,7 @@ export function layoutOf(value: unknown): LayerLayout {
 	return {
 		width: oneOf(SIZE_MODES, bag["width"], "fixed"),
 		height: oneOf(SIZE_MODES, bag["height"], "fixed"),
-		position: oneOf(POSITION_MODES, bag["position"], "offset"),
+		position: oneOf(POSITION_MODES, bag["position"], "flow"),
 		margin: sidesOf(bag["margin"], marginOf),
 		padding: sidesOf(bag["padding"], spacingOf),
 		cell: placementOf(bag["cell"]),

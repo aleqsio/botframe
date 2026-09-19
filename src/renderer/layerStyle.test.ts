@@ -137,6 +137,14 @@ describe("the position of a layer", () => {
 		expect(style.left).toBeUndefined();
 	});
 
+	it("holds a flow child in the flow of a flex parent and writes no offset", () => {
+		const style = positionIn("flow", ROW);
+		expect(style.position).toBe("relative");
+		expect(style.left).toBeUndefined();
+		expect(style.top).toBeUndefined();
+		expect(positionIn("offset", ROW)).toMatchObject({ left: "10px", top: "20px" });
+	});
+
 	it("writes position absolute for each layer that is out of the flow", () => {
 		expect(positionIn("offset", null).position).toBe("absolute");
 		expect(positionIn("absolute", ROW).position).toBe("absolute");

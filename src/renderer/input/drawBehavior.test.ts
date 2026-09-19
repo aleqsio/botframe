@@ -7,7 +7,7 @@ import { firstId } from "./toolFixtures";
 import {
 	coveredTarget,
 	dragOver,
-	drawnLayer,
+	lastDrawn,
 	nestedTarget,
 	pointAt,
 	tapAt,
@@ -38,7 +38,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("artboard"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
-		expect(drawnLayer(target)).toMatchObject({
+		expect(lastDrawn(target)).toMatchObject({
 			x: 40,
 			y: 40,
 			width: 200,
@@ -60,7 +60,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("rectangle"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
-		expect(drawnLayer(target)).toMatchObject({
+		expect(lastDrawn(target)).toMatchObject({
 			fill: "#d9d9d9",
 			clip: false,
 			name: "Rectangle 2",
@@ -73,7 +73,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("ellipse"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
-		expect(drawnLayer(target)).toMatchObject({
+		expect(lastDrawn(target)).toMatchObject({
 			x: 40,
 			y: 40,
 			width: 200,
@@ -94,7 +94,7 @@ describe("the draw tools", () => {
 
 		tapAt(behaviorFor("artboard"), target, CENTER);
 
-		expect(drawnLayer(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
+		expect(lastDrawn(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
 		expect(target.doc.changeCount()).toBe(changes + 1);
 		expect(target.user.tool.get()).toBe("select");
 	});
@@ -125,7 +125,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
 
-		const drawn = drawnLayer(target);
+		const drawn = lastDrawn(target);
 		expect(drawn).toMatchObject({ parent, x: 20, y: 20, width: 60, height: 50 });
 		expect(target.doc.childIds(parent)).toEqual([drawn.id]);
 		expect(target.doc.rootIds()).toEqual([parent]);
@@ -137,7 +137,7 @@ describe("the draw tools", () => {
 
 		tapAt(behaviorFor("rectangle"), target, PRESS);
 
-		expect(drawnLayer(target)).toMatchObject({ parent, x: 20, y: 20, width: 100, height: 100 });
+		expect(lastDrawn(target)).toMatchObject({ parent, x: 20, y: 20, width: 100, height: 100 });
 	});
 
 	it("holds the box in the space of the parent when the parent moves during the draw", () => {
@@ -152,7 +152,7 @@ describe("the draw tools", () => {
 		behavior.drag?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
 		behavior.dragEnd?.(target, pointAt(camera, { x: 500, y: 330 }), NO_MODIFIERS);
 
-		expect(drawnLayer(target)).toMatchObject({ x: 20, y: 20, width: 80, height: 70 });
+		expect(lastDrawn(target)).toMatchObject({ x: 20, y: 20, width: 80, height: 70 });
 	});
 
 	it("draws inside a turned parent in the space of that parent", () => {
@@ -165,7 +165,7 @@ describe("the draw tools", () => {
 			release: { x: 550, y: 300 },
 		});
 
-		const drawn = drawnLayer(target);
+		const drawn = lastDrawn(target);
 		expect(drawn.parent).toBe(parent);
 		expect(drawn.x).toBeCloseTo(20);
 		expect(drawn.y).toBeCloseTo(20);
@@ -179,7 +179,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
 
-		expect(drawnLayer(target)).toMatchObject({
+		expect(lastDrawn(target)).toMatchObject({
 			parent: null,
 			x: 440,
 			y: 280,
@@ -198,7 +198,7 @@ describe("the draw tools", () => {
 			release: { x: 480, y: 320 },
 		});
 
-		expect(drawnLayer(target)).toMatchObject({ parent, x: 30, y: 30, width: 30, height: 30 });
+		expect(lastDrawn(target)).toMatchObject({ parent, x: 30, y: 30, width: 30, height: 30 });
 		expect(target.doc.childIds(child)).toEqual([]);
 	});
 
@@ -208,7 +208,7 @@ describe("the draw tools", () => {
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
 
-		expect(drawnLayer(target)).toMatchObject({
+		expect(lastDrawn(target)).toMatchObject({
 			parent: below,
 			x: 20,
 			y: 20,

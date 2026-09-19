@@ -5,6 +5,7 @@ import { PIXELS } from "../../../document/length";
 import type { Axis } from "../../../document/length";
 import { SIZE_MODES } from "../../../document/layout";
 import type { SizeMode } from "../../../document/layout";
+import { useDrawnFrame } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { ChipBox } from "./ChipBox";
@@ -48,6 +49,7 @@ export function SizeRow({
 }): ReactElement {
 	const mode = layer.layout[axis];
 	const fixed = mode === "fixed";
+	const drawn = useDrawnFrame(doc, layer.id);
 	const field = boxField(AXIS_LABEL[axis], axis, layer, doc.basisOf(layer.id));
 	const write = (patch: LayerPatch): void => {
 		doc.update(layer.id, patch);
@@ -79,7 +81,7 @@ export function SizeRow({
 				field={fixed ? field : resolvedField(field)}
 				onCommit={commit}
 				onPatch={write}
-				value={fixed ? field.read(layer) : layer[axis]}
+				value={fixed ? field.read(layer) : (drawn?.[axis] ?? layer[axis])}
 			/>
 		</div>
 	);
