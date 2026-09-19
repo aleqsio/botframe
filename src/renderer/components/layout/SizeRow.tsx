@@ -21,14 +21,16 @@ const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
 };
 const AXIS_LABEL: Readonly<Record<Axis, string>> = { width: "W", height: "H" };
 const FILL_TIP = "parent is not flex, falls back to 100%";
+const HUG_TIP = "Hug needs Row, Column or Grid";
 
-function sizeOptions(blocked: boolean): readonly SegmentOption<SizeMode>[] {
+function sizeOptions(blocked: boolean, hugless: boolean): readonly SegmentOption<SizeMode>[] {
 	return SIZE_MODES.map((mode) => ({
 		value: mode,
 		label: SIZE_LABEL[mode],
 		icon: <SizeModeIcon mode={mode} />,
 		muted: mode === "fill" && blocked,
-		title: mode === "fill" && blocked ? FILL_TIP : undefined,
+		disabled: mode === "hug" && hugless,
+		title: mode === "fill" && blocked ? FILL_TIP : mode === "hug" && hugless ? HUG_TIP : undefined,
 	}));
 }
 
@@ -73,7 +75,7 @@ export function SizeRow({
 					write({ layout: axis === "width" ? { width: next } : { height: next } });
 					doc.commit("set size");
 				}}
-				options={sizeOptions(blocked)}
+				options={sizeOptions(blocked, layer.layout.display === "block")}
 				value={mode}
 			/>
 			<ChipBox

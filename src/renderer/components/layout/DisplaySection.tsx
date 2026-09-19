@@ -7,7 +7,8 @@ import { DisplayRows } from "./DisplayRows";
 import { DisplayIcon, WrapIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
-import { resetChildren } from "./resetChildren";
+import { resetChildren, unhugPatch } from "./resetChildren";
+import { drawnLayer } from "../../input/drawn";
 import { isFlex } from "./selfText";
 
 const BLOCK_NOTE = "Block. Children position with X and Y.";
@@ -63,6 +64,9 @@ export function DisplaySection({
 				<Segmented
 					label="Display"
 					onPick={(next) => {
+						if (next === "block") {
+							doc.update(layer.id, unhugPatch(drawnLayer((id) => doc.layer(id), layer)));
+						}
 						doc.update(layer.id, { layout: { display: next } });
 						resetChildren(doc, layer.id, display);
 						doc.commit("set display");

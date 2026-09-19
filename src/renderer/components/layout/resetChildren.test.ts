@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../../document/document";
+import { firstId } from "../../../document/documentFixtures";
 import type { LayerFields, LayerId } from "../../../document/layer";
-import { resetChildren } from "./resetChildren";
+import { resetChildren, unhugPatch } from "./resetChildren";
 
 const CHILD: LayerFields = {
 	x: 30,
@@ -53,5 +54,19 @@ describe("resetChildren", () => {
 		expect(doc.layer(offset)?.layout.position).toBe("default");
 		expect(doc.layer(absolute)).toMatchObject({ x: 30, y: 40 });
 		expect(doc.layer(absolute)?.layout.position).toBe("absolute");
+	});
+});
+
+describe("unhugPatch", () => {
+	it("makes each hugging axis fixed at the drawn size", () => {
+		const doc = DesignDocument.create();
+		const layer = doc.layer(firstId(doc));
+		if (layer === null) {
+			throw new Error("no layer");
+		}
+		const hugging = { ...layer, width: 300, layout: { ...layer.layout, width: "hug" as const } };
+
+		expect(unhugPatch(hugging)).toEqual({ width: 300, layout: { width: "fixed" } });
+		expect(unhugPatch(layer)).toEqual({});
 	});
 });
