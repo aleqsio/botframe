@@ -114,24 +114,6 @@ export function WrapIcon(): ReactElement {
 	);
 }
 
-export function PaddingIcon(): ReactElement {
-	return (
-		<Glyph size={12}>
-			<rect
-				height="10.4"
-				rx="1.6"
-				stroke="currentColor"
-				strokeDasharray="2.2 1.8"
-				strokeWidth="1.1"
-				width="10.4"
-				x="0.8"
-				y="0.8"
-			/>
-			<rect fill="currentColor" height="4.8" rx="1" width="4.8" x="3.6" y="3.6" />
-		</Glyph>
-	);
-}
-
 export function SidesIcon(): ReactElement {
 	return (
 		<Glyph size={14}>

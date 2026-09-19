@@ -15,7 +15,7 @@ A selector is a control that shows a set of options and holds one picked option.
 ## Rows
 
 6. A row of controls has one height. A field, a selector, and a button on one row are all 26 px tall.
-7. A control that a state disables stays in its place, keeps its size, and shows a dimmed state. Its value stays visible.
+7. A control that a state disables stays in its place, keeps its size, and shows a dimmed state. Its value stays visible. A control that expands into a group, such as one field into four, is replaced by the group; the toggle that opened it stays in its place.
 8. A toggle stays in its place while it is on and while it is off, and shows a pressed state while it is on.
 
 ## Sections

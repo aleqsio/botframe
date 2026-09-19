@@ -6,7 +6,15 @@ import { dismissPlan } from "./dismiss";
 import { TrackChips } from "./TrackChips";
 import { TrackBar } from "./TrackBar";
 import { TrackStencil } from "./TrackStencil";
-import { MAX_TRACKS, TRACK_WORD, addTrack, factorTemplate, trackList, writeTracks } from "./tracks";
+import {
+	MAX_TRACKS,
+	TRACK_WORD,
+	addTrack,
+	commitTracks,
+	factorTemplate,
+	trackList,
+	writeTracks,
+} from "./tracks";
 import type { TrackAxis, TrackEdit } from "./tracks";
 
 type PadRef = RefObject<HTMLDivElement | null>;
@@ -116,6 +124,7 @@ export function TracksEditor({ doc, layer }: { doc: DesignDocument; layer: Layer
 		};
 	const addOn = (axis: TrackAxis) => (): void => {
 		writeTracks(doc, layer, axis, addTrack(trackList(tracks, axis)));
+		commitTracks(doc);
 	};
 	const columns = { gridTemplateColumns: factorTemplate(tracks.columns) };
 	const rows = { gridTemplateRows: factorTemplate(tracks.rows) };

@@ -15,18 +15,20 @@ export interface SideFieldsProps<U extends string> {
 	group: string;
 	values: Record<Side, Measure<U>>;
 	units: readonly U[];
+	min: number;
 	onChange: (side: Side, next: Measure<U>) => void;
+	onCommit: () => void;
 	tips?: Partial<Record<U, string>> | undefined;
-	worded?: boolean | undefined;
 }
 
 export function SideFields<U extends string>({
 	group,
+	min,
 	onChange,
+	onCommit,
 	tips,
 	units,
 	values,
-	worded = false,
 }: SideFieldsProps<U>): ReactElement {
 	return (
 		<>
@@ -34,10 +36,12 @@ export function SideFields<U extends string>({
 				<div className={`layout-side layout-side-${side}`} key={side}>
 					<LengthField
 						label={`${group} ${side}`}
+						min={min}
 						onChange={(next) => {
 							onChange(side, next);
 						}}
-						text={worded ? WORD[side] : undefined}
+						onCommit={onCommit}
+						text={WORD[side]}
 						tips={tips}
 						units={units}
 						value={values[side]}

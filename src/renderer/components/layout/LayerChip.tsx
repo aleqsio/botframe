@@ -1,10 +1,9 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import type { Layer } from "../../../document/layer";
+import type { Layer, LayerPatch } from "../../../document/layer";
 import type { LayerField } from "../layerFields";
 import { ChipBox } from "./ChipBox";
-import { ChipGrip } from "./ChipGrip";
-import type { ChipGripProps } from "./ChipGrip";
+import { ChipGrip, fieldGrip } from "./ChipGrip";
 
 export function LayerChip({
 	doc,
@@ -15,20 +14,17 @@ export function LayerChip({
 	field: LayerField;
 	layer: Layer;
 }): ReactElement {
-	const chip: ChipGripProps = {
-		field,
-		value: field.read(layer),
-		onCommit: () => {
-			doc.commit(field.message);
-		},
-		onPatch: (patch) => {
-			doc.update(layer.id, patch);
-		},
+	const value = field.read(layer);
+	const onCommit = (): void => {
+		doc.commit(field.message);
+	};
+	const onPatch = (patch: LayerPatch): void => {
+		doc.update(layer.id, patch);
 	};
 
 	return (
-		<ChipBox {...chip}>
-			<ChipGrip {...chip} />
+		<ChipBox field={field} onCommit={onCommit} onPatch={onPatch} value={value}>
+			<ChipGrip {...fieldGrip(field, value, onPatch, onCommit)} />
 		</ChipBox>
 	);
 }

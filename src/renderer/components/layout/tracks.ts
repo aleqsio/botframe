@@ -74,6 +74,9 @@ export function writeTracks(
 	const { tracks } = layer.layout;
 	const next = axis === "columns" ? { ...tracks, columns: list } : { ...tracks, rows: list };
 	doc.update(layer.id, { layout: { tracks: next } });
+}
+
+export function commitTracks(doc: DesignDocument): void {
 	doc.commit("set tracks");
 }
 

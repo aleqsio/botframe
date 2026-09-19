@@ -9,9 +9,11 @@ import type { LayerPatch } from "../../../document/layer";
 import { modifiersOf } from "../../input/modifiers";
 import type { Modifiers } from "../../input/modifiers";
 import { stepOf } from "../../input/step";
+import type { StepRule } from "../../input/step";
 import { fieldPatch } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { draggedValue } from "../numberValue";
+import type { Bound } from "../numberValue";
 
 const PRIMARY_BUTTON = 0;
 
@@ -33,10 +35,13 @@ interface ChipDrag {
 type DragRef = RefObject<ChipDrag | null>;
 
 export interface ChipGripProps {
-	disabled?: boolean | undefined;
-	field: LayerField;
+	label: string;
+	name?: string | undefined;
 	value: number;
-	onPatch: (patch: LayerPatch) => void;
+	bound: Bound;
+	step: StepRule;
+	disabled?: boolean | undefined;
+	onValue: (value: number) => void;
 	onCommit: () => void;
 }
 
@@ -48,16 +53,30 @@ interface ChipHandlers {
 	onPointerUp: () => void;
 }
 
-function steppedValue(field: LayerField, start: number, moved: number, held: Modifiers): number {
-	return draggedValue({ start, moved, step: stepOf(field.step, held), bound: field.bound });
+export function fieldGrip(
+	field: LayerField,
+	value: number,
+	onPatch: (patch: LayerPatch) => void,
+	onCommit: () => void,
+): ChipGripProps {
+	return {
+		label: field.label,
+		value,
+		bound: field.bound,
+		step: field.step,
+		onValue: (next) => {
+			onPatch(fieldPatch(field, next));
+		},
+		onCommit,
+	};
 }
 
-function draggedTo(drag: ChipDrag, field: LayerField): number {
-	return steppedValue(field, drag.startValue, drag.x - drag.startX, drag.modifiers);
+function steppedValue(props: ChipGripProps, start: number, moved: number, held: Modifiers): number {
+	return draggedValue({ start, moved, step: stepOf(props.step, held), bound: props.bound });
 }
 
-function applyValue(props: ChipGripProps, value: number): void {
-	props.onPatch(fieldPatch(props.field, value));
+function draggedTo(drag: ChipDrag, props: ChipGripProps): number {
+	return steppedValue(props, drag.startValue, drag.x - drag.startX, drag.modifiers);
 }
 
 function beginDrag(held: DragRef, props: ChipGripProps, event: ReactPointerEvent<HTMLElement>) {
@@ -87,7 +106,7 @@ function trackDrag(held: DragRef, props: ChipGripProps, event: ReactPointerEvent
 	}
 	drag.frame = requestAnimationFrame(() => {
 		drag.frame = 0;
-		applyValue(props, draggedTo(drag, props.field));
+		props.onValue(draggedTo(drag, props));
 	});
 }
 
@@ -103,7 +122,7 @@ function endDrag(held: DragRef, props: ChipGripProps): void {
 	if (drag.x === drag.startX) {
 		return;
 	}
-	applyValue(props, draggedTo(drag, props.field));
+	props.onValue(draggedTo(drag, props));
 	props.onCommit();
 }
 
@@ -112,7 +131,7 @@ export function steppedByKey(props: ChipGripProps, key: string, held: Modifiers)
 	if (sign === undefined || props.disabled === true) {
 		return null;
 	}
-	return steppedValue(props.field, props.value, sign, held);
+	return steppedValue(props, props.value, sign, held);
 }
 
 function stepByKey(props: ChipGripProps, event: ReactKeyboardEvent<HTMLElement>): void {
@@ -121,7 +140,7 @@ function stepByKey(props: ChipGripProps, event: ReactKeyboardEvent<HTMLElement>)
 		return;
 	}
 	event.preventDefault();
-	applyValue(props, next);
+	props.onValue(next);
 	props.onCommit();
 }
 
@@ -148,21 +167,21 @@ function useChipHandlers(props: ChipGripProps): ChipHandlers {
 }
 
 export function ChipGrip(props: ChipGripProps): ReactElement {
-	const { disabled = false, field, value } = props;
+	const { bound, disabled = false, label, name = label, value } = props;
 	const handlers = useChipHandlers(props);
 
 	return (
 		<label className="chip-handle">
-			<span className="chip-name">{field.label}</span>
+			<span className="chip-name">{label}</span>
 			<input
-				aria-label={field.label}
-				aria-valuemax={field.bound.max}
-				aria-valuemin={field.bound.min}
+				aria-label={name}
+				aria-valuemax={bound.max}
+				aria-valuemin={bound.min}
 				aria-valuenow={value}
 				className="chip-grip"
 				disabled={disabled}
-				max={field.bound.max}
-				min={field.bound.min}
+				max={bound.max}
+				min={bound.min}
 				onKeyDown={handlers.onKeyDown}
 				onPointerCancel={handlers.onPointerCancel}
 				onPointerDown={handlers.onPointerDown}

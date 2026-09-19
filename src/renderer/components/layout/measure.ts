@@ -1,5 +1,7 @@
 import { parseUnitText } from "../../../document/length";
 import type { MARGIN_UNITS, MarginSide } from "../../../document/layout";
+import { FRACTION_STEP, LENGTH_STEP, PERCENT_STEP } from "../../input/step";
+import type { StepRule } from "../../input/step";
 
 export type MarginUnit = (typeof MARGIN_UNITS)[number];
 
@@ -32,4 +34,15 @@ export function parseMeasure<U extends string>(
 
 export function measureText({ unit, value }: Measure<string>): string {
 	return unit === AUTO ? AUTO : String(value);
+}
+
+const UNIT_STEP: Readonly<Record<string, StepRule>> = {
+	px: LENGTH_STEP,
+	rem: LENGTH_STEP,
+	"%": PERCENT_STEP,
+	fr: FRACTION_STEP,
+};
+
+export function unitStep(unit: string): StepRule {
+	return UNIT_STEP[unit] ?? LENGTH_STEP;
 }

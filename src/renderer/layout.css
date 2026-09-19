@@ -28,12 +28,10 @@
 	--layout-icon-large: 16px;
 
 	--layout-content: calc(var(--inspector-width) - 2 * var(--layout-space-4));
-	--layout-label: calc(var(--layout-content) / 4);
 	--layout-value: calc(3 * var(--layout-control) + var(--layout-space-5));
 	--layout-gutter: calc(var(--layout-content) / 6);
 	--layout-pad: calc(2 * var(--layout-control) + 2 * var(--layout-space-3));
-	--layout-pad-box: calc(3 * var(--layout-control) + 4 * var(--layout-space-2));
-	--layout-pad-side: calc(var(--layout-content) / 3);
+	--layout-pad-side: calc(5 * var(--layout-control) + var(--layout-space-2));
 }
 
 .layout-section {
@@ -104,14 +102,6 @@
 	align-items: center;
 	gap: var(--layout-space-2);
 	min-width: 0;
-}
-
-.layout-row-label {
-	display: flex;
-	flex: none;
-	align-items: center;
-	gap: var(--layout-space-2);
-	width: var(--layout-label);
 }
 
 .layout-seg {
@@ -199,17 +189,53 @@
 
 .layout-sides {
 	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: var(--layout-space-2);
 	min-width: 0;
 }
 
-.layout-margin {
-	grid-template-columns: 1fr 1fr;
+.layout-sides .chip-name,
+.layout-pad-box .chip-name,
+.layout-pad-row .chip-name {
+	font-size: var(--layout-text-chip);
 }
 
-.layout-margin .chip-name {
-	flex: none;
-	font-size: var(--layout-text-chip);
+.layout-pad-box {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--layout-space-2);
+	padding: var(--layout-space-2);
+	border-radius: var(--layout-radius-pill);
+	background-color: var(--layout-tint);
+	box-shadow: inset 0 0 0 1px var(--layout-accent-ring);
+}
+
+.layout-pad-box .layout-side-top,
+.layout-pad-box .layout-side-bottom {
+	grid-column: 1 / -1;
+	justify-self: center;
+	width: var(--layout-pad-side);
+}
+
+.layout-pad-box .layout-side-top {
+	grid-row: 1;
+}
+
+.layout-pad-box .layout-side-left {
+	grid-area: 2 / 1;
+}
+
+.layout-pad-box .layout-side-right {
+	grid-area: 2 / 2;
+}
+
+.layout-pad-box .layout-side-bottom {
+	grid-row: 3;
+}
+
+.layout-pad-box .layout-toggle {
+	grid-area: 1 / 2;
+	justify-self: end;
 }
 
 .layout-pad-row .number-chip {
@@ -253,54 +279,6 @@
 .layout-toggle .layout-glyph {
 	width: var(--layout-icon);
 	height: var(--layout-icon);
-}
-
-.layout-pad-box {
-	position: relative;
-	height: var(--layout-pad-box);
-	border-radius: var(--layout-radius-pill);
-	background-color: var(--layout-tint);
-	box-shadow: inset 0 0 0 1px var(--layout-accent-ring);
-}
-
-.layout-pad-label {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	translate: -50% -50%;
-	color: var(--panel-label);
-	font-size: var(--layout-text-chip);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-}
-
-.layout-pad-box .layout-side {
-	position: absolute;
-	width: var(--layout-pad-side);
-}
-
-.layout-pad-box .layout-side-top {
-	top: var(--layout-space-2);
-	left: 50%;
-	translate: -50% 0;
-}
-
-.layout-pad-box .layout-side-bottom {
-	bottom: var(--layout-space-2);
-	left: 50%;
-	translate: -50% 0;
-}
-
-.layout-pad-box .layout-side-left {
-	top: 50%;
-	left: var(--layout-space-2);
-	translate: 0 -50%;
-}
-
-.layout-pad-box .layout-side-right {
-	top: 50%;
-	right: var(--layout-space-2);
-	translate: 0 -50%;
 }
 
 .layout-cells {

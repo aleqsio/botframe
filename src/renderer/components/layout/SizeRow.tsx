@@ -9,7 +9,7 @@ import { useDrawnFrame } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { ChipBox } from "./ChipBox";
-import { ChipGrip } from "./ChipGrip";
+import { ChipGrip, fieldGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import { resetChildren } from "./resetChildren";
@@ -63,13 +63,7 @@ export function SizeRow({
 
 	return (
 		<div className={`layout-row layout-size layout-size-${axis}`}>
-			<ChipGrip
-				disabled={!fixed}
-				field={field}
-				onCommit={commit}
-				onPatch={write}
-				value={field.read(layer)}
-			/>
+			<ChipGrip {...fieldGrip(field, field.read(layer), write, commit)} disabled={!fixed} />
 			<Segmented
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {

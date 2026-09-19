@@ -6,20 +6,29 @@ import type { Spacing } from "../../../document/layout";
 import { LengthField } from "./LengthField";
 import { isWrapped } from "./previewStyle";
 
+const GAP_MIN = 0;
+
 function GapRow({
 	label,
 	onChange,
+	onCommit,
 	value,
 }: {
 	label: string;
 	onChange: (next: Spacing) => void;
+	onCommit: () => void;
 	value: Spacing;
 }): ReactElement {
 	return (
-		<div className="layout-row">
-			<span className="property-label layout-row-label">{label}</span>
-			<LengthField label={label} onChange={onChange} units={SPACING_UNITS} value={value} />
-		</div>
+		<LengthField
+			label={label}
+			min={GAP_MIN}
+			onChange={onChange}
+			onCommit={onCommit}
+			text={label}
+			units={SPACING_UNITS}
+			value={value}
+		/>
 	);
 }
 
@@ -28,6 +37,8 @@ export function GapFields({ doc, layer }: { doc: DesignDocument; layer: Layer })
 	const twoAxes = isWrapped(layer.layout) || layer.layout.display === "grid";
 	const write = (next: typeof gap): void => {
 		doc.update(layer.id, { layout: { gap: next } });
+	};
+	const commit = (): void => {
 		doc.commit("set gap");
 	};
 
@@ -38,6 +49,7 @@ export function GapFields({ doc, layer }: { doc: DesignDocument; layer: Layer })
 				onChange={(next) => {
 					write({ ...gap, column: next });
 				}}
+				onCommit={commit}
 				value={gap.column}
 			/>
 			{twoAxes ? (
@@ -46,6 +58,7 @@ export function GapFields({ doc, layer }: { doc: DesignDocument; layer: Layer })
 					onChange={(next) => {
 						write({ ...gap, row: next });
 					}}
+					onCommit={commit}
 					value={gap.row}
 				/>
 			) : null}

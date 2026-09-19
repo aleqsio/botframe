@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MARGIN_UNITS, SPACING_UNITS } from "../../../document/layout";
-import { marginMeasure, marginSideOf, measureText, parseMeasure } from "./measure";
+import { FRACTION_STEP, LENGTH_STEP, PERCENT_STEP } from "../../input/step";
+import { marginMeasure, marginSideOf, measureText, parseMeasure, unitStep } from "./measure";
 
 describe("the margin measure", () => {
 	it("reads auto as a measure the field can show", () => {
@@ -43,5 +44,25 @@ describe("parseMeasure", () => {
 		expect(parseMeasure("3fr", SPACING_UNITS, "px")).toBeNull();
 		expect(parseMeasure("wide", MARGIN_UNITS, "px")).toBeNull();
 		expect(parseMeasure("", SPACING_UNITS, "px")).toBeNull();
+	});
+});
+
+describe("unitStep", () => {
+	it("steps a length in px and in rem by one", () => {
+		expect(unitStep("px")).toBe(LENGTH_STEP);
+		expect(unitStep("rem")).toBe(LENGTH_STEP);
+	});
+
+	it("gives the percent step to a percent", () => {
+		expect(unitStep("%")).toBe(PERCENT_STEP);
+	});
+
+	it("gives a small step to a fraction", () => {
+		expect(unitStep("fr")).toBe(FRACTION_STEP);
+		expect(FRACTION_STEP.normal).toBe(0.1);
+	});
+
+	it("falls back to the length step for auto", () => {
+		expect(unitStep("auto")).toBe(LENGTH_STEP);
 	});
 });

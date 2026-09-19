@@ -1,13 +1,19 @@
 import type { ReactElement, ReactNode } from "react";
+import type { LayerPatch } from "../../../document/layer";
 import { UNITS, isUnit } from "../../../document/length";
 import { DraftInput } from "../PropertyField";
 import { typedPatch } from "../layerFields";
+import type { LayerField } from "../layerFields";
 import { formatNumber } from "../numberValue";
 import { UnitMenu } from "./UnitMenu";
-import type { ChipGripProps } from "./ChipGrip";
 
-export interface ChipBoxProps extends ChipGripProps {
+export interface ChipBoxProps {
 	children?: ReactNode | undefined;
+	disabled?: boolean | undefined;
+	field: LayerField;
+	value: number;
+	onPatch: (patch: LayerPatch) => void;
+	onCommit: () => void;
 }
 
 function commitText(props: ChipBoxProps, text: string): void {

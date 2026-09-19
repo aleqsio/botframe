@@ -10,6 +10,7 @@ import type { Measure, MarginUnit } from "./measure";
 import { PERCENT_TIP } from "./selfText";
 
 const MARGIN_TIP = "Margins do nothing on an absolutely positioned child here.";
+const MARGIN_MIN = -100_000;
 const MARGIN_TIPS: Partial<Record<MarginUnit, string>> = { "%": PERCENT_TIP };
 
 type Margins = Record<Side, MarginSide>;
@@ -37,19 +38,21 @@ export function MarginFields({
 
 	return (
 		<div
-			className={dim ? "layout-sides layout-margin layout-dim" : "layout-sides layout-margin"}
+			className={dim ? "layout-sides layout-dim" : "layout-sides"}
 			title={dim ? MARGIN_TIP : undefined}
 		>
 			<SideFields
 				group="Margin"
+				min={MARGIN_MIN}
 				onChange={(side, next) => {
 					doc.update(layer.id, { layout: { margin: { ...margin, [side]: marginSideOf(next) } } });
+				}}
+				onCommit={() => {
 					doc.commit("set margin");
 				}}
 				tips={MARGIN_TIPS}
 				units={MARGIN_UNITS}
 				values={measuresOf(margin)}
-				worded
 			/>
 		</div>
 	);
