@@ -23,11 +23,17 @@ const SIZE_LABEL: Readonly<Record<SizeMode, string>> = {
 const AXIS_LABEL: Readonly<Record<Axis, string>> = { width: "W", height: "H" };
 const FULL = 100;
 
-const SIZE_OPTIONS: readonly SegmentOption<SizeMode>[] = SIZE_MODES.map((mode) => ({
-	value: mode,
-	label: SIZE_LABEL[mode],
-	icon: <SizeModeIcon mode={mode} />,
-}));
+const ROOT_FILL_TIP = "A layer at the root has no parent to fill";
+
+function sizeOptions(root: boolean): readonly SegmentOption<SizeMode>[] {
+	return SIZE_MODES.map((mode) => ({
+		value: mode,
+		label: SIZE_LABEL[mode],
+		icon: <SizeModeIcon mode={mode} />,
+		disabled: mode === "fill" && root,
+		title: mode === "fill" && root ? ROOT_FILL_TIP : undefined,
+	}));
+}
 
 export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch {
 	const hugsBlock = next === "hug" && layer.layout.display === "block";
@@ -74,7 +80,7 @@ export function SizeRow({
 					}
 					doc.commit("set size");
 				}}
-				options={SIZE_OPTIONS}
+				options={sizeOptions(layer.parent === null)}
 				value={mode}
 			/>
 			<ChipBox
