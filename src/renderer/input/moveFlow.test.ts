@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import type { LayerFields, LayerId } from "../../document/layer";
+import type { Point } from "../state/camera";
 import { UserState } from "../state/userState";
 import { NO_MODIFIERS } from "./modifiers";
+import { cancelMove } from "./moveDrag";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { drawnCenterOf, drawnOf, firstId, idAt, laidOutRow, pointAt } from "./toolFixtures";
@@ -142,5 +144,41 @@ describe("a child that fills a row", () => {
 		behavior.drag?.(scene, pointAt(camera, { x: press.x + 300, y: press.y + 300 }), NO_MODIFIERS);
 
 		expect(target.doc.layer(first)).toMatchObject({ parent: null, x: 420 + 300, y: 260 + 300 });
+	});
+});
+
+function fillScene(): { target: PointerTarget; first: LayerId; press: Point } {
+	const { target, ids } = laidOutRow();
+	const parent = firstId(target.doc);
+	const first = idAt(ids, 0);
+	target.doc.update(first, { layout: { width: "fill" } });
+	target.doc.commit("fill");
+	const wide = new Map<LayerId, Slot>([[first, { parent, x: 0, y: 0, width: 180, height: 40 }]]);
+	let hits: readonly LayerId[] = [first, parent];
+	const scene = { ...target, drawn: drawnOf(wide), layerIds: hits, layerIdsAt: () => hits };
+	const behavior = behaviorFor("select");
+	const camera = target.user.camera.get();
+	const press = { x: 420 + 170, y: 260 + 20 };
+	behavior.dragStart?.(scene, pointAt(camera, press), pointAt(camera, press), NO_MODIFIERS);
+	hits = [];
+	behavior.drag?.(scene, pointAt(camera, { x: press.x + 300, y: press.y + 300 }), NO_MODIFIERS);
+	return { target: scene, first, press };
+}
+
+describe("a fill child that leaves a row for the root", () => {
+	it("keeps its painted width as a fixed width, so it does not fill the root", () => {
+		const { target, first } = fillScene();
+
+		expect(target.doc.layer(first)).toMatchObject({ parent: null, width: 180 });
+		expect(target.doc.layer(first)?.layout.width).toBe("fixed");
+	});
+
+	it("gets its fill width back when the gesture is cancelled", () => {
+		const { target, first } = fillScene();
+
+		cancelMove(target.doc, target.user);
+
+		expect(target.doc.layer(first)).toMatchObject({ width: 60 });
+		expect(target.doc.layer(first)?.layout.width).toBe("fill");
 	});
 });
