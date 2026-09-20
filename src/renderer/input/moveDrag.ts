@@ -28,6 +28,21 @@ function turnOf(target: PointerTarget, layer: Layer): number {
 	return layer.rotation + chainTurn(parentChainOf(target, layer.id));
 }
 
+function fixedFill(target: PointerTarget, id: LayerId): LayerPatch {
+	const layer = target.doc.layer(id);
+	const drawn = drawnReaderOf(target)(id);
+	if (layer === null || drawn === null) {
+		return {};
+	}
+	const wide = layer.layout.width === "fill";
+	const tall = layer.layout.height === "fill";
+	return {
+		...(wide ? { width: drawn.width } : {}),
+		...(tall ? { height: drawn.height } : {}),
+		layout: { ...(wide ? { width: "fixed" } : {}), ...(tall ? { height: "fixed" } : {}) },
+	};
+}
+
 function landedPatch(
 	target: PointerTarget,
 	move: LayerMove,
@@ -38,7 +53,8 @@ function landedPatch(
 	if (display !== undefined && display !== null && display !== "block") {
 		return { ...BACK_TO_FLOW, rotation };
 	}
-	return { rotation, layout: { position: move.start.position } };
+	const loose = fixedFill(target, move.id);
+	return { ...loose, rotation, layout: { ...loose.layout, position: move.start.position } };
 }
 
 function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
@@ -61,8 +77,11 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 		start: {
 			x: layer.x,
 			y: layer.y,
+			width: layer.width,
+			height: layer.height,
 			rotation: layer.rotation,
 			position: layer.layout.position,
+			sizing: { width: layer.layout.width, height: layer.layout.height },
 			cell: layer.layout.cell,
 			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		},
@@ -106,7 +125,7 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	user.snap.set(null);
 	user.lift.set(null);
 	doc.move(move.id, move.from, move.start.index);
-	const { x, y, rotation, position, cell } = move.start;
-	doc.update(move.id, { x, y, rotation, layout: { position, cell } });
+	const { x, y, width, height, rotation, position, cell, sizing } = move.start;
+	doc.update(move.id, { x, y, width, height, rotation, layout: { position, cell, ...sizing } });
 	doc.commit(CANCEL_COMMIT);
 }
