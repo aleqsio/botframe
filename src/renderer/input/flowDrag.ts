@@ -3,9 +3,8 @@ import type { DisplayMode } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import type { LayerMove } from "../state/userState";
-import { drawnRead } from "./drawn";
 import { recellInGrid } from "./gridDrag";
-import { parentPointOf, readerOf } from "./targetSpace";
+import { drawnReaderOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 type Axis = "x" | "y";
@@ -40,7 +39,7 @@ function laysOutInFlow(display: DisplayMode | null, layer: Layer): boolean {
 }
 
 function otherBoxes(target: PointerTarget, layer: Layer): Rect[] {
-	const read = drawnRead(readerOf(target));
+	const read = drawnReaderOf(target);
 	return target.doc.siblingIds(layer.parent).flatMap((id) => {
 		const sibling = id === layer.id ? null : read(id);
 		return sibling === null ? [] : [sibling];

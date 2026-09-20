@@ -2,6 +2,7 @@ import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
+import type { DrawnReader } from "./drawn";
 import type { Zone } from "./handles";
 import type { Modifiers } from "./modifiers";
 
@@ -10,6 +11,7 @@ export interface PointerTarget {
 	user: UserState;
 	layerIds: readonly LayerId[];
 	layerIdsAt: (point: StagePoint) => readonly LayerId[];
+	drawn: DrawnReader;
 }
 
 export interface ToolBehavior {

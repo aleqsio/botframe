@@ -3,12 +3,11 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove } from "../state/userState";
-import { drawnRead } from "./drawn";
 import type { Modifiers } from "./modifiers";
 import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
 import { freeAxesOf, placedOn, snapOn } from "./snapAxes";
 import { snapShapeOf } from "./snapShape";
-import { parentPointOf, readerOf } from "./targetSpace";
+import { drawnReaderOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 interface DraggedBox {
@@ -41,7 +40,7 @@ export function carryLayer(
 	modifiers: Modifiers,
 ): void {
 	const layer = target.doc.layer(move.id);
-	const drawn = drawnRead(readerOf(target))(move.id);
+	const drawn = drawnReaderOf(target)(move.id);
 	if (layer === null || drawn === null) {
 		return;
 	}

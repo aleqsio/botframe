@@ -2,7 +2,6 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Placement } from "../../document/layout";
 import { placedAt, samePlacement } from "../components/layout/cellPlacement";
 import type { Point } from "../state/camera";
-import { drawnGrid, drawnInset } from "./drawn";
 import type { PointerTarget } from "./tool";
 
 const HALF = 2;
@@ -31,11 +30,11 @@ export function recellInGrid(
 	parent: LayerId,
 	point: Point,
 ): void {
-	const grid = drawnGrid(parent);
+	const grid = target.drawn.grid(parent);
 	if (grid.columns.length === 0 || grid.rows.length === 0) {
 		return;
 	}
-	const inset = drawnInset(parent);
+	const inset = target.drawn.inset(parent);
 	const at = {
 		column: trackIndexOf(grid.columns, grid.columnGap, inset.left, point.x) + FIRST_LINE,
 		row: trackIndexOf(grid.rows, grid.rowGap, inset.top, point.y) + FIRST_LINE,

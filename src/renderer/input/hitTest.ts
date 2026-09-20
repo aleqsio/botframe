@@ -2,7 +2,7 @@ import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 
 const LAYER_ID = /^\d+@\d+$/u;
-const LAYER_ATTRIBUTE = "data-layer-id";
+export const LAYER_ATTRIBUTE = "data-layer-id";
 const ZERO_ALPHA_HEX = /^#(?:[\da-f]{3}0|[\da-f]{6}00)$/u;
 const COLOR_FUNCTION = /^rgba?\((?<body>.*)\)$/u;
 const ZERO_ALPHA = /^(?:0+(?:\.0*)?|\.0+)%?$/u;

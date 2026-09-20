@@ -4,6 +4,7 @@ import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
+import { NO_DRAWN } from "./drawn";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
@@ -43,6 +44,7 @@ export function targetOf(withLayer: boolean): PointerTarget {
 		user: new UserState(),
 		layerIds: withLayer ? [firstId(doc)] : [],
 		layerIdsAt: NO_HITS,
+		drawn: NO_DRAWN,
 	};
 }
 
@@ -68,7 +70,11 @@ export function coveredTarget(): CoveredScene {
 	});
 	const user = new UserState();
 	user.selection.set([below]);
-	return { target: { doc, user, layerIds: [above, below], layerIdsAt: NO_HITS }, above, below };
+	return {
+		target: { doc, user, layerIds: [above, below], layerIdsAt: NO_HITS, drawn: NO_DRAWN },
+		above,
+		below,
+	};
 }
 
 export interface DropScene {
@@ -83,7 +89,13 @@ export function dropScene(fields: LayerFields): DropScene {
 	const layer = firstId(doc);
 	let hits: readonly LayerId[] = [];
 	return {
-		target: { doc, user: new UserState(), layerIds: [layer], layerIdsAt: () => hits },
+		target: {
+			doc,
+			user: new UserState(),
+			layerIds: [layer],
+			layerIdsAt: () => hits,
+			drawn: NO_DRAWN,
+		},
 		layer,
 		into: doc.createLayer(fields),
 		setHits: (ids) => {
@@ -101,7 +113,14 @@ export function nestedTarget(rotation: number): { target: PointerTarget; child: 
 	});
 	const child = doc.createLayer(NESTED_CHILD, parent);
 	const layerIdsAt = (): readonly LayerId[] => [child, parent];
-	return { target: { doc, user: new UserState(), layerIds: [child, parent], layerIdsAt }, child };
+	const target = {
+		doc,
+		user: new UserState(),
+		layerIds: [child, parent],
+		layerIdsAt,
+		drawn: NO_DRAWN,
+	};
+	return { target, child };
 }
 
 export function lastDrawn(target: PointerTarget): Layer {
