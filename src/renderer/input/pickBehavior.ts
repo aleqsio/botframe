@@ -1,10 +1,12 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
-import { NOTHING_SELECTED } from "../state/userState";
+import { NOTHING_SELECTED, toggleSelected } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { drawnLayer } from "./drawn";
 import { insideSubtree } from "./dropTarget";
 import { containsPoint } from "./layerSpace";
+import { extendsSelection } from "./modifiers";
+import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
 import { parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
@@ -62,6 +64,17 @@ function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
 	return held;
 }
 
+function pressWith(target: PointerTarget, canvas: Point, modifiers: Modifiers): void {
+	if (!extendsSelection(modifiers)) {
+		layerOfPress(target, canvas);
+		return;
+	}
+	const layerId = topHit(target);
+	if (layerId !== null) {
+		toggleSelected(target.user.selection, layerId);
+	}
+}
+
 function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
 }
@@ -86,8 +99,8 @@ function layerIdUnder(target: PointerTarget, point: StagePoint): LayerId | null 
 export function createPickBehavior(): ToolBehavior {
 	return {
 		highlight: layerIdUnder,
-		tap(target, point) {
-			layerOfPress(target, point.canvas);
+		tap(target, point, modifiers) {
+			pressWith(target, point.canvas, modifiers);
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {

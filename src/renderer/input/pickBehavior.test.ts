@@ -9,6 +9,8 @@ const RELEASE = { x: 540, y: 350 };
 const CLIENT = { x: 120, y: 80 };
 const CENTER = { x: 540, y: 340 };
 const EMPTY = { x: 300, y: 200 };
+const WITH_SHIFT = { shift: true, alt: false, control: false };
+const WITH_CONTROL = { shift: false, alt: false, control: true };
 
 describe("the select tool", () => {
 	it("moves the layer under the pointer with one change for the drag", () => {
@@ -167,5 +169,40 @@ describe("the select tool", () => {
 
 		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [] });
 		expect(target.user.selection.get()).toEqual([id]);
+	});
+});
+
+describe("the select tool with a modifier", () => {
+	it("adds the layer under a shift press to the selection", () => {
+		const { target, above, below } = coveredTarget();
+
+		tapAt(behaviorFor("select"), target, CENTER, WITH_SHIFT);
+
+		expect(target.user.selection.get()).toEqual([below, above]);
+	});
+
+	it("takes a selected layer out of the selection on a shift press", () => {
+		const { target, above, below } = coveredTarget();
+		target.user.selection.set([below, above]);
+
+		tapAt(behaviorFor("select"), target, CENTER, WITH_SHIFT);
+
+		expect(target.user.selection.get()).toEqual([below]);
+	});
+
+	it("adds the layer under a control press to the selection", () => {
+		const { target, above, below } = coveredTarget();
+
+		tapAt(behaviorFor("select"), target, CENTER, WITH_CONTROL);
+
+		expect(target.user.selection.get()).toEqual([below, above]);
+	});
+
+	it("holds the selection on a shift press on the empty canvas", () => {
+		const { target, below } = coveredTarget();
+
+		tapAt(behaviorFor("select"), { ...target, layerIds: [] }, EMPTY, WITH_SHIFT);
+
+		expect(target.user.selection.get()).toEqual([below]);
 	});
 });

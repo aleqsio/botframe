@@ -30,7 +30,7 @@ export interface StageInputHandlers {
 	) => void;
 	onDragMove: (point: StagePoint, modifiers: Modifiers) => void;
 	onDragEnd: (point: StagePoint, modifiers: Modifiers) => void;
-	onTap: (layerIds: readonly LayerId[], point: StagePoint) => void;
+	onTap: (layerIds: readonly LayerId[], point: StagePoint, modifiers: Modifiers) => void;
 	onHover: (point: StagePoint) => void;
 	onLeave: () => void;
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
@@ -126,7 +126,7 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 			break;
 		}
 		case "tap": {
-			handlers.onTap(input.layerIds, stagePointOf(input, camera, gesture.point));
+			handlers.onTap(input.layerIds, stagePointOf(input, camera, gesture.point), input.modifiers);
 			break;
 		}
 		case "pinch": {
@@ -194,17 +194,12 @@ function accumulate(previous: PendingWheel | null, at: Point, delta: ViewportDel
 	};
 }
 
-function trackPointer(session: StageSession, client: Point): void {
-	session.user.pointer.set(client);
-}
-
 function beginGesture(session: StageSession, event: StagePointerEvent): void {
 	if (!isPrimaryButton(event)) {
 		return;
 	}
 	const { input } = session;
 	flush(session);
-	trackPointer(session, clientPointOf(event));
 	input.modifiers = modifiersOf(event);
 	const down = input.recognizer.down(sampleOf(event));
 	if (!down.taken) {
@@ -225,7 +220,6 @@ function trackHover(session: StageSession, event: StagePointerEvent): void {
 		readStageOrigin(input, event.currentTarget);
 	}
 	input.hover = clientPointOf(event);
-	trackPointer(session, input.hover);
 	schedule(session);
 }
 
@@ -263,7 +257,6 @@ function finish(session: StageSession, event: StagePointerEvent, cancelled: bool
 
 function leaveStage(session: StageSession): void {
 	session.input.hover = null;
-	session.user.pointer.set(null);
 	session.handlers.onLeave();
 }
 

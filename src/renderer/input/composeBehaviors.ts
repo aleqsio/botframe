@@ -23,8 +23,8 @@ export function composeBehaviors(behaviors: readonly ToolBehavior[]): ToolBehavi
 		highlight(target, point) {
 			return firstAnswer(behaviors, (behavior) => behavior.highlight?.(target, point) ?? null);
 		},
-		tap(target, point) {
-			return behaviors.some((behavior) => behavior.tap?.(target, point) === true);
+		tap(target, point, modifiers) {
+			return behaviors.some((behavior) => behavior.tap?.(target, point, modifiers) === true);
 		},
 		dragStart(target, origin, point, modifiers) {
 			owner =

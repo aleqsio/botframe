@@ -58,7 +58,6 @@ export class UserState {
 	readonly highlight = new Slot<LayerId | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);
-	readonly pointer = new Slot<Point | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
@@ -74,4 +73,14 @@ export function toggleCollapsed(collapsed: Slot<ReadonlySet<LayerId>>, id: Layer
 		next.add(id);
 	}
 	collapsed.set(next);
+}
+
+export function toggleSelected(selection: Slot<readonly LayerId[]>, id: LayerId): void {
+	const held = selection.get();
+	const rest = held.filter((selected) => selected !== id);
+	if (rest.length === held.length) {
+		selection.set([...held, id]);
+		return;
+	}
+	selection.set(rest.length === 0 ? NOTHING_SELECTED : rest);
 }

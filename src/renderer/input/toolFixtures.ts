@@ -117,8 +117,13 @@ export function pointAt(camera: Camera, stage: Point): StagePoint {
 	return { client: stage, stage, canvas: toCanvasPoint(camera, stage) };
 }
 
-export function tapAt(behavior: ToolBehavior, target: PointerTarget, stage: Point): void {
-	behavior.tap?.(target, pointAt(target.user.camera.get(), stage));
+export function tapAt(
+	behavior: ToolBehavior,
+	target: PointerTarget,
+	stage: Point,
+	modifiers: Modifiers = NO_MODIFIERS,
+): void {
+	behavior.tap?.(target, pointAt(target.user.camera.get(), stage), modifiers);
 }
 
 export function dragOver(behavior: ToolBehavior, target: PointerTarget, spec: DragSpec): void {

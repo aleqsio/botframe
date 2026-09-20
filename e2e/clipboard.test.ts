@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
 import { HTML_FLAVOR, LAYERS_FLAVOR } from "../src/shared/clipboard";
-import { at, openStage } from "./support";
+import { at, drawWith, openStage } from "./support";
 
 const APPLE = process.platform === "darwin";
 const COPY = APPLE ? "Meta+c" : "Control+c";
@@ -22,6 +22,10 @@ interface MenuEntry {
 
 const ARTBOARD = { press: { x: 280, y: 40 }, release: { x: 480, y: 180 } };
 const OVER_EMPTY = { x: 500, y: 300 };
+const ARTBOARD_DRAG = { from: ARTBOARD.press, to: ARTBOARD.release };
+const OVER_THE_SHAPE = { x: 540, y: 340 };
+const OVER_THE_ARTBOARD = { x: 300, y: 60 };
+const OFF_THE_ARTBOARD = { x: 120, y: 400 };
 
 function clipboardFlavors(app: ElectronApplication): Promise<boolean> {
 	return app.evaluate(({ clipboard }, flavor) => clipboard.has(flavor), LAYERS_FLAVOR);
@@ -95,6 +99,36 @@ test("a copy and a paste give a second layer with the same box", async () => {
 	expect(second).not.toBe(first);
 	await expect(layers.nth(2)).toHaveCSS("width", "200px");
 	await expect(layers.nth(2)).toHaveCSS("height", "140px");
+
+	await app.close();
+});
+
+async function clickAt(window: Page, point: Point): Promise<void> {
+	await window.mouse.move(point.x, point.y);
+	await window.mouse.down();
+	await window.mouse.up();
+}
+
+test("a paste puts the layer into the selected artboard, not the layer under the pointer", async () => {
+	const { app, layers, origin, window } = await openStage();
+
+	await drawWith(window, origin, "a", ARTBOARD_DRAG);
+	await expect(layers).toHaveCount(2);
+	const artboard = layers.nth(1);
+
+	await clickAt(window, at(origin, OVER_THE_SHAPE));
+	await expect(layers.nth(0)).toHaveAttribute("data-selected", "");
+	await window.keyboard.press(COPY);
+	await expect.poll(() => clipboardFlavors(app)).toBe(true);
+
+	await clickAt(window, at(origin, OVER_THE_ARTBOARD));
+	await expect(artboard).toHaveAttribute("data-selected", "");
+	await window.mouse.move(at(origin, OFF_THE_ARTBOARD).x, at(origin, OFF_THE_ARTBOARD).y);
+	await window.keyboard.press(PASTE);
+
+	await expect(layers).toHaveCount(3);
+	await expect(artboard.locator("> .layer")).toHaveCount(1);
+	await expect(artboard.locator("> .layer")).toHaveAttribute("data-selected", "");
 
 	await app.close();
 });

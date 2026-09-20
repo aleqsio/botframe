@@ -37,32 +37,33 @@ function read(id: LayerId): Layer | null {
 }
 
 describe("pasteParent", () => {
-	it("takes the first artboard under the pointer", () => {
-		expect(pasteParent(read, [NESTED_ARTBOARD, ARTBOARD], [])).toBe(NESTED_ARTBOARD);
+	it("takes the selected artboard", () => {
+		expect(pasteParent(read, [ARTBOARD])).toBe(ARTBOARD);
 	});
 
-	it("passes over a layer under the pointer that is not an artboard", () => {
-		expect(pasteParent(read, [CHILD, ARTBOARD], [])).toBe(ARTBOARD);
+	it("takes the selected nested artboard, not the artboard that holds it", () => {
+		expect(pasteParent(read, [NESTED_ARTBOARD])).toBe(NESTED_ARTBOARD);
 	});
 
-	it("takes the parent of the selection when no artboard is under the pointer", () => {
-		expect(pasteParent(read, [], [CHILD])).toBe(ARTBOARD);
+	it("takes the parent of a selected layer that is not an artboard", () => {
+		expect(pasteParent(read, [CHILD])).toBe(ARTBOARD);
 	});
 
-	it("takes the parent of the selection when the pointer is off the stage", () => {
-		expect(pasteParent(read, [ROOT_RECTANGLE], [CHILD])).toBe(ARTBOARD);
+	it("takes the first selected layer when the selection holds more than one layer", () => {
+		expect(pasteParent(read, [ARTBOARD, ROOT_RECTANGLE])).toBe(ARTBOARD);
+		expect(pasteParent(read, [ROOT_RECTANGLE, ARTBOARD])).toBeNull();
 	});
 
-	it("takes the root when nothing is under the pointer and nothing is selected", () => {
-		expect(pasteParent(read, [], [])).toBeNull();
+	it("takes the root when nothing is selected", () => {
+		expect(pasteParent(read, [])).toBeNull();
 	});
 
 	it("takes the root when the selected layer sits at the root", () => {
-		expect(pasteParent(read, [], [ROOT_RECTANGLE])).toBeNull();
+		expect(pasteParent(read, [ROOT_RECTANGLE])).toBeNull();
 	});
 
 	it("takes the root when the selection names a layer the document lost", () => {
-		expect(pasteParent(read, [], ["9@9"])).toBeNull();
+		expect(pasteParent(read, ["9@9"])).toBeNull();
 	});
 });
 

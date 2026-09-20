@@ -4,7 +4,6 @@ import type { LayerEnvelope } from "../document/envelope";
 import type { LayerId } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { bridge } from "./bridge";
-import { layerIdsUnder } from "./input/hitTest";
 import { layerMarkup } from "./layerMarkup";
 import type { Bridge } from "./bridge";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
@@ -42,12 +41,6 @@ function write(user: UserState, html: string, layers: string | null): boolean {
 	return true;
 }
 
-function targetOf(doc: DesignDocument, user: UserState): LayerId | null {
-	const point = user.pointer.get();
-	const under = point === null ? [] : layerIdsUnder(document.elementsFromPoint(point.x, point.y));
-	return pasteParent((id) => doc.layer(id), under, user.selection.get());
-}
-
 function pastedId(
 	doc: DesignDocument,
 	node: LayerNode,
@@ -63,7 +56,7 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 	if (envelope.layers.length === 0) {
 		return;
 	}
-	const parent = targetOf(doc, user);
+	const parent = pasteParent((id) => doc.layer(id), user.selection.get());
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
 	user.selection.set(ids);

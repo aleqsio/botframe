@@ -7,9 +7,11 @@ import type {
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { toggleSelected } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { GestureRecognizer, sampleOf } from "./gesture";
 import { COMMIT_MESSAGES } from "./layerCommand";
+import { extendsSelection, modifiersOf } from "./modifiers";
 import { scrollStepOf } from "./panelScroll";
 import { carriedMove, carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
@@ -19,7 +21,7 @@ type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
 
 export interface RowHandlers {
-	onClick: (id: LayerId) => void;
+	onClick: (event: RowMouseEvent, id: LayerId) => void;
 	onContextMenu: (event: RowMouseEvent, id: LayerId) => void;
 	onPointerCancel: (event: RowPointerEvent) => void;
 	onPointerDown: (event: RowPointerEvent, id: LayerId) => void;
@@ -222,9 +224,13 @@ function openRowMenu(session: RowSession, event: RowMouseEvent, id: LayerId): vo
 	session.user.menu.set({ client: { x: event.clientX, y: event.clientY }, layerIds: [] });
 }
 
-function rowClick(session: RowSession, id: LayerId): void {
+function rowClick(session: RowSession, event: RowMouseEvent, id: LayerId): void {
 	if (session.input.dropped) {
 		session.input.dropped = false;
+		return;
+	}
+	if (extendsSelection(modifiersOf(event))) {
+		toggleSelected(session.user.selection, id);
 		return;
 	}
 	session.user.selection.set([id]);
@@ -242,8 +248,8 @@ export function useRowDrag(
 	}
 
 	return {
-		onClick: (id) => {
-			rowClick(session(), id);
+		onClick: (event, id) => {
+			rowClick(session(), event, id);
 		},
 		onContextMenu: (event, id) => {
 			openRowMenu(session(), event, id);

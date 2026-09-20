@@ -141,6 +141,7 @@ body {
 }
 
 .selection,
+.selection-peer,
 .highlight,
 .drop-frame {
 	position: absolute;
@@ -155,6 +156,10 @@ body {
 	--handle: calc(var(--handle-size) / var(--zoom));
 
 	outline: calc(2px / var(--zoom)) solid var(--selection);
+}
+
+.selection-peer {
+	outline: calc(1.5px / var(--zoom)) solid var(--selection);
 }
 
 .highlight {

@@ -62,15 +62,20 @@ function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 }
 
 function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
-	const [id] = useSlot(user.selection);
+	const [id, ...peers] = useSlot(user.selection);
 
 	return id === undefined ? null : (
-		<LayerFrame className="selection" doc={doc} id={id}>
-			<PaddingBand doc={doc} id={id} />
-			{CORNERS.map((corner) => (
-				<span className="selection-handle" data-corner={corner} key={corner} />
+		<>
+			<LayerFrame className="selection" doc={doc} id={id}>
+				<PaddingBand doc={doc} id={id} />
+				{CORNERS.map((corner) => (
+					<span className="selection-handle" data-corner={corner} key={corner} />
+				))}
+			</LayerFrame>
+			{peers.map((peer) => (
+				<LayerFrame className="selection-peer" doc={doc} id={peer} key={peer} />
 			))}
-		</LayerFrame>
+		</>
 	);
 }
 
