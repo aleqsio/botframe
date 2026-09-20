@@ -59,18 +59,26 @@ function reorderInFlow(
 	}
 }
 
-export function settleInFlow(target: PointerTarget, move: LayerMove, canvas: Point): void {
+function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): DisplayMode | null {
+	const parent = move.parent === null ? null : target.doc.layer(move.parent);
+	const display = parent?.layout.display ?? null;
+	return laysOutInFlow(display, layer) ? display : null;
+}
+
+export function settleInFlow(
+	target: PointerTarget,
+	move: LayerMove,
+	canvas: Point,
+	lift: Point,
+): void {
 	const layer = target.doc.layer(move.id);
-	const display = move.parent === null ? null : target.doc.layer(move.parent)?.layout.display;
-	const origin = parentPointOf(target, move.id, canvas);
-	if (layer === null || display === undefined || !laysOutInFlow(display ?? null, layer)) {
+	const display = layer === null ? null : flowDisplayOf(target, move, layer);
+	if (layer === null || display === null) {
 		target.user.lift.set(null);
 		return;
 	}
-	target.user.lift.set({
-		id: move.id,
-		at: { x: origin.x - move.grab.x, y: origin.y - move.grab.y },
-	});
+	const origin = parentPointOf(target, move.id, canvas);
+	target.user.lift.set({ id: move.id, at: lift });
 	if (display === "row" || display === "column") {
 		reorderInFlow(target, layer, display, origin);
 	} else if (display === "grid" && move.parent !== null) {

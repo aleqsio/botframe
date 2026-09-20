@@ -29,8 +29,8 @@ export interface LayerMove {
 	from: LayerId | null;
 	parent: LayerId | null;
 	start: MoveStart;
-	offset: Point;
-	grab: Point;
+	anchor: Point;
+	turn: number;
 	field: SnapField;
 }
 

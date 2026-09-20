@@ -6,7 +6,7 @@ import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
 import { NO_DRAWN } from "./drawn";
 import type { DrawnReader } from "./drawn";
-import { centerOf, fromParentPoint } from "./layerSpace";
+import { centerOf, chainTurn, fromParentPoint, layerChain, normalizeDegrees } from "./layerSpace";
 import { drawnReaderOf, parentChainOf } from "./targetSpace";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
@@ -146,6 +146,19 @@ export function drawnCenterOf(target: PointerTarget, id: LayerId): Point {
 		throw new Error("the document lost the layer");
 	}
 	return fromParentPoint(parentChainOf(target, id), centerOf(drawn));
+}
+
+export function anchorOnScreen(target: PointerTarget, id: LayerId, anchor: Point): Point {
+	const chain = layerChain(drawnReaderOf(target), id);
+	const layer = chain.at(-1);
+	if (layer === undefined) {
+		throw new Error("the document lost the layer");
+	}
+	return fromParentPoint(chain, { x: anchor.x * layer.width, y: anchor.y * layer.height });
+}
+
+export function turnOnScreen(target: PointerTarget, id: LayerId): number {
+	return normalizeDegrees(chainTurn(layerChain(drawnReaderOf(target), id)));
 }
 
 export function lastDrawn(target: PointerTarget): Layer {

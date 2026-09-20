@@ -50,8 +50,8 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 		from,
 		parent,
 		start: { x: 0, y: 0, rotation: 0, position: "default", cell: { mode: "auto" }, index: 0 },
-		offset: { x: 0, y: 0 },
-		grab: { x: 0, y: 0 },
+		anchor: { x: 0, y: 0 },
+		turn: 0,
 		field: snapFieldOf({ points: [], curves: [], container: null }),
 	};
 }
