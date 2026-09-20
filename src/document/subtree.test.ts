@@ -132,6 +132,22 @@ describe("createSubtree", () => {
 		expect(firstChildOf(doc, copy).layout).toMatchObject({ display: "row", wrap: true });
 	});
 
+	it("keeps the origin of each layer that it creates", () => {
+		const doc = DesignDocument.create();
+		const { root } = threeLevels(doc);
+		doc.update(root, { origin: { x: 0, y: 1 } });
+		doc.commit("set origin");
+		const node = doc.readSubtree(root);
+		if (node === null) {
+			throw new Error("the document lost the root");
+		}
+
+		const copy = doc.createSubtree(node, null);
+
+		expect(doc.layer(copy)?.origin).toEqual({ x: 0, y: 1 });
+		expect(firstChildOf(doc, copy).origin).toEqual({ x: 0.5, y: 0.5 });
+	});
+
 	it("keeps the angle of each layer that it creates", () => {
 		const doc = DesignDocument.create();
 		const { root } = threeLevels(doc);

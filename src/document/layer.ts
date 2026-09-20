@@ -20,9 +20,21 @@ export type Rect = {
 	height: number;
 };
 
+export interface Origin {
+	x: number;
+	y: number;
+}
+
+export const CENTER_ORIGIN: Origin = { x: 0.5, y: 0.5 };
+
+export function isCenterOrigin(origin: Origin): boolean {
+	return origin.x === CENTER_ORIGIN.x && origin.y === CENTER_ORIGIN.y;
+}
+
 export interface Layer extends Rect {
 	id: LayerId;
 	rotation: number;
+	origin: Origin;
 	fill: string;
 	geometry: Geometry;
 	name: string;
@@ -46,6 +58,7 @@ export interface LayerFields extends Rect {
 
 export type LayerPatch = Partial<LayerFields> & {
 	rotation?: number;
+	origin?: Partial<Origin>;
 	lengths?: Partial<LayerLengths>;
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];

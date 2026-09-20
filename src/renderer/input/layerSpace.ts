@@ -1,4 +1,5 @@
-import type { Layer, LayerId } from "../../document/layer";
+import { CENTER_ORIGIN } from "../../document/layer";
+import type { Layer, LayerId, Origin, Rect } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
 
@@ -6,12 +7,23 @@ const HALF_TURN = 180;
 
 export type ReadLayer = (id: LayerId) => Layer | null;
 
-export function centerOf(layer: Layer): Point {
+export interface Turned extends Size {
+	rotation: number;
+	origin: Origin;
+}
+
+export type Placed = Turned & Rect;
+
+export function centerOf(layer: Rect): Point {
 	return { x: layer.x + layer.width / 2, y: layer.y + layer.height / 2 };
 }
 
 export function halfSizeOf(size: Size): Point {
 	return { x: size.width / 2, y: size.height / 2 };
+}
+
+export function pivotOf(layer: Turned): Point {
+	return { x: layer.origin.x * layer.width, y: layer.origin.y * layer.height };
 }
 
 export function rotatePoint(point: Point, degrees: number): Point {
@@ -21,15 +33,56 @@ export function rotatePoint(point: Point, degrees: number): Point {
 	return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos };
 }
 
-export function toLayerPoint(layer: Layer, point: Point): Point {
-	const center = centerOf(layer);
-	return rotatePoint({ x: point.x - center.x, y: point.y - center.y }, -layer.rotation);
+export function intoLayer(layer: Placed, point: Point): Point {
+	const pivot = pivotOf(layer);
+	const turned = rotatePoint(
+		{ x: point.x - layer.x - pivot.x, y: point.y - layer.y - pivot.y },
+		-layer.rotation,
+	);
+	return { x: turned.x + pivot.x, y: turned.y + pivot.y };
 }
 
-export function containsPoint(layer: Layer, point: Point): boolean {
+export function outOfLayer(layer: Placed, local: Point): Point {
+	const pivot = pivotOf(layer);
+	const turned = rotatePoint({ x: local.x - pivot.x, y: local.y - pivot.y }, layer.rotation);
+	return { x: layer.x + pivot.x + turned.x, y: layer.y + pivot.y + turned.y };
+}
+
+export function toLayerPoint(layer: Placed, point: Point): Point {
+	const local = intoLayer(layer, point);
+	const half = halfSizeOf(layer);
+	return { x: local.x - half.x, y: local.y - half.y };
+}
+
+export function containsPoint(layer: Placed, point: Point): boolean {
 	const local = toLayerPoint(layer, point);
 	const half = halfSizeOf(layer);
 	return Math.abs(local.x) <= half.x && Math.abs(local.y) <= half.y;
+}
+
+export function anchorOf(layer: Placed, point: Point): Point {
+	const local = intoLayer(layer, point);
+	return {
+		x: layer.width === 0 ? 0 : local.x / layer.width,
+		y: layer.height === 0 ? 0 : local.y / layer.height,
+	};
+}
+
+export function anchoredPlace(layer: Turned, anchor: Point, point: Point): Point {
+	const pivot = pivotOf(layer);
+	const turned = rotatePoint(
+		{ x: anchor.x * layer.width - pivot.x, y: anchor.y * layer.height - pivot.y },
+		layer.rotation,
+	);
+	return { x: point.x - pivot.x - turned.x, y: point.y - pivot.y - turned.y };
+}
+
+export function visualCenterOf(layer: Placed): Point {
+	return outOfLayer(layer, halfSizeOf(layer));
+}
+
+export function placedAround(layer: Turned, center: Point): Point {
+	return anchoredPlace(layer, CENTER_ORIGIN, center);
 }
 
 export function angleFrom(center: Point, point: Point): number {
@@ -59,21 +112,12 @@ export function parentChain(read: ReadLayer, id: LayerId): Layer[] {
 	return layerChain(read, read(id)?.parent ?? null);
 }
 
-function intoLayer(layer: Layer, point: Point): Point {
-	const local = toLayerPoint(layer, point);
-	const half = halfSizeOf(layer);
-	return { x: local.x + half.x, y: local.y + half.y };
+export function chainTurn(chain: readonly Layer[]): number {
+	return chain.reduce((total, layer) => total + layer.rotation, 0);
 }
 
 export function toParentPoint(chain: readonly Layer[], point: Point): Point {
 	return chain.reduce<Point>((carried, layer) => intoLayer(layer, carried), point);
-}
-
-function outOfLayer(layer: Layer, point: Point): Point {
-	const half = halfSizeOf(layer);
-	const turned = rotatePoint({ x: point.x - half.x, y: point.y - half.y }, layer.rotation);
-	const center = centerOf(layer);
-	return { x: turned.x + center.x, y: turned.y + center.y };
 }
 
 export function fromParentPoint(chain: readonly Layer[], point: Point): Point {

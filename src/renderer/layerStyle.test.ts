@@ -13,7 +13,7 @@ import type {
 	Spacing,
 	SpacingUnit,
 } from "../document/layout";
-import { layerStyle, outOfFlow, turnedPad } from "./layerStyle";
+import { layerStyle, outOfFlow, spaceTransform, turnedPad } from "./layerStyle";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
 const ROW: DisplayMode = "row";
@@ -22,7 +22,7 @@ const GRID: DisplayMode = "grid";
 const PLACED: LayoutPatch = {
 	cell: { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } },
 };
-const TURNED = "translate(15px, 20px) rotate(30deg) translate(-15px, -20px)";
+const TURNED = "rotate(30deg)";
 
 function layerWith(geometry: Geometry): Layer {
 	return {
@@ -72,12 +72,25 @@ describe("layerStyle geometry", () => {
 		});
 	});
 
-	it("turns the layer around its own center only when it holds an angle", () => {
+	it("turns the layer about its origin only when it holds an angle", () => {
 		const flat = layerWith({ kind: "ellipse" });
 		expect(layerStyle(flat, null).transform).toBe("translate3d(10px, 20px, 0)");
-		expect(layerStyle({ ...flat, rotation: 30 }, null).transform).toBe(
-			`translate3d(10px, 20px, 0) ${TURNED}`,
+		expect(layerStyle(flat, null).transformOrigin).toBeUndefined();
+		expect(layerStyle({ ...flat, rotation: 30 }, null)).toMatchObject({
+			transform: `translate3d(10px, 20px, 0) ${TURNED}`,
+			transformOrigin: "50% 50%",
+		});
+		expect(layerStyle({ ...flat, rotation: 30, origin: { x: 0, y: 1 } }, null)).toMatchObject({
+			transformOrigin: "0% 100%",
+		});
+	});
+
+	it("gives the overlay an explicit pivot from the drawn size, so a chain of turns composes", () => {
+		const turned = { ...layerWith({ kind: "ellipse" }), rotation: 30, origin: { x: 0.25, y: 1 } };
+		expect(spaceTransform(turned)).toBe(
+			"translate3d(10px, 20px, 0) translate(7.5px, 40px) rotate(30deg) translate(-7.5px, -40px)",
 		);
+		expect(spaceTransform({ ...turned, rotation: 0 })).toBe("translate3d(10px, 20px, 0)");
 	});
 
 	it("draws a rectangle with its corner radius and leaves the corner shape unset when smoothing is zero", () => {
@@ -173,9 +186,12 @@ describe("the position of a layer", () => {
 		expect(style.transform).toBeUndefined();
 	});
 
-	it("turns a layer in the flow around its center and does not move it", () => {
+	it("turns a layer in the flow about its origin and does not move it", () => {
 		const turned = { ...layerOf({}), rotation: 30 };
-		expect(layerStyle(turned, ROW).transform).toBe(TURNED);
+		expect(layerStyle(turned, ROW)).toMatchObject({
+			transform: TURNED,
+			transformOrigin: "50% 50%",
+		});
 	});
 
 	it("does not change the box of a turned layer unless the layer asks for it", () => {

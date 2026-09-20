@@ -23,7 +23,7 @@ export interface Basis {
 	root: Size;
 }
 
-const PERCENT = 100;
+export const PERCENT = 100;
 const REM_PIXELS = 16;
 const DECIMALS = 100;
 const LENGTH_TEXT = /^([+-]?(?:\d+\.?\d*|\.\d+))\s*([a-z%]*)$/iu;

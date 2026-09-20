@@ -52,7 +52,7 @@ describe("layerMarkup", () => {
 		const markup = layerMarkup(node);
 
 		for (const [key, value] of Object.entries(
-			layerStyle({ ...node.fields, rotation: 0, layout: node.layout }, null),
+			layerStyle({ ...node.fields, rotation: 0, origin: node.origin, layout: node.layout }, null),
 		)) {
 			expect(markup).toContain(String(value));
 			expect(key.length).toBeGreaterThan(0);

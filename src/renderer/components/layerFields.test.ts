@@ -11,7 +11,7 @@ import type { LayerField, UnitChoice } from "./layerFields";
 
 const ALT = { shift: false, alt: true, control: false };
 const SHIFT = { shift: true, alt: false, control: false };
-const BOX_LABELS = ["X", "Y", "W", "H", "Rotation"];
+const BOX_LABELS = ["X", "Y", "W", "H", "Rotation", "Origin X", "Origin Y"];
 const CHILD_FIELDS: LayerFields = {
 	x: 0,
 	y: 0,
@@ -68,6 +68,8 @@ describe("the layer fields", () => {
 			["W", 240],
 			["H", 160],
 			["Rotation", 0],
+			["Origin X", 50],
+			["Origin Y", 50],
 		]);
 	});
 
@@ -79,6 +81,8 @@ describe("the layer fields", () => {
 			["W", "px"],
 			["H", "px"],
 			["Rotation", "deg"],
+			["Origin X", "%"],
+			["Origin Y", "%"],
 			["Radius", "px"],
 			["Smoothing", ""],
 		]);
@@ -138,6 +142,7 @@ describe("fieldGroupsOf", () => {
 		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
 		expect(groups.map((group) => [group.name, group.fields.map((field) => field.label)])).toEqual([
 			["Rotation", ["Rotation"]],
+			["Origin", ["Origin X", "Origin Y"]],
 			["Corners", ["Radius", "Smoothing"]],
 		]);
 	});
@@ -148,7 +153,7 @@ describe("fieldGroupsOf", () => {
 
 		const groups = fieldGroupsOf(layerOf(doc));
 
-		expect(groups.map((group) => group.name)).toEqual(["Rotation"]);
+		expect(groups.map((group) => group.name)).toEqual(["Rotation", "Origin"]);
 		expect(fieldsOf(layerOf(doc), NO_BASIS).map((field) => field.label)).toEqual(BOX_LABELS);
 	});
 

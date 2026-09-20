@@ -1,6 +1,7 @@
-import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
+import type { Layer, LayerPatch, Origin, Rect, RectangleGeometry } from "../../document/layer";
 import {
 	AXIS_OF,
+	PERCENT,
 	PIXELS,
 	UNITS,
 	availableUnits,
@@ -22,7 +23,9 @@ const FULL_TURN = 360;
 const SMOOTHING_LIMIT = 1;
 const DEGREES = "deg";
 const NO_UNIT = "";
+const PERCENT_UNIT = "%";
 const CORNER_MESSAGE = "set corners";
+const ORIGIN_MESSAGE = "set origin";
 
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
@@ -129,6 +132,26 @@ const TURN_FIELD: LayerField = {
 	patch: (value) => ({ rotation: value }),
 };
 
+function originField(label: string, axis: keyof Origin): LayerField {
+	return {
+		label,
+		unit: PERCENT_UNIT,
+		choice: null,
+		bound: RELATIVE_PLACE_BOUND,
+		step: PERCENT_STEP,
+		message: ORIGIN_MESSAGE,
+		read: (layer) => layer.origin[axis] * PERCENT,
+		patch: (value) => ({ origin: { [axis]: value / PERCENT } }),
+	};
+}
+
+const TURN_GROUP: FieldGroup = { name: "Rotation", fields: [TURN_FIELD] };
+
+const ORIGIN_GROUP: FieldGroup = {
+	name: "Origin",
+	fields: [originField("Origin X", "x"), originField("Origin Y", "y")],
+};
+
 function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 	return {
 		name: "Corners",
@@ -140,7 +163,7 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 }
 
 export function fieldGroupsOf(layer: Layer): readonly FieldGroup[] {
-	const groups: readonly FieldGroup[] = [{ name: "Rotation", fields: [TURN_FIELD] }];
+	const groups: readonly FieldGroup[] = [TURN_GROUP, ORIGIN_GROUP];
 	const { geometry } = layer;
 	return geometry.kind === "rectangle" ? [...groups, cornerGroup(geometry)] : groups;
 }

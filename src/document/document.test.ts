@@ -50,6 +50,18 @@ describe("DesignDocument", () => {
 		expect(doc.layer(firstId(doc))).toMatchObject({ rotation: 0 });
 	});
 
+	it("turns a layer about its center until a peer moves the origin, one axis at a time", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		expect(doc.layer(id)).toMatchObject({ origin: { x: 0.5, y: 0.5 } });
+
+		doc.update(id, { origin: { x: 0 } });
+		expect(doc.layer(id)).toMatchObject({ origin: { x: 0, y: 0.5 } });
+
+		doc.update(id, { origin: { x: 0.5, y: 1 } });
+		expect(doc.layer(id)).toMatchObject({ origin: { x: 0.5, y: 1 } });
+	});
+
 	it("records one change per drag, not one per pointer move", () => {
 		const doc = DesignDocument.create();
 		const id = firstId(doc);
