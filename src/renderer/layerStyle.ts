@@ -14,8 +14,11 @@ import type {
 	Span,
 	Track,
 } from "../document/layout";
+import { roundNumber } from "../document/length";
 import type { Axis } from "../document/length";
 import { halfSizeOf } from "./input/layerSpace";
+
+const HALF_TURN = 180;
 
 declare module "react" {
 	interface CSSProperties {
@@ -188,13 +191,40 @@ function marginText(side: MarginSide): string | null {
 	return side.value === 0 ? null : printSpacing(side);
 }
 
-function marginStyle(margin: Record<Side, MarginSide>, flow: ParentFlow): CSSProperties {
+const TURN_PAD: Readonly<Record<Side, Axis>> = {
+	top: "height",
+	right: "width",
+	bottom: "height",
+	left: "width",
+};
+
+export function turnedPad(layer: StyledLayer): Record<Axis, number> {
+	const radians = (layer.rotation * Math.PI) / HALF_TURN;
+	const cos = Math.abs(Math.cos(radians));
+	const sin = Math.abs(Math.sin(radians));
+	return {
+		width: roundNumber((layer.width * cos + layer.height * sin - layer.width) / 2),
+		height: roundNumber((layer.width * sin + layer.height * cos - layer.height) / 2),
+	};
+}
+
+const NO_PAD: Record<Axis, number> = { width: 0, height: 0 };
+
+function paddedMargin(text: string | null, pad: number): string | null {
+	if (pad === 0 || text === "auto") {
+		return text;
+	}
+	return text === null ? `${pad}px` : `calc(${text} + ${pad}px)`;
+}
+
+function marginStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	if (flow.outOfFlow) {
 		return {};
 	}
+	const pad = layer.layout.turnedBox ? turnedPad(layer) : NO_PAD;
 	const style: CSSProperties = {};
 	for (const side of SIDES) {
-		const text = marginText(margin[side]);
+		const text = paddedMargin(marginText(layer.layout.margin[side]), pad[TURN_PAD[side]]);
 		if (text !== null) {
 			Object.assign(style, MARGIN_TEXT[side](text));
 		}
@@ -209,7 +239,7 @@ function selfStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSPr
 		...axisStyle("width", layer, flow),
 		...axisStyle("height", layer, flow),
 		...cellStyle(layer.layout.cell, flow),
-		...marginStyle(layer.layout.margin, flow),
+		...marginStyle(layer, flow),
 	};
 }
 

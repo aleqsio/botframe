@@ -37,7 +37,7 @@ function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): Reac
 	return (
 		<button
 			aria-pressed={wrap}
-			className="layout-wrapchip"
+			className="layout-flag"
 			disabled={!isFlex(display)}
 			onClick={() => {
 				doc.update(layer.id, { layout: { wrap: !wrap } });

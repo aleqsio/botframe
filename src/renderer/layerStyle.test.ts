@@ -13,7 +13,7 @@ import type {
 	Spacing,
 	SpacingUnit,
 } from "../document/layout";
-import { layerStyle, outOfFlow } from "./layerStyle";
+import { layerStyle, outOfFlow, turnedPad } from "./layerStyle";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
 const ROW: DisplayMode = "row";
@@ -176,6 +176,37 @@ describe("the position of a layer", () => {
 	it("turns a layer in the flow around its center and does not move it", () => {
 		const turned = { ...layerOf({}), rotation: 30 };
 		expect(layerStyle(turned, ROW).transform).toBe(TURNED);
+	});
+
+	it("does not change the box of a turned layer unless the layer asks for it", () => {
+		const style = layerStyle({ ...layerOf({}), rotation: 90 }, ROW);
+		expect(style.marginLeft).toBeUndefined();
+		expect(style.marginTop).toBeUndefined();
+	});
+
+	it("reserves the turned bounding box of a layer in the flow with margins", () => {
+		const turned = { ...layerOf({ turnedBox: true }), rotation: 90 };
+		expect(layerStyle(turned, ROW)).toMatchObject({
+			marginLeft: "5px",
+			marginRight: "5px",
+			marginTop: "-5px",
+			marginBottom: "-5px",
+		});
+		expect(turnedPad({ ...layerOf({}), width: 30, height: 30, rotation: 45 })).toEqual({
+			width: 6.21,
+			height: 6.21,
+		});
+	});
+
+	it("adds the turned pad to the margin the layer holds", () => {
+		const held = layerOf({
+			turnedBox: true,
+			margin: { ...DEFAULT_LAYOUT.margin, left: { unit: "auto" }, right: { value: 8, unit: "px" } },
+		});
+		const style = layerStyle({ ...held, rotation: 90 }, ROW);
+		expect(style.marginLeft).toBe("auto");
+		expect(style.marginRight).toBe("calc(8px + 5px)");
+		expect(layerStyle({ ...held, rotation: 90 }, null).marginRight).toBeUndefined();
 	});
 });
 
