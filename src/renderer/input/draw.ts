@@ -1,9 +1,14 @@
-import type { Rect } from "../../document/layer";
+import type { Layer, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { centerOf, chainTurn, halfSizeOf, normalizeDegrees, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { MIN_LAYER_SIZE } from "./transform";
 
 export const DEFAULT_DRAW_SIZE = 100;
+
+export interface DrawnRect extends Rect {
+	rotation?: number;
+}
 
 interface Span {
 	start: number;
@@ -42,4 +47,16 @@ export function drawnRect(origin: Point, point: Point, modifiers: Modifiers): Re
 
 export function tappedRect(point: Point): Rect {
 	return { x: point.x, y: point.y, width: DEFAULT_DRAW_SIZE, height: DEFAULT_DRAW_SIZE };
+}
+
+export function levelRect(chain: readonly Layer[], rect: Rect): DrawnRect {
+	const center = toParentPoint(chain, centerOf(rect));
+	const half = halfSizeOf(rect);
+	return {
+		x: center.x - half.x,
+		y: center.y - half.y,
+		width: rect.width,
+		height: rect.height,
+		rotation: normalizeDegrees(-chainTurn(chain)),
+	};
 }
