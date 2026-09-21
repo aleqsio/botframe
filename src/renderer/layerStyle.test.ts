@@ -209,9 +209,22 @@ describe("the position of a layer", () => {
 			marginBottom: "-5px",
 		});
 		expect(turnedPad({ ...layerOf({}), width: 30, height: 30, rotation: 45 })).toEqual({
-			width: 6.21,
-			height: 6.21,
+			top: 6.21,
+			right: 6.21,
+			bottom: 6.21,
+			left: 6.21,
 		});
+	});
+
+	it("reserves the turned bounding box about an origin that is not the center", () => {
+		const corner = { ...layerOf({ turnedBox: true }), rotation: 90, origin: { x: 0, y: 0 } };
+		const style = layerStyle(corner, ROW);
+		expect(style).toMatchObject({
+			marginLeft: "40px",
+			marginRight: "-30px",
+			marginBottom: "-10px",
+		});
+		expect(style.marginTop).toBeUndefined();
 	});
 
 	it("adds the turned pad to the margin the layer holds", () => {

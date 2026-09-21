@@ -1,7 +1,7 @@
 import type { Geometry, Layer } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
-import { fromParentPoint } from "./layerSpace";
+import { cornersOf, fromParentPoint } from "./layerSpace";
 
 export type Curve =
 	| { kind: "segment"; from: Point; to: Point }
@@ -16,15 +16,6 @@ type SnapReporter = (layer: Layer) => SnapShape;
 
 function middleOf(box: Size): Point {
 	return { x: box.width / 2, y: box.height / 2 };
-}
-
-function cornersOf(box: Size): Point[] {
-	return [
-		{ x: 0, y: 0 },
-		{ x: box.width, y: 0 },
-		{ x: box.width, y: box.height },
-		{ x: 0, y: box.height },
-	];
 }
 
 function edgeMiddlesOf(box: Size): Point[] {
