@@ -5,17 +5,10 @@
 				"source": "github",
 				"repo": "michael-denyer/pstack-claude"
 			}
-		},
-		"ponytail": {
-			"source": {
-				"source": "github",
-				"repo": "DietrichGebert/ponytail"
-			}
 		}
 	},
 	"enabledPlugins": {
-		"pstack@pstack-claude": true,
-		"ponytail@ponytail": true
+		"pstack@pstack-claude": true
 	},
 	"hooks": {
 		"PostToolUse": [
