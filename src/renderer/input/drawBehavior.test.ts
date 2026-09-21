@@ -173,6 +173,39 @@ describe("the draw tools", () => {
 		expect(drawn.height).toBeCloseTo(50);
 	});
 
+	it("draws an artboard level on the canvas inside a turned parent", () => {
+		const target = artboardTarget();
+		const parent = firstId(target.doc);
+		target.doc.update(parent, { rotation: 90 });
+
+		dragOver(behaviorFor("artboard"), target, {
+			press: { x: 600, y: 240 },
+			release: { x: 550, y: 300 },
+		});
+
+		const drawn = lastDrawn(target);
+		expect(drawn.parent).toBe(parent);
+		expect(drawn.rotation).toBeCloseTo(270);
+		expect(drawn.x).toBeCloseTo(25);
+		expect(drawn.y).toBeCloseTo(15);
+		expect(drawn.width).toBeCloseTo(50);
+		expect(drawn.height).toBeCloseTo(60);
+	});
+
+	it("places the artboard of a tap level on the canvas inside a turned parent", () => {
+		const target = artboardTarget();
+		target.doc.update(firstId(target.doc), { rotation: 90 });
+
+		tapAt(behaviorFor("artboard"), target, { x: 600, y: 240 });
+
+		const drawn = lastDrawn(target);
+		expect(drawn.rotation).toBeCloseTo(270);
+		expect(drawn.x).toBeCloseTo(20);
+		expect(drawn.y).toBeCloseTo(-80);
+		expect(drawn.width).toBe(100);
+		expect(drawn.height).toBe(100);
+	});
+
 	it("draws at the root when a shape, and no artboard, is under the press", () => {
 		const target = targetOf(true);
 		const under = firstId(target.doc);

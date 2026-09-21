@@ -50,6 +50,7 @@ export type LayerTraits = Omit<Layer, "id" | "parent">;
 export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 
 export interface LayerFields extends Rect {
+	rotation?: number;
 	fill: string;
 	name: string;
 	clip: boolean;
@@ -57,7 +58,6 @@ export interface LayerFields extends Rect {
 }
 
 export type LayerPatch = Partial<LayerFields> & {
-	rotation?: number;
 	origin?: Partial<Origin>;
 	lengths?: Partial<LayerLengths>;
 	layout?: LayoutPatch;
