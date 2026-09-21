@@ -104,7 +104,6 @@ body {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	transform-origin: 0 0;
-	transform: translateY(calc(-100% - 4px));
 	scale: calc(1 / var(--zoom));
 }
 
