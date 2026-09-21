@@ -419,3 +419,53 @@ describe("a move drag of a child that the parent lays out", () => {
 		expect(target.user.lift.get()).toBeNull();
 	});
 });
+
+const SECOND_CELL = {
+	mode: "place",
+	column: { start: 2, end: 3 },
+	row: { start: 2, end: 3 },
+} as const;
+
+function gridScene(): { target: PointerTarget; child: LayerId } {
+	const { target, child } = nestedTarget(0);
+	target.doc.update(firstId(target.doc), { layout: { display: "grid" } });
+	target.doc.update(child, { layout: { cell: SECOND_CELL } });
+	target.doc.commit("place the child in a cell");
+	return { target, child };
+}
+
+describe("a layer that leaves a grid", () => {
+	it("drops its cell placement when it lands at the root, and gets it back on Escape", () => {
+		const { target, child } = gridScene();
+		const behavior = behaviorFor("select");
+		const leaving = { ...target, layerIdsAt: NO_HITS };
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 450, y: 290 });
+
+		behavior.dragStart?.(leaving, press, press, NO_MODIFIERS);
+		behavior.drag?.(leaving, pointAt(camera, { x: 700, y: 600 }), NO_MODIFIERS);
+
+		expect(target.doc.layer(child)).toMatchObject({ parent: null });
+		expect(target.doc.layer(child)?.layout.cell).toEqual({ mode: "auto" });
+
+		cancelMove(target.doc, target.user);
+
+		expect(target.doc.layer(child)?.layout.cell).toEqual(SECOND_CELL);
+	});
+
+	it("drops its cell placement when it lands in a row", () => {
+		const { target, child } = gridScene();
+		const row = target.doc.createLayer({ ...ARTBOARD, x: 700, y: 600 });
+		target.doc.update(row, { layout: { display: "row" } });
+		target.doc.commit("add a row");
+
+		dragOver(
+			behaviorFor("select"),
+			{ ...target, layerIdsAt: () => [row] },
+			{ press: { x: 450, y: 290 }, release: { x: 750, y: 650 } },
+		);
+
+		expect(target.doc.layer(child)).toMatchObject({ parent: row });
+		expect(target.doc.layer(child)?.layout.cell).toEqual({ mode: "auto" });
+	});
+});

@@ -14,6 +14,7 @@ import { drawnReaderOf, parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 const CANCEL_COMMIT = "cancel move";
+const AUTO_CELL = { mode: "auto" } as const;
 
 function parentUnder(target: PointerTarget, move: LayerMove, point: StagePoint): LayerId | null {
 	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id);
@@ -51,10 +52,11 @@ function landedPatch(
 ): LayerPatch {
 	const display = parent === null ? null : target.doc.layer(parent)?.layout.display;
 	if (display !== undefined && display !== null && display !== "block") {
-		return { ...BACK_TO_FLOW, rotation };
+		return { ...BACK_TO_FLOW, rotation, layout: { ...BACK_TO_FLOW.layout, cell: AUTO_CELL } };
 	}
 	const loose = fixedFill(target, move.id);
-	return { ...loose, rotation, layout: { ...loose.layout, position: move.start.position } };
+	const layout = { ...loose.layout, position: move.start.position, cell: AUTO_CELL };
+	return { ...loose, rotation, layout };
 }
 
 function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
