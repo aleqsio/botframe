@@ -27,8 +27,9 @@ function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke)
 	return true;
 }
 
-function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
+export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
 	if (stroke.key === CANCEL_KEY) {
+		user.snap.set(null);
 		cancelMove(doc, user);
 		cancelDraw(doc, user);
 		return true;

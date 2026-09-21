@@ -37,6 +37,10 @@ function onTheLine(segments: readonly SnapSegment[], landed: Point): boolean {
 	return segments.every((segment) => Math.abs(landed[segment.axis] - segment.at) <= LINE_GRACE);
 }
 
+function samePoint(one: Point, other: Point): boolean {
+	return one.x === other.x && one.y === other.y;
+}
+
 export function snappedResize(
 	target: PointerTarget,
 	grip: ResizeGrip,
@@ -46,7 +50,9 @@ export function snappedResize(
 	const raw = resizedRect(grip.start, grip.handle, point, modifiers);
 	const pull = pullFor(grip, raw);
 	const pulled = pulledTo(target, pull, point, modifiers);
-	const rect = resizedRect(grip.start, grip.handle, pulled.point, modifiers);
+	const rect = samePoint(pulled.point, point)
+		? raw
+		: resizedRect(grip.start, grip.handle, pulled.point, modifiers);
 	const honored = onTheLine(pulled.segments, handlePointOf(grip.start, rect, grip.handle));
 	publishPull(target, pull, honored ? pulled.segments : NO_SEGMENTS);
 	return honored ? rect : raw;
