@@ -17,7 +17,8 @@
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
 		"start": "electron-vite preview",
-		"test:e2e": "electron-vite build && playwright test"
+		"test:e2e": "electron-vite build && playwright test --project electron",
+		"test:e2e:chromium": "electron-vite build && playwright test --project chromium"
 	},
 	"dependencies": {
 		"@base-ui-components/react": "1.0.0-rc.0",

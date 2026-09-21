@@ -21,10 +21,13 @@ Each gate is a separate CI job, and each job blocks a merge.
 | Tests | Vitest | — |
 | Dead code | knip | no unused file, export, or dependency |
 | Duplication | jscpd | no clone |
+| Layout | Playwright, headless Chromium | the drag invariants, see below |
 
 Lint limits: cyclomatic complexity 10, cognitive complexity 15 (both from `oxlint-plugin-complexity`), depth 3, 4 parameters, 60 lines for each function, 400 lines for each file.
 
 The lint rules also hold the module boundaries from AGENTS.md. `src/document/` imports no React, no Electron, and no Node module.
+
+`bun run test:e2e:chromium` builds the renderer and opens `out/renderer` in headless Chromium. The Playwright project `chromium` in `e2e/chromium/` serves the build through `page.route`, so no server runs. It holds the invariants that need real layout: the center of the bounding client rect of a dragged layer moves by the mouse delta, through a turn, a corner origin, a change of parent, and a change of size. The Playwright project `electron` in `e2e/` keeps the menu, the clipboard, and the window. CI runs the `chromium` project and not the `electron` project.
 
 lefthook runs the format, the lint, and the typecheck before each commit. CI is the gate that counts, because a user can skip a hook.
 
@@ -36,7 +39,7 @@ lefthook runs the format, the lint, and the typecheck before each commit. CI is 
 
 ## Open items
 
-- [ ] Playwright covers the drag test only. Add coverage as features arrive.
+- [ ] The Electron suite runs in no CI job. Add coverage in the Chromium project as features arrive.
 - [ ] Add performance checks in CI for the STACK.md targets.
 - [ ] Make each CI job a required check in the GitHub settings.
 - [ ] Add Stryker mutation tests on the difference, as a report, not as a gate.
