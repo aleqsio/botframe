@@ -7,8 +7,9 @@ import { drawnFrom } from "./drawn";
 import type { DrawnBox } from "./drawn";
 import { anchoredPlace } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
-import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
-import { freeAxesOf, placedOn, snapOn } from "./snapAxes";
+import { freeAxesOf, placedOn } from "./snapAxes";
+import { pulledPoint } from "./snapPull";
+import type { SnapPull } from "./snapPull";
 import { snapShapeOf } from "./snapShape";
 import { parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
@@ -29,18 +30,13 @@ function displayOf(target: PointerTarget, parent: LayerId | null): DisplayMode |
 	return parent === null ? null : (target.doc.layer(parent)?.layout.display ?? null);
 }
 
-function snappedPlace(
-	target: PointerTarget,
-	move: LayerMove,
-	box: DraggedBox,
-	wanted: Point,
-): Point {
-	const reach = SNAP_REACH / target.user.camera.get().zoom;
-	const points = snapShapeOf({ ...box.drawn, ...wanted }).points;
-	const snap = snapOn(box.axes, snapTo(move.field, points, reach));
-	const segments = snapSegmentsOf(snap, move.field.span);
-	target.user.snap.set(segments.length === 0 ? null : { parent: box.drawn.parent, segments });
-	return snappedPoint(wanted, snap);
+function pullFor(move: LayerMove, box: DraggedBox, wanted: Point): SnapPull {
+	return {
+		field: move.field,
+		axes: box.axes,
+		parent: box.drawn.parent,
+		points: snapShapeOf({ ...box.drawn, ...wanted }).points,
+	};
 }
 
 function liftOf(box: DraggedBox, placed: Point, slot: DrawnBox | null): Carry {
@@ -71,10 +67,7 @@ export function carryLayer(
 	const drawn = drawnFrom(layer, display, slot);
 	const box = { drawn, axes: freeAxesOf(display, layer.layout.position) };
 	const wanted = anchoredPlace(drawn, move.anchor, parentPointOf(target, move.id, point.canvas));
-	if (modifiers.control) {
-		target.user.snap.set(null);
-	}
-	const placed = modifiers.control ? wanted : snappedPlace(target, move, box, wanted);
+	const placed = pulledPoint(target, pullFor(move, box, wanted), wanted, modifiers);
 	if (box.axes.length > 0) {
 		const held = { x: placed.x - drawn.x + layer.x, y: placed.y - drawn.y + layer.y };
 		target.doc.update(move.id, placedOn(box.axes, held));

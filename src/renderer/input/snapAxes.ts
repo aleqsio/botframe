@@ -2,6 +2,8 @@ import type { GuideAxis } from "../../document/guides";
 import type { DisplayMode, PositionMode } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
+import { HANDLE_AXIS } from "./handles";
+import type { Handle } from "./handles";
 import type { Snap } from "./snap";
 
 const BOTH_AXES: readonly GuideAxis[] = ["x", "y"];
@@ -19,6 +21,11 @@ export function freeAxesOf(
 		return position === "offset" ? [CROSS_AXIS[parentDisplay]] : NO_AXES;
 	}
 	return NO_AXES;
+}
+
+export function handleAxesOf(handle: Handle): readonly GuideAxis[] {
+	const axis = HANDLE_AXIS[handle];
+	return [...(axis.x === 0 ? [] : (["x"] as const)), ...(axis.y === 0 ? [] : (["y"] as const))];
 }
 
 export function placedOn(axes: readonly GuideAxis[], point: Point): Partial<Point> {

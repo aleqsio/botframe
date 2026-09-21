@@ -1,6 +1,6 @@
-import type { Layer } from "../../document/layer";
+import type { Layer, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { halfSizeOf, toLayerPoint } from "./layerSpace";
+import { fromParentPoint, halfSizeOf, toLayerPoint } from "./layerSpace";
 
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
@@ -40,6 +40,16 @@ export const HANDLE_AXIS: Readonly<Record<Handle, Axis>> = {
 
 export function zoneKey(zone: Zone): ZoneKey {
 	return `${zone.mode}-${zone.handle}`;
+}
+
+function alongEdge(direction: number, extent: number): number {
+	return ((direction + 1) / 2) * extent;
+}
+
+export function handlePointOf(start: Layer, rect: Rect, handle: Handle): Point {
+	const axis = HANDLE_AXIS[handle];
+	const local = { x: alongEdge(axis.x, rect.width), y: alongEdge(axis.y, rect.height) };
+	return fromParentPoint([{ ...start, ...rect }], local);
 }
 
 function cornerOf(local: Point): Corner {
