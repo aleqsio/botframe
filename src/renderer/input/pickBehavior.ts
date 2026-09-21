@@ -4,6 +4,7 @@ import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { drawnLayer } from "./drawn";
 import { insideSubtree } from "./dropTarget";
+import { applyGroupMove, beginGroupMove, finishGroupMove, pressesGroup } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
 import type { Modifiers } from "./modifiers";
@@ -105,6 +106,10 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {
+			if (pressesGroup(target) && beginGroupMove(target, origin.canvas)) {
+				applyGroupMove(target, point);
+				return true;
+			}
 			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
@@ -115,9 +120,11 @@ export function createPickBehavior(): ToolBehavior {
 		},
 		drag(target, point, modifiers) {
 			applyMove(target, point, modifiers);
+			applyGroupMove(target, point);
 		},
 		dragEnd(target, point, modifiers) {
 			finishMove(target, point, modifiers);
+			finishGroupMove(target, point);
 		},
 		context(target, client) {
 			selectForMenu(target);

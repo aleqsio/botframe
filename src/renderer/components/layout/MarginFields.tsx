@@ -4,6 +4,7 @@ import type { Layer } from "../../../document/layer";
 import { MARGIN_UNITS } from "../../../document/layout";
 import type { DisplayMode, MarginSide, Side } from "../../../document/layout";
 import { outOfFlow } from "../../layerStyle";
+import { editEach, useTargets } from "../targets";
 import { SideFields } from "./SideFields";
 import { marginMeasure, marginSideOf } from "./measure";
 import type { Measure, MarginUnit } from "./measure";
@@ -33,6 +34,7 @@ export function MarginFields({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
+	const targets = useTargets();
 	const { margin } = layer.layout;
 	const dim = outOfFlow(display, layer.layout.position);
 
@@ -45,7 +47,9 @@ export function MarginFields({
 				group="Margin"
 				min={MARGIN_MIN}
 				onChange={(side, next) => {
-					doc.update(layer.id, { layout: { margin: { ...margin, [side]: marginSideOf(next) } } });
+					editEach(doc, targets, (target) => ({
+						layout: { margin: { ...target.layout.margin, [side]: marginSideOf(next) } },
+					}));
 				}}
 				onCommit={() => {
 					doc.commit("set margin");

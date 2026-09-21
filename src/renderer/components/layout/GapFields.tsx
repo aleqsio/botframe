@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { SPACING_UNITS } from "../../../document/layout";
 import type { Spacing } from "../../../document/layout";
+import { editEach, plainEdit, useTargets } from "../targets";
 import { LengthField } from "./LengthField";
 import { isWrapped } from "./previewStyle";
 
@@ -33,10 +34,11 @@ function GapRow({
 }
 
 export function GapFields({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const targets = useTargets();
 	const { gap } = layer.layout;
 	const twoAxes = isWrapped(layer.layout) || layer.layout.display === "grid";
 	const write = (next: typeof gap): void => {
-		doc.update(layer.id, { layout: { gap: next } });
+		editEach(doc, targets, plainEdit({ layout: { gap: next } }));
 	};
 	const commit = (): void => {
 		doc.commit("set gap");

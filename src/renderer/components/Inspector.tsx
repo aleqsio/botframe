@@ -1,18 +1,15 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
-import { usePicked } from "../state/useSlot";
+import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 import { useLayer, useLayerCount } from "../useDocument";
 import { LayerProperties } from "./LayerProperties";
-import { inspectorHeading } from "./layerEntry";
+import { inspectorHeading, selectionHeading } from "./layerEntry";
+import { TargetsContext } from "./targets";
 
-function firstSelected(ids: readonly LayerId[]): LayerId | null {
-	return ids[0] ?? null;
-}
-
-function InspectorHeader({ layer }: { layer: Layer | null }): ReactElement {
-	const heading = inspectorHeading(layer);
+function InspectorHeader({ count, layer }: { count: number; layer: Layer | null }): ReactElement {
+	const heading = count > 1 ? selectionHeading(count) : inspectorHeading(layer);
 
 	return (
 		<header className="inspector-header">
@@ -35,17 +32,20 @@ function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 }
 
 export function Inspector({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
-	const layer = useLayer(doc, usePicked(user.selection, firstSelected));
+	const ids: readonly LayerId[] = useSlot(user.selection);
+	const layer = useLayer(doc, ids[0] ?? null);
 
 	return (
 		<aside aria-label="Inspector" id="inspector">
-			<InspectorHeader layer={layer} />
+			<InspectorHeader count={ids.length} layer={layer} />
 			<div className="inspector-body">
-				{layer === null ? (
-					<PageProperties doc={doc} />
-				) : (
-					<LayerProperties doc={doc} layer={layer} />
-				)}
+				<TargetsContext value={ids}>
+					{layer === null ? (
+						<PageProperties doc={doc} />
+					) : (
+						<LayerProperties doc={doc} layer={layer} />
+					)}
+				</TargetsContext>
 			</div>
 		</aside>
 	);

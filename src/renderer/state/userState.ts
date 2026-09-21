@@ -2,6 +2,7 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
+import type { Group } from "../input/group";
 import type { ZoneKey } from "../input/handles";
 import type { RowDrag } from "../input/rowDrop";
 import type { SnapField, SnapSegment } from "../input/snap";
@@ -34,6 +35,11 @@ export interface LayerMove {
 	field: SnapField;
 }
 
+export interface GroupMove {
+	group: Group;
+	grab: Point;
+}
+
 export interface Lifted {
 	id: LayerId;
 	at: Point;
@@ -60,6 +66,7 @@ export class UserState {
 	readonly draw = new Slot<Draw | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
+	readonly groupMove = new Slot<GroupMove | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
 	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);

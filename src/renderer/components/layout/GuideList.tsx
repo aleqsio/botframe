@@ -3,6 +3,8 @@ import type { DesignDocument } from "../../../document/document";
 import type { Guide } from "../../../document/guides";
 import type { Layer } from "../../../document/layer";
 import { Icon } from "../Icon";
+import { isArtboard } from "../layerEntry";
+import { editEach, useTargets } from "../targets";
 import { LayerChip } from "./LayerChip";
 import {
 	GUIDE_AXES,
@@ -24,6 +26,8 @@ function GuideRow({
 	index: number;
 	layer: Layer;
 }): ReactElement {
+	const targets = useTargets();
+
 	return (
 		<div className="guide-row">
 			<LayerChip doc={doc} field={guideField(layer, index, guide)} layer={layer} />
@@ -31,7 +35,9 @@ function GuideRow({
 				aria-label="Remove guide"
 				className="guide-button"
 				onClick={() => {
-					doc.update(layer.id, removedGuide(layer, index));
+					editEach(doc, targets, (target) =>
+						isArtboard(target) ? removedGuide(target, index) : null,
+					);
 					doc.commit(GUIDE_MESSAGE);
 				}}
 				type="button"
@@ -43,6 +49,8 @@ function GuideRow({
 }
 
 export function GuideList({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const targets = useTargets();
+
 	return (
 		<div className="field-group layout-section">
 			<span className="group-label">Guides</span>
@@ -55,7 +63,9 @@ export function GuideList({ doc, layer }: { doc: DesignDocument; layer: Layer })
 						className="guide-button guide-add"
 						key={axis}
 						onClick={() => {
-							doc.update(layer.id, addedGuide(layer, axis));
+							editEach(doc, targets, (target) =>
+								isArtboard(target) ? addedGuide(target, axis) : null,
+							);
 							doc.commit(GUIDE_MESSAGE);
 						}}
 						type="button"

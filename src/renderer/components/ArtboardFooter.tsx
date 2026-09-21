@@ -1,10 +1,12 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
-import type { Layer } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
 import { Icon } from "./Icon";
 import { swappedBox } from "./layerFields";
 import { CUSTOM_PRESET, PRESET_GROUPS, presetNameFor, presetNamed } from "./presets";
+import { isArtboard } from "./layerEntry";
+import { editEach, useTargets } from "./targets";
 
 type Orientation = "Portrait" | "Landscape";
 
@@ -14,25 +16,27 @@ function orientationOf(layer: Layer): Orientation {
 	return layer.width > layer.height ? "Landscape" : "Portrait";
 }
 
-function applyPreset(doc: DesignDocument, layer: Layer, name: string): void {
+function applyPreset(doc: DesignDocument, targets: readonly LayerId[], name: string): void {
 	const preset = presetNamed(name);
 	if (preset === null) {
 		return;
 	}
-	doc.update(layer.id, { width: preset.width, height: preset.height });
+	editEach(doc, targets, (target) =>
+		isArtboard(target) ? { width: preset.width, height: preset.height } : null,
+	);
 	doc.commit(COMMIT_MESSAGES.resize);
 }
 
-function turnTo(doc: DesignDocument, layer: Layer, wanted: Orientation): void {
-	if (orientationOf(layer) === wanted) {
-		return;
-	}
-	doc.update(layer.id, swappedBox(layer));
+function turnTo(doc: DesignDocument, targets: readonly LayerId[], wanted: Orientation): void {
+	editEach(doc, targets, (target) =>
+		isArtboard(target) && orientationOf(target) !== wanted ? swappedBox(target) : null,
+	);
 	doc.commit(COMMIT_MESSAGES.resize);
 }
 
 function OrientationControl({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	const held = orientationOf(layer);
+	const targets = useTargets();
 
 	return (
 		<fieldset aria-label="Orientation" className="segmented" data-active={held}>
@@ -43,7 +47,7 @@ function OrientationControl({ doc, layer }: { doc: DesignDocument; layer: Layer 
 					className="segment"
 					key={name}
 					onClick={() => {
-						turnTo(doc, layer, name);
+						turnTo(doc, targets, name);
 					}}
 					type="button"
 				>
@@ -55,12 +59,14 @@ function OrientationControl({ doc, layer }: { doc: DesignDocument; layer: Layer 
 }
 
 function PresetSelect({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const targets = useTargets();
+
 	return (
 		<div className="footer-select">
 			<select
 				aria-label="Preset"
 				onChange={(event) => {
-					applyPreset(doc, layer, event.target.value);
+					applyPreset(doc, targets, event.target.value);
 				}}
 				value={presetNameFor(layer.width, layer.height)}
 			>

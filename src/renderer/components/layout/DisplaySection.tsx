@@ -3,6 +3,8 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { DISPLAY_MODES } from "../../../document/layout";
 import type { DisplayMode } from "../../../document/layout";
+import type { LayerId } from "../../../document/layer";
+import { editEach, plainEdit, useTargets } from "../targets";
 import { DisplayRows } from "./DisplayRows";
 import { DisplayIcon, WrapIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
@@ -31,7 +33,16 @@ function displayOptions(hugs: boolean): readonly SegmentOption<DisplayMode>[] {
 	}));
 }
 
+function setDisplay(doc: DesignDocument, targets: readonly LayerId[], next: DisplayMode): void {
+	editEach(doc, targets, (held) => {
+		resetChildren(doc, held.id, held.layout.display);
+		return { layout: { display: next } };
+	});
+	doc.commit("set display");
+}
+
 function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const targets = useTargets();
 	const { display, wrap } = layer.layout;
 
 	return (
@@ -40,7 +51,7 @@ function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): Reac
 			className="layout-flag"
 			disabled={!isFlex(display)}
 			onClick={() => {
-				doc.update(layer.id, { layout: { wrap: !wrap } });
+				editEach(doc, targets, plainEdit({ layout: { wrap: !wrap } }));
 				doc.commit("set wrap");
 			}}
 			title={WRAP_TIP}
@@ -59,6 +70,7 @@ export function DisplaySection({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
+	const targets = useTargets();
 	const { display, width, height } = layer.layout;
 
 	return (
@@ -68,9 +80,7 @@ export function DisplaySection({
 				<Segmented
 					label="Display"
 					onPick={(next) => {
-						doc.update(layer.id, { layout: { display: next } });
-						resetChildren(doc, layer.id, display);
-						doc.commit("set display");
+						setDisplay(doc, targets, next);
 					}}
 					options={displayOptions(width === "hug" || height === "hug")}
 					value={display}

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import type { Layer } from "../../../document/layer";
+import type { LayerId } from "../../../document/layer";
 import type { LayerLayout, Placement } from "../../../document/layout";
+import { editEach, useTargets } from "../targets";
 import { anchorOf, clampPlacement, holdsCell, placedAt } from "./cellPlacement";
 import type { Cell } from "./cellPlacement";
 
@@ -50,18 +51,21 @@ function CellButtons({
 export function CellPicker({
 	cell,
 	doc,
-	layer,
+	parent,
 	tracks,
 }: {
 	cell: Placement;
 	doc: DesignDocument;
-	layer: Layer;
+	parent: LayerId | null;
 	tracks: LayerLayout["tracks"];
 }): ReactElement {
 	const [anchor, setAnchor] = useState<Cell | null>(null);
+	const targets = useTargets();
 	const write = (next: Placement): void => {
 		const held = clampPlacement(next, tracks.columns.length, tracks.rows.length);
-		doc.update(layer.id, { layout: { cell: held } });
+		editEach(doc, targets, (target) =>
+			target.parent === parent ? { layout: { cell: held } } : null,
+		);
 	};
 
 	function begin(event: ReactPointerEvent<HTMLElement>): void {

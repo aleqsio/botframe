@@ -3,6 +3,7 @@ import type { Size } from "../../document/length";
 import { isArtboard } from "../components/layerEntry";
 import {
 	centerOf,
+	chainRotation,
 	fromParentPoint,
 	halfSizeOf,
 	normalizeDegrees,
@@ -35,10 +36,6 @@ export function dropParentOf(
 }
 
 export type Placement = Pick<Layer, "x" | "y" | "rotation">;
-
-function chainRotation(chain: readonly Layer[]): number {
-	return chain.reduce((total, layer) => total + layer.rotation, 0);
-}
 
 export function heldPlacement(
 	layer: Layer,

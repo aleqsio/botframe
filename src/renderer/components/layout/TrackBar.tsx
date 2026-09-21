@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { TRACK_UNITS } from "../../../document/layout";
+import { useTargets } from "../targets";
 import { LengthField } from "./LengthField";
 import {
 	FRACTION,
@@ -31,6 +32,7 @@ export function TrackBar({
 	layer: Layer;
 	onClose: () => void;
 }): ReactElement {
+	const targets = useTargets();
 	const list = trackList(layer.layout.tracks, edit.axis);
 	const tip = list.length < 2 ? RESET_TIP : `Remove ${TRACK_WORD[edit.axis].toLowerCase()}`;
 	const word = trackLabel(edit.axis, edit.index);
@@ -41,7 +43,7 @@ export function TrackBar({
 				label={word}
 				min={TRACK_MIN}
 				onChange={(next) => {
-					writeTracks(doc, layer, edit.axis, setTrack(list, edit.index, trackOf(next)));
+					writeTracks(doc, targets, edit.axis, setTrack(list, edit.index, trackOf(next)));
 				}}
 				onCommit={() => {
 					commitTracks(doc);
@@ -54,7 +56,7 @@ export function TrackBar({
 				aria-label={tip}
 				className="layout-tminus"
 				onClick={() => {
-					writeTracks(doc, layer, edit.axis, removeTrack(list, edit.index));
+					writeTracks(doc, targets, edit.axis, removeTrack(list, edit.index));
 					commitTracks(doc);
 					onClose();
 				}}

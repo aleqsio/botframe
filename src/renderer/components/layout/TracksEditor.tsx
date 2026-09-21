@@ -4,6 +4,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { dismissPlan } from "./dismiss";
 import { TrackChips } from "./TrackChips";
+import { useTargets } from "../targets";
 import { TrackBar } from "./TrackBar";
 import { TrackStencil } from "./TrackStencil";
 import {
@@ -111,6 +112,7 @@ function GhostTrack({
 export function TracksEditor({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	const [edit, setEdit] = useState<TrackEdit | null>(null);
 	const root = useRef<HTMLDivElement | null>(null);
+	const targets = useTargets();
 	const { tracks } = layer.layout;
 	const close = (): void => {
 		setEdit(null);
@@ -123,7 +125,7 @@ export function TracksEditor({ doc, layer }: { doc: DesignDocument; layer: Layer
 			setEdit({ axis, index });
 		};
 	const addOn = (axis: TrackAxis) => (): void => {
-		writeTracks(doc, layer, axis, addTrack(trackList(tracks, axis)));
+		writeTracks(doc, targets, axis, addTrack(trackList(tracks, axis)));
 		commitTracks(doc);
 	};
 	const columns = { gridTemplateColumns: factorTemplate(tracks.columns) };

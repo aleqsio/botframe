@@ -5,13 +5,13 @@ import type {
 	ReactElement,
 	RefObject,
 } from "react";
-import type { LayerPatch } from "../../../document/layer";
 import { modifiersOf } from "../../input/modifiers";
 import type { Modifiers } from "../../input/modifiers";
 import { stepOf } from "../../input/step";
 import type { StepRule } from "../../input/step";
-import { fieldPatch } from "../layerFields";
+import { fieldEdit } from "../layerFields";
 import type { LayerField } from "../layerFields";
+import type { LayerEdit } from "../targets";
 import { draggedValue } from "../numberValue";
 import type { Bound } from "../numberValue";
 
@@ -56,7 +56,7 @@ interface ChipHandlers {
 export function fieldGrip(
 	field: LayerField,
 	value: number,
-	onPatch: (patch: LayerPatch) => void,
+	onPatch: (edit: LayerEdit) => void,
 	onCommit: () => void,
 ): ChipGripProps {
 	return {
@@ -65,7 +65,7 @@ export function fieldGrip(
 		bound: field.bound,
 		step: field.step,
 		onValue: (next) => {
-			onPatch(fieldPatch(field, next));
+			onPatch(fieldEdit(field, next));
 		},
 		onCommit,
 	};

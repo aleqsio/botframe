@@ -1,7 +1,9 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import type { Layer, LayerPatch } from "../../../document/layer";
+import type { Layer } from "../../../document/layer";
 import type { LayerField } from "../layerFields";
+import { editEach, useTargets } from "../targets";
+import type { LayerEdit } from "../targets";
 import { ChipBox } from "./ChipBox";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
 
@@ -14,12 +16,13 @@ export function LayerChip({
 	field: LayerField;
 	layer: Layer;
 }): ReactElement {
+	const targets = useTargets();
 	const value = field.read(layer);
 	const onCommit = (): void => {
 		doc.commit(field.message);
 	};
-	const onPatch = (patch: LayerPatch): void => {
-		doc.update(layer.id, patch);
+	const onPatch = (edit: LayerEdit): void => {
+		editEach(doc, targets, edit);
 	};
 
 	return (

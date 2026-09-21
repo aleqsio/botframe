@@ -1,10 +1,11 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
-import type { BoxKey } from "../../../document/length";
+import type { Basis, BoxKey } from "../../../document/length";
 import { POSITION_MODES } from "../../../document/layout";
 import type { PositionMode } from "../../../document/layout";
 import { boxField } from "../layerFields";
+import { editEach, plainEdit, useTargets } from "../targets";
 import { LayerChip } from "./LayerChip";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
@@ -34,7 +35,8 @@ export function PositionRow({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
-	const basis = doc.basisOf(layer.id);
+	const targets = useTargets();
+	const basisOf = (target: Layer): Basis => doc.basisOf(target.id);
 	const mode = blocked ? "absolute" : layer.layout.position;
 
 	return (
@@ -44,7 +46,7 @@ export function PositionRow({
 					<Segmented
 						label="Position"
 						onPick={(next) => {
-							doc.update(layer.id, { layout: { position: next } });
+							editEach(doc, targets, plainEdit({ layout: { position: next } }));
 							doc.commit("set position");
 						}}
 						options={POSITION_OPTIONS}
@@ -57,7 +59,7 @@ export function PositionRow({
 					{PLACE_KEYS.map(({ key, label }) => (
 						<LayerChip
 							doc={doc}
-							field={boxField(label, key, layer, basis)}
+							field={boxField(label, key, layer, basisOf)}
 							key={key}
 							layer={layer}
 						/>

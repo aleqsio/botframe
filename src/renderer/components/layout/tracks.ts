@@ -1,6 +1,7 @@
 import type { DesignDocument } from "../../../document/document";
-import type { Layer } from "../../../document/layer";
+import type { LayerId } from "../../../document/layer";
 import type { LayerLayout, Track, TrackUnit } from "../../../document/layout";
+import { editEach } from "../targets";
 import type { Measure } from "./measure";
 
 export type TrackAxis = "columns" | "rows";
@@ -67,13 +68,16 @@ export function trackList(tracks: LayerLayout["tracks"], axis: TrackAxis): reado
 
 export function writeTracks(
 	doc: DesignDocument,
-	layer: Layer,
+	targets: readonly LayerId[],
 	axis: TrackAxis,
 	list: readonly Track[],
 ): void {
-	const { tracks } = layer.layout;
-	const next = axis === "columns" ? { ...tracks, columns: list } : { ...tracks, rows: list };
-	doc.update(layer.id, { layout: { tracks: next } });
+	editEach(doc, targets, ({ layout }) => ({
+		layout: {
+			tracks:
+				axis === "columns" ? { ...layout.tracks, columns: list } : { ...layout.tracks, rows: list },
+		},
+	}));
 }
 
 export function commitTracks(doc: DesignDocument): void {

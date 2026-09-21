@@ -5,6 +5,7 @@ import type { LayerMove, UserState } from "../state/userState";
 import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf, heldPlacement } from "./dropTarget";
 import type { Placement as HeldPlacement } from "./dropTarget";
+import { CANCEL_COMMIT } from "./groupMove";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
@@ -12,8 +13,6 @@ import { carryLayer } from "./moveCarry";
 import { snapFieldAround } from "./snapField";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
-
-const CANCEL_COMMIT = "cancel move";
 
 function parentUnder(target: PointerTarget, move: LayerMove, point: StagePoint): LayerId | null {
 	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id);

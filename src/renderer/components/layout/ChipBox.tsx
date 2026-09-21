@@ -1,9 +1,9 @@
 import type { ReactElement, ReactNode } from "react";
-import type { LayerPatch } from "../../../document/layer";
 import { UNITS, isUnit } from "../../../document/length";
 import { DraftInput } from "../PropertyField";
-import { typedPatch } from "../layerFields";
+import { typedEdit } from "../layerFields";
 import type { LayerField } from "../layerFields";
+import type { LayerEdit } from "../targets";
 import { formatNumber } from "../numberValue";
 import { UnitMenu } from "./UnitMenu";
 
@@ -12,16 +12,16 @@ export interface ChipBoxProps {
 	disabled?: boolean | undefined;
 	field: LayerField;
 	value: number;
-	onPatch: (patch: LayerPatch) => void;
+	onPatch: (edit: LayerEdit) => void;
 	onCommit: () => void;
 }
 
 function commitText(props: ChipBoxProps, text: string): void {
-	const patch = typedPatch(props.field, text);
-	if (patch === null) {
+	const edit = typedEdit(props.field, text);
+	if (edit === null) {
 		return;
 	}
-	props.onPatch(patch);
+	props.onPatch(edit);
 	props.onCommit();
 }
 

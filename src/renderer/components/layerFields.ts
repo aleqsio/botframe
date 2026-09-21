@@ -1,4 +1,4 @@
-import type { Layer, LayerPatch, Rect, RectangleGeometry } from "../../document/layer";
+import type { Layer, LayerPatch, Rect } from "../../document/layer";
 import {
 	AXIS_OF,
 	PIXELS,
@@ -14,6 +14,7 @@ import type { StepRule } from "../input/step";
 import { MIN_LAYER_SIZE } from "../input/transform";
 import { boundValue } from "./numberValue";
 import type { Bound } from "./numberValue";
+import type { LayerEdit } from "./targets";
 
 const COORDINATE_LIMIT = 100_000;
 const RELATIVE_LIMIT = 10_000;
@@ -40,8 +41,8 @@ const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
 export interface UnitChoice {
 	possible: ReadonlySet<Unit>;
-	convert: (unit: Unit) => LayerPatch;
-	parse: (text: string) => LayerPatch | null;
+	convert: (unit: Unit) => LayerEdit;
+	parse: (text: string) => LayerEdit | null;
 }
 
 export interface LayerField {
@@ -52,7 +53,7 @@ export interface LayerField {
 	step: StepRule;
 	message: string;
 	read: (layer: Layer) => number;
-	patch: (value: number) => LayerPatch;
+	patch: (value: number) => LayerEdit;
 }
 
 export interface FieldGroup {
@@ -76,35 +77,55 @@ function boxPatch(key: BoxKey, length: Length): LayerPatch {
 	return { lengths: { [key]: { value, unit: length.unit } } };
 }
 
-function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
-	const axis = AXIS_OF[key];
+export type BasisOf = (layer: Layer) => Basis;
+
+function unitsOf(key: BoxKey, layer: Layer, basis: Basis): Set<Unit> {
+	return new Set<Unit>([layer.lengths[key].unit, ...availableUnits(AXIS_OF[key], basis)]);
+}
+
+function convertedLength(key: BoxKey, unit: Unit, basisOf: BasisOf): LayerEdit {
+	return (target) => {
+		const basis = basisOf(target);
+		if (!unitsOf(key, target, basis).has(unit)) {
+			return null;
+		}
+		return boxPatch(key, lengthIn(target[key], unit, AXIS_OF[key], basis));
+	};
+}
+
+function unitChoice(key: BoxKey, layer: Layer, basisOf: BasisOf): UnitChoice {
 	const held = layer.lengths[key].unit;
-	const possible = new Set<Unit>([held, ...availableUnits(axis, basis)]);
+	const possible = unitsOf(key, layer, basisOf(layer));
 	return {
 		possible,
-		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
+		convert: (unit) => convertedLength(key, unit, basisOf),
 		parse: (text) => {
 			const typed = parseUnitText(text, UNITS, held);
-			return typed === null || !possible.has(typed.unit) ? null : boxPatch(key, typed);
+			return typed === null || !possible.has(typed.unit) ? null : () => boxPatch(key, typed);
 		},
 	};
 }
 
-export function boxField(label: string, key: BoxKey, layer: Layer, basis: Basis): LayerField {
+export function boxField(label: string, key: BoxKey, layer: Layer, basisOf: BasisOf): LayerField {
 	const { unit } = layer.lengths[key];
 	return {
 		label,
 		unit,
-		choice: unitChoice(key, layer, basis),
+		choice: unitChoice(key, layer, basisOf),
 		bound: boundOf(key, unit),
 		step: unit === PIXELS ? LENGTH_STEP : PERCENT_STEP,
 		message: placeKey(key) ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
 		read: (target) => target.lengths[key].value,
-		patch: (value) => boxPatch(key, { value, unit }),
+		patch: (value) => (target) => boxPatch(key, { value, unit: target.lengths[key].unit }),
 	};
 }
 
-function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry): LayerField {
+function cornerPatch(target: Layer, key: CornerKey, value: number): LayerPatch | null {
+	const { geometry } = target;
+	return geometry.kind === "rectangle" ? { geometry: { ...geometry, [key]: value } } : null;
+}
+
+function cornerField(label: string, key: CornerKey): LayerField {
 	const smooth = key === "cornerSmoothing";
 	return {
 		label,
@@ -113,8 +134,8 @@ function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry)
 		bound: smooth ? SMOOTHING_BOUND : RADIUS_BOUND,
 		step: smooth ? FACTOR_STEP : LENGTH_STEP,
 		message: CORNER_MESSAGE,
-		read: () => geometry[key],
-		patch: (value) => ({ geometry: { ...geometry, [key]: value } }),
+		read: (target) => (target.geometry.kind === "rectangle" ? target.geometry[key] : 0),
+		patch: (value) => (target) => cornerPatch(target, key, value),
 	};
 }
 
@@ -126,35 +147,29 @@ const TURN_FIELD: LayerField = {
 	step: ANGLE_STEP,
 	message: COMMIT_MESSAGES.rotate,
 	read: (layer) => layer.rotation,
-	patch: (value) => ({ rotation: value }),
+	patch: (value) => () => ({ rotation: value }),
 };
 
-function cornerGroup(geometry: RectangleGeometry): FieldGroup {
-	return {
-		name: "Corners",
-		fields: [
-			cornerField("Radius", "cornerRadius", geometry),
-			cornerField("Smoothing", "cornerSmoothing", geometry),
-		],
-	};
-}
+const CORNER_GROUP: FieldGroup = {
+	name: "Corners",
+	fields: [cornerField("Radius", "cornerRadius"), cornerField("Smoothing", "cornerSmoothing")],
+};
 
 export function fieldGroupsOf(layer: Layer): readonly FieldGroup[] {
 	const groups: readonly FieldGroup[] = [{ name: "Rotation", fields: [TURN_FIELD] }];
-	const { geometry } = layer;
-	return geometry.kind === "rectangle" ? [...groups, cornerGroup(geometry)] : groups;
+	return layer.geometry.kind === "rectangle" ? [...groups, CORNER_GROUP] : groups;
 }
 
-export function fieldPatch(field: LayerField, value: number): LayerPatch {
+export function fieldEdit(field: LayerField, value: number): LayerEdit {
 	return field.patch(boundValue(field.bound, value));
 }
 
-export function typedPatch(field: LayerField, text: string): LayerPatch | null {
+export function typedEdit(field: LayerField, text: string): LayerEdit | null {
 	if (field.choice !== null) {
 		return field.choice.parse(text);
 	}
 	const value = Number.parseFloat(text);
-	return Number.isFinite(value) ? fieldPatch(field, value) : null;
+	return Number.isFinite(value) ? fieldEdit(field, value) : null;
 }
 
 export type Size = Pick<Rect, "width" | "height">;

@@ -1,31 +1,56 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
 import type { Point, StagePoint } from "../state/camera";
+import { rectMap, turnAbout } from "./affine";
+import { framePlaced, groupOf, placeGroup } from "./group";
+import type { Group } from "./group";
 import { zoneAt } from "./handles";
 import type { Handle, Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
+import { centerOf } from "./layerSpace";
+import type { Placed } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { parentPointOf, selectedLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizePatch, resizedRect, rotatedDegrees } from "./transform";
 
-type Grip =
-	| { kind: "resize"; start: Layer; handle: Handle }
-	| { kind: "rotate"; start: Layer; origin: Point };
+type Subject = { kind: "layer"; start: Layer } | { kind: "group"; group: Group };
+
+type Resize = { kind: "resize"; subject: Subject; handle: Handle };
+type Turn = { kind: "rotate"; subject: Subject; origin: Point };
+type Grip = Resize | Turn;
 
 interface Aim {
-	layer: Layer;
+	subject: Subject;
 	point: Point;
 	zone: Zone | null;
 }
 
+function subjectOf(target: PointerTarget): Subject | null {
+	const group = groupOf(target);
+	if (group !== null) {
+		return { kind: "group", group };
+	}
+	const start = selectedLayer(target);
+	return start === null ? null : { kind: "layer", start };
+}
+
+function placedOf(subject: Subject): Placed {
+	return subject.kind === "layer" ? subject.start : framePlaced(subject.group.frame);
+}
+
+function pointOf(target: PointerTarget, subject: Subject, canvas: Point): Point {
+	return subject.kind === "layer" ? parentPointOf(target, subject.start.id, canvas) : canvas;
+}
+
 function aimAt(target: PointerTarget, canvas: Point): Aim | null {
-	const layer = selectedLayer(target);
-	if (layer === null) {
+	const subject = subjectOf(target);
+	if (subject === null) {
 		return null;
 	}
-	const point = parentPointOf(target, layer.id, canvas);
-	return { layer, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
+	const point = pointOf(target, subject, canvas);
+	const zone = zoneAt(placedOf(subject), point, target.user.camera.get().zoom);
+	return { subject, point, zone };
 }
 
 function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
@@ -33,19 +58,25 @@ function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
 }
 
 function heldLayerId(target: PointerTarget, point: StagePoint): LayerId | null {
+	if (target.user.selection.get().length > 1) {
+		return null;
+	}
 	const aim = aimAt(target, point.canvas);
-	return aim === null || aim.zone === null ? null : aim.layer.id;
+	if (aim === null || aim.zone === null || aim.subject.kind === "group") {
+		return null;
+	}
+	return aim.subject.start.id;
 }
 
 function gripFor(aim: Aim | null): Grip | null {
 	if (aim === null || aim.zone === null) {
 		return null;
 	}
-	const { layer, point, zone } = aim;
+	const { subject, point, zone } = aim;
 	if (zone.mode === "rotate") {
-		return { kind: "rotate", start: layer, origin: point };
+		return { kind: "rotate", subject, origin: point };
 	}
-	return { kind: "resize", start: layer, handle: zone.handle };
+	return { kind: "resize", subject, handle: zone.handle };
 }
 
 function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
@@ -53,17 +84,35 @@ function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
 	return parent?.layout.display ?? "block";
 }
 
-function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: Modifiers): void {
-	const point = parentPointOf(target, grip.start.id, canvas);
-	if (grip.kind === "resize") {
-		const rect = resizedRect(grip.start, grip.handle, point, modifiers);
-		const display = parentDisplayOf(target, grip.start);
-		target.doc.update(grip.start.id, resizePatch(grip.start, display, rect));
+function applyResize(target: PointerTarget, grip: Resize, to: Point, modifiers: Modifiers): void {
+	const { subject } = grip;
+	const rect = resizedRect(placedOf(subject), grip.handle, to, modifiers);
+	if (subject.kind === "layer") {
+		const { start } = subject;
+		target.doc.update(start.id, resizePatch(start, parentDisplayOf(target, start), rect));
 		return;
 	}
-	target.doc.update(grip.start.id, {
-		rotation: rotatedDegrees(grip.start, grip.origin, point, modifiers),
-	});
+	placeGroup(target, subject.group, rectMap(subject.group.frame, rect), "resize");
+}
+
+function applyTurn(target: PointerTarget, grip: Turn, to: Point, modifiers: Modifiers): void {
+	const { subject } = grip;
+	const placed = placedOf(subject);
+	const rotation = rotatedDegrees(placed, grip.origin, to, modifiers);
+	if (subject.kind === "layer") {
+		target.doc.update(subject.start.id, { rotation });
+		return;
+	}
+	placeGroup(target, subject.group, turnAbout(centerOf(placed), rotation), "rotate");
+}
+
+function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: Modifiers): void {
+	const to = pointOf(target, grip.subject, canvas);
+	if (grip.kind === "resize") {
+		applyResize(target, grip, to, modifiers);
+		return;
+	}
+	applyTurn(target, grip, to, modifiers);
 }
 
 export function createHandleBehavior(): ToolBehavior {

@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { DISTRIBUTIONS } from "../../../document/layout";
 import type { Distribute } from "../../../document/layout";
+import { editEach, plainEdit, useTargets } from "../targets";
 import { DistributeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
@@ -28,6 +29,7 @@ export function DistributeChips({
 	doc: DesignDocument;
 	layer: Layer;
 }): ReactElement {
+	const targets = useTargets();
 	const turned = layer.layout.display === "column";
 
 	return (
@@ -35,7 +37,7 @@ export function DistributeChips({
 			<Segmented
 				label="Distribute"
 				onPick={(next) => {
-					doc.update(layer.id, { layout: { distribute: next } });
+					editEach(doc, targets, plainEdit({ layout: { distribute: next } }));
 					doc.commit("set distribute");
 				}}
 				options={OPTIONS}

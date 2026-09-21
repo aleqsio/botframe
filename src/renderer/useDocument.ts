@@ -1,7 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { DesignDocument, Unsubscribe } from "../document/document";
-import type { Layer, LayerId } from "../document/layer";
+import type { Layer, LayerId, Rect } from "../document/layer";
 import { drawnPadding, drawnRead } from "./input/drawn";
+import { groupFrameOf } from "./input/groupFrame";
 import { layerChain } from "./input/layerSpace";
 import { layerTransform } from "./layerStyle";
 
@@ -91,6 +92,28 @@ export function useDrawnFrame(doc: DesignDocument, id: LayerId): DrawnFrame | nu
 		useSyncExternalStore(
 			useCallback((listener: () => void) => subscribeAfterCommit(doc, listener), [doc]),
 			useCallback(() => frameText(doc, id), [doc, id]),
+		),
+	);
+}
+
+function groupText(doc: DesignDocument, ids: readonly LayerId[]): string {
+	const frame = groupFrameOf((id) => doc.layer(id), ids);
+	return frame === null ? NO_FRAME : [frame.x, frame.y, frame.width, frame.height].join(FRAME_PART);
+}
+
+function groupOf(text: string): Rect | null {
+	const [x, y, width, height] = text.split(FRAME_PART);
+	if (x === undefined || y === undefined || width === undefined || height === undefined) {
+		return null;
+	}
+	return { x: Number(x), y: Number(y), width: Number(width), height: Number(height) };
+}
+
+export function useGroupFrame(doc: DesignDocument, ids: readonly LayerId[]): Rect | null {
+	return groupOf(
+		useSyncExternalStore(
+			useCallback((listener: () => void) => subscribeAfterCommit(doc, listener), [doc]),
+			useCallback(() => groupText(doc, ids), [doc, ids]),
 		),
 	);
 }

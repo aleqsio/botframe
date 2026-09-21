@@ -61,6 +61,10 @@ export function inspectorHeading(layer: Layer | null): InspectorHeading {
 	return { glyph: glyphOf(layer), name: layerEntry(layer).label, kind: kindLabel(layer) };
 }
 
+export function selectionHeading(count: number): InspectorHeading {
+	return { glyph: "page", name: `${count} layers`, kind: "Selection" };
+}
+
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {
 	let count = 0;
 	for (const layer of layers) {

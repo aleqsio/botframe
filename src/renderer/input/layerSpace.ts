@@ -1,4 +1,4 @@
-import type { Layer, LayerId } from "../../document/layer";
+import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
 
@@ -6,7 +6,11 @@ const HALF_TURN = 180;
 
 export type ReadLayer = (id: LayerId) => Layer | null;
 
-export function centerOf(layer: Layer): Point {
+export interface Placed extends Rect {
+	rotation: number;
+}
+
+export function centerOf(layer: Placed): Point {
 	return { x: layer.x + layer.width / 2, y: layer.y + layer.height / 2 };
 }
 
@@ -21,12 +25,12 @@ export function rotatePoint(point: Point, degrees: number): Point {
 	return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos };
 }
 
-export function toLayerPoint(layer: Layer, point: Point): Point {
+export function toLayerPoint(layer: Placed, point: Point): Point {
 	const center = centerOf(layer);
 	return rotatePoint({ x: point.x - center.x, y: point.y - center.y }, -layer.rotation);
 }
 
-export function containsPoint(layer: Layer, point: Point): boolean {
+export function containsPoint(layer: Placed, point: Point): boolean {
 	const local = toLayerPoint(layer, point);
 	const half = halfSizeOf(layer);
 	return Math.abs(local.x) <= half.x && Math.abs(local.y) <= half.y;
@@ -39,6 +43,10 @@ export function angleFrom(center: Point, point: Point): number {
 export function normalizeDegrees(degrees: number): number {
 	const full = HALF_TURN * 2;
 	return ((degrees % full) + full) % full;
+}
+
+export function chainRotation(chain: readonly Layer[]): number {
+	return chain.reduce((total, layer) => total + layer.rotation, 0);
 }
 
 export function layerChain(read: ReadLayer, id: LayerId | null): Layer[] {

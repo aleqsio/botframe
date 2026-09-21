@@ -1,6 +1,6 @@
-import type { Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { halfSizeOf, toLayerPoint } from "./layerSpace";
+import type { Placed } from "./layerSpace";
 
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
@@ -68,7 +68,7 @@ function isOutside(local: Point, half: Point): boolean {
 	return Math.abs(local.x) > half.x || Math.abs(local.y) > half.y;
 }
 
-export function zoneAt(layer: Layer, point: Point, zoom: number): Zone | null {
+export function zoneAt(layer: Placed, point: Point, zoom: number): Zone | null {
 	const local = toLayerPoint(layer, point);
 	const half = halfSizeOf(layer);
 	const reach = cornerReach(local, half);

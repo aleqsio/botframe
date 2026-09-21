@@ -133,14 +133,15 @@ describe("the select tool", () => {
 		expect(target.doc.layer(parent)).toMatchObject({ x: 420, y: 260 });
 	});
 
-	it("moves the layer of the press when the selection holds more than one layer", () => {
+	it("moves each selected layer when the press lands on one of them", () => {
 		const { target, above, below } = coveredTarget();
 		target.user.selection.set([below, above]);
 
 		dragOver(behaviorFor("select"), target, { press: PRESS, release: RELEASE });
 
 		expect(target.doc.layer(above)).toMatchObject({ x: 520, y: 330 });
-		expect(target.doc.layer(below)).toMatchObject({ x: 420, y: 260 });
+		expect(target.doc.layer(below)).toMatchObject({ x: 520, y: 330 });
+		expect(target.user.selection.get()).toEqual([below, above]);
 	});
 
 	it("selects the layer under the secondary press, not the parent that holds it", () => {

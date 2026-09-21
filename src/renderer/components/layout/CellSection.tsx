@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import type { LayerLayout, Placement } from "../../../document/layout";
+import { editEach, useTargets } from "../targets";
 import { CellPicker } from "./CellPicker";
 import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
@@ -22,6 +23,7 @@ export function CellSection({
 	layer: Layer;
 	tracks: LayerLayout["tracks"];
 }): ReactElement {
+	const targets = useTargets();
 	const cell = clampPlacement(layer.layout.cell, tracks.columns.length, tracks.rows.length);
 
 	return (
@@ -30,9 +32,16 @@ export function CellSection({
 				<Segmented
 					label="Cell"
 					onPick={(mode) => {
-						const anchor = anchorOf(cell);
-						doc.update(layer.id, {
-							layout: { cell: mode === "auto" ? { mode } : placedAt(anchor, anchor) },
+						editEach(doc, targets, (target) => {
+							if (target.parent !== layer.parent) {
+								return null;
+							}
+							const anchor = anchorOf(
+								clampPlacement(target.layout.cell, tracks.columns.length, tracks.rows.length),
+							);
+							return {
+								layout: { cell: mode === "auto" ? { mode } : placedAt(anchor, anchor) },
+							};
 						});
 						doc.commit("set cell");
 					}}
@@ -40,7 +49,7 @@ export function CellSection({
 					value={cell.mode}
 				/>
 			</div>
-			<CellPicker cell={cell} doc={doc} layer={layer} tracks={tracks} />
+			<CellPicker cell={cell} doc={doc} parent={layer.parent} tracks={tracks} />
 			<p className="layout-note">{placementText(cell)}</p>
 		</>
 	);

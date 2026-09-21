@@ -26,8 +26,8 @@ export function guideField(layer: Layer, index: number, guide: Guide): LayerFiel
 		step: LENGTH_STEP,
 		message: GUIDE_MESSAGE,
 		read: (held) => held.guides[index]?.at ?? 0,
-		patch: (value) => ({
-			guides: layer.guides.map((held, at) => (at === index ? { ...held, at: value } : held)),
+		patch: (value) => (target) => ({
+			guides: target.guides.map((held, at) => (at === index ? { ...held, at: value } : held)),
 		}),
 	};
 }

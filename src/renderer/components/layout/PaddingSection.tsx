@@ -4,6 +4,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { SPACING_UNITS } from "../../../document/layout";
 import type { LayerLayout, SpacingUnit } from "../../../document/layout";
+import { editEach, plainEdit, useTargets } from "../targets";
 import { LengthField } from "./LengthField";
 import { SidesIcon } from "./LayoutIcons";
 import { SideFields } from "./SideFields";
@@ -69,9 +70,10 @@ export function PaddingSection({
 	layer: Layer;
 }): ReactElement {
 	const [open, setOpen] = useState(false);
+	const targets = useTargets();
 	const { padding } = layer.layout;
 	const write = (next: Padding): void => {
-		doc.update(layer.id, { layout: { padding: next } });
+		editEach(doc, targets, plainEdit({ layout: { padding: next } }));
 	};
 	const commit = (): void => {
 		doc.commit("set padding");

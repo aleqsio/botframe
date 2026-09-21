@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import type { LayerLayout } from "../../../document/layout";
+import { editEach, useTargets } from "../targets";
 import { activeCell, alignAt, onCrossLine, spreadBar } from "./padCells";
 import type { PadCell } from "./padCells";
 
@@ -25,6 +26,7 @@ function isOn(layout: LayerLayout, cell: PadCell): boolean {
 }
 
 export function AlignPad({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	const targets = useTargets();
 	const { layout } = layer;
 	const spread = layout.distribute !== "pack";
 	const marks = spreadBar(layout);
@@ -44,7 +46,9 @@ export function AlignPad({ doc, layer }: { doc: DesignDocument; layer: Layer }):
 					className="layout-alignpad-cell"
 					key={button.name}
 					onClick={() => {
-						doc.update(layer.id, { layout: { align: alignAt(layout, button) } });
+						editEach(doc, targets, (target) => ({
+							layout: { align: alignAt(target.layout, button) },
+						}));
 						doc.commit("set align");
 					}}
 					title={button.name}

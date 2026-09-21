@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import type { Layer, LayerPatch } from "../../../document/layer";
+import type { Layer, LayerId } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
 import type { Axis, Unit } from "../../../document/length";
 import { SIZE_MODES } from "../../../document/layout";
@@ -8,6 +8,8 @@ import type { LayoutPatch, SizeMode } from "../../../document/layout";
 import { useDrawnFrame } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
+import { editEach, useTargets } from "../targets";
+import type { LayerEdit } from "../targets";
 import { ChipBox } from "./ChipBox";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
@@ -44,6 +46,22 @@ function resolvedField(field: LayerField, unit: Unit): LayerField {
 	return { ...field, unit, choice: null };
 }
 
+function setSizeMode(
+	doc: DesignDocument,
+	targets: readonly LayerId[],
+	axis: Axis,
+	next: SizeMode,
+): void {
+	editEach(doc, targets, (held) => {
+		const layout = hugPatch(held, axis, next);
+		if (layout.display !== undefined) {
+			resetChildren(doc, held.id, "block");
+		}
+		return { layout };
+	});
+	doc.commit("set size");
+}
+
 export function SizeRow({
 	axis,
 	blocked,
@@ -59,9 +77,10 @@ export function SizeRow({
 	const fixed = mode === "fixed";
 	const full = mode === "fill" && blocked;
 	const drawn = useDrawnFrame(doc, layer.id);
-	const field = boxField(AXIS_LABEL[axis], axis, layer, doc.basisOf(layer.id));
-	const write = (patch: LayerPatch): void => {
-		doc.update(layer.id, patch);
+	const targets = useTargets();
+	const field = boxField(AXIS_LABEL[axis], axis, layer, (target) => doc.basisOf(target.id));
+	const write = (edit: LayerEdit): void => {
+		editEach(doc, targets, edit);
 	};
 	const commit = (): void => {
 		doc.commit(field.message);
@@ -73,12 +92,7 @@ export function SizeRow({
 			<Segmented
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {
-					const layout = hugPatch(layer, axis, next);
-					write({ layout });
-					if (layout.display !== undefined) {
-						resetChildren(doc, layer.id, "block");
-					}
-					doc.commit("set size");
+					setSizeMode(doc, targets, axis, next);
 				}}
 				options={sizeOptions(layer.parent === null)}
 				value={mode}

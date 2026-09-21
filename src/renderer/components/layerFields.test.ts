@@ -6,7 +6,7 @@ import type { Basis } from "../../document/length";
 import { NO_MODIFIERS } from "../input/modifiers";
 import { stepOf } from "../input/step";
 import { firstId } from "../input/toolFixtures";
-import { boxField, fieldGroupsOf, fieldPatch, swappedBox, typedPatch } from "./layerFields";
+import { boxField, fieldEdit, fieldGroupsOf, swappedBox, typedEdit } from "./layerFields";
 import type { LayerField, UnitChoice } from "./layerFields";
 
 const ALT = { shift: false, alt: true, control: false };
@@ -33,10 +33,10 @@ function layerOf(doc: DesignDocument): Layer {
 
 function fieldsOf(layer: Layer, basis: Basis): readonly LayerField[] {
 	return [
-		boxField("X", "x", layer, basis),
-		boxField("Y", "y", layer, basis),
-		boxField("W", "width", layer, basis),
-		boxField("H", "height", layer, basis),
+		boxField("X", "x", layer, () => basis),
+		boxField("Y", "y", layer, () => basis),
+		boxField("W", "width", layer, () => basis),
+		boxField("H", "height", layer, () => basis),
 		...fieldGroupsOf(layer).flatMap((group) => group.fields),
 	];
 }
@@ -53,7 +53,7 @@ function applied(label: string, value: number): Layer {
 	const doc = DesignDocument.create();
 	const layer = layerOf(doc);
 	const field = fieldNamed(layer, label);
-	doc.update(layer.id, fieldPatch(field, value));
+	doc.update(layer.id, fieldEdit(field, value)(layer) ?? {});
 	doc.commit(field.message);
 	return layerOf(doc);
 }
@@ -126,7 +126,7 @@ describe("the layer fields", () => {
 		const before = doc.changeCount();
 		const layer = layerOf(doc);
 
-		doc.update(layer.id, fieldPatch(fieldNamed(layer, "X"), 10));
+		doc.update(layer.id, fieldEdit(fieldNamed(layer, "X"), 10)(layer) ?? {});
 		doc.commit("move layer");
 
 		expect(doc.changeCount()).toBe(before + 1);
@@ -218,7 +218,7 @@ describe("the unit of a box field", () => {
 	it("makes the unit a layer holds possible, even when the layer has no basis for it", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%")(child.layer) ?? {});
 		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
 
 		expect(choiceOf(orphan, "W").possible).toEqual(new Set(["%", "px", "rem"]));
@@ -234,7 +234,7 @@ describe("the unit of a box field", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
 
-		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%")(child.layer) ?? {});
 
 		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 50, unit: "%" });
 		expect(doc.layer(child.layer.id)).toMatchObject({ width: 120 });
@@ -244,7 +244,10 @@ describe("the unit of a box field", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
 
-		doc.update(child.layer.id, typedPatch(fieldNamed(child.layer, "W", child.basis), "25%") ?? {});
+		doc.update(
+			child.layer.id,
+			typedEdit(fieldNamed(child.layer, "W", child.basis), "25%")?.(child.layer) ?? {},
+		);
 
 		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
 		expect(doc.layer(child.layer.id)).toMatchObject({ width: 60 });
@@ -253,25 +256,28 @@ describe("the unit of a box field", () => {
 	it("keeps the unit of the field when the text names no unit", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%")(child.layer) ?? {});
 		const held = heldChild(doc, child.layer.id);
 
-		doc.update(child.layer.id, typedPatch(fieldNamed(held.layer, "W", held.basis), "25") ?? {});
+		doc.update(
+			child.layer.id,
+			typedEdit(fieldNamed(held.layer, "W", held.basis), "25")?.(held.layer) ?? {},
+		);
 
 		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 25, unit: "%" });
 	});
 
 	it("refuses a unit that the layer cannot take, and text that is not a length", () => {
 		const layer = layerOf(DesignDocument.create());
-		expect(typedPatch(fieldNamed(layer, "W"), "50%")).toBeNull();
-		expect(typedPatch(fieldNamed(layer, "W"), "wide")).toBeNull();
-		expect(typedPatch(fieldNamed(layer, "Rotation"), "half")).toBeNull();
+		expect(typedEdit(fieldNamed(layer, "W"), "50%")).toBeNull();
+		expect(typedEdit(fieldNamed(layer, "W"), "wide")).toBeNull();
+		expect(typedEdit(fieldNamed(layer, "Rotation"), "half")).toBeNull();
 	});
 
 	it("steps a percentage by one, and by five with shift", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%")(child.layer) ?? {});
 		const held = heldChild(doc, child.layer.id);
 		const field = fieldNamed(held.layer, "W", held.basis);
 
@@ -283,10 +289,13 @@ describe("the unit of a box field", () => {
 	it("holds a relative size above zero and a relative position inside the limit", () => {
 		const doc = DesignDocument.create();
 		const child = childOf(doc);
-		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%")(child.layer) ?? {});
 		const held = heldChild(doc, child.layer.id);
 
-		doc.update(child.layer.id, typedPatch(fieldNamed(held.layer, "W", held.basis), "-5%") ?? {});
+		doc.update(
+			child.layer.id,
+			typedEdit(fieldNamed(held.layer, "W", held.basis), "-5%")?.(held.layer) ?? {},
+		);
 
 		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 0.1, unit: "%" });
 	});
