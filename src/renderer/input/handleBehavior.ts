@@ -2,16 +2,16 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
 import type { Point, StagePoint } from "../state/camera";
 import { zoneAt } from "./handles";
-import type { Handle, Zone } from "./handles";
+import type { Zone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
+import { resizeGripOf, snappedResize } from "./resizeSnap";
+import type { ResizeGrip } from "./resizeSnap";
 import { parentPointOf, selectedLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
-import { resizePatch, resizedRect, rotatedDegrees } from "./transform";
+import { resizePatch, rotatedDegrees } from "./transform";
 
-type Grip =
-	| { kind: "resize"; start: Layer; handle: Handle }
-	| { kind: "rotate"; start: Layer; origin: Point };
+type Grip = ({ kind: "resize" } & ResizeGrip) | { kind: "rotate"; start: Layer; origin: Point };
 
 interface Aim {
 	layer: Layer;
@@ -37,7 +37,7 @@ function heldLayerId(target: PointerTarget, point: StagePoint): LayerId | null {
 	return aim === null || aim.zone === null ? null : aim.layer.id;
 }
 
-function gripFor(aim: Aim | null): Grip | null {
+function gripFor(target: PointerTarget, aim: Aim | null): Grip | null {
 	if (aim === null || aim.zone === null) {
 		return null;
 	}
@@ -45,7 +45,7 @@ function gripFor(aim: Aim | null): Grip | null {
 	if (zone.mode === "rotate") {
 		return { kind: "rotate", start: layer, origin: point };
 	}
-	return { kind: "resize", start: layer, handle: zone.handle };
+	return { kind: "resize", ...resizeGripOf(target, layer, zone.handle) };
 }
 
 function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
@@ -56,7 +56,7 @@ function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
 function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: Modifiers): void {
 	const point = parentPointOf(target, grip.start.id, canvas);
 	if (grip.kind === "resize") {
-		const rect = resizedRect(grip.start, grip.handle, point, modifiers);
+		const rect = snappedResize(target, grip, point, modifiers);
 		const display = parentDisplayOf(target, grip.start);
 		target.doc.update(grip.start.id, resizePatch(grip.start, display, rect));
 		return;
@@ -84,7 +84,7 @@ export function createHandleBehavior(): ToolBehavior {
 			return zoneUnder(target, point.canvas) !== null;
 		},
 		dragStart(target, origin, point, modifiers) {
-			held = gripFor(aimAt(target, origin.canvas));
+			held = gripFor(target, aimAt(target, origin.canvas));
 			apply(target, point.canvas, modifiers);
 			return held !== null;
 		},
@@ -99,6 +99,7 @@ export function createHandleBehavior(): ToolBehavior {
 			}
 			apply(target, point.canvas, modifiers);
 			held = null;
+			target.user.snap.set(null);
 			target.doc.commit(COMMIT_MESSAGES[grip.kind]);
 		},
 	};

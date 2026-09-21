@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
-import type { LayerFields, LayerId } from "../../document/layer";
+import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { NO_DRAWN } from "./drawn";
+import type { DrawnReader } from "./drawn";
+import { handlePointOf } from "./handles";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
-import type { PointerTarget } from "./tool";
+import type { SnapSegment } from "./snap";
+import type { PointerTarget, ToolBehavior } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import { dragOver, dropScene, nestedTarget, pointAt } from "./toolFixtures";
+import {
+	anchorOnScreen,
+	dragOver,
+	dropScene,
+	firstId,
+	nestedTarget,
+	pointAt,
+	tapAt,
+} from "./toolFixtures";
 
 const CONTROL: Modifiers = { ...NO_MODIFIERS, control: true };
 const SIBLING: LayerFields = {
@@ -23,9 +35,60 @@ const NEAR_THE_SIBLING = { x: 483, y: 280 };
 const GRAB_THE_CHILD = { x: 450, y: 290 };
 const NEAR_THE_EDGE = { x: 433, y: 290 };
 const NEAR_THE_GUIDE = { x: 503, y: 290 };
+const WEST_HANDLE = { x: 440, y: 300 };
+const NEAR_THE_LEFT_EDGE = { x: 423, y: 300 };
+const NEAR_THE_PADDING = { x: 433, y: 300 };
+const NORTH_HANDLE = { x: 470, y: 280 };
+const NEAR_THE_TOP_EDGE = { x: 470, y: 263 };
+const WEST_MIDDLE = { x: 0, y: 0.5 };
+const NW_CORNER = { x: 440, y: 280 };
+const BACK_FROM_THE_CORNER = { x: 423, y: 263 };
+const SHIFT: Modifiers = { ...NO_MODIFIERS, shift: true };
+const PADDED: DrawnReader = {
+	...NO_DRAWN,
+	inset: () => ({ top: 0, right: 0, bottom: 0, left: 10 }),
+};
+const NO_SIDE = { value: 0, unit: "px" } as const;
+const LEFT_MARGIN = {
+	top: NO_SIDE,
+	right: NO_SIDE,
+	bottom: NO_SIDE,
+	left: { value: 10, unit: "px" },
+} as const;
 
 function dragChild(target: PointerTarget, release: Point, modifiers = NO_MODIFIERS): void {
 	dragOver(behaviorFor("select"), target, { press: GRAB_THE_CHILD, release, modifiers });
+}
+
+function storedLayer(target: PointerTarget, id: LayerId): Layer {
+	const layer = target.doc.layer(id);
+	if (layer === null) {
+		throw new Error("the document lost the layer");
+	}
+	return layer;
+}
+
+function onlySegment(target: PointerTarget): SnapSegment {
+	const [segment] = target.user.snap.get()?.segments ?? [];
+	if (segment === undefined) {
+		throw new Error("the drag published no snap line");
+	}
+	return segment;
+}
+
+function gripChild(
+	target: PointerTarget,
+	press: Point,
+	release: Point,
+	modifiers = NO_MODIFIERS,
+): ToolBehavior {
+	const behavior = behaviorFor("select");
+	const camera = target.user.camera.get();
+	tapAt(behavior, target, GRAB_THE_CHILD);
+	const at = pointAt(camera, press);
+	behavior.dragStart?.(target, at, at, modifiers);
+	behavior.drag?.(target, pointAt(camera, release), modifiers);
+	return behavior;
 }
 
 describe("a move drag near a sibling", () => {
@@ -112,6 +175,103 @@ describe("a move drag inside an artboard", () => {
 		const { target, child } = nestedTarget(0);
 		dragChild(target, { x: 470, y: 310 });
 		expect(target.doc.layer(child)).toMatchObject({ x: 40, y: 40 });
+		expect(target.user.snap.get()).toBeNull();
+	});
+});
+
+describe("a resize drag inside an artboard", () => {
+	it("attaches the dragged edge to the edge of the artboard and draws the line", () => {
+		const { target, child } = nestedTarget(0);
+
+		const behavior = gripChild(target, WEST_HANDLE, NEAR_THE_LEFT_EDGE);
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 0, width: 80 });
+		expect(target.user.snap.get()?.segments).toEqual([{ axis: "x", at: 0, from: 0, to: 160 }]);
+
+		behavior.dragEnd?.(target, pointAt(target.user.camera.get(), NEAR_THE_LEFT_EDGE), NO_MODIFIERS);
+		expect(target.user.snap.get()).toBeNull();
+	});
+
+	it("leaves the edge under the pointer while the control key is down", () => {
+		const { target, child } = nestedTarget(0);
+
+		gripChild(target, WEST_HANDLE, NEAR_THE_LEFT_EDGE, CONTROL);
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 3, width: 77 });
+		expect(target.user.snap.get()).toBeNull();
+	});
+
+	it("pulls a north handle along y alone and leaves x where the pointer puts it", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(firstId(target.doc), { guides: [{ axis: "x", at: 50 }] });
+
+		gripChild(target, NORTH_HANDLE, NEAR_THE_TOP_EDGE);
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 0, width: 60, height: 60 });
+		expect(target.user.snap.get()?.segments).toEqual([{ axis: "y", at: 0, from: 0, to: 240 }]);
+	});
+
+	it("takes the margin of a fill child to zero at the padding edge of a row", () => {
+		const { target, child } = nestedTarget(0);
+		const doc = target.doc;
+		doc.update(firstId(doc), { layout: { display: "row" } });
+		doc.update(child, { layout: { width: "fill", margin: LEFT_MARGIN } });
+		doc.commit("set up the row");
+
+		gripChild({ ...target, drawn: PADDED }, WEST_HANDLE, NEAR_THE_PADDING);
+
+		expect(doc.layer(child)?.layout.margin.left).toEqual({ value: 0, unit: "px" });
+		expect(doc.layer(child)).toMatchObject({ x: 20, width: 60 });
+	});
+});
+
+describe("a resize drag of a turned layer", () => {
+	it("puts the west edge of a turned child on the edge the snap line draws", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(child, { rotation: 30 });
+		const west = anchorOnScreen(target, child, WEST_MIDDLE);
+
+		gripChild(target, west, { x: west.x - 26, y: west.y });
+
+		const landed = storedLayer(target, child);
+		expect(landed).toMatchObject({ x: -5.88, y: 13.07, width: 87.74, height: 40 });
+		expect(target.user.snap.get()?.segments).toEqual([{ axis: "x", at: 0, from: 0, to: 160 }]);
+		expect(handlePointOf(landed, landed, "w").x).toBeCloseTo(0, 2);
+	});
+
+	it("keeps the published line and the landed edge together", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(child, { rotation: 30 });
+		const west = anchorOnScreen(target, child, WEST_MIDDLE);
+
+		gripChild(target, west, { x: west.x - 26, y: west.y });
+
+		const landed = storedLayer(target, child);
+		const segment = onlySegment(target);
+		expect(segment.axis).toBe("x");
+		expect(handlePointOf(landed, landed, "w").x).toBeCloseTo(segment.at, 2);
+	});
+
+	it("drops a snap the aspect modifier keeps a corner from reaching", () => {
+		const { target, child } = nestedTarget(0);
+
+		gripChild(target, NW_CORNER, BACK_FROM_THE_CORNER, SHIFT);
+
+		const landed = storedLayer(target, child);
+		expect(landed).toMatchObject({ x: -5.5, y: 3, width: 85.5, height: 57 });
+		expect(handlePointOf(landed, landed, "nw")).toEqual({ x: -5.5, y: 3 });
+		expect(target.user.snap.get()).toBeNull();
+	});
+
+	it("drops a snap the turned edge runs parallel to", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(firstId(target.doc), { guides: [{ axis: "x", at: 52 }] });
+		target.doc.update(child, { rotation: 90 });
+		const west = anchorOnScreen(target, child, WEST_MIDDLE);
+
+		gripChild(target, west, { x: west.x, y: west.y - 4 });
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 18, y: 18, width: 64, height: 40 });
 		expect(target.user.snap.get()).toBeNull();
 	});
 });
