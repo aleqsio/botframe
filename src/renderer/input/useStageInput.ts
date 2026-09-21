@@ -1,21 +1,30 @@
 import { useRef } from "react";
-import type {
-	MouseEvent as ReactMouseEvent,
-	PointerEvent as ReactPointerEvent,
-	WheelEvent as ReactWheelEvent,
-} from "react";
+import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from "react";
 import type { LayerId } from "../../document/layer";
 import { applyViewportDelta, toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint, ViewportDelta } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { GestureRecognizer, sampleOf } from "./gesture";
-import type { Gesture, PointerSample } from "./gesture";
+import type { Gesture, PointerInput, PointerSample } from "./gesture";
 import { layerIdsAt } from "./hitTest";
 import { NO_MODIFIERS, modifiersOf } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { wheelDelta } from "./wheel";
 
-type StagePointerEvent = ReactPointerEvent<HTMLElement>;
+interface StageElement {
+	getBoundingClientRect: () => Pick<DOMRect, "left" | "top">;
+	setPointerCapture: (pointerId: number) => void;
+}
+
+export interface StagePointerEvent extends PointerInput {
+	button: number;
+	altKey: boolean;
+	shiftKey: boolean;
+	ctrlKey: boolean;
+	metaKey: boolean;
+	currentTarget: StageElement;
+}
+
 type StageMouseEvent = ReactMouseEvent<HTMLElement>;
 type StageWheelEvent = ReactWheelEvent<HTMLElement>;
 
@@ -39,7 +48,7 @@ export interface StageInputHandlers {
 export interface StagePointerHandlers {
 	onContextMenu: (event: StageMouseEvent) => void;
 	onPointerCancel: (event: StagePointerEvent) => void;
-	onPointerLeave: () => void;
+	onPointerLeave: (event: StagePointerEvent) => void;
 	onPointerDown: (event: StagePointerEvent) => void;
 	onPointerMove: (event: StagePointerEvent) => void;
 	onPointerUp: (event: StagePointerEvent) => void;
@@ -54,6 +63,7 @@ interface PendingWheel {
 
 interface StageInput {
 	recognizer: GestureRecognizer;
+	stage: StageElement | null;
 	stageOrigin: Point;
 	layerIds: readonly LayerId[];
 	moves: Map<number, PointerSample>;
@@ -73,6 +83,7 @@ interface StageSession {
 function createStageInput(): StageInput {
 	return {
 		recognizer: new GestureRecognizer(),
+		stage: null,
 		stageOrigin: { x: 0, y: 0 },
 		layerIds: [],
 		moves: new Map(),
@@ -88,7 +99,7 @@ function isPrimaryButton(event: StagePointerEvent): boolean {
 	return event.button === PRIMARY_BUTTON;
 }
 
-function clientPointOf(event: StageMouseEvent): Point {
+function clientPointOf(event: Pick<StagePointerEvent, "clientX" | "clientY">): Point {
 	return { x: event.clientX, y: event.clientY };
 }
 
@@ -141,8 +152,17 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 	}
 }
 
+function readStageOrigin(input: StageInput): void {
+	if (input.stage === null) {
+		return;
+	}
+	const box = input.stage.getBoundingClientRect();
+	input.stageOrigin = { x: box.left, y: box.top };
+}
+
 function step(session: StageSession): void {
 	const { input } = session;
+	readStageOrigin(input);
 	const wheel = input.wheel;
 	const hover = input.hover;
 	const moves = [...input.moves.values()];
@@ -180,11 +200,6 @@ function flush(session: StageSession): void {
 	step(session);
 }
 
-function readStageOrigin(input: StageInput, element: HTMLElement): void {
-	const box = element.getBoundingClientRect();
-	input.stageOrigin = { x: box.left, y: box.top };
-}
-
 function accumulate(previous: PendingWheel | null, at: Point, delta: ViewportDelta): PendingWheel {
 	if (previous === null) {
 		return { at, pan: delta.pan, scale: delta.scale };
@@ -209,7 +224,6 @@ function beginGesture(session: StageSession, event: StagePointerEvent): void {
 		return;
 	}
 	emit(session, down.ended);
-	readStageOrigin(input, event.currentTarget);
 	input.layerIds = layerIdsAt({ x: event.clientX, y: event.clientY });
 	event.currentTarget.setPointerCapture(event.pointerId);
 }
@@ -218,9 +232,6 @@ function trackHover(session: StageSession, event: StagePointerEvent): void {
 	const { input } = session;
 	if (input.recognizer.active()) {
 		return;
-	}
-	if (input.frame === 0) {
-		readStageOrigin(input, event.currentTarget);
 	}
 	input.hover = clientPointOf(event);
 	schedule(session);
@@ -239,9 +250,6 @@ function trackMove(session: StageSession, event: StagePointerEvent): void {
 
 function trackWheel(session: StageSession, event: StageWheelEvent): void {
 	const { input } = session;
-	if (input.frame === 0) {
-		readStageOrigin(input, event.currentTarget);
-	}
 	const at = { x: event.clientX, y: event.clientY };
 	input.wheel = accumulate(input.wheel, at, wheelDelta(event, session.user.tool.get()));
 	schedule(session);
@@ -275,33 +283,35 @@ function openMenu(session: StageSession, event: StageMouseEvent): void {
 export function useStageInput(user: UserState, handlers: StageInputHandlers): StagePointerHandlers {
 	const input = useRef<StageInput | null>(null);
 
-	function session(): StageSession {
-		return { input: (input.current ??= createStageInput()), handlers, user };
+	function session(stage: StageElement): StageSession {
+		const held = (input.current ??= createStageInput());
+		held.stage = stage;
+		return { input: held, handlers, user };
 	}
 
 	return {
 		onContextMenu: (event) => {
-			openMenu(session(), event);
+			openMenu(session(event.currentTarget), event);
 		},
 		onPointerCancel: (event) => {
-			finish(session(), event, true);
+			finish(session(event.currentTarget), event, true);
 		},
-		onPointerLeave: () => {
-			leaveStage(session());
+		onPointerLeave: (event) => {
+			leaveStage(session(event.currentTarget));
 		},
 		onPointerDown: (event) => {
-			beginGesture(session(), event);
+			beginGesture(session(event.currentTarget), event);
 		},
 		onPointerMove: (event) => {
-			trackMove(session(), event);
+			trackMove(session(event.currentTarget), event);
 		},
 		onPointerUp: (event) => {
 			if (isPrimaryButton(event)) {
-				finish(session(), event, false);
+				finish(session(event.currentTarget), event, false);
 			}
 		},
 		onWheel: (event) => {
-			trackWheel(session(), event);
+			trackWheel(session(event.currentTarget), event);
 		},
 	};
 }
