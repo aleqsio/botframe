@@ -74,13 +74,3 @@ export function toggleCollapsed(collapsed: Slot<ReadonlySet<LayerId>>, id: Layer
 	}
 	collapsed.set(next);
 }
-
-export function toggleSelected(selection: Slot<readonly LayerId[]>, id: LayerId): void {
-	const held = selection.get();
-	const rest = held.filter((selected) => selected !== id);
-	if (rest.length === held.length) {
-		selection.set([...held, id]);
-		return;
-	}
-	selection.set(rest.length === 0 ? NOTHING_SELECTED : rest);
-}

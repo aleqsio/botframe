@@ -1,23 +1,10 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-import { at, drawWith, openStage } from "./support";
-import type { Drag, Point } from "./support";
+import { at, clickAt, drawWith, openStage } from "./support";
+import type { Drag } from "./support";
 
 const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const OVER_THE_SHAPE = { x: 540, y: 340 };
 const OVER_THE_ARTBOARD = { x: 300, y: 60 };
-
-async function clickAt(window: Page, point: Point, modifier: string | null): Promise<void> {
-	if (modifier !== null) {
-		await window.keyboard.down(modifier);
-	}
-	await window.mouse.move(point.x, point.y);
-	await window.mouse.down();
-	await window.mouse.up();
-	if (modifier !== null) {
-		await window.keyboard.up(modifier);
-	}
-}
 
 test("a shift press on the canvas adds a layer to the selection and takes it out again", async () => {
 	const { app, layers, origin, window } = await openStage();
@@ -40,7 +27,7 @@ test("a shift press on the canvas adds a layer to the selection and takes it out
 	await expect(layers.nth(1)).not.toHaveAttribute("data-selected", "");
 	await expect(window.locator(".selection-peer")).toHaveCount(0);
 
-	await clickAt(window, at(origin, OVER_THE_ARTBOARD), null);
+	await clickAt(window, at(origin, OVER_THE_ARTBOARD));
 	await expect(layers.nth(0)).not.toHaveAttribute("data-selected", "");
 	await expect(layers.nth(1)).toHaveAttribute("data-selected", "");
 

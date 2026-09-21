@@ -14,6 +14,7 @@ const DEFAULT_FILL = "#000000";
 
 export interface LayerEnvelope {
 	sourceParent: string | null;
+	sourceIds: readonly string[];
 	layers: readonly LayerNode[];
 }
 
@@ -104,6 +105,7 @@ export function serializeEnvelope(envelope: LayerEnvelope): string {
 		kind: KIND,
 		version: VERSION,
 		sourceParent: envelope.sourceParent,
+		sourceIds: envelope.sourceIds,
 		layers: envelope.layers,
 	});
 }
@@ -116,6 +118,7 @@ export function parseEnvelope(raw: string): LayerEnvelope | null {
 	const parent = bag["sourceParent"];
 	return {
 		sourceParent: typeof parent === "string" ? parent : null,
+		sourceIds: listOf(bag["sourceIds"]).filter((id) => typeof id === "string"),
 		layers: listOf(bag["layers"]).map((layer) => nodeOf(layer)),
 	};
 }

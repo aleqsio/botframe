@@ -59,6 +59,7 @@ interface StageInput {
 	moves: Map<number, PointerSample>;
 	hover: Point | null;
 	modifiers: Modifiers;
+	press: Modifiers;
 	wheel: PendingWheel | null;
 	frame: number;
 }
@@ -77,6 +78,7 @@ function createStageInput(): StageInput {
 		moves: new Map(),
 		hover: null,
 		modifiers: NO_MODIFIERS,
+		press: NO_MODIFIERS,
 		wheel: null,
 		frame: 0,
 	};
@@ -126,7 +128,7 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 			break;
 		}
 		case "tap": {
-			handlers.onTap(input.layerIds, stagePointOf(input, camera, gesture.point), input.modifiers);
+			handlers.onTap(input.layerIds, stagePointOf(input, camera, gesture.point), input.press);
 			break;
 		}
 		case "pinch": {
@@ -201,6 +203,7 @@ function beginGesture(session: StageSession, event: StagePointerEvent): void {
 	const { input } = session;
 	flush(session);
 	input.modifiers = modifiersOf(event);
+	input.press = input.modifiers;
 	const down = input.recognizer.down(sampleOf(event));
 	if (!down.taken) {
 		return;

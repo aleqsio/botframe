@@ -198,6 +198,15 @@ describe("the select tool with a modifier", () => {
 		expect(target.user.selection.get()).toEqual([below, above]);
 	});
 
+	it("takes the parent out of the selection on a shift press on its child", () => {
+		const { target, child } = nestedTarget(0);
+		target.user.selection.set([firstId(target.doc)]);
+
+		tapAt(behaviorFor("select"), target, CENTER, WITH_SHIFT);
+
+		expect(target.user.selection.get()).toEqual([child]);
+	});
+
 	it("holds the selection on a shift press on the empty canvas", () => {
 		const { target, below } = coveredTarget();
 

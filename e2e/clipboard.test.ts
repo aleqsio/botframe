@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
-import type { ElectronApplication, Page } from "@playwright/test";
+import type { ElectronApplication } from "@playwright/test";
 import { HTML_FLAVOR, LAYERS_FLAVOR } from "../src/shared/clipboard";
-import { at, drawWith, openStage } from "./support";
+import { at, clickAt, drawWith, openStage } from "./support";
+import type { Drag } from "./support";
 
 const APPLE = process.platform === "darwin";
 const COPY = APPLE ? "Meta+c" : "Control+c";
@@ -9,20 +10,14 @@ const CUT = APPLE ? "Meta+x" : "Control+x";
 const PASTE = APPLE ? "Meta+v" : "Control+v";
 const UNDO = APPLE ? "Meta+z" : "Control+z";
 
-interface Point {
-	x: number;
-	y: number;
-}
-
 interface MenuEntry {
 	label: string;
 	enabled: boolean;
 	children: string[];
 }
 
-const ARTBOARD = { press: { x: 280, y: 40 }, release: { x: 480, y: 180 } };
+const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const OVER_EMPTY = { x: 500, y: 300 };
-const ARTBOARD_DRAG = { from: ARTBOARD.press, to: ARTBOARD.release };
 const OVER_THE_SHAPE = { x: 540, y: 340 };
 const OVER_THE_ARTBOARD = { x: 300, y: 60 };
 const OFF_THE_ARTBOARD = { x: 120, y: 400 };
@@ -66,22 +61,10 @@ async function enabledOf(app: ElectronApplication, label: string): Promise<boole
 	return items.find((item) => item.label === label)?.enabled ?? false;
 }
 
-async function drawRectangle(
-	window: Page,
-	origin: Point,
-	box: { press: Point; release: Point },
-): Promise<void> {
-	await window.keyboard.press("r");
-	await window.mouse.move(at(origin, box.press).x, at(origin, box.press).y);
-	await window.mouse.down();
-	await window.mouse.move(at(origin, box.release).x, at(origin, box.release).y, { steps: 8 });
-	await window.mouse.up();
-}
-
 test("a copy and a paste give a second layer with the same box", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawRectangle(window, origin, ARTBOARD);
+	await drawWith(window, origin, "r", ARTBOARD);
 	await expect(layers).toHaveCount(2);
 	const drawn = layers.nth(1);
 	await expect(drawn).toHaveAttribute("data-selected", "");
@@ -103,16 +86,10 @@ test("a copy and a paste give a second layer with the same box", async () => {
 	await app.close();
 });
 
-async function clickAt(window: Page, point: Point): Promise<void> {
-	await window.mouse.move(point.x, point.y);
-	await window.mouse.down();
-	await window.mouse.up();
-}
-
 test("a paste puts the layer into the selected artboard, not the layer under the pointer", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD_DRAG);
+	await drawWith(window, origin, "a", ARTBOARD);
 	await expect(layers).toHaveCount(2);
 	const artboard = layers.nth(1);
 
@@ -150,7 +127,7 @@ test("the Edit menu holds the clipboard commands and a Copy as submenu", async (
 	]);
 	expect(await copyAsLabels(app)).toEqual(["HTML"]);
 
-	await drawRectangle(window, origin, ARTBOARD);
+	await drawWith(window, origin, "r", ARTBOARD);
 	await expect(layers).toHaveCount(2);
 	await expect.poll(() => enabledOf(app, "Copy as")).toBe(true);
 
@@ -160,7 +137,7 @@ test("the Edit menu holds the clipboard commands and a Copy as submenu", async (
 test("a cut takes the layer away, and one undo brings it back", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawRectangle(window, origin, ARTBOARD);
+	await drawWith(window, origin, "r", ARTBOARD);
 	await expect(layers).toHaveCount(2);
 
 	await window.keyboard.press(CUT);
@@ -176,7 +153,7 @@ test("a cut takes the layer away, and one undo brings it back", async () => {
 test("a copy inside a text field of the panel stays a text copy", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawRectangle(window, origin, ARTBOARD);
+	await drawWith(window, origin, "r", ARTBOARD);
 	await expect(layers).toHaveCount(2);
 	await app.evaluate(({ clipboard }) => {
 		clipboard.clear();

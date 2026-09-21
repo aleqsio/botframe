@@ -56,7 +56,7 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 	if (envelope.layers.length === 0) {
 		return;
 	}
-	const parent = pasteParent((id) => doc.layer(id), user.selection.get());
+	const parent = pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
 	user.selection.set(ids);
@@ -76,7 +76,11 @@ export function copySelection(doc: DesignDocument, user: UserState): boolean {
 	if (nodes.length === 0) {
 		return false;
 	}
-	const envelope = { sourceParent: sourceParentOf(doc, user), layers: nodes };
+	const envelope = {
+		sourceParent: sourceParentOf(doc, user),
+		sourceIds: user.selection.get(),
+		layers: nodes,
+	};
 	return write(user, markupOf(nodes), serializeEnvelope(envelope));
 }
 

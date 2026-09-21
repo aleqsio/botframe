@@ -7,7 +7,6 @@ import type {
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { toggleSelected } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { GestureRecognizer, sampleOf } from "./gesture";
 import { COMMIT_MESSAGES } from "./layerCommand";
@@ -16,6 +15,7 @@ import { scrollStepOf } from "./panelScroll";
 import { carriedMove, carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
 import { rowHitAt } from "./rowHit";
+import { toggleSelected } from "./selection";
 
 type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
@@ -230,7 +230,7 @@ function rowClick(session: RowSession, event: RowMouseEvent, id: LayerId): void 
 		return;
 	}
 	if (extendsSelection(modifiersOf(event))) {
-		toggleSelected(session.user.selection, id);
+		toggleSelected((layerId) => session.doc.layer(layerId), session.user.selection, id);
 		return;
 	}
 	session.user.selection.set([id]);

@@ -4,13 +4,17 @@ import type { ReadLayer } from "./input/layerSpace";
 
 export const PASTE_OFFSET = 20;
 
-export function pasteParent(read: ReadLayer, selection: readonly LayerId[]): LayerId | null {
+export function pasteParent(
+	read: ReadLayer,
+	selection: readonly LayerId[],
+	sourceIds: readonly string[],
+): LayerId | null {
 	const [active] = selection;
 	const layer = active === undefined ? null : read(active);
 	if (layer === null) {
 		return null;
 	}
-	return isArtboard(layer) ? layer.id : layer.parent;
+	return isArtboard(layer) && !sourceIds.includes(layer.id) ? layer.id : layer.parent;
 }
 
 export interface LayerShift {
