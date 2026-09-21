@@ -93,14 +93,13 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 	});
 }
 
-export function applyMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {
+export function applyMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): boolean {
 	const move = target.user.move.get();
 	if (move === null) {
-		return;
+		return false;
 	}
 	const landed = retarget(target, move, point);
-	const lift = carryLayer(target, landed, point, modifiers);
-	settleInFlow(target, landed, point.canvas, lift);
+	return settleInFlow(target, landed, point.canvas, carryLayer(target, landed, point, modifiers));
 }
 
 export function finishMove(target: PointerTarget, point: StagePoint, modifiers: Modifiers): void {

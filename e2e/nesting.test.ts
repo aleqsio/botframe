@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import type { Locator, Page } from "@playwright/test";
-import { at, boxOf, dragOn, drawWith, openStage, pressInto } from "./support";
+import type { Page } from "@playwright/test";
+import { at, boxOf, dragOn, drawWith, idOf, layerById, openStage, pressInto } from "./support";
 import type { Drag, Point } from "./support";
 
 const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
@@ -20,18 +20,6 @@ const GRAB_THE_SHAPE = { x: 540, y: 340 };
 const OVER_THE_ROOT_ARTBOARD = { x: 470, y: 170 };
 const OVER_THE_NESTED_ARTBOARD = { x: 440, y: 150 };
 const INSIDE_THE_NESTED_ARTBOARD: Drag = { from: OVER_THE_NESTED_ARTBOARD, to: { x: 420, y: 130 } };
-
-async function idOf(locator: Locator): Promise<string> {
-	const id = await locator.getAttribute("data-layer-id");
-	if (id === null) {
-		throw new Error("the layer has no id");
-	}
-	return id;
-}
-
-function layerById(window: Page, id: string): Locator {
-	return window.locator(`.layer[data-layer-id="${id}"]`);
-}
 
 function layerIdAt(window: Page, point: Point): Promise<string | null> {
 	return window.evaluate(

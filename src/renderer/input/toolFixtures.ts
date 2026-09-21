@@ -237,7 +237,7 @@ export function rowOfThree(): RowOfThree {
 	return { target: { ...target, layerIds: hits, layerIdsAt: () => hits }, ids };
 }
 
-function rowSlots(parent: LayerId, ids: readonly LayerId[]): ReadonlyMap<LayerId, Slot> {
+export function rowSlots(parent: LayerId, ids: readonly LayerId[]): ReadonlyMap<LayerId, Slot> {
 	return new Map(
 		ids.map((id, index) => [
 			id,

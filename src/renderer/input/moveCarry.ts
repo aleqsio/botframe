@@ -18,6 +18,11 @@ interface DraggedBox {
 	axes: readonly GuideAxis[];
 }
 
+export interface Carry {
+	lift: Point;
+	placed: boolean;
+}
+
 const IN_PLACE: Point = { x: 0, y: 0 };
 
 function displayOf(target: PointerTarget, parent: LayerId | null): DisplayMode | null {
@@ -38,13 +43,16 @@ function snappedPlace(
 	return snappedPoint(wanted, snap);
 }
 
-function liftOf(box: DraggedBox, placed: Point, slot: DrawnBox | null): Point {
+function liftOf(box: DraggedBox, placed: Point, slot: DrawnBox | null): Carry {
 	if (slot === null || !slot.placed) {
-		return IN_PLACE;
+		return { lift: IN_PLACE, placed: slot === null };
 	}
 	return {
-		x: box.axes.includes("x") ? 0 : placed.x - box.drawn.x,
-		y: box.axes.includes("y") ? 0 : placed.y - box.drawn.y,
+		lift: {
+			x: box.axes.includes("x") ? 0 : placed.x - box.drawn.x,
+			y: box.axes.includes("y") ? 0 : placed.y - box.drawn.y,
+		},
+		placed: true,
 	};
 }
 
@@ -53,10 +61,10 @@ export function carryLayer(
 	move: LayerMove,
 	point: StagePoint,
 	modifiers: Modifiers,
-): Point {
+): Carry {
 	const layer = target.doc.layer(move.id);
 	if (layer === null) {
-		return IN_PLACE;
+		return { lift: IN_PLACE, placed: true };
 	}
 	const display = displayOf(target, move.parent);
 	const slot = target.drawn.box(layer);

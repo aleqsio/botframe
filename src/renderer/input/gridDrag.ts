@@ -29,10 +29,10 @@ export function recellInGrid(
 	layer: Layer,
 	parent: LayerId,
 	point: Point,
-): void {
+): boolean {
 	const grid = target.drawn.grid(parent);
 	if (grid.columns.length === 0 || grid.rows.length === 0) {
-		return;
+		return false;
 	}
 	const inset = target.drawn.inset(parent);
 	const at = {
@@ -40,7 +40,9 @@ export function recellInGrid(
 		row: trackIndexOf(grid.rows, grid.rowGap, inset.top, point.y) + FIRST_LINE,
 	};
 	const wanted: Placement = placedAt(at, at);
-	if (!samePlacement(layer.layout.cell, wanted)) {
-		target.doc.update(layer.id, { layout: { cell: wanted } });
+	if (samePlacement(layer.layout.cell, wanted)) {
+		return false;
 	}
+	target.doc.update(layer.id, { layout: { cell: wanted } });
+	return true;
 }

@@ -113,7 +113,7 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		drag(target, point, modifiers) {
-			applyMove(target, point, modifiers);
+			return applyMove(target, point, modifiers);
 		},
 		dragEnd(target, point, modifiers) {
 			finishMove(target, point, modifiers);

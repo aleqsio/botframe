@@ -70,6 +70,7 @@ export function createDrawBehavior(defaults: DrawDefaults): () => ToolBehavior {
 		},
 		drag(target, point, modifiers) {
 			stretch(target, point.canvas, modifiers);
+			return false;
 		},
 		dragEnd(target, point, modifiers) {
 			if (target.user.draw.get() === null) {

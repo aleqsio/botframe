@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { at, drawWith } from "../support";
 import type { Drag } from "../support";
-import { dragCenterBy, makeRow, openRenderer, turnLayer, typeChip } from "./support";
+import { clickAt, dragCenterBy, makeRow, openRenderer, turnLayer, typeChip } from "./support";
 
 const GRAB = { x: 460, y: 300 };
 const DELTA = { x: 80, y: -40 };
@@ -40,11 +40,11 @@ test("a drag of a turned layer with a corner origin moves it by the mouse delta"
 test("a child dragged out of a row lands at the root with its center moved by the mouse delta", async ({
 	page,
 }) => {
-	const scene = await openRenderer(page);
-	const { origin } = scene;
+	const { layers, origin } = await openRenderer(page);
 	await drawWith(page, origin, "a", ARTBOARD);
 	await drawWith(page, origin, "r", INSIDE);
-	const child = await makeRow(page, origin, scene);
+	const child = layers.nth(2);
+	await makeRow(page, origin, child);
 
 	await dragCenterBy(page, child, at(origin, CHILD_IN_ROW), OUT_OF_THE_ROW_BY);
 
@@ -53,12 +53,12 @@ test("a child dragged out of a row lands at the root with its center moved by th
 });
 
 test("a fill child keeps its painted width when it leaves the row", async ({ page }) => {
-	const scene = await openRenderer(page);
-	const { origin } = scene;
+	const { layers, origin } = await openRenderer(page);
 	await drawWith(page, origin, "a", ARTBOARD);
 	await drawWith(page, origin, "r", INSIDE);
-	const child = await makeRow(page, origin, scene);
-	await page.mouse.click(at(origin, CHILD_IN_ROW).x, at(origin, CHILD_IN_ROW).y);
+	const child = layers.nth(2);
+	await makeRow(page, origin, child);
+	await clickAt(page, origin, CHILD_IN_ROW);
 	await page.getByRole("group", { name: "W size" }).getByRole("button", { name: "Fill" }).click();
 	await expect(child).toHaveCSS("width", ROW_WIDTH);
 
