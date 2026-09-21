@@ -52,14 +52,18 @@ export function writeField(
 	}
 }
 
+export function updateAll(doc: DesignDocument, layers: readonly Layer[], patch: LayerPatch): void {
+	for (const layer of layers) {
+		doc.update(layer.id, patch);
+	}
+}
+
 export function writeAll(
 	doc: DesignDocument,
 	layers: readonly Layer[],
 	patch: LayerPatch,
 	message: string,
 ): void {
-	for (const layer of layers) {
-		doc.update(layer.id, patch);
-	}
+	updateAll(doc, layers, patch);
 	doc.commit(message);
 }

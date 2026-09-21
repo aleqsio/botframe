@@ -104,9 +104,9 @@ function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState })
 }
 
 function Marquee({ user }: { user: UserState }): ReactNode {
-	const box = useSlot(user.marquee);
+	const marquee = useSlot(user.marquee);
 
-	return box === null ? null : <div className="marquee" style={boxStyle(box)} />;
+	return marquee === null ? null : <div className="marquee" style={boxStyle(marquee.box)} />;
 }
 
 function HighlightFrame({

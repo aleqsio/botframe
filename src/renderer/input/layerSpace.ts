@@ -60,11 +60,13 @@ export function cornersOf(box: Size): Corners {
 }
 
 export function hullOf(points: readonly [Point, ...Point[]]): Rect {
-	const xs = points.map((point) => point.x);
-	const ys = points.map((point) => point.y);
-	const x = Math.min(...xs);
-	const y = Math.min(...ys);
-	return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+	let [low] = points;
+	let high = low;
+	for (const point of points) {
+		low = { x: Math.min(low.x, point.x), y: Math.min(low.y, point.y) };
+		high = { x: Math.max(high.x, point.x), y: Math.max(high.y, point.y) };
+	}
+	return { x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y };
 }
 
 export function turnedBounds(layer: Turned): Rect {

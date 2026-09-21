@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import { ColorField } from "./ColorField";
 import { DraftInput, PropertyField } from "./PropertyField";
 import type { FieldGroup, LayerField } from "./layerFields";
-import { sharedField, sharedGroups, writeAll, writeField } from "./mixedFields";
+import { sharedField, sharedGroups, updateAll, writeAll, writeField } from "./mixedFields";
 import { MIXED_TEXT, mixedText, sharedOf } from "./mixedValue";
 import { formatNumber } from "./numberValue";
 import { ChipSection } from "./layout/ChipSection";
@@ -83,10 +84,13 @@ export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 			{sharedGroups(layers).map((group) => (
 				<MixedGroup doc={doc} group={group} key={group.name} layers={layers} />
 			))}
-			<PropertyField
+			<ColorField
 				label="Fill"
-				onCommit={(text) => {
-					writeAll(doc, layers, { fill: text }, FILL_MESSAGE);
+				onChange={(text) => {
+					updateAll(doc, layers, { fill: text });
+				}}
+				onCommit={() => {
+					doc.commit(FILL_MESSAGE);
 				}}
 				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), sameText)}
 			/>

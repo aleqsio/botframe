@@ -40,6 +40,11 @@ export interface Lifted {
 	at: Point;
 }
 
+export interface Marquee {
+	origin: Point;
+	box: Rect;
+}
+
 export interface GroupStart {
 	id: LayerId;
 	x: number;
@@ -73,7 +78,7 @@ export class UserState {
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
 	readonly group = new Slot<GroupMove | null>(null);
-	readonly marquee = new Slot<Rect | null>(null);
+	readonly marquee = new Slot<Marquee | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
 	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);

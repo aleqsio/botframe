@@ -6,7 +6,16 @@ import { NO_DRAWN } from "./drawn";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { NO_MODIFIERS } from "./modifiers";
+import { handleStroke } from "./useKeyInput";
 import { NO_HITS, dragOver, pointAt } from "./toolFixtures";
+
+const ESCAPE = {
+	key: "Escape",
+	shiftKey: false,
+	altKey: false,
+	ctrlKey: false,
+	metaKey: false,
+};
 
 const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#d9d9d9",
@@ -104,6 +113,27 @@ describe("the marquee of the select tool", () => {
 			NO_MODIFIERS,
 		);
 
-		expect(scene.target.user.marquee.get()).toEqual({ x: 5, y: 10, width: 25, height: 20 });
+		expect(scene.target.user.marquee.get()).toEqual({
+			origin: { x: 30, y: 30 },
+			box: { x: 5, y: 10, width: 25, height: 20 },
+		});
+	});
+
+	it("stops the sweep and holds the selection after Escape clears the marquee", () => {
+		const scene = marqueeScene();
+		const behavior = behaviorFor("select");
+		const camera = scene.target.user.camera.get();
+
+		behavior.dragStart?.(
+			scene.target,
+			pointAt(camera, { x: -10, y: -10 }),
+			pointAt(camera, { x: 30, y: 30 }),
+			NO_MODIFIERS,
+		);
+		handleStroke(scene.target.doc, scene.target.user, ESCAPE);
+		behavior.drag?.(scene.target, pointAt(camera, { x: 230, y: 120 }), NO_MODIFIERS);
+
+		expect(scene.target.user.marquee.get()).toBeNull();
+		expect(scene.target.user.selection.get()).toEqual([scene.near]);
 	});
 });
