@@ -14,3 +14,7 @@ export function modifiersOf(event: {
 }): Modifiers {
 	return { shift: event.shiftKey, alt: event.altKey, control: event.ctrlKey || event.metaKey };
 }
+
+export function extendsSelection(modifiers: Modifiers): boolean {
+	return modifiers.shift || modifiers.control;
+}

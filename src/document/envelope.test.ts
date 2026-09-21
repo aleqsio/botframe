@@ -43,14 +43,17 @@ function envelopeWith(body: Record<string, unknown>): string {
 
 describe("serializeEnvelope", () => {
 	it("gives the same bytes for the same subtree", () => {
-		const once = serializeEnvelope({ sourceParent: "1@1", layers: [ROOT] });
-		const again = serializeEnvelope({ sourceParent: "1@1", layers: [ROOT] });
+		const once = serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] });
+		const again = serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] });
 		expect(once).toBe(again);
 	});
 
 	it("carries the parent of the source and the tree", () => {
-		expect(parseEnvelope(serializeEnvelope({ sourceParent: "1@1", layers: [ROOT] }))).toEqual({
+		expect(
+			parseEnvelope(serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] })),
+		).toEqual({
 			sourceParent: "1@1",
+			sourceIds: ["2@1"],
 			layers: [ROOT],
 		});
 	});
@@ -58,7 +61,7 @@ describe("serializeEnvelope", () => {
 
 describe("parseEnvelope", () => {
 	it("reads a tree that a copy wrote", () => {
-		const raw = serializeEnvelope({ sourceParent: null, layers: [ROOT, CHILD] });
+		const raw = serializeEnvelope({ sourceParent: null, sourceIds: [], layers: [ROOT, CHILD] });
 		expect(parseEnvelope(raw)?.layers).toEqual([ROOT, CHILD]);
 	});
 
@@ -116,7 +119,9 @@ describe("parseEnvelope", () => {
 
 	it("reads the layout of a layer and falls back to the default for a layout that is broken", () => {
 		const held = { ...ROOT, layout: { ...DEFAULT_LAYOUT, display: "grid" as const } };
-		const kept = parseEnvelope(serializeEnvelope({ sourceParent: null, layers: [held] }));
+		const kept = parseEnvelope(
+			serializeEnvelope({ sourceParent: null, sourceIds: [], layers: [held] }),
+		);
 		expect(kept?.layers[0]?.layout.display).toBe("grid");
 
 		const broken = envelopeWith({ layers: [{ layout: { display: "masonry", wrap: "yes" } }] });
@@ -131,5 +136,11 @@ describe("parseEnvelope", () => {
 
 	it("gives null for a source parent that is not a string", () => {
 		expect(parseEnvelope(envelopeWith({ sourceParent: 7, layers: [] }))?.sourceParent).toBeNull();
+	});
+
+	it("keeps only the source ids that are strings", () => {
+		const raw = envelopeWith({ sourceIds: ["2@1", 7, null], layers: [] });
+		expect(parseEnvelope(raw)?.sourceIds).toEqual(["2@1"]);
+		expect(parseEnvelope(envelopeWith({ layers: [] }))?.sourceIds).toEqual([]);
 	});
 });

@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-import { at, launchApp, openStage, stageOrigin } from "./support";
-import type { Point } from "./support";
+import { at, clickAt, launchApp, openStage, stageOrigin } from "./support";
 
 const CENTER = { x: 540, y: 340 };
 const START = /translate3d\(420px, 260px, 0px\)/u;
@@ -57,12 +55,6 @@ test("the keyboard moves, turns and scales the selected layer by an exact step",
 
 	await app.close();
 });
-
-async function clickAt(window: Page, point: Point): Promise<void> {
-	await window.mouse.move(point.x, point.y);
-	await window.mouse.down();
-	await window.mouse.up();
-}
 
 test("the Delete key and the Backspace key take the selected layer away", async () => {
 	const { app, layers, origin, window } = await openStage();

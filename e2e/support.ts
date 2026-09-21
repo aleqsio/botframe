@@ -32,6 +32,22 @@ export async function pressRight(window: Page, point: Point): Promise<void> {
 	await window.mouse.up({ button: "right" });
 }
 
+export async function clickAt(
+	window: Page,
+	point: Point,
+	modifier: string | null = null,
+): Promise<void> {
+	if (modifier !== null) {
+		await window.keyboard.down(modifier);
+	}
+	await window.mouse.move(point.x, point.y);
+	await window.mouse.down();
+	await window.mouse.up();
+	if (modifier !== null) {
+		await window.keyboard.up(modifier);
+	}
+}
+
 export function menuItem(menu: Locator, label: string): Locator {
 	return menu.locator(".layer-menu-item", { hasText: label });
 }

@@ -58,7 +58,6 @@ export class UserState {
 	readonly highlight = new Slot<LayerId | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);
-	readonly pointer = new Slot<Point | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);

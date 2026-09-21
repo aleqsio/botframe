@@ -144,7 +144,9 @@ describe("composeBehaviors", () => {
 			recorder("third", true, log),
 		]);
 
-		expect(behavior.tap?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS))).toBe(true);
+		expect(behavior.tap?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS), NO_MODIFIERS)).toBe(
+			true,
+		);
 		expect(behavior.context?.(targetOf(false), PRESS)).toBe(true);
 		expect(log).toEqual(["first.tap", "second.tap", "first.context", "second.context"]);
 	});
@@ -153,7 +155,9 @@ describe("composeBehaviors", () => {
 		const log: string[] = [];
 		const behavior = composeBehaviors([recorder("first", false, log)]);
 
-		expect(behavior.tap?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS))).toBe(false);
+		expect(behavior.tap?.(targetOf(false), pointAt(IDENTITY_CAMERA, PRESS), NO_MODIFIERS)).toBe(
+			false,
+		);
 		expect(behavior.context?.(targetOf(false), PRESS)).toBe(false);
 	});
 });

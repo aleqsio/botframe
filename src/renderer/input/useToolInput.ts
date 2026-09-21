@@ -65,9 +65,9 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 			user.dragging.set(false);
 			current?.behavior.dragEnd?.(current.target, point, modifiers);
 		},
-		onTap(layerIds, point) {
+		onTap(layerIds, point, modifiers) {
 			const current = begin(layerIds);
-			current.behavior.tap?.(current.target, point);
+			current.behavior.tap?.(current.target, point, modifiers);
 		},
 		onHover(point) {
 			trackHover(point);

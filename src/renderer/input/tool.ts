@@ -15,7 +15,7 @@ export interface PointerTarget {
 export interface ToolBehavior {
 	hover?: (target: PointerTarget, point: StagePoint) => Zone | null;
 	highlight?: (target: PointerTarget, point: StagePoint) => LayerId | null;
-	tap?: (target: PointerTarget, point: StagePoint) => boolean;
+	tap?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => boolean;
 	dragStart?: (
 		target: PointerTarget,
 		origin: StagePoint,

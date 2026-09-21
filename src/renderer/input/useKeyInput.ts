@@ -16,12 +16,13 @@ function isTyping(target: EventTarget | null): boolean {
 
 function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
 	const command = commandFor(stroke);
-	const [id] = user.selection.get();
-	const layer = command === null || id === undefined ? null : doc.layer(id);
-	if (command === null || layer === null) {
+	const layers = user.selection.get().flatMap((id) => doc.layer(id) ?? []);
+	if (command === null || layers.length === 0) {
 		return false;
 	}
-	applyCommand(doc, layer, command);
+	for (const layer of layers) {
+		applyCommand(doc, layer, command);
+	}
 	doc.commit(COMMIT_MESSAGES[command.kind]);
 	return true;
 }

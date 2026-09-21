@@ -80,8 +80,8 @@ function LayerRow({
 				<button
 					aria-pressed={selected}
 					className="layer-row"
-					onClick={() => {
-						rows.onClick(id);
+					onClick={(event) => {
+						rows.onClick(event, id);
 					}}
 					onContextMenu={(event) => {
 						rows.onContextMenu(event, id);
