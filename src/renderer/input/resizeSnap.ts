@@ -3,10 +3,10 @@ import type { Point } from "../state/camera";
 import { handlePointOf } from "./handles";
 import type { Handle } from "./handles";
 import type { Modifiers } from "./modifiers";
-import type { SnapField } from "./snap";
+import type { SnapField, SnapSegment } from "./snap";
 import { handleAxesOf } from "./snapAxes";
 import { snapFieldAround } from "./snapField";
-import { pulledPoint } from "./snapPull";
+import { NO_SEGMENTS, publishPull, pulledTo } from "./snapPull";
 import type { SnapPull } from "./snapPull";
 import type { PointerTarget } from "./tool";
 import { resizedRect } from "./transform";
@@ -31,6 +31,12 @@ function pullFor(grip: ResizeGrip, rect: Rect): SnapPull {
 	};
 }
 
+const LINE_GRACE = 0.005;
+
+function onTheLine(segments: readonly SnapSegment[], landed: Point): boolean {
+	return segments.every((segment) => Math.abs(landed[segment.axis] - segment.at) <= LINE_GRACE);
+}
+
 export function snappedResize(
 	target: PointerTarget,
 	grip: ResizeGrip,
@@ -38,6 +44,10 @@ export function snappedResize(
 	modifiers: Modifiers,
 ): Rect {
 	const raw = resizedRect(grip.start, grip.handle, point, modifiers);
-	const pulled = pulledPoint(target, pullFor(grip, raw), point, modifiers);
-	return resizedRect(grip.start, grip.handle, pulled, modifiers);
+	const pull = pullFor(grip, raw);
+	const pulled = pulledTo(target, pull, point, modifiers);
+	const rect = resizedRect(grip.start, grip.handle, pulled.point, modifiers);
+	const honored = onTheLine(pulled.segments, handlePointOf(grip.start, rect, grip.handle));
+	publishPull(target, pull, honored ? pulled.segments : NO_SEGMENTS);
+	return honored ? rect : raw;
 }

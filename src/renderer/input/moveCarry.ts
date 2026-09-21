@@ -8,7 +8,7 @@ import type { DrawnBox } from "./drawn";
 import { anchoredPlace } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { freeAxesOf, placedOn } from "./snapAxes";
-import { pulledPoint } from "./snapPull";
+import { publishPull, pulledTo } from "./snapPull";
 import type { SnapPull } from "./snapPull";
 import { snapShapeOf } from "./snapShape";
 import { parentPointOf } from "./targetSpace";
@@ -68,7 +68,10 @@ export function carryLayer(
 	const drawn = drawnFrom(layer, display, slot);
 	const box = { drawn, axes: freeAxesOf(display, layer.layout.position) };
 	const wanted = anchoredPlace(drawn, move.anchor, parentPointOf(target, move.id, point.canvas));
-	const placed = pulledPoint(target, pullFor(move, box, wanted), wanted, modifiers);
+	const pull = pullFor(move, box, wanted);
+	const pulled = pulledTo(target, pull, wanted, modifiers);
+	publishPull(target, pull, pulled.segments);
+	const placed = pulled.point;
 	if (box.axes.length > 0) {
 		const held = { x: placed.x - drawn.x + layer.x, y: placed.y - drawn.y + layer.y };
 		target.doc.update(move.id, placedOn(box.axes, held));

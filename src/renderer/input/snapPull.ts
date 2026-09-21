@@ -4,7 +4,7 @@ import type { Point } from "../state/camera";
 import { rotatePoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
-import type { Snap, SnapField } from "./snap";
+import type { Snap, SnapField, SnapSegment } from "./snap";
 import { snapOn } from "./snapAxes";
 import type { PointerTarget } from "./tool";
 
@@ -49,20 +49,35 @@ function pulledAlong(wanted: Point, travel: Travel, snap: Snap): Point {
 		: alongCarrier(wanted, travel.carrier, snap);
 }
 
-export function pulledPoint(
+export interface Pulled {
+	point: Point;
+	segments: readonly SnapSegment[];
+}
+
+export const NO_SEGMENTS: readonly SnapSegment[] = [];
+
+export function pulledTo(
 	target: PointerTarget,
 	pull: SnapPull,
 	wanted: Point,
 	modifiers: Modifiers,
-): Point {
+): Pulled {
 	if (modifiers.control) {
-		target.user.snap.set(null);
-		return wanted;
+		return { point: wanted, segments: NO_SEGMENTS };
 	}
 	const reach = SNAP_REACH / target.user.camera.get().zoom;
 	const travel = travelOf(pull);
 	const snap = snapOn(travel.axes, snapTo(pull.field, pull.points, reach));
-	const segments = snapSegmentsOf(snap, pull.field.span);
+	return {
+		point: pulledAlong(wanted, travel, snap),
+		segments: snapSegmentsOf(snap, pull.field.span),
+	};
+}
+
+export function publishPull(
+	target: PointerTarget,
+	pull: SnapPull,
+	segments: readonly SnapSegment[],
+): void {
 	target.user.snap.set(segments.length === 0 ? null : { parent: pull.parent, segments });
-	return pulledAlong(wanted, travel, snap);
 }
