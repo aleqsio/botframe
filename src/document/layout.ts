@@ -53,6 +53,7 @@ export interface LayerLayout {
 	align: { main: Alignment; cross: Alignment };
 	gap: { column: Spacing; row: Spacing };
 	tracks: { columns: readonly Track[]; rows: readonly Track[] };
+	turnedBox: boolean;
 }
 
 export type LayoutPatch = Partial<LayerLayout>;
@@ -167,6 +168,7 @@ export function layoutOf(value: unknown): LayerLayout {
 		align: alignOf(bag["align"]),
 		gap: gapOf(bag["gap"]),
 		tracks: tracksOf(bag["tracks"]),
+		turnedBox: bag["turnedBox"] === true,
 	};
 }
 

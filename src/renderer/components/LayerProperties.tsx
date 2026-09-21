@@ -10,6 +10,9 @@ import type { FieldGroup } from "./layerFields";
 import { GuideList } from "./layout/GuideList";
 import { LayerChip } from "./layout/LayerChip";
 import { LayoutPanel } from "./layout/LayoutPanel";
+import { TurnToggle } from "./layout/TurnToggle";
+
+const TURN_GROUP = "Rotation";
 
 function ChipGroup({
 	doc,
@@ -27,6 +30,7 @@ function ChipGroup({
 				{group.fields.map((field) => (
 					<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
 				))}
+				{group.name === TURN_GROUP ? <TurnToggle doc={doc} layer={layer} /> : null}
 			</div>
 		</div>
 	);

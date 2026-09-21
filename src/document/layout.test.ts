@@ -24,6 +24,7 @@ describe("DEFAULT_LAYOUT", () => {
 			align: { main: "start", cross: "start" },
 			gap: { column: zero(), row: zero() },
 			tracks: { columns: [unit(), unit(), unit()], rows: [unit(), unit()] },
+			turnedBox: false,
 		});
 	});
 });

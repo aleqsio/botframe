@@ -208,6 +208,8 @@ export function turnedPad(layer: StyledLayer): Record<Axis, number> {
 	};
 }
 
+const NO_PAD: Record<Axis, number> = { width: 0, height: 0 };
+
 function paddedMargin(text: string | null, pad: number): string | null {
 	if (pad === 0 || text === "auto") {
 		return text;
@@ -219,7 +221,7 @@ function marginStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	if (flow.outOfFlow) {
 		return {};
 	}
-	const pad = turnedPad(layer);
+	const pad = layer.layout.turnedBox ? turnedPad(layer) : NO_PAD;
 	const style: CSSProperties = {};
 	for (const side of SIDES) {
 		const text = paddedMargin(marginText(layer.layout.margin[side]), pad[TURN_PAD[side]]);
