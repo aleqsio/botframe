@@ -7,6 +7,7 @@ import type { ToolId } from "../components/tools";
 import { composeBehaviors } from "./composeBehaviors";
 import { createDrawBehavior } from "./drawBehavior";
 import { createHandleBehavior } from "./handleBehavior";
+import { createMarqueeBehavior } from "./marqueeBehavior";
 import { createPanBehavior } from "./panBehavior";
 import { createPickBehavior } from "./pickBehavior";
 import type { ToolBehavior } from "./tool";
@@ -14,7 +15,7 @@ import type { ToolBehavior } from "./tool";
 type BehaviorFactory = () => ToolBehavior;
 
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
-	select: [createHandleBehavior, createPickBehavior],
+	select: [createHandleBehavior, createPickBehavior, createMarqueeBehavior],
 	artboard: [createHandleBehavior, createDrawBehavior(ARTBOARD_DEFAULTS)],
 	rectangle: [createHandleBehavior, createDrawBehavior(RECTANGLE_DEFAULTS)],
 	ellipse: [createHandleBehavior, createDrawBehavior(ELLIPSE_DEFAULTS)],

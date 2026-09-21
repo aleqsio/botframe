@@ -5,7 +5,9 @@ import {
 	anchorOf,
 	anchoredPlace,
 	containsPoint,
+	cornersOf,
 	fromParentPoint,
+	hullOf,
 	intoLayer,
 	layerChain,
 	outOfLayer,
@@ -167,5 +169,31 @@ describe("anchoredPlace", () => {
 		const placed = { ...TILTED, ...placedAround(TILTED, center) };
 		expect(visualCenterOf(placed).x).toBeCloseTo(center.x);
 		expect(visualCenterOf(placed).y).toBeCloseTo(center.y);
+	});
+});
+
+describe("hullOf", () => {
+	it("gives the box that holds each point", () => {
+		expect(
+			hullOf([
+				{ x: 10, y: 4 },
+				{ x: -2, y: 30 },
+			]),
+		).toEqual({ x: -2, y: 4, width: 12, height: 26 });
+	});
+
+	it("gives a box of no size for one point", () => {
+		expect(hullOf([{ x: 3, y: 5 }])).toEqual({ x: 3, y: 5, width: 0, height: 0 });
+	});
+});
+
+describe("cornersOf", () => {
+	it("gives the four corners of a box at its own origin", () => {
+		expect(cornersOf({ width: 10, height: 20 })).toEqual([
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+			{ x: 10, y: 20 },
+			{ x: 0, y: 20 },
+		]);
 	});
 });

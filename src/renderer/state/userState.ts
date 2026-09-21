@@ -1,4 +1,4 @@
-import type { Layer, LayerId } from "../../document/layer";
+import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { LayerLayout, Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
@@ -40,6 +40,17 @@ export interface Lifted {
 	at: Point;
 }
 
+export interface GroupStart {
+	id: LayerId;
+	x: number;
+	y: number;
+}
+
+export interface GroupMove {
+	origin: Point;
+	starts: readonly GroupStart[];
+}
+
 export interface SnapGuides {
 	parent: LayerId | null;
 	segments: readonly SnapSegment[];
@@ -61,6 +72,8 @@ export class UserState {
 	readonly draw = new Slot<Draw | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
+	readonly group = new Slot<GroupMove | null>(null);
+	readonly marquee = new Slot<Rect | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
 	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);

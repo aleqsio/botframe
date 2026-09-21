@@ -15,7 +15,7 @@ import { scrollStepOf } from "./panelScroll";
 import { carriedMove, carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
 import { rowHitAt } from "./rowHit";
-import { toggleSelected } from "./selection";
+import { selectIds, toggleSelected } from "./selection";
 
 type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
@@ -211,7 +211,7 @@ function pointerCancel(session: RowSession, event: RowPointerEvent): void {
 
 function selectForMenu(session: RowSession, id: LayerId): void {
 	if (!session.user.selection.get().includes(id)) {
-		session.user.selection.set([id]);
+		selectIds(session.user.selection, [id]);
 	}
 }
 
@@ -233,7 +233,7 @@ function rowClick(session: RowSession, event: RowMouseEvent, id: LayerId): void 
 		toggleSelected((layerId) => session.doc.layer(layerId), session.user.selection, id);
 		return;
 	}
-	session.user.selection.set([id]);
+	selectIds(session.user.selection, [id]);
 }
 
 export function useRowDrag(

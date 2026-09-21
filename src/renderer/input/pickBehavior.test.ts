@@ -47,7 +47,7 @@ describe("the select tool", () => {
 		expect(target.user.selection.get()).toEqual([]);
 	});
 
-	it("clears the selection when the drag starts on the empty canvas", () => {
+	it("sweeps a marquee over the layer it touches when the drag starts on the empty canvas", () => {
 		const target = targetOf(true);
 		const id = firstId(target.doc);
 		tapAt(behaviorFor("select"), target, CENTER);
@@ -55,10 +55,22 @@ describe("the select tool", () => {
 		dragOver(
 			behaviorFor("select"),
 			{ ...target, layerIds: [] },
-			{
-				press: EMPTY,
-				release: RELEASE,
-			},
+			{ press: EMPTY, release: RELEASE },
+		);
+
+		expect(target.user.selection.get()).toEqual([id]);
+		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });
+	});
+
+	it("clears the selection when the marquee touches no layer", () => {
+		const target = targetOf(true);
+		const id = firstId(target.doc);
+		tapAt(behaviorFor("select"), target, CENTER);
+
+		dragOver(
+			behaviorFor("select"),
+			{ ...target, layerIds: [] },
+			{ press: EMPTY, release: { x: 320, y: 220 } },
 		);
 
 		expect(target.user.selection.get()).toEqual([]);
@@ -133,14 +145,16 @@ describe("the select tool", () => {
 		expect(target.doc.layer(parent)).toMatchObject({ x: 420, y: 260 });
 	});
 
-	it("moves the layer of the press when the selection holds more than one layer", () => {
+	it("carries the whole selection when the press lands on a layer it holds", () => {
 		const { target, above, below } = coveredTarget();
 		target.user.selection.set([below, above]);
+		const changes = target.doc.changeCount();
 
 		dragOver(behaviorFor("select"), target, { press: PRESS, release: RELEASE });
 
 		expect(target.doc.layer(above)).toMatchObject({ x: 520, y: 330 });
-		expect(target.doc.layer(below)).toMatchObject({ x: 420, y: 260 });
+		expect(target.doc.layer(below)).toMatchObject({ x: 520, y: 330 });
+		expect(target.doc.changeCount()).toBe(changes + 1);
 	});
 
 	it("selects the layer under the secondary press, not the parent that holds it", () => {

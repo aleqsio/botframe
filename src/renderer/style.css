@@ -30,6 +30,7 @@
 	--bar-selected: rgb(255 255 255 / 0.16);
 	--bar-focus: rgb(138 168 255 / 0.9);
 	--selection: #0d99ff;
+	--marquee-fill: rgb(13 153 255 / 0.12);
 	--highlight: rgb(13 153 255 / 0.75);
 	--snap: #f24822;
 	--guide: rgb(242 72 34 / 0.55);
@@ -140,7 +141,9 @@ body {
 }
 
 .selection,
+.selection-box,
 .selection-peer,
+.marquee,
 .highlight,
 .drop-frame {
 	position: absolute;
@@ -157,8 +160,17 @@ body {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
 
+.selection-box {
+	outline: calc(2px / var(--zoom)) solid var(--selection);
+}
+
 .selection-peer {
 	outline: calc(1.5px / var(--zoom)) solid var(--selection);
+}
+
+.marquee {
+	outline: calc(1px / var(--zoom)) solid var(--selection);
+	background-color: var(--marquee-fill);
 }
 
 .highlight {
@@ -740,6 +752,12 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .layer-glyph-page {
 	border-radius: 2px 5px 2px 2px;
+}
+
+.layer-glyph-group {
+	border-style: dashed;
+	border-radius: 3px;
+	background-color: var(--panel-label);
 }
 
 .inspector-header {

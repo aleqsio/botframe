@@ -1,5 +1,4 @@
 import type { Layer, LayerId } from "../../document/layer";
-import type { DisplayMode } from "../../document/layout";
 import type { Point, StagePoint } from "../state/camera";
 import { zoneAt } from "./handles";
 import type { Zone } from "./handles";
@@ -7,7 +6,7 @@ import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { resizeGripOf, snappedResize } from "./resizeSnap";
 import type { ResizeGrip } from "./resizeSnap";
-import { parentPointOf, selectedLayer } from "./targetSpace";
+import { parentDisplayOf, parentPointOf, soleLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizePatch, rotatedDegrees } from "./transform";
 
@@ -20,7 +19,7 @@ interface Aim {
 }
 
 function aimAt(target: PointerTarget, canvas: Point): Aim | null {
-	const layer = selectedLayer(target);
+	const layer = soleLayer(target);
 	if (layer === null) {
 		return null;
 	}
@@ -46,11 +45,6 @@ function gripFor(target: PointerTarget, aim: Aim | null): Grip | null {
 		return { kind: "rotate", start: layer, origin: point };
 	}
 	return { kind: "resize", ...resizeGripOf(target, layer, zone.handle) };
-}
-
-function parentDisplayOf(target: PointerTarget, start: Layer): DisplayMode {
-	const parent = start.parent === null ? null : target.doc.layer(start.parent);
-	return parent?.layout.display ?? "block";
 }
 
 function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: Modifiers): void {

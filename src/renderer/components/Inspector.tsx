@@ -1,19 +1,21 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import type { DesignDocument } from "../../document/document";
-import type { Layer, LayerId } from "../../document/layer";
-import { usePicked } from "../state/useSlot";
+import type { Layer } from "../../document/layer";
+import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
-import { useLayer, useLayerCount } from "../useDocument";
+import { useLayerCount, useLayers } from "../useDocument";
 import { LayerProperties } from "./LayerProperties";
-import { inspectorHeading } from "./layerEntry";
+import { MixedProperties } from "./MixedProperties";
+import { groupHeading, inspectorHeading } from "./layerEntry";
+import type { InspectorHeading } from "./layerEntry";
 
-function firstSelected(ids: readonly LayerId[]): LayerId | null {
-	return ids[0] ?? null;
+function headingOf(layers: readonly Layer[]): InspectorHeading {
+	const [first, peer] = layers;
+
+	return peer === undefined ? inspectorHeading(first ?? null) : groupHeading(layers.length);
 }
 
-function InspectorHeader({ layer }: { layer: Layer | null }): ReactElement {
-	const heading = inspectorHeading(layer);
-
+function InspectorHeader({ heading }: { heading: InspectorHeading }): ReactElement {
 	return (
 		<header className="inspector-header">
 			<span aria-hidden="true" className={`layer-glyph layer-glyph-${heading.glyph}`} />
@@ -34,18 +36,33 @@ function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 	);
 }
 
+function InspectorBody({
+	doc,
+	layers,
+}: {
+	doc: DesignDocument;
+	layers: readonly Layer[];
+}): ReactNode {
+	const [first, peer] = layers;
+
+	if (first === undefined) {
+		return <PageProperties doc={doc} />;
+	}
+	return peer === undefined ? (
+		<LayerProperties doc={doc} layer={first} />
+	) : (
+		<MixedProperties doc={doc} layers={layers} />
+	);
+}
+
 export function Inspector({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
-	const layer = useLayer(doc, usePicked(user.selection, firstSelected));
+	const layers = useLayers(doc, useSlot(user.selection));
 
 	return (
 		<aside aria-label="Inspector" id="inspector">
-			<InspectorHeader layer={layer} />
+			<InspectorHeader heading={headingOf(layers)} />
 			<div className="inspector-body">
-				{layer === null ? (
-					<PageProperties doc={doc} />
-				) : (
-					<LayerProperties doc={doc} layer={layer} />
-				)}
+				<InspectorBody doc={doc} layers={layers} />
 			</div>
 		</aside>
 	);

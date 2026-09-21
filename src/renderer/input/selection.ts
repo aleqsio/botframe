@@ -8,6 +8,18 @@ function apart(read: ReadLayer, id: LayerId, other: LayerId): boolean {
 	return !insideSubtree(read, id, other) && !insideSubtree(read, other, id);
 }
 
+export function outermost(read: ReadLayer, ids: readonly LayerId[]): readonly LayerId[] {
+	return ids.filter((id) => !ids.some((other) => other !== id && insideSubtree(read, id, other)));
+}
+
+export function selectIds(selection: Slot<readonly LayerId[]>, ids: readonly LayerId[]): void {
+	const held = selection.get();
+	if (ids.length === held.length && ids.every((id, index) => id === held[index])) {
+		return;
+	}
+	selection.set(ids.length === 0 ? NOTHING_SELECTED : ids);
+}
+
 export function toggleSelected(
 	read: ReadLayer,
 	selection: Slot<readonly LayerId[]>,
@@ -15,9 +27,11 @@ export function toggleSelected(
 ): void {
 	const held = selection.get();
 	if (held.includes(id)) {
-		const rest = held.filter((selected) => selected !== id);
-		selection.set(rest.length === 0 ? NOTHING_SELECTED : rest);
+		selectIds(
+			selection,
+			held.filter((selected) => selected !== id),
+		);
 		return;
 	}
-	selection.set([...held.filter((selected) => apart(read, id, selected)), id]);
+	selectIds(selection, [...held.filter((selected) => apart(read, id, selected)), id]);
 }
