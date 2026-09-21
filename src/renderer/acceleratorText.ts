@@ -1,4 +1,11 @@
-import { onApple } from "./input/editCommand";
+import { onApple } from "./input/command";
+
+const ARROW_KEYS: Readonly<Record<string, string>> = {
+	Left: "←",
+	Right: "→",
+	Up: "↑",
+	Down: "↓",
+};
 
 const APPLE_KEYS: Readonly<Record<string, string>> = {
 	CmdOrCtrl: "⌘",
@@ -6,10 +13,12 @@ const APPLE_KEYS: Readonly<Record<string, string>> = {
 	Ctrl: "⌃",
 	Shift: "⇧",
 	Backspace: "⌫",
+	...ARROW_KEYS,
 };
 
 const OTHER_KEYS: Readonly<Record<string, string>> = {
 	CmdOrCtrl: "Ctrl",
+	...ARROW_KEYS,
 };
 
 export function acceleratorText(accelerator: string): string {

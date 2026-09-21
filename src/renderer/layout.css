@@ -34,6 +34,55 @@
 	--layout-pad-side: calc(5 * var(--layout-control) + var(--layout-space-2));
 }
 
+.arrange {
+	display: flex;
+	flex-direction: column;
+	gap: var(--layout-space-2);
+	padding-bottom: var(--layout-space-4);
+	border-bottom: 1px solid var(--panel-border);
+}
+
+.arrange-row {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: var(--layout-space-1);
+}
+
+.arrange-button {
+	display: grid;
+	place-items: center;
+	min-width: 0;
+	height: var(--layout-control);
+	padding: 0;
+	border: 0;
+	border-radius: var(--layout-radius-inner);
+	background-color: var(--panel-hover);
+	color: var(--panel-label);
+	cursor: default;
+	transition:
+		background-color 200ms ease,
+		color 200ms ease;
+}
+
+.arrange-button:hover:not(:disabled) {
+	background-color: var(--panel-selected);
+	color: var(--panel-text);
+}
+
+.arrange-button:disabled {
+	opacity: 0.35;
+}
+
+.arrange-button:focus-visible {
+	outline: var(--layout-space-1) solid var(--panel-focus);
+	outline-offset: calc(-1 * var(--layout-space-1));
+}
+
+.arrange-button .icon {
+	width: var(--layout-icon);
+	height: var(--layout-icon);
+}
+
 .layout-section {
 	display: flex;
 	flex-direction: column;
@@ -740,6 +789,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.arrange-button,
 	.layout-segment,
 	.layout-toggle,
 	.layout-cell,

@@ -24,7 +24,7 @@ export function stageOrigin(window: Page): Promise<Point> {
 	});
 }
 
-export const EDIT_LABELS = ["Cut", "Copy", "Copy as", "Paste", "Duplicate", "Delete"];
+export const EDIT_LABELS = ["Cut", "Copy", "Copy as", "Paste", "Duplicate", "Delete", "Arrange"];
 
 export async function pressRight(window: Page, point: Point): Promise<void> {
 	await window.mouse.move(point.x, point.y);

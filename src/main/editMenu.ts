@@ -33,7 +33,7 @@ function commandItem(item: EditMenuItem, window: BrowserWindow): MenuItemConstru
 		return {
 			label: item.label,
 			enabled: item.enabled,
-			submenu: children.map((child) => commandItem(child, window)),
+			submenu: withSeparators(children, window),
 		};
 	}
 	return {

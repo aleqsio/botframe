@@ -38,9 +38,10 @@ describe("the Edit menu", () => {
 			"Paste",
 			"Duplicate",
 			"Delete",
+			"Arrange",
 		]);
 		expect(labelsOf(named(items, "Copy as").submenu ?? [])).toEqual(["HTML"]);
-		expect(withSeparator(items)).toEqual(["Cut", "Duplicate"]);
+		expect(withSeparator(items)).toEqual(["Cut", "Duplicate", "Arrange"]);
 	});
 
 	it("disables each command on a new document with no selection", () => {
@@ -55,6 +56,7 @@ describe("the Edit menu", () => {
 			Paste: false,
 			Duplicate: false,
 			Delete: false,
+			Arrange: false,
 		});
 	});
 
@@ -97,9 +99,17 @@ describe("the context menu", () => {
 	it("lists the clipboard and layer commands and separates the two groups", () => {
 		const items = contextMenuItems(DesignDocument.create(), new UserState());
 
-		expect(labelsOf(items)).toEqual(["Cut", "Copy", "Copy as", "Paste", "Duplicate", "Delete"]);
+		expect(labelsOf(items)).toEqual([
+			"Cut",
+			"Copy",
+			"Copy as",
+			"Paste",
+			"Duplicate",
+			"Delete",
+			"Arrange",
+		]);
 		expect(labelsOf(named(items, "Copy as").submenu ?? [])).toEqual(["HTML"]);
-		expect(withSeparator(items)).toEqual(["Duplicate"]);
+		expect(withSeparator(items)).toEqual(["Duplicate", "Arrange"]);
 	});
 
 	it("disables each command with no selection and an empty clipboard", () => {
@@ -112,6 +122,7 @@ describe("the context menu", () => {
 			Paste: false,
 			Duplicate: false,
 			Delete: false,
+			Arrange: false,
 		});
 	});
 
@@ -128,6 +139,27 @@ describe("the context menu", () => {
 			Paste: true,
 			Duplicate: true,
 			Delete: true,
+			Arrange: true,
+		});
+	});
+
+	it("gives Arrange a submenu of the layout actions, grouped by a separator", () => {
+		const doc = DesignDocument.create();
+		const user = new UserState();
+		user.selection.set([firstId(doc)]);
+		const arrange = named(contextMenuItems(doc, user), "Arrange").submenu ?? [];
+
+		expect(labelsOf(arrange)).toContain("Align left");
+		expect(labelsOf(arrange)).toContain("Swap width and height");
+		expect(withSeparator(arrange)).toEqual([
+			"Distribute horizontally",
+			"Center horizontally in the parent",
+			"Flip horizontally",
+		]);
+		expect(enabledOf(arrange)).toMatchObject({
+			"Align left": false,
+			"Swap width and height": true,
+			"Rotate 90° right": true,
 		});
 	});
 });

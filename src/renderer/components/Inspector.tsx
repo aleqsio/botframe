@@ -5,6 +5,7 @@ import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 import { useLayerCount, useLayers } from "../useDocument";
 import { LayerProperties } from "./LayerProperties";
+import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { groupHeading, inspectorHeading } from "./layerEntry";
 import type { InspectorHeading } from "./layerEntry";
@@ -62,6 +63,7 @@ export function Inspector({ doc, user }: { doc: DesignDocument; user: UserState 
 		<aside aria-label="Inspector" id="inspector">
 			<InspectorHeader heading={headingOf(layers)} />
 			<div className="inspector-body">
+				<LayoutActions doc={doc} layers={layers} user={user} />
 				<InspectorBody doc={doc} layers={layers} />
 			</div>
 		</aside>

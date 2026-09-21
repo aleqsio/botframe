@@ -1043,55 +1043,6 @@ button.layer-chevron[aria-expanded="false"]::before {
 	height: calc(1px / var(--zoom));
 }
 
-.segmented {
-	position: relative;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	min-width: 0;
-	margin: 0;
-	padding: 2px;
-	border: 0;
-	border-radius: 8px;
-	background-color: var(--panel-hover);
-}
-
-.segment-pill {
-	position: absolute;
-	top: 2px;
-	bottom: 2px;
-	left: 2px;
-	width: calc(50% - 2px);
-	border-radius: 6px;
-	background-color: var(--panel-selected);
-	transition: translate 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.segmented[data-active="Landscape"] .segment-pill {
-	translate: 100% 0;
-}
-
-.segment {
-	position: relative;
-	padding: 5px 6px;
-	border: 0;
-	border-radius: 6px;
-	background-color: transparent;
-	color: var(--panel-label);
-	font: inherit;
-	font-size: 11px;
-	cursor: default;
-	transition: color 200ms ease;
-}
-
-.segment[aria-pressed="true"] {
-	color: var(--panel-text);
-}
-
-.segment:focus-visible {
-	outline: 2px solid var(--panel-focus);
-	outline-offset: -2px;
-}
-
 .card-footer {
 	display: flex;
 	align-items: center;
@@ -1147,8 +1098,6 @@ button.layer-chevron[aria-expanded="false"]::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.segment,
-	.segment-pill,
 	.footer-select,
 	.footer-chevron {
 		transition: none;
