@@ -1,4 +1,3 @@
-import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Point } from "../state/camera";
 
 const TAP_LIMIT = 4;
@@ -38,7 +37,14 @@ interface Pinch {
 	spread: number;
 }
 
-export function sampleOf(event: ReactPointerEvent<HTMLElement>): PointerSample {
+export interface PointerInput {
+	pointerId: number;
+	pointerType: string;
+	clientX: number;
+	clientY: number;
+}
+
+export function sampleOf(event: PointerInput): PointerSample {
 	return {
 		pointerId: event.pointerId,
 		x: event.clientX,
