@@ -7,7 +7,7 @@ import type { Handle } from "./handles";
 import type { Snap } from "./snap";
 
 const BOTH_AXES: readonly GuideAxis[] = ["x", "y"];
-const NO_AXES: readonly GuideAxis[] = [];
+export const NO_AXES: readonly GuideAxis[] = [];
 const CROSS_AXIS: Readonly<Record<"row" | "column", GuideAxis>> = { row: "y", column: "x" };
 
 export function freeAxesOf(
@@ -25,7 +25,7 @@ export function freeAxesOf(
 
 export function handleAxesOf(handle: Handle): readonly GuideAxis[] {
 	const axis = HANDLE_AXIS[handle];
-	return [...(axis.x === 0 ? [] : (["x"] as const)), ...(axis.y === 0 ? [] : (["y"] as const))];
+	return BOTH_AXES.filter((name) => axis[name] !== 0);
 }
 
 export function placedOn(axes: readonly GuideAxis[], point: Point): Partial<Point> {

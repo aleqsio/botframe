@@ -5,7 +5,7 @@ import { rotatePoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
 import type { Snap, SnapField, SnapSegment } from "./snap";
-import { snapOn } from "./snapAxes";
+import { NO_AXES, snapOn } from "./snapAxes";
 import type { PointerTarget } from "./tool";
 
 export interface SnapPull {
@@ -21,7 +21,6 @@ interface Travel {
 	carrier: Point | null;
 }
 
-const NO_AXES: readonly GuideAxis[] = [];
 const UNIT: Readonly<Record<GuideAxis, Point>> = { x: { x: 1, y: 0 }, y: { x: 0, y: 1 } };
 const PARALLEL = 1e-6;
 
@@ -38,15 +37,13 @@ function travelOf(pull: SnapPull): Travel {
 	return { axes: pull.axes, carrier: { x: along.x / reach, y: along.y / reach } };
 }
 
-function alongCarrier(wanted: Point, carrier: Point, snap: Snap): Point {
+function pulledAlong(wanted: Point, travel: Travel, snap: Snap): Point {
+	const { carrier } = travel;
+	if (carrier === null) {
+		return snappedPoint(wanted, snap);
+	}
 	const delta = (snap.x?.delta ?? 0) + (snap.y?.delta ?? 0);
 	return { x: wanted.x + delta * carrier.x, y: wanted.y + delta * carrier.y };
-}
-
-function pulledAlong(wanted: Point, travel: Travel, snap: Snap): Point {
-	return travel.carrier === null
-		? snappedPoint(wanted, snap)
-		: alongCarrier(wanted, travel.carrier, snap);
 }
 
 export interface Pulled {
