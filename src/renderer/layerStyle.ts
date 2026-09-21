@@ -16,10 +16,8 @@ import type {
 } from "../document/layout";
 import { PERCENT, roundNumber } from "../document/length";
 import type { Axis } from "../document/length";
-import { pivotOf } from "./input/layerSpace";
+import { pivotOf, turnedBounds } from "./input/layerSpace";
 import type { Turned } from "./input/layerSpace";
-
-const HALF_TURN = 180;
 
 declare module "react" {
 	interface CSSProperties {
@@ -211,24 +209,17 @@ function marginText(side: MarginSide): string | null {
 	return side.value === 0 ? null : printSpacing(side);
 }
 
-const TURN_PAD: Readonly<Record<Side, Axis>> = {
-	top: "height",
-	right: "width",
-	bottom: "height",
-	left: "width",
-};
-
-export function turnedPad(layer: StyledLayer): Record<Axis, number> {
-	const radians = (layer.rotation * Math.PI) / HALF_TURN;
-	const cos = Math.abs(Math.cos(radians));
-	const sin = Math.abs(Math.sin(radians));
+export function turnedPad(layer: StyledLayer): Record<Side, number> {
+	const bounds = turnedBounds(layer);
 	return {
-		width: roundNumber((layer.width * cos + layer.height * sin - layer.width) / 2),
-		height: roundNumber((layer.width * sin + layer.height * cos - layer.height) / 2),
+		top: roundNumber(-bounds.y),
+		right: roundNumber(bounds.x + bounds.width - layer.width),
+		bottom: roundNumber(bounds.y + bounds.height - layer.height),
+		left: roundNumber(-bounds.x),
 	};
 }
 
-const NO_PAD: Record<Axis, number> = { width: 0, height: 0 };
+const NO_PAD: Record<Side, number> = { top: 0, right: 0, bottom: 0, left: 0 };
 
 function paddedMargin(text: string | null, pad: number): string | null {
 	if (pad === 0 || text === "auto") {
@@ -244,7 +235,7 @@ function marginStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	const pad = layer.layout.turnedBox ? turnedPad(layer) : NO_PAD;
 	const style: CSSProperties = {};
 	for (const side of SIDES) {
-		const text = paddedMargin(marginText(layer.layout.margin[side]), pad[TURN_PAD[side]]);
+		const text = paddedMargin(marginText(layer.layout.margin[side]), pad[side]);
 		if (text !== null) {
 			Object.assign(style, MARGIN_TEXT[side](text));
 		}
