@@ -296,3 +296,33 @@ describe("the unit of a box field", () => {
 		expect(doc.layer(child.layer.id)?.lengths.width).toEqual({ value: 0.1, unit: "%" });
 	});
 });
+
+describe("the reason a unit is not available", () => {
+	it("tells how to make each relative unit available to a layer at the root", () => {
+		const doc = DesignDocument.create();
+
+		expect(choiceOf({ layer: layerOf(doc), basis: NO_BASIS }, "W").tips).toEqual({
+			"%": "Put the layer in another layer to use %.",
+			vw: "Put the layer in another layer to use vw.",
+			vh: "Put the layer in another layer to use vh.",
+		});
+	});
+
+	it("gives no reason to a layer inside a container, because each unit is possible", () => {
+		const child = childOf(DesignDocument.create());
+
+		expect(choiceOf(child, "W").tips).toEqual({});
+	});
+
+	it("gives no reason for the unit the layer holds, because the menu does not gray it", () => {
+		const doc = DesignDocument.create();
+		const child = childOf(doc);
+		doc.update(child.layer.id, choiceOf(child, "W").convert("%"));
+		const orphan = { layer: heldChild(doc, child.layer.id).layer, basis: NO_BASIS };
+
+		expect(choiceOf(orphan, "W").tips).toEqual({
+			vw: "Put the layer in another layer to use vw.",
+			vh: "Put the layer in another layer to use vh.",
+		});
+	});
+});
