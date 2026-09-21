@@ -7,7 +7,7 @@ import { centerOf, fromParentPoint } from "./layerSpace";
 interface Spec {
 	id: LayerId;
 	parent: LayerId | null;
-	artboard: boolean;
+	frame: boolean;
 	rotation?: number;
 }
 
@@ -25,7 +25,7 @@ function layerOf(spec: Spec): Layer {
 			kind: "rectangle",
 			cornerRadius: 0,
 			cornerSmoothing: 0,
-			artboard: spec.artboard,
+			artboard: spec.frame,
 		},
 		name: "",
 		clip: false,
@@ -33,14 +33,14 @@ function layerOf(spec: Spec): Layer {
 	};
 }
 
-const DRAGGED = layerOf({ id: "1@1", parent: null, artboard: false });
-const INSIDE_DRAGGED = layerOf({ id: "2@1", parent: "1@1", artboard: true });
-const RECTANGLE = layerOf({ id: "3@1", parent: null, artboard: false });
-const ARTBOARD = layerOf({ id: "4@1", parent: null, artboard: true });
-const OUTER = layerOf({ id: "5@1", parent: null, artboard: true });
+const DRAGGED = layerOf({ id: "1@1", parent: null, frame: false });
+const INSIDE_DRAGGED = layerOf({ id: "2@1", parent: "1@1", frame: true });
+const RECTANGLE = layerOf({ id: "3@1", parent: null, frame: false });
+const FRAME = layerOf({ id: "4@1", parent: null, frame: true });
+const OUTER = layerOf({ id: "5@1", parent: null, frame: true });
 const ELLIPSE: Layer = { ...RECTANGLE, id: "6@1", geometry: { kind: "ellipse" } };
 
-const WORLD = [DRAGGED, INSIDE_DRAGGED, RECTANGLE, ARTBOARD, OUTER, ELLIPSE];
+const WORLD = [DRAGGED, INSIDE_DRAGGED, RECTANGLE, FRAME, OUTER, ELLIPSE];
 
 function read(id: LayerId): Layer | null {
 	return WORLD.find((layer) => layer.id === id) ?? null;
@@ -51,26 +51,26 @@ function parentOf(ids: readonly LayerId[]): LayerId | null {
 }
 
 describe("dropParentOf", () => {
-	it("takes the deepest artboard under the pointer", () => {
-		expect(parentOf([DRAGGED.id, ARTBOARD.id, OUTER.id])).toBe(ARTBOARD.id);
+	it("takes the deepest frame under the pointer", () => {
+		expect(parentOf([DRAGGED.id, FRAME.id, OUTER.id])).toBe(FRAME.id);
 	});
 
 	it("passes over a shape, so no shape takes the layer as a child", () => {
-		expect(parentOf([RECTANGLE.id, ELLIPSE.id, ARTBOARD.id])).toBe(ARTBOARD.id);
+		expect(parentOf([RECTANGLE.id, ELLIPSE.id, FRAME.id])).toBe(FRAME.id);
 	});
 
 	it("skips the dragged layer and each layer below it", () => {
-		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id, ARTBOARD.id])).toBe(ARTBOARD.id);
+		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id, FRAME.id])).toBe(FRAME.id);
 		expect(parentOf([DRAGGED.id, INSIDE_DRAGGED.id])).toBeNull();
 	});
 
-	it("gives the root when no artboard is under the pointer", () => {
+	it("gives the root when no frame is under the pointer", () => {
 		expect(parentOf([RECTANGLE.id, ELLIPSE.id])).toBeNull();
 		expect(parentOf([])).toBeNull();
 	});
 
 	it("passes over a layer that the document lost", () => {
-		expect(parentOf(["9@9", ARTBOARD.id])).toBe(ARTBOARD.id);
+		expect(parentOf(["9@9", FRAME.id])).toBe(FRAME.id);
 	});
 });
 
@@ -79,9 +79,9 @@ function placed(layer: Layer, from: readonly Layer[], to: readonly Layer[]): Lay
 }
 
 describe("heldPlacement", () => {
-	const TURNED = layerOf({ id: "7@1", parent: null, artboard: true, rotation: 90 });
+	const TURNED = layerOf({ id: "7@1", parent: null, frame: true, rotation: 90 });
 	const CHILD: Layer = {
-		...layerOf({ id: "8@1", parent: null, artboard: false, rotation: 30 }),
+		...layerOf({ id: "8@1", parent: null, frame: false, rotation: 30 }),
 		x: 40,
 		y: 10,
 		width: 60,

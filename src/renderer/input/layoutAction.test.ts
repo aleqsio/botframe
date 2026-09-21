@@ -90,8 +90,8 @@ describe("the layout action table", () => {
 
 	it("answers the panel from the layers and the menu from the selection in the same way", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 50, y: 60, width: 20, height: 20 }], frame));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 50, y: 60, width: 20, height: 20 }], parent));
 		const layers = [layerOf(held.doc, child)];
 
 		for (const action of LAYOUT_ACTIONS) {
@@ -116,8 +116,8 @@ describe("the layout action table", () => {
 describe("align", () => {
 	it("aligns one layer to the box of its parent", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 50, y: 60, width: 20, height: 20 }], frame));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 50, y: 60, width: 20, height: 20 }], parent));
 
 		run(held, "alignLeft");
 
@@ -165,13 +165,13 @@ describe("align", () => {
 
 	it("is off under a parent that lays out its children", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		place(held, [{ x: 50, y: 60, width: 20, height: 20 }], frame);
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		place(held, [{ x: 50, y: 60, width: 20, height: 20 }], parent);
 		const command = actionOf("alignLeft");
 
 		expect(command.enabled(held.doc, held.user)).toBe(true);
 
-		held.doc.update(frame, { layout: { display: "row" } });
+		held.doc.update(parent, { layout: { display: "row" } });
 		held.doc.commit("set display");
 
 		expect(command.enabled(held.doc, held.user)).toBe(false);
@@ -188,8 +188,8 @@ describe("align", () => {
 describe("center", () => {
 	it("puts the layer in the middle of its parent on the two axes", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 100 }]));
-		const child = only(place(held, [{ x: 0, y: 0, width: 20, height: 10 }], frame));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 100 }]));
+		const child = only(place(held, [{ x: 0, y: 0, width: 20, height: 10 }], parent));
 
 		run(held, "centerBoth");
 
@@ -236,22 +236,22 @@ describe("distribute", () => {
 });
 
 describe("size to fit", () => {
-	it("holds the children of the frame and keeps them where they were", () => {
+	it("holds the children of the parent and keeps them where they were", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
 		const children = place(
 			held,
 			[
 				{ x: 20, y: 30, width: 40, height: 50 },
 				{ x: 100, y: 10, width: 20, height: 20 },
 			],
-			frame,
+			parent,
 		);
-		held.user.selection.set([frame]);
+		held.user.selection.set([parent]);
 
 		run(held, "sizeToFit");
 
-		expect(layerOf(held.doc, frame)).toMatchObject({
+		expect(layerOf(held.doc, parent)).toMatchObject({
 			x: 20,
 			y: 10,
 			width: 100,
@@ -286,8 +286,8 @@ describe("flip", () => {
 
 	it("holds one layer in its place and turns its rotation the other way", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], frame));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
 
 		run(held, "flipX");
 
@@ -296,8 +296,8 @@ describe("flip", () => {
 
 	it("turns the rotation of the layer the other way", () => {
 		const held = scene();
-		const frame = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], frame));
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], parent));
 		held.doc.update(child, { rotation: 30 });
 		held.doc.commit("turn");
 

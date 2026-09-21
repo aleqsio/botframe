@@ -10,14 +10,14 @@ const CHILD_SIZE = { width: THIRD, height: 60 };
 const RADIANS = Math.PI / 180;
 const DIGITS = 6;
 
-interface Frame {
+interface Space {
 	chain: Linear;
 	shift: Point;
 	own: Affine;
 	origin: Point;
 }
 
-const STILL: Frame = {
+const STILL: Space = {
 	chain: IDENTITY,
 	shift: { x: 0, y: 0 },
 	own: IDENTITY,
@@ -71,8 +71,8 @@ function parentOn(chain: Linear, shift: Point): ClientBox {
 	};
 }
 
-function readOf(box: Rect, frame: Frame): BoxRead {
-	const { chain, shift, own, origin } = frame;
+function readOf(box: Rect, space: Space): BoxRead {
+	const { chain, shift, own, origin } = space;
 	const turned = boundsOf(box, { a: own.a, b: own.b, c: own.c, d: own.d }, { x: 0, y: 0 });
 	const pivot = mapped(own, { x: 0, y: 0 }, { x: box.x + origin.x, y: box.y + origin.y });
 	const placed = {
@@ -121,14 +121,14 @@ describe("layoutBox", () => {
 
 	it("undoes a turned and zoomed parent chain around a lifted and turned child", () => {
 		const box = { x: 10, y: 20, width: 30, height: 50 };
-		const frame = {
+		const space = {
 			chain: multiply(scale(2), turn(30)),
 			shift: { x: 100, y: 50 },
 			own: { ...turn(45), e: 12, f: -8 },
 			origin: { x: 15, y: 25 },
 		};
 
-		expect(layoutBox(readOf(box, frame))).toEqual(closeTo(box));
+		expect(layoutBox(readOf(box, space))).toEqual(closeTo(box));
 	});
 
 	it("gives no box when the chain cannot be undone", () => {

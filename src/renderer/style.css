@@ -94,7 +94,7 @@ body {
 	will-change: transform;
 }
 
-.artboard-label {
+.frame-label {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -108,7 +108,7 @@ body {
 	scale: calc(1 / var(--zoom));
 }
 
-.artboard-label[data-selected] {
+.frame-label[data-selected] {
 	color: var(--selection);
 }
 
@@ -120,13 +120,13 @@ body {
 	cursor: grabbing;
 }
 
-#stage[data-tool="artboard"],
+#stage[data-tool="frame"],
 #stage[data-tool="rectangle"],
 #stage[data-tool="ellipse"] {
 	cursor: crosshair;
 }
 
-#stage[data-tool="artboard"] .layer,
+#stage[data-tool="frame"] .layer,
 #stage[data-tool="rectangle"] .layer,
 #stage[data-tool="ellipse"] .layer {
 	cursor: inherit;
@@ -145,7 +145,7 @@ body {
 .selection-peer,
 .marquee,
 .highlight,
-.drop-frame {
+.drop-outline {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -184,7 +184,7 @@ body {
 	border-style: solid;
 }
 
-.drop-frame {
+.drop-outline {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 	outline-offset: calc(1px / var(--zoom));
 }
@@ -735,7 +735,7 @@ button.layer-chevron[aria-expanded="false"]::before {
 	border: 1.5px solid var(--panel-label);
 }
 
-.layer-glyph-artboard {
+.layer-glyph-frame {
 	border-style: dashed;
 	border-radius: 2px;
 }

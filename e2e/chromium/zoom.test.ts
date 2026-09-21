@@ -25,7 +25,7 @@ async function clickTimes(locator: Locator, times: number): Promise<void> {
 	await clickTimes(locator, times - 1);
 }
 
-test("the selection frame sits on a fill child of a row at zoom 32", async ({ page }) => {
+test("the selection outline sits on a fill child of a row at zoom 32", async ({ page }) => {
 	const { origin } = await openRenderer(page);
 	const children = await drawRowOfThree(page, origin);
 	await fillWidth(page, origin, children.nth(0));
@@ -41,7 +41,7 @@ test("the selection frame sits on a fill child of a row at zoom 32", async ({ pa
 
 	await expect(zoom.locator("output")).toHaveText("3200%");
 	const layer = await rectOf(middle);
-	const frame = await rectOf(page.locator(".selection"));
-	expect(frame.x).toBeCloseTo(layer.x, DIGITS);
-	expect(frame.width).toBeCloseTo(layer.width, DIGITS);
+	const outline = await rectOf(page.locator(".selection"));
+	expect(outline.x).toBeCloseTo(layer.x, DIGITS);
+	expect(outline.width).toBeCloseTo(layer.width, DIGITS);
 });

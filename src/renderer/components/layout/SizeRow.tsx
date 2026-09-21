@@ -5,7 +5,7 @@ import { PIXELS } from "../../../document/length";
 import type { Axis, Unit } from "../../../document/length";
 import { SIZE_MODES } from "../../../document/layout";
 import type { LayoutPatch, SizeMode } from "../../../document/layout";
-import { useDrawnFrame } from "../../useDocument";
+import { useDrawnOutline } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { ChipBox } from "./ChipBox";
@@ -58,7 +58,7 @@ export function SizeRow({
 	const mode = layer.layout[axis];
 	const fixed = mode === "fixed";
 	const full = mode === "fill" && blocked;
-	const drawn = useDrawnFrame(doc, layer.id);
+	const drawn = useDrawnOutline(doc, layer.id);
 	const field = boxField(AXIS_LABEL[axis], axis, layer, doc.basisOf(layer.id));
 	const write = (patch: LayerPatch): void => {
 		doc.update(layer.id, patch);

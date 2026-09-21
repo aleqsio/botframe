@@ -7,8 +7,8 @@ import type { SnapSegment } from "./input/snap";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useDrawnFrame, useDrawnSpace, useSelectionBox } from "./useDocument";
-import type { DrawnFrame } from "./useDocument";
+import { useDrawnOutline, useDrawnSpace, useSelectionBox } from "./useDocument";
+import type { DrawnOutline } from "./useDocument";
 
 declare module "react" {
 	interface CSSProperties {
@@ -16,16 +16,16 @@ declare module "react" {
 	}
 }
 
-function frameStyle(frame: DrawnFrame): CSSProperties {
+function outlineStyle(outline: DrawnOutline): CSSProperties {
 	return {
-		transform: frame.transform,
-		width: `${frame.width}px`,
-		height: `${frame.height}px`,
+		transform: outline.transform,
+		width: `${outline.width}px`,
+		height: `${outline.height}px`,
 		"--handle-size": `${HANDLE_SIZE}px`,
 	};
 }
 
-function LayerFrame({
+function LayerOutline({
 	className,
 	doc,
 	id,
@@ -36,14 +36,14 @@ function LayerFrame({
 	id: LayerId;
 	children?: ReactNode;
 }): ReactNode {
-	const frame = useDrawnFrame(doc, id);
+	const outline = useDrawnOutline(doc, id);
 
-	if (frame === null) {
+	if (outline === null) {
 		return null;
 	}
 
 	return (
-		<div className={className} style={frameStyle(frame)}>
+		<div className={className} style={outlineStyle(outline)}>
 			{children}
 		</div>
 	);
@@ -52,13 +52,13 @@ function LayerFrame({
 const NO_PADDING = "0px 0px 0px 0px";
 
 function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
-	const frame = useDrawnFrame(doc, id);
+	const outline = useDrawnOutline(doc, id);
 
-	if (frame === null || frame.padding === NO_PADDING) {
+	if (outline === null || outline.padding === NO_PADDING) {
 		return null;
 	}
 
-	return <span className="selection-padding" style={{ borderWidth: frame.padding }} />;
+	return <span className="selection-padding" style={{ borderWidth: outline.padding }} />;
 }
 
 function boxStyle(box: Rect): CSSProperties {
@@ -69,38 +69,42 @@ function boxStyle(box: Rect): CSSProperties {
 	};
 }
 
-function SoleFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
 	return (
-		<LayerFrame className="selection" doc={doc} id={id}>
+		<LayerOutline className="selection" doc={doc} id={id}>
 			<PaddingBand doc={doc} id={id} />
 			{CORNERS.map((corner) => (
 				<span className="selection-handle" data-corner={corner} key={corner} />
 			))}
-		</LayerFrame>
+		</LayerOutline>
 	);
 }
 
-function GroupFrame({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId[] }): ReactNode {
+function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId[] }): ReactNode {
 	const box = useSelectionBox(doc, ids);
 
 	return (
 		<>
 			{ids.map((id) => (
-				<LayerFrame className="selection-peer" doc={doc} id={id} key={id} />
+				<LayerOutline className="selection-peer" doc={doc} id={id} key={id} />
 			))}
 			{box === null ? null : <div className="selection-box" style={boxStyle(box)} />}
 		</>
 	);
 }
 
-function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
+function SelectionOutline({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	const ids = useSlot(user.selection);
 	const [id, peer] = ids;
 
 	if (id === undefined) {
 		return null;
 	}
-	return peer === undefined ? <SoleFrame doc={doc} id={id} /> : <GroupFrame doc={doc} ids={ids} />;
+	return peer === undefined ? (
+		<SoleOutline doc={doc} id={id} />
+	) : (
+		<GroupOutline doc={doc} ids={ids} />
+	);
 }
 
 function Marquee({ user }: { user: UserState }): ReactNode {
@@ -109,7 +113,7 @@ function Marquee({ user }: { user: UserState }): ReactNode {
 	return marquee === null ? null : <div className="marquee" style={boxStyle(marquee.box)} />;
 }
 
-function HighlightFrame({
+function HighlightOutline({
 	doc,
 	id,
 	user,
@@ -119,7 +123,7 @@ function HighlightFrame({
 	user: UserState;
 }): ReactNode {
 	return useSelected(user.selection, id) ? null : (
-		<LayerFrame className="highlight" doc={doc} id={id} />
+		<LayerOutline className="highlight" doc={doc} id={id} />
 	);
 }
 
@@ -128,13 +132,13 @@ function Drop({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNod
 		doc.layer(layerId),
 	);
 
-	return id === null ? null : <LayerFrame className="drop-frame" doc={doc} id={id} />;
+	return id === null ? null : <LayerOutline className="drop-outline" doc={doc} id={id} />;
 }
 
 function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
 	const id = useSlot(user.highlight);
 
-	return id === null ? null : <HighlightFrame doc={doc} id={id} user={user} />;
+	return id === null ? null : <HighlightOutline doc={doc} id={id} user={user} />;
 }
 
 function snapLineStyle(segment: SnapSegment): CSSProperties {
@@ -168,7 +172,7 @@ export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState })
 		<>
 			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
-			<SelectionFrame doc={doc} user={user} />
+			<SelectionOutline doc={doc} user={user} />
 			<Marquee user={user} />
 			<SnapLines doc={doc} user={user} />
 		</>

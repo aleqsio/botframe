@@ -1,5 +1,5 @@
 import type { LayerId } from "../../document/layer";
-import { isRootArtboard } from "../components/layerEntry";
+import { isRootFrame } from "../components/layerEntry";
 import type { LayerMove } from "../state/userState";
 import type { ReadLayer } from "./layerSpace";
 import type { RowDrag } from "./rowDrop";
@@ -17,5 +17,5 @@ export function droppedInto(
 	read: ReadLayer,
 ): LayerId | null {
 	const id = dropTarget(move, drag);
-	return id === null || isRootArtboard(read(id)) ? null : id;
+	return id === null || isRootFrame(read(id)) ? null : id;
 }

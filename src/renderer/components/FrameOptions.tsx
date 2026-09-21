@@ -6,9 +6,9 @@ import { viewportCenter } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { FloatingBar } from "./FloatingBar";
 import { ToolButton } from "./ToolButton";
-import { ARTBOARD_DEFAULTS, drawnFields, finishDraw, placeLayer } from "./layerDefaults";
+import { FRAME_DEFAULTS, drawnFields, finishDraw, placeLayer } from "./layerDefaults";
 import { PresetRow } from "./PresetRow";
-import type { ArtboardPreset } from "./presets";
+import type { FramePreset } from "./presets";
 
 interface PresetPlacement {
 	doc: DesignDocument;
@@ -16,7 +16,7 @@ interface PresetPlacement {
 	user: UserState;
 }
 
-function placePreset({ doc, stage, user }: PresetPlacement, preset: ArtboardPreset): void {
+function placePreset({ doc, stage, user }: PresetPlacement, preset: FramePreset): void {
 	const box = stage.current?.getBoundingClientRect();
 	if (box === undefined) {
 		return;
@@ -28,15 +28,15 @@ function placePreset({ doc, stage, user }: PresetPlacement, preset: ArtboardPres
 		width: preset.width,
 		height: preset.height,
 	};
-	placeLayer(doc, user, drawnFields(ARTBOARD_DEFAULTS, rect, preset.name), null);
-	finishDraw(doc, user, ARTBOARD_DEFAULTS);
+	placeLayer(doc, user, drawnFields(FRAME_DEFAULTS, rect, preset.name), null);
+	finishDraw(doc, user, FRAME_DEFAULTS);
 }
 
-export function ArtboardOptions(placement: PresetPlacement): ReactElement {
+export function FrameOptions(placement: PresetPlacement): ReactElement {
 	const [swapped, setSwapped] = useState(false);
 
 	return (
-		<FloatingBar label="Artboard options">
+		<FloatingBar label="Frame options">
 			<ToolButton
 				icon="swap"
 				label="Turn the presets"

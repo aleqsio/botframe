@@ -208,7 +208,7 @@ describe("a remote delete or move", () => {
 		const doc = DesignDocument.create();
 		const parent = doc.createLayer(DRAWN);
 		const child = doc.createLayer(DRAWN, parent);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		expect(doc.layer(parent)).not.toBeNull();
 		expect(doc.layer(child)).not.toBeNull();
 
@@ -231,7 +231,7 @@ describe("a remote delete or move", () => {
 		const doc = DesignDocument.create();
 		const parent = doc.createLayer(DRAWN);
 		const child = doc.createLayer(DRAWN, parent);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		const listener = vi.fn<() => void>();
 		doc.subscribeLayer(child, listener);
 
@@ -252,7 +252,7 @@ describe("a remote delete or move", () => {
 		const from = doc.createLayer(DRAWN);
 		const to = doc.createLayer(DRAWN);
 		const child = doc.createLayer(DRAWN, from);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		expect(doc.layer(child)).toMatchObject({ parent: from });
 		const listener = vi.fn<() => void>();
 		doc.subscribeLayer(child, listener);
@@ -275,7 +275,7 @@ describe("a remote delete or move", () => {
 	it("deletes nothing and throws nothing for a layer that a peer deleted", () => {
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
@@ -291,7 +291,7 @@ describe("a remote delete or move", () => {
 });
 
 describe("the layer writer", () => {
-	it("reads a layer that an older build wrote with no name, no clip, and no artboard flag", () => {
+	it("reads a layer that an older build wrote with no name, no clip, and no frame flag", () => {
 		const source = new LoroDoc();
 		const node = source.getTree("layers").createNode();
 		node.data.set("x", 10);
@@ -328,7 +328,7 @@ describe("the layer writer", () => {
 		for (let step = 1; step <= 200; step += 1) {
 			doc.update(id, { x: 0, y: 0, width: step, height: step });
 		}
-		doc.commit("create artboard");
+		doc.commit("create frame");
 
 		expect(doc.changeCount()).toBe(before + 1);
 		expect(doc.layer(id)).toMatchObject({ width: 200, height: 200 });

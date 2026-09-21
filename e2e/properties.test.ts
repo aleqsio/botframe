@@ -4,7 +4,7 @@ import { drawWith, openStage } from "./support";
 import type { Drag } from "./support";
 
 const PRESET = { name: "iPhone 16", width: 393, height: 852 };
-const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const SHIFT_DRAG = 2;
 const DRAG = 40;
@@ -13,7 +13,7 @@ const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
 async function placePreset(window: Page, name: string): Promise<void> {
 	await window.keyboard.press("a");
 	await window
-		.getByRole("toolbar", { name: "Artboard options" })
+		.getByRole("toolbar", { name: "Frame options" })
 		.getByRole("button", { name })
 		.click();
 }
@@ -57,7 +57,7 @@ async function dragBy(window: Page, handle: Locator, pixels: number): Promise<vo
 	await window.mouse.up();
 }
 
-test("a preset places an artboard of that size at the middle of the stage", async () => {
+test("a preset places a frame of that size at the middle of the stage", async () => {
 	const { app, layers, stage, window } = await openStage();
 	const title = window.locator("#inspector .inspector-name");
 	await expect(title).toHaveText("Page");
@@ -93,9 +93,9 @@ test("the arrange row exchanges the width and the height", async () => {
 	await app.close();
 });
 
-test("the arrange row aligns a layer to the box of its artboard", async () => {
+test("the arrange row aligns a layer to the box of its frame", async () => {
 	const { app, origin, window } = await openStage();
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 
 	await expect(chipValue(window, "X")).toHaveValue("40");
@@ -108,7 +108,7 @@ test("the arrange row aligns a layer to the box of its artboard", async () => {
 	await app.close();
 });
 
-test("the preset list of a selected artboard resizes it", async () => {
+test("the preset list of a selected frame resizes it", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
@@ -121,7 +121,7 @@ test("the preset list of a selected artboard resizes it", async () => {
 	await app.close();
 });
 
-test("the clip switch changes what the artboard does with the content outside its box", async () => {
+test("the clip switch changes what the frame does with the content outside its box", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
@@ -306,7 +306,7 @@ test("shift makes a large drag step and alt makes a small one", async () => {
 
 test("a layer inside a container takes a unit that is not the pixel", async () => {
 	const { app, layers, origin, window } = await openStage();
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 	const child = layers.nth(1).locator("> .layer");
 	const unit = window.getByLabel("W unit", { exact: true });
@@ -327,9 +327,9 @@ test("a layer inside a container takes a unit that is not the pixel", async () =
 	await app.close();
 });
 
-test("shift steps a percentage by five, and the layer follows the artboard", async () => {
+test("shift steps a percentage by five, and the layer follows the frame", async () => {
 	const { app, layers, origin, window } = await openStage();
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 	const child = layers.nth(1).locator("> .layer");
 	await pickUnit(window, "W", "%");

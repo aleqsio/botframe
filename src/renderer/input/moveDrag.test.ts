@@ -21,7 +21,7 @@ import {
 } from "./toolFixtures";
 import type { DropScene } from "./toolFixtures";
 
-const ARTBOARD: LayerFields = {
+const FRAME: LayerFields = {
 	x: 100,
 	y: 100,
 	width: 300,
@@ -33,13 +33,13 @@ const ARTBOARD: LayerFields = {
 };
 
 const RECTANGLE: LayerFields = {
-	...ARTBOARD,
+	...FRAME,
 	clip: false,
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
 };
 
 const GRAB = { x: 440, y: 280 };
-const OVER_THE_ARTBOARD = { x: 200, y: 160 };
+const OVER_THE_FRAME = { x: 200, y: 160 };
 const EMPTY = { x: 700, y: 600 };
 const TURNED_GRAB = { x: 580, y: 270 };
 const ON_SCREEN = { x: 600, y: 240 };
@@ -70,12 +70,12 @@ function dropOver(scene: DropScene, spec: DropSpec): void {
 }
 
 describe("a drop into a new parent", () => {
-	it("puts the layer into the artboard under the pointer and holds it on the screen", () => {
-		const scene = dropScene(ARTBOARD);
+	it("puts the layer into the frame under the pointer and holds it on the screen", () => {
+		const scene = dropScene(FRAME);
 
 		dropOver(scene, {
 			press: GRAB,
-			release: OVER_THE_ARTBOARD,
+			release: OVER_THE_FRAME,
 			hits: [scene.layer, scene.into],
 		});
 
@@ -88,9 +88,9 @@ describe("a drop into a new parent", () => {
 	});
 
 	it("holds the layer under the pointer when the new parent changes its size", () => {
-		const scene = dropScene(ARTBOARD);
+		const scene = dropScene(FRAME);
 		const doc = scene.target.doc;
-		const wider = doc.createLayer({ ...ARTBOARD, x: 700, y: 100, width: 600 });
+		const wider = doc.createLayer({ ...FRAME, x: 700, y: 100, width: 600 });
 		doc.move(scene.layer, scene.into);
 		doc.update(scene.layer, { lengths: { width: { value: 50, unit: "%" } } });
 		doc.commit("set width");
@@ -108,20 +108,20 @@ describe("a drop into a new parent", () => {
 	});
 
 	it("commits the whole gesture one time", () => {
-		const scene = dropScene(ARTBOARD);
+		const scene = dropScene(FRAME);
 		const changes = scene.target.doc.changeCount();
 
 		dropOver(scene, {
 			press: GRAB,
-			release: OVER_THE_ARTBOARD,
+			release: OVER_THE_FRAME,
 			hits: [scene.layer, scene.into],
 		});
 
 		expect(scene.target.doc.changeCount()).toBe(changes + 1);
 	});
 
-	it("takes the layer out to the root when no artboard is under the pointer", () => {
-		const scene = dropScene(ARTBOARD);
+	it("takes the layer out to the root when no frame is under the pointer", () => {
+		const scene = dropScene(FRAME);
 		const doc = scene.target.doc;
 		doc.move(scene.layer, scene.into);
 		doc.update(scene.layer, { x: 320, y: 160 });
@@ -137,7 +137,7 @@ describe("a drop into a new parent", () => {
 
 		dropOver(scene, {
 			press: GRAB,
-			release: OVER_THE_ARTBOARD,
+			release: OVER_THE_FRAME,
 			hits: [scene.layer, scene.into],
 		});
 
@@ -145,14 +145,14 @@ describe("a drop into a new parent", () => {
 	});
 
 	it("does nothing when the drop lands on the layer itself or on a layer inside it", () => {
-		const scene = dropScene(ARTBOARD);
+		const scene = dropScene(FRAME);
 		const doc = scene.target.doc;
-		const inside = doc.createLayer(ARTBOARD, scene.layer);
+		const inside = doc.createLayer(FRAME, scene.layer);
 		const moved = vi.spyOn(doc, "move");
 
 		dropOver(scene, {
 			press: GRAB,
-			release: OVER_THE_ARTBOARD,
+			release: OVER_THE_FRAME,
 			hits: [scene.layer, inside],
 		});
 
@@ -161,8 +161,8 @@ describe("a drop into a new parent", () => {
 		expect(moved).not.toHaveBeenCalled();
 	});
 
-	it("moves the layer when the target changes, not once for each frame", () => {
-		const scene = dropScene(ARTBOARD);
+	it("moves the layer when the target changes, not once for each animation frame", () => {
+		const scene = dropScene(FRAME);
 		const behavior = behaviorFor("select");
 		const camera = scene.target.user.camera.get();
 		const press = pointAt(camera, GRAB);
@@ -185,7 +185,7 @@ describe("a drop into a new parent", () => {
 	});
 });
 
-describe("a layer inside an artboard", () => {
+describe("a layer inside a frame", () => {
 	it("moves the layer in the space of its parent", () => {
 		const { target, child } = nestedTarget(0);
 
@@ -247,7 +247,7 @@ describe("a layer inside an artboard", () => {
 
 describe("Escape during a move drag", () => {
 	it("puts the layer back in the first parent at its first position", () => {
-		const scene = dropScene(ARTBOARD);
+		const scene = dropScene(FRAME);
 		const doc = scene.target.doc;
 		const behavior = behaviorFor("select");
 		const camera = scene.target.user.camera.get();
@@ -256,7 +256,7 @@ describe("Escape during a move drag", () => {
 
 		behavior.dragStart?.(scene.target, press, press, NO_MODIFIERS);
 		scene.setHits([scene.layer, scene.into]);
-		behavior.drag?.(scene.target, pointAt(camera, OVER_THE_ARTBOARD), NO_MODIFIERS);
+		behavior.drag?.(scene.target, pointAt(camera, OVER_THE_FRAME), NO_MODIFIERS);
 		expect(doc.layer(scene.layer)).toMatchObject({ parent: scene.into });
 
 		cancelMove(doc, scene.target.user);
@@ -292,7 +292,7 @@ describe("Escape during a move drag", () => {
 	});
 
 	it("leaves the rest of the gesture without an answer", () => {
-		const scene = dropScene(ARTBOARD);
+		const scene = dropScene(FRAME);
 		const doc = scene.target.doc;
 		const behavior = behaviorFor("select");
 		const camera = scene.target.user.camera.get();
@@ -303,8 +303,8 @@ describe("Escape during a move drag", () => {
 		cancelMove(doc, scene.target.user);
 		const changes = doc.changeCount();
 
-		behavior.drag?.(scene.target, pointAt(camera, OVER_THE_ARTBOARD), NO_MODIFIERS);
-		behavior.dragEnd?.(scene.target, pointAt(camera, OVER_THE_ARTBOARD), NO_MODIFIERS);
+		behavior.drag?.(scene.target, pointAt(camera, OVER_THE_FRAME), NO_MODIFIERS);
+		behavior.dragEnd?.(scene.target, pointAt(camera, OVER_THE_FRAME), NO_MODIFIERS);
 
 		expect(doc.layer(scene.layer)).toMatchObject({ parent: null, x: 420, y: 260 });
 		expect(doc.changeCount()).toBe(changes);
@@ -455,7 +455,7 @@ describe("a layer that leaves a grid", () => {
 
 	it("drops its cell placement when it lands in a row", () => {
 		const { target, child } = gridScene();
-		const row = target.doc.createLayer({ ...ARTBOARD, x: 700, y: 600 });
+		const row = target.doc.createLayer({ ...FRAME, x: 700, y: 600 });
 		target.doc.update(row, { layout: { display: "row" } });
 		target.doc.commit("add a row");
 

@@ -5,8 +5,8 @@ import type { Drag } from "./support";
 
 const ELLIPSE_DRAG: Drag = { from: { x: 260, y: 460 }, to: { x: 380, y: 560 } };
 const LAYER_CENTER = { x: 540, y: 340 };
-const ROOT_ARTBOARD: Drag = { from: { x: 240, y: 460 }, to: { x: 520, y: 640 } };
-const NESTED_ARTBOARD: Drag = { from: { x: 280, y: 500 }, to: { x: 400, y: 600 } };
+const ROOT_FRAME: Drag = { from: { x: 240, y: 460 }, to: { x: 520, y: 640 } };
+const NESTED_FRAME: Drag = { from: { x: 280, y: 500 }, to: { x: 400, y: 600 } };
 const WINDOW_ORIGIN = { x: 0, y: 0 };
 const SELECTION_BLUE = "rgb(13, 153, 255)";
 const TOP_OF_CANVAS = { x: 600, y: 12 };
@@ -77,10 +77,10 @@ test("the Layers button of the file pill takes the layer card away and brings it
 	await app.close();
 });
 
-test("the artboard tool opens a bar of presets above the tool bar, and select opens none", async () => {
+test("the frame tool opens a bar of presets above the tool bar, and select opens none", async () => {
 	const { app, window } = await launchApp();
 	const tools = window.getByRole("toolbar", { name: "Tools" });
-	const options = window.getByRole("toolbar", { name: "Artboard options" });
+	const options = window.getByRole("toolbar", { name: "Frame options" });
 
 	await expect(tools).toBeVisible();
 	await expect(window.getByRole("toolbar")).toHaveCount(1);
@@ -115,7 +115,7 @@ test("the artboard tool opens a bar of presets above the tool bar, and select op
 
 test("the swap button turns each preset, and a vertical wheel scrolls the presets sideways", async () => {
 	const { app, window } = await launchApp();
-	const options = window.getByRole("toolbar", { name: "Artboard options" });
+	const options = window.getByRole("toolbar", { name: "Frame options" });
 	const swap = options.getByRole("button", { name: "Swap width and height" });
 	const firstSize = options.locator(".preset-size").first();
 	const row = options.locator(".preset-row");
@@ -172,31 +172,31 @@ test("the shape options switch the rectangle tool to the ellipse tool, which dra
 	await app.close();
 });
 
-test("a root artboard shows its name above its corner at one size for each zoom", async () => {
+test("a root frame shows its name above its corner at one size for each zoom", async () => {
 	const { app, window } = await launchApp();
-	const labels = window.locator(".artboard-label");
-	const artboard = window.locator("#viewport > .layer").nth(1);
+	const labels = window.locator(".frame-label");
+	const frame = window.locator("#viewport > .layer").nth(1);
 
 	await expect(window.locator(".layer")).toHaveCount(1);
 	await window.keyboard.press("a");
-	await dragOn(window, WINDOW_ORIGIN, ROOT_ARTBOARD);
+	await dragOn(window, WINDOW_ORIGIN, ROOT_FRAME);
 	await window.keyboard.press("a");
-	await dragOn(window, WINDOW_ORIGIN, NESTED_ARTBOARD);
+	await dragOn(window, WINDOW_ORIGIN, NESTED_FRAME);
 
-	await expect(artboard.locator("> .layer")).toHaveCount(1);
+	await expect(frame.locator("> .layer")).toHaveCount(1);
 	await expect(labels).toHaveCount(1);
-	await expect(labels).toHaveText("Artboard 1");
+	await expect(labels).toHaveText("Frame 1");
 
-	const corner = await boxOf(artboard);
+	const corner = await boxOf(frame);
 	const label = await boxOf(labels);
 	expect(label.x).toBeCloseTo(corner.x, 0);
 	expect(label.y + label.height).toBeCloseTo(corner.y - 4, 0);
 
-	await expect(artboard).not.toHaveAttribute("data-selected", "");
+	await expect(frame).not.toHaveAttribute("data-selected", "");
 	await expect(labels).not.toHaveCSS("color", SELECTION_BLUE);
 	await labels.click();
 
-	await expect(artboard).toHaveAttribute("data-selected", "");
+	await expect(frame).toHaveAttribute("data-selected", "");
 	await expect(labels).toHaveCSS("color", SELECTION_BLUE);
 
 	await window.mouse.move(LAYER_CENTER.x, LAYER_CENTER.y);
@@ -206,7 +206,7 @@ test("a root artboard shows its name above its corner at one size for each zoom"
 	await expect(window.locator("#viewport")).toHaveAttribute("style", /scale\(1\.6/u);
 
 	expect((await boxOf(labels)).height).toBeCloseTo(label.height, 0);
-	expect((await boxOf(artboard)).height).toBeGreaterThan(corner.height * 1.5);
+	expect((await boxOf(frame)).height).toBeGreaterThan(corner.height * 1.5);
 
 	await app.close();
 });
@@ -256,11 +256,11 @@ test("the window drags by the file pill, and the top edge of the canvas takes pr
 
 test("a press on a label goes to the tool, so the hand tool moves the canvas from it", async () => {
 	const { app, window } = await launchApp();
-	const label = window.locator(".artboard-label");
+	const label = window.locator(".frame-label");
 
 	await expect(window.locator(".layer")).toHaveCount(1);
 	await window.keyboard.press("a");
-	await dragOn(window, WINDOW_ORIGIN, ROOT_ARTBOARD);
+	await dragOn(window, WINDOW_ORIGIN, ROOT_FRAME);
 	await expect(label).toHaveCount(1);
 	await window.keyboard.press("h");
 

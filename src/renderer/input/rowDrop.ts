@@ -1,6 +1,6 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Size } from "../../document/length";
-import { isArtboard } from "../components/layerEntry";
+import { isFrame } from "../components/layerEntry";
 import { heldPlacement, insideSubtree } from "./dropTarget";
 import type { Placement } from "./dropTarget";
 import { layerChain, parentChain } from "./layerSpace";
@@ -49,7 +49,7 @@ export function rowPlaceOf(part: number, takesChildren: boolean): RowPlace {
 }
 
 export function rowTargetOf(hit: RowHit, read: ReadLayer): RowTarget {
-	return { id: hit.id, place: rowPlaceOf(hit.part, isArtboard(read(hit.id))) };
+	return { id: hit.id, place: rowPlaceOf(hit.part, isFrame(read(hit.id))) };
 }
 
 function indexAfterLift(siblings: readonly LayerId[], dragged: LayerId, slot: number): number {
@@ -63,7 +63,7 @@ function insideMove(dragged: LayerId, parent: LayerId, tree: RowTree): RowMove {
 }
 
 function takesSibling(dragged: LayerId, parent: LayerId | null, tree: RowTree): boolean {
-	if (parent === null || isArtboard(tree.read(parent))) {
+	if (parent === null || isFrame(tree.read(parent))) {
 		return true;
 	}
 	return tree.read(dragged)?.parent === parent;
@@ -87,7 +87,7 @@ export function rowMoveOf(dragged: LayerId, target: RowTarget, tree: RowTree): R
 	if (target.place !== "inside") {
 		return siblingMove(dragged, row, target.place, tree);
 	}
-	return isArtboard(row) ? insideMove(dragged, row.id, tree) : null;
+	return isFrame(row) ? insideMove(dragged, row.id, tree) : null;
 }
 
 export function rowMarkOf(drag: RowDrag | null, id: LayerId): RowMark | null {

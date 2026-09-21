@@ -58,7 +58,7 @@ describe("the history", () => {
 	it("takes the layer of an undone create away and gives it back on redo", () => {
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		const structure = vi.fn<() => void>();
 		doc.subscribeStructure(structure);
 
@@ -77,7 +77,7 @@ describe("the history", () => {
 		const unsubscribe = doc.subscribeHistory(listener);
 
 		doc.createLayer(DRAWN);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		expect(listener).toHaveBeenCalledTimes(1);
 
 		doc.undo();

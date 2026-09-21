@@ -59,7 +59,7 @@ describe("the highlight of the pointer", () => {
 		expect(behaviorFor("hand").highlight?.(hits, point)).toBeNull();
 	});
 
-	it("names the layer inside the artboard, not the artboard under it", () => {
+	it("names the layer inside the frame, not the frame under it", () => {
 		const { target, child } = nestedTarget(0);
 
 		expect(

@@ -4,7 +4,7 @@ import type { Guide } from "../document/guides";
 import type { LayerId } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
-import { isRootArtboard, layerEntry } from "./components/layerEntry";
+import { isRootFrame, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import type { Lifted } from "./state/userState";
@@ -69,7 +69,7 @@ export function LayerView({
 	);
 }
 
-export function ArtboardLabel({
+export function FrameLabel({
 	doc,
 	id,
 	selection,
@@ -81,13 +81,13 @@ export function ArtboardLabel({
 	const layer = useLayer(doc, id);
 	const selected = useSelected(selection, id);
 
-	if (layer === null || !isRootArtboard(layer)) {
+	if (layer === null || !isRootFrame(layer)) {
 		return null;
 	}
 
 	return (
 		<div
-			className="artboard-label"
+			className="frame-label"
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
 			style={canvasLabelStyle(layer)}

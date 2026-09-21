@@ -7,9 +7,9 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 	unsupported: "Layer",
 };
 
-const ARTBOARD_LABEL = "Artboard";
+const FRAME_LABEL = "Frame";
 
-export type LayerGlyph = "artboard" | "ellipse" | "rectangle";
+export type LayerGlyph = "frame" | "ellipse" | "rectangle";
 
 export interface InspectorHeading {
 	glyph: LayerGlyph | "page" | "group";
@@ -26,20 +26,20 @@ export interface LayerEntry {
 	swatch: string;
 }
 
-export function isArtboard(layer: Layer | null): boolean {
+export function isFrame(layer: Layer | null): boolean {
 	const geometry = layer?.geometry;
 	return geometry?.kind === "rectangle" && geometry.artboard;
 }
 
-export function isRootArtboard(layer: Layer | null): boolean {
-	return layer !== null && layer.parent === null && isArtboard(layer);
+export function isRootFrame(layer: Layer | null): boolean {
+	return layer !== null && layer.parent === null && isFrame(layer);
 }
 
 function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}
-	return isArtboard(layer) ? ARTBOARD_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
+	return isFrame(layer) ? FRAME_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
 }
 
 export function layerEntry(layer: Layer | null): LayerEntry {
@@ -50,8 +50,8 @@ export function layerEntry(layer: Layer | null): LayerEntry {
 }
 
 export function glyphOf(layer: Layer | null): LayerGlyph {
-	if (isArtboard(layer)) {
-		return "artboard";
+	if (isFrame(layer)) {
+		return "frame";
 	}
 	return layer?.geometry.kind === "ellipse" ? "ellipse" : "rectangle";
 }

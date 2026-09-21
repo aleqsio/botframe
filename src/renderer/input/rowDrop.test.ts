@@ -42,10 +42,10 @@ const PARENTS: Readonly<Record<string, LayerId | null>> = {
 	[DEEP_TWO]: SHOOT,
 };
 
-const ARTBOARDS: ReadonlySet<LayerId> = new Set([BRANCH, LAST]);
+const FRAMES: ReadonlySet<LayerId> = new Set([BRANCH, LAST]);
 
 function geometryOf(id: LayerId): Layer["geometry"] {
-	if (!ARTBOARDS.has(id)) {
+	if (!FRAMES.has(id)) {
 		return { kind: "ellipse" };
 	}
 	return { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true };
@@ -112,11 +112,11 @@ describe("rowPlaceOf", () => {
 });
 
 describe("rowTargetOf", () => {
-	it("gives the middle of an artboard row as inside", () => {
+	it("gives the middle of a frame row as inside", () => {
 		expect(rowTargetOf({ id: BRANCH, part: 0.5 }, read)).toEqual({ id: BRANCH, place: "inside" });
 	});
 
-	it("gives the middle of a row that is no artboard as before or after", () => {
+	it("gives the middle of a row that is no frame as before or after", () => {
 		expect(rowTargetOf({ id: FIRST, part: 0.4 }, read)).toEqual({ id: FIRST, place: "before" });
 		expect(rowTargetOf({ id: FIRST, part: 0.6 }, read)).toEqual({ id: FIRST, place: "after" });
 	});
@@ -134,12 +134,12 @@ describe("rowMoveOf", () => {
 		expect(moveOf(FIRST, LEAF, "after")).toEqual({ parent: BRANCH, index: 1 });
 	});
 
-	it("refuses a drop beside a child of a row that is no artboard", () => {
+	it("refuses a drop beside a child of a row that is no frame", () => {
 		expect(moveOf(FIRST, DEEP, "before")).toBeNull();
 		expect(moveOf(FIRST, DEEP, "after")).toBeNull();
 	});
 
-	it("still orders the children that a row which is no artboard already holds", () => {
+	it("still orders the children that a row which is no frame already holds", () => {
 		expect(moveOf(DEEP_TWO, DEEP, "before")).toEqual({ parent: SHOOT, index: 0 });
 		expect(moveOf(DEEP, DEEP_TWO, "after")).toEqual({ parent: SHOOT, index: 1 });
 	});
@@ -160,7 +160,7 @@ describe("rowMoveOf", () => {
 		expect(moveOf(FIRST, LAST, "inside")).toEqual({ parent: LAST, index: 0 });
 	});
 
-	it("refuses a drop inside a row that is no artboard", () => {
+	it("refuses a drop inside a row that is no frame", () => {
 		expect(moveOf(LEAF, FIRST, "inside")).toBeNull();
 		expect(moveOf(FIRST, DEEP, "inside")).toBeNull();
 	});

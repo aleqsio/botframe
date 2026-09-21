@@ -24,7 +24,7 @@ const PULLED_EAST = { x: 460, y: 300 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
 const SE_ZONE = { mode: "resize", handle: "se" };
-const DRAW_TOOLS: readonly ToolId[] = ["rectangle", "artboard"];
+const DRAW_TOOLS: readonly ToolId[] = ["rectangle", "frame"];
 const SHIFT: Modifiers = { shift: true, alt: false, control: false };
 const ALT: Modifiers = { shift: false, alt: true, control: false };
 
@@ -45,7 +45,7 @@ describe("the behavior of each tool", () => {
 
 		expect(zones).toEqual({
 			select: SE_ZONE,
-			artboard: SE_ZONE,
+			frame: SE_ZONE,
 			rectangle: SE_ZONE,
 			ellipse: SE_ZONE,
 			hand: null,
@@ -337,7 +337,7 @@ describe("the hand tool", () => {
 	});
 });
 
-describe("the handles of a layer inside an artboard", () => {
+describe("the handles of a layer inside a frame", () => {
 	it("takes the resize handle of the layer at the canvas point of that handle", () => {
 		const { target, child } = nestedTarget(0);
 		const behavior = behaviorFor("select");

@@ -14,11 +14,11 @@ async function dragOnStage(window: Page, origin: Point, press: Point, release: P
 	await window.mouse.move(at(origin, release).x, at(origin, release).y, { steps: 8 });
 }
 
-test("the artboard tool draws a white artboard that clips its content", async () => {
+test("the frame tool draws a white frame that clips its content", async () => {
 	const { app, layers, origin, stage, window } = await openStage();
 
 	await window.keyboard.press("a");
-	await expect(stage).toHaveAttribute("data-tool", "artboard");
+	await expect(stage).toHaveAttribute("data-tool", "frame");
 
 	await dragOnStage(window, origin, PRESS, RELEASE);
 	await window.mouse.up();

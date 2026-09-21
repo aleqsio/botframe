@@ -9,7 +9,7 @@ const ABOVE_THE_EDGE = "translateY(calc(-100% - var(--layout-space-2)))";
 const BELOW_THE_EDGE = "translate(-100%, var(--layout-space-2))";
 const WIDTH_ON_SCREEN = "calc(393px * var(--zoom))";
 
-function artboard(rotation: number): Layer {
+function frame(rotation: number): Layer {
 	return {
 		id: "1@1",
 		...BOX,
@@ -24,8 +24,8 @@ function artboard(rotation: number): Layer {
 }
 
 describe("canvasLabelStyle", () => {
-	it("puts the label at the corner of the artboard and holds it to the width on the screen", () => {
-		expect(canvasLabelStyle(artboard(0))).toEqual({
+	it("puts the label at the corner of the frame and holds it to the width on the screen", () => {
+		expect(canvasLabelStyle(frame(0))).toEqual({
 			translate: "40px 60px",
 			rotate: "0deg",
 			transform: ABOVE_THE_EDGE,
@@ -34,7 +34,7 @@ describe("canvasLabelStyle", () => {
 	});
 
 	it("moves the label to the turned corner and turns it with the top edge", () => {
-		expect(canvasLabelStyle(artboard(30))).toEqual({
+		expect(canvasLabelStyle(frame(30))).toEqual({
 			translate: "279.33px 18.82px",
 			rotate: "30deg",
 			transform: ABOVE_THE_EDGE,
@@ -43,7 +43,7 @@ describe("canvasLabelStyle", () => {
 	});
 
 	it("keeps the quarter turn, because the text reads down and not upside down", () => {
-		expect(canvasLabelStyle(artboard(90))).toEqual({
+		expect(canvasLabelStyle(frame(90))).toEqual({
 			translate: "662.5px 289.5px",
 			rotate: "90deg",
 			transform: ABOVE_THE_EDGE,
@@ -52,7 +52,7 @@ describe("canvasLabelStyle", () => {
 	});
 
 	it("turns the label back up at a half turn and hangs it off the far end of the edge", () => {
-		expect(canvasLabelStyle(artboard(180))).toEqual({
+		expect(canvasLabelStyle(frame(180))).toEqual({
 			translate: "433px 912px",
 			rotate: "0deg",
 			transform: BELOW_THE_EDGE,
@@ -61,7 +61,7 @@ describe("canvasLabelStyle", () => {
 	});
 
 	it("turns the label back up for each angle between the quarter turn and the three quarter turn", () => {
-		expect(canvasLabelStyle(artboard(210))).toEqual({
+		expect(canvasLabelStyle(frame(210))).toEqual({
 			translate: "193.67px 953.18px",
 			rotate: "30deg",
 			transform: BELOW_THE_EDGE,
@@ -70,7 +70,7 @@ describe("canvasLabelStyle", () => {
 	});
 
 	it("reads a negative angle as its positive turn and leaves it upright", () => {
-		expect(canvasLabelStyle(artboard(-45))).toEqual({
+		expect(canvasLabelStyle(frame(-45))).toEqual({
 			translate: "-203.67px 323.72px",
 			rotate: "315deg",
 			transform: ABOVE_THE_EDGE,

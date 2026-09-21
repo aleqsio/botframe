@@ -1,8 +1,4 @@
-import {
-	ARTBOARD_DEFAULTS,
-	ELLIPSE_DEFAULTS,
-	RECTANGLE_DEFAULTS,
-} from "../components/layerDefaults";
+import { ELLIPSE_DEFAULTS, FRAME_DEFAULTS, RECTANGLE_DEFAULTS } from "../components/layerDefaults";
 import type { ToolId } from "../components/tools";
 import { composeBehaviors } from "./composeBehaviors";
 import { createDrawBehavior } from "./drawBehavior";
@@ -16,7 +12,7 @@ type BehaviorFactory = () => ToolBehavior;
 
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
 	select: [createHandleBehavior, createPickBehavior, createMarqueeBehavior],
-	artboard: [createHandleBehavior, createDrawBehavior(ARTBOARD_DEFAULTS)],
+	frame: [createHandleBehavior, createDrawBehavior(FRAME_DEFAULTS)],
 	rectangle: [createHandleBehavior, createDrawBehavior(RECTANGLE_DEFAULTS)],
 	ellipse: [createHandleBehavior, createDrawBehavior(ELLIPSE_DEFAULTS)],
 	text: [createHandleBehavior],

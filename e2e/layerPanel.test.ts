@@ -3,16 +3,16 @@ import type { ElectronApplication, Locator, Page } from "@playwright/test";
 import { EDIT_LABELS, drawWith, menuItem, openStage, pressRight } from "./support";
 import type { Drag, Point } from "./support";
 
-const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
-const BRANCH = ["Rectangle", "Artboard 1", "Rectangle 2"];
+const BRANCH = ["Rectangle", "Frame 1", "Rectangle 2"];
 const APART: Drag = { from: { x: 300, y: 40 }, to: { x: 380, y: 120 } };
 
 test("the chevron takes the children of a row away and brings them back", async () => {
 	const { app, origin, window } = await openStage();
 	const rows = window.locator(".layer-row");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 	await expect(rows).toHaveText(BRANCH);
 
@@ -22,9 +22,9 @@ test("the chevron takes the children of a row away and brings them back", async 
 
 	await chevron.click();
 
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 	await expect(chevron).toHaveAttribute("aria-expanded", "false");
-	await expect(chevron).toHaveAttribute("aria-label", "Expand Artboard 1");
+	await expect(chevron).toHaveAttribute("aria-label", "Expand Frame 1");
 
 	await chevron.click();
 
@@ -64,8 +64,8 @@ test("a drag into the middle of a row gives the layer that row as its parent", a
 	const rows = window.locator(".layer-row");
 	const lines = window.locator(".layer-line");
 
-	await drawWith(window, origin, "a", ARTBOARD);
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await drawWith(window, origin, "a", FRAME);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 	await expect(rows.nth(1)).toHaveAttribute("aria-pressed", "true");
 
 	await pressRow(window, lines.nth(0));
@@ -76,7 +76,7 @@ test("a drag into the middle of a row gives the layer that row as its parent", a
 
 	await window.mouse.up();
 
-	await expect(rows).toHaveText(["Artboard 1", "Rectangle"]);
+	await expect(rows).toHaveText(["Frame 1", "Rectangle"]);
 	await expect(window.locator("#viewport > .layer")).toHaveCount(1);
 	expect((await rectOf(rows.nth(1))).x - (await rectOf(rows.nth(0))).x).toBe(14);
 	await expect(rows.nth(0)).toHaveAttribute("aria-pressed", "true");
@@ -90,7 +90,7 @@ test("a drag to the bottom edge of a row puts the layer after that row", async (
 	const rows = window.locator(".layer-row");
 	const lines = window.locator(".layer-line");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 
 	await pressRow(window, lines.nth(0));
 	await moveOnto(window, lines.nth(1), 0.9);
@@ -99,7 +99,7 @@ test("a drag to the bottom edge of a row puts the layer after that row", async (
 
 	await window.mouse.up();
 
-	await expect(rows).toHaveText(["Artboard 1", "Rectangle"]);
+	await expect(rows).toHaveText(["Frame 1", "Rectangle"]);
 	await expect(window.locator("#viewport > .layer")).toHaveCount(2);
 	expect((await rectOf(rows.nth(1))).x).toBe((await rectOf(rows.nth(0))).x);
 
@@ -111,14 +111,14 @@ test("a press with a small move selects the row and moves no layer", async () =>
 	const rows = window.locator(".layer-row");
 	const lines = window.locator(".layer-line");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 
 	const point = await pressRow(window, lines.nth(0));
 	await window.mouse.move(point.x + 2, point.y + 1);
 	await window.mouse.up();
 
 	await expect(rows.nth(0)).toHaveAttribute("aria-pressed", "true");
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 	await expect(window.locator("#viewport > .layer")).toHaveCount(2);
 
 	await app.close();
@@ -175,21 +175,21 @@ test("a collapsed row takes a drop as its last child", async () => {
 	const lines = window.locator(".layer-line");
 	const chevron = window.locator("button.layer-chevron");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 	await chevron.click();
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 
 	await pressRow(window, lines.nth(0));
 	await moveOnto(window, lines.nth(1), 0.5);
 	await expect(lines.nth(1)).toHaveAttribute("data-mark", "inside");
 	await window.mouse.up();
 
-	await expect(rows).toHaveText(["Artboard 1"]);
+	await expect(rows).toHaveText(["Frame 1"]);
 
 	await chevron.click();
 
-	await expect(rows).toHaveText(["Artboard 1", "Rectangle 2", "Rectangle"]);
+	await expect(rows).toHaveText(["Frame 1", "Rectangle 2", "Rectangle"]);
 
 	await app.close();
 });
@@ -199,8 +199,8 @@ test("a nest by drag holds the place of the layer on the canvas", async () => {
 	const rows = window.locator(".layer-row");
 	const lines = window.locator(".layer-line");
 
-	await drawWith(window, origin, "a", ARTBOARD);
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await drawWith(window, origin, "a", FRAME);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 	const seed = layers.nth(0);
 	const seedId = await seed.getAttribute("data-layer-id");
 	const before = await seed.boundingBox();
@@ -214,7 +214,7 @@ test("a nest by drag holds the place of the layer on the canvas", async () => {
 
 	const child = window.locator(`.layer[data-layer-id="${seedId ?? ""}"]`);
 	await expect(child).toHaveCount(1);
-	await expect(rows).toHaveText(["Artboard 1", "Rectangle"]);
+	await expect(rows).toHaveText(["Frame 1", "Rectangle"]);
 	const after = await child.boundingBox();
 	if (after === null) {
 		throw new Error("the child has no box");
@@ -231,8 +231,8 @@ test("the secondary press on a row selects it and runs a menu command on it", as
 	const lines = window.locator(".layer-line");
 	const menu = window.locator(".layer-menu");
 
-	await drawWith(window, origin, "a", ARTBOARD);
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await drawWith(window, origin, "a", FRAME);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 
 	await pressRight(window, await bandOf(lines.nth(0), 0.5));
 
@@ -244,7 +244,7 @@ test("the secondary press on a row selects it and runs a menu command on it", as
 	await menuItem(menu, "Duplicate").click();
 
 	await expect(menu).toBeHidden();
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1", "Rectangle"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1", "Rectangle"]);
 	await expect(window.locator("#viewport .layer")).toHaveCount(3);
 
 	await pressRight(window, await bandOf(lines.nth(2), 0.5));
@@ -252,13 +252,13 @@ test("the secondary press on a row selects it and runs a menu command on it", as
 	await menuItem(menu, "Delete").click();
 
 	await expect(menu).toBeHidden();
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1"]);
 	await expect(window.locator("#viewport .layer")).toHaveCount(2);
 
 	await app.close();
 });
 
-test("the middle of a row that is no artboard takes the drop after that row", async () => {
+test("the middle of a row that is no frame takes the drop after that row", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const rows = window.locator(".layer-row");
 	const lines = window.locator(".layer-line");

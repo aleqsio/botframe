@@ -18,25 +18,25 @@ const PRESS = { x: 440, y: 280 };
 const CENTER = { x: 540, y: 340 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
-const ARTBOARD_GEOMETRY = {
+const FRAME_GEOMETRY = {
 	kind: "rectangle",
 	cornerRadius: 0,
 	cornerSmoothing: 0,
 	artboard: true,
 } as const;
 
-function artboardTarget(): PointerTarget {
+function frameTarget(): PointerTarget {
 	const target = targetOf(true);
-	target.doc.update(firstId(target.doc), { geometry: ARTBOARD_GEOMETRY });
+	target.doc.update(firstId(target.doc), { geometry: FRAME_GEOMETRY });
 	return target;
 }
 
 describe("the draw tools", () => {
-	it("draws an artboard, selects it, and gives the stage back to the select tool", () => {
+	it("draws a frame, selects it, and gives the stage back to the select tool", () => {
 		const target = targetOf(false);
 		const changes = target.doc.changeCount();
 
-		dragOver(behaviorFor("artboard"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
+		dragOver(behaviorFor("frame"), target, { press: DRAW_PRESS, release: DRAW_RELEASE });
 
 		expect(lastDrawn(target)).toMatchObject({
 			x: 40,
@@ -46,7 +46,7 @@ describe("the draw tools", () => {
 			parent: null,
 			fill: "#ffffff",
 			clip: true,
-			name: "Artboard 1",
+			name: "Frame 1",
 			geometry: { kind: "rectangle", artboard: true },
 		});
 		expect(target.doc.layerIds()).toHaveLength(2);
@@ -92,7 +92,7 @@ describe("the draw tools", () => {
 		const target = targetOf(false);
 		const changes = target.doc.changeCount();
 
-		tapAt(behaviorFor("artboard"), target, CENTER);
+		tapAt(behaviorFor("frame"), target, CENTER);
 
 		expect(lastDrawn(target)).toMatchObject({ x: 540, y: 340, width: 100, height: 100 });
 		expect(target.doc.changeCount()).toBe(changes + 1);
@@ -101,7 +101,7 @@ describe("the draw tools", () => {
 
 	it("deletes the layer in progress on a cancel and writes no change on the release", () => {
 		const target = targetOf(false);
-		const behavior = behaviorFor("artboard");
+		const behavior = behaviorFor("frame");
 		const camera = target.user.camera.get();
 		const changes = target.doc.changeCount();
 		const press = pointAt(camera, DRAW_PRESS);
@@ -119,8 +119,8 @@ describe("the draw tools", () => {
 		expect(target.user.tool.get()).toBe("select");
 	});
 
-	it("draws the new layer inside the artboard under the press, in the space of that artboard", () => {
-		const target = artboardTarget();
+	it("draws the new layer inside the frame under the press, in the space of that frame", () => {
+		const target = frameTarget();
 		const parent = firstId(target.doc);
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
@@ -131,8 +131,8 @@ describe("the draw tools", () => {
 		expect(target.doc.rootIds()).toEqual([parent]);
 	});
 
-	it("places the box of a tap inside the artboard under the tap", () => {
-		const target = artboardTarget();
+	it("places the box of a tap inside the frame under the tap", () => {
+		const target = frameTarget();
 		const parent = firstId(target.doc);
 
 		tapAt(behaviorFor("rectangle"), target, PRESS);
@@ -141,7 +141,7 @@ describe("the draw tools", () => {
 	});
 
 	it("holds the box in the space of the parent when the parent moves during the draw", () => {
-		const target = artboardTarget();
+		const target = frameTarget();
 		const parent = firstId(target.doc);
 		const behavior = behaviorFor("rectangle");
 		const camera = target.user.camera.get();
@@ -156,7 +156,7 @@ describe("the draw tools", () => {
 	});
 
 	it("draws inside a turned parent in the space of that parent", () => {
-		const target = artboardTarget();
+		const target = frameTarget();
 		const parent = firstId(target.doc);
 		target.doc.update(parent, { rotation: 90 });
 
@@ -173,12 +173,12 @@ describe("the draw tools", () => {
 		expect(drawn.height).toBeCloseTo(50);
 	});
 
-	it("draws an artboard level on the canvas inside a turned parent", () => {
-		const target = artboardTarget();
+	it("draws a frame level on the canvas inside a turned parent", () => {
+		const target = frameTarget();
 		const parent = firstId(target.doc);
 		target.doc.update(parent, { rotation: 90 });
 
-		dragOver(behaviorFor("artboard"), target, {
+		dragOver(behaviorFor("frame"), target, {
 			press: { x: 600, y: 240 },
 			release: { x: 550, y: 300 },
 		});
@@ -192,11 +192,11 @@ describe("the draw tools", () => {
 		expect(drawn.height).toBeCloseTo(60);
 	});
 
-	it("places the artboard of a tap level on the canvas inside a turned parent", () => {
-		const target = artboardTarget();
+	it("places the frame of a tap level on the canvas inside a turned parent", () => {
+		const target = frameTarget();
 		target.doc.update(firstId(target.doc), { rotation: 90 });
 
-		tapAt(behaviorFor("artboard"), target, { x: 600, y: 240 });
+		tapAt(behaviorFor("frame"), target, { x: 600, y: 240 });
 
 		const drawn = lastDrawn(target);
 		expect(drawn.rotation).toBeCloseTo(270);
@@ -206,7 +206,7 @@ describe("the draw tools", () => {
 		expect(drawn.height).toBe(100);
 	});
 
-	it("draws at the root when a shape, and no artboard, is under the press", () => {
+	it("draws at the root when a shape, and no frame, is under the press", () => {
 		const target = targetOf(true);
 		const under = firstId(target.doc);
 
@@ -222,7 +222,7 @@ describe("the draw tools", () => {
 		expect(target.doc.childIds(under)).toEqual([]);
 	});
 
-	it("draws inside the artboard when a shape in that artboard is under the press", () => {
+	it("draws inside the frame when a shape in that frame is under the press", () => {
 		const { target, child } = nestedTarget(0);
 		const parent = firstId(target.doc);
 
@@ -235,9 +235,9 @@ describe("the draw tools", () => {
 		expect(target.doc.childIds(child)).toEqual([]);
 	});
 
-	it("draws inside an artboard that the shape above it covers", () => {
+	it("draws inside a frame that the shape above it covers", () => {
 		const { target, below } = coveredTarget();
-		target.doc.update(below, { geometry: ARTBOARD_GEOMETRY });
+		target.doc.update(below, { geometry: FRAME_GEOMETRY });
 
 		dragOver(behaviorFor("rectangle"), target, { press: PRESS, release: { x: 500, y: 330 } });
 

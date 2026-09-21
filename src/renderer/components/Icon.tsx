@@ -7,7 +7,6 @@ const PATHS = {
 	alignLeft: "M4 4v16M8 6h10v4H8zM8 14h6v4H8z",
 	alignRight: "M20 4v16M6 6h10v4H6zM10 14h6v4h-6z",
 	alignTop: "M4 4h16M6 8h4v10H6zM14 8h4v6h-4z",
-	artboard: "M8.5 3v18M15.5 3v18M3 8.5h18M3 15.5h18",
 	centerBoth: "M12 3v18M3 12h18M8 8h8v8H8z",
 	centerX: "M12 3v18M7 8h10v8H7z",
 	centerY: "M3 12h18M8 7h8v10H8z",
@@ -17,6 +16,7 @@ const PATHS = {
 	fit: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 8h8v8H8z",
 	flipX: "M12 3v18M9 6 4 12l5 6zM15 6l5 6-5 6z",
 	flipY: "M3 12h18M6 9 12 4l6 5zM6 15l6 5 6-5z",
+	frame: "M8.5 3v18M15.5 3v18M3 8.5h18M3 15.5h18",
 	hand: "M9 11V5a1.5 1.5 0 0 1 3 0v6M12 11V4a1.5 1.5 0 0 1 3 0v7M15 11V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.4-2.6L6 14.6a1.5 1.5 0 0 1 2.6-1.5l.4.7M9 11V9.5a1.5 1.5 0 0 0-3 0V13",
 	image:
 		"M6 4.5h12A1.5 1.5 0 0 1 19.5 6v12a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V6A1.5 1.5 0 0 1 6 4.5zM4.5 15.5 8.5 11.5l3 3 2.5-2.5 5.5 5.5M16.4 9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0z",
