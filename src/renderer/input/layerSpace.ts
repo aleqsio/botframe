@@ -48,7 +48,9 @@ export function outOfLayer(layer: Placed, local: Point): Point {
 	return { x: layer.x + pivot.x + turned.x, y: layer.y + pivot.y + turned.y };
 }
 
-export function cornersOf(box: Size): Point[] {
+export type Corners = readonly [Point, Point, Point, Point];
+
+export function cornersOf(box: Size): Corners {
 	return [
 		{ x: 0, y: 0 },
 		{ x: box.width, y: 0 },
@@ -57,13 +59,20 @@ export function cornersOf(box: Size): Point[] {
 	];
 }
 
+export function hullOf(points: readonly [Point, ...Point[]]): Rect {
+	let [low] = points;
+	let high = low;
+	for (const point of points) {
+		low = { x: Math.min(low.x, point.x), y: Math.min(low.y, point.y) };
+		high = { x: Math.max(high.x, point.x), y: Math.max(high.y, point.y) };
+	}
+	return { x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y };
+}
+
 export function turnedBounds(layer: Turned): Rect {
-	const corners = cornersOf(layer).map((corner) => outOfLayer({ ...layer, x: 0, y: 0 }, corner));
-	const xs = corners.map((corner) => corner.x);
-	const ys = corners.map((corner) => corner.y);
-	const x = Math.min(...xs);
-	const y = Math.min(...ys);
-	return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+	const flat = { ...layer, x: 0, y: 0 };
+	const [first, ...rest] = cornersOf(layer);
+	return hullOf([outOfLayer(flat, first), ...rest.map((corner) => outOfLayer(flat, corner))]);
 }
 
 export function toLayerPoint(layer: Placed, point: Point): Point {

@@ -12,12 +12,14 @@ const ARTBOARD_LABEL = "Artboard";
 export type LayerGlyph = "artboard" | "ellipse" | "rectangle";
 
 export interface InspectorHeading {
-	glyph: LayerGlyph | "page";
+	glyph: LayerGlyph | "page" | "group";
 	name: string;
 	kind: string;
 }
 
 const PAGE_HEADING: InspectorHeading = { glyph: "page", name: "Page", kind: "Nothing is selected" };
+
+const GROUP_KIND = "Selection";
 
 export interface LayerEntry {
 	label: string;
@@ -59,6 +61,10 @@ export function inspectorHeading(layer: Layer | null): InspectorHeading {
 		return PAGE_HEADING;
 	}
 	return { glyph: glyphOf(layer), name: layerEntry(layer).label, kind: kindLabel(layer) };
+}
+
+export function groupHeading(count: number): InspectorHeading {
+	return { glyph: "group", name: `${count} layers`, kind: GROUP_KIND };
 }
 
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {

@@ -1,18 +1,20 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
-import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { insideSubtree } from "./dropTarget";
+import { applyGroupMove, beginGroupMove, finishGroupMove } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
-import { toggleSelected } from "./selection";
+import { selectIds, toggleSelected } from "./selection";
 import { drawnReaderOf, parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
+const NO_LAYERS: readonly LayerId[] = [];
+
 function select(user: UserState, layerId: LayerId | null): void {
-	user.selection.set(layerId === null ? NOTHING_SELECTED : [layerId]);
+	selectIds(user.selection, layerId === null ? NO_LAYERS : [layerId]);
 }
 
 function topHit(target: PointerTarget): LayerId | null {
@@ -79,6 +81,14 @@ function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
 }
 
+function dragsGroup(target: PointerTarget, canvas: Point): boolean {
+	const under = topHit(target);
+	if (under !== null) {
+		return isHeld(target, under);
+	}
+	return heldSelection(target, canvas) !== null;
+}
+
 function holdsPress(target: PointerTarget, under: LayerId): boolean {
 	return target.user.selection
 		.get()
@@ -104,6 +114,10 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {
+			if (dragsGroup(target, origin.canvas) && beginGroupMove(target, origin.canvas)) {
+				applyGroupMove(target, point.canvas);
+				return true;
+			}
 			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
@@ -113,9 +127,11 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		drag(target, point, modifiers) {
+			applyGroupMove(target, point.canvas);
 			return applyMove(target, point, modifiers);
 		},
 		dragEnd(target, point, modifiers) {
+			finishGroupMove(target, point.canvas);
 			finishMove(target, point, modifiers);
 		},
 		context(target, client) {

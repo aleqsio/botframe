@@ -8,6 +8,7 @@ import { isArtboard } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
 import { GuideList } from "./layout/GuideList";
+import { ChipSection } from "./layout/ChipSection";
 import { LayerChip } from "./layout/LayerChip";
 import { LayoutPanel } from "./layout/LayoutPanel";
 import { TurnToggle } from "./layout/TurnToggle";
@@ -24,15 +25,12 @@ function ChipGroup({
 	layer: Layer;
 }): ReactElement {
 	return (
-		<div className="field-group layout-section">
-			<span className="group-label">{group.name}</span>
-			<div className="chip-row">
-				{group.fields.map((field) => (
-					<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
-				))}
-				{group.name === TURN_GROUP ? <TurnToggle doc={doc} layer={layer} /> : null}
-			</div>
-		</div>
+		<ChipSection name={group.name}>
+			{group.fields.map((field) => (
+				<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
+			))}
+			{group.name === TURN_GROUP ? <TurnToggle doc={doc} layer={layer} /> : null}
+		</ChipSection>
 	);
 }
 

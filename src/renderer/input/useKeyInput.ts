@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../document/document";
 import type { UserState } from "../state/userState";
 import { cancelDraw } from "./drawBehavior";
 import { commandForStroke, runEditCommand } from "./editCommand";
+import { cancelGroupMove } from "./groupMove";
 import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 import { cancelMove } from "./moveDrag";
 import type { KeyStroke } from "./layerCommand";
@@ -30,7 +31,9 @@ function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke)
 export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
 	if (stroke.key === CANCEL_KEY) {
 		user.snap.set(null);
+		user.marquee.set(null);
 		cancelMove(doc, user);
+		cancelGroupMove(doc, user);
 		cancelDraw(doc, user);
 		return true;
 	}

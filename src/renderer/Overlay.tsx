@@ -1,13 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
-import type { LayerId } from "../document/layer";
+import type { LayerId, Rect } from "../document/layer";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
 import type { SnapSegment } from "./input/snap";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useDrawnFrame, useDrawnSpace } from "./useDocument";
+import { useDrawnFrame, useDrawnSpace, useSelectionBox } from "./useDocument";
 import type { DrawnFrame } from "./useDocument";
 
 declare module "react" {
@@ -61,22 +61,52 @@ function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 	return <span className="selection-padding" style={{ borderWidth: frame.padding }} />;
 }
 
-function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
-	const [id, ...peers] = useSlot(user.selection);
+function boxStyle(box: Rect): CSSProperties {
+	return {
+		transform: `translate3d(${box.x}px, ${box.y}px, 0)`,
+		width: `${box.width}px`,
+		height: `${box.height}px`,
+	};
+}
 
-	return id === undefined ? null : (
-		<>
-			<LayerFrame className="selection" doc={doc} id={id}>
-				<PaddingBand doc={doc} id={id} />
-				{CORNERS.map((corner) => (
-					<span className="selection-handle" data-corner={corner} key={corner} />
-				))}
-			</LayerFrame>
-			{peers.map((peer) => (
-				<LayerFrame className="selection-peer" doc={doc} id={peer} key={peer} />
+function SoleFrame({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+	return (
+		<LayerFrame className="selection" doc={doc} id={id}>
+			<PaddingBand doc={doc} id={id} />
+			{CORNERS.map((corner) => (
+				<span className="selection-handle" data-corner={corner} key={corner} />
 			))}
+		</LayerFrame>
+	);
+}
+
+function GroupFrame({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId[] }): ReactNode {
+	const box = useSelectionBox(doc, ids);
+
+	return (
+		<>
+			{ids.map((id) => (
+				<LayerFrame className="selection-peer" doc={doc} id={id} key={id} />
+			))}
+			{box === null ? null : <div className="selection-box" style={boxStyle(box)} />}
 		</>
 	);
+}
+
+function SelectionFrame({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
+	const ids = useSlot(user.selection);
+	const [id, peer] = ids;
+
+	if (id === undefined) {
+		return null;
+	}
+	return peer === undefined ? <SoleFrame doc={doc} id={id} /> : <GroupFrame doc={doc} ids={ids} />;
+}
+
+function Marquee({ user }: { user: UserState }): ReactNode {
+	const marquee = useSlot(user.marquee);
+
+	return marquee === null ? null : <div className="marquee" style={boxStyle(marquee.box)} />;
 }
 
 function HighlightFrame({
@@ -139,6 +169,7 @@ export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState })
 			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
 			<SelectionFrame doc={doc} user={user} />
+			<Marquee user={user} />
 			<SnapLines doc={doc} user={user} />
 		</>
 	);
