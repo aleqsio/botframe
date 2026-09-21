@@ -11,6 +11,8 @@
 		"test-results",
 		"playwright-report",
 		"bun.lock",
-		"*.md"
+		"*.md",
+		".claude/settings.local.json",
+		".claude/worktrees"
 	]
 }

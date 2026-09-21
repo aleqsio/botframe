@@ -48,6 +48,24 @@ export function outOfLayer(layer: Placed, local: Point): Point {
 	return { x: layer.x + pivot.x + turned.x, y: layer.y + pivot.y + turned.y };
 }
 
+export function cornersOf(box: Size): Point[] {
+	return [
+		{ x: 0, y: 0 },
+		{ x: box.width, y: 0 },
+		{ x: box.width, y: box.height },
+		{ x: 0, y: box.height },
+	];
+}
+
+export function turnedBounds(layer: Turned): Rect {
+	const corners = cornersOf(layer).map((corner) => outOfLayer({ ...layer, x: 0, y: 0 }, corner));
+	const xs = corners.map((corner) => corner.x);
+	const ys = corners.map((corner) => corner.y);
+	const x = Math.min(...xs);
+	const y = Math.min(...ys);
+	return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+}
+
 export function toLayerPoint(layer: Placed, point: Point): Point {
 	const local = intoLayer(layer, point);
 	const half = halfSizeOf(layer);
