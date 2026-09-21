@@ -2,6 +2,9 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import { SIDES } from "../../document/layout";
 import type { DisplayMode, Side } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
+import type { Point } from "../state/camera";
+import { IDENTITY, layoutBox, multiply } from "./drawnBox";
+import type { Affine, BoxRead, ClientBox, Linear } from "./drawnBox";
 import { LAYER_ATTRIBUTE, isLayerId } from "./hitTest";
 import type { ReadLayer } from "./layerSpace";
 
@@ -72,18 +75,75 @@ function pixelList(text: string): number[] {
 	return text.split(" ").flatMap((part) => (part.endsWith("px") ? [pixelsOf(part)] : []));
 }
 
-function domBox(layer: Layer): DrawnBox | null {
-	const element = elementOf(layer.id);
-	if (element === null) {
-		return null;
+const NO_TRANSFORM = "none";
+const VIEWPORT_ID = "viewport";
+
+function affineOf(transform: string): Affine {
+	if (transform === NO_TRANSFORM) {
+		return IDENTITY;
 	}
+	const { a, b, c, d, e, f } = new DOMMatrix(transform);
+	return { a, b, c, d, e, f };
+}
+
+function chainOf(parent: HTMLElement): Linear {
+	let chain: Linear = IDENTITY;
+	let held: HTMLElement | null = parent;
+	while (held !== null) {
+		chain = multiply(affineOf(getComputedStyle(held).transform), chain);
+		held = held.id === VIEWPORT_ID ? null : held.parentElement;
+	}
+	return chain;
+}
+
+// Blink lays out on a grid of 1/64 px, and the computed style prints the size with fewer digits.
+// https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/platform/geometry/layout_unit.h
+const LAYOUT_STEPS = 64;
+
+function layoutPixelsOf(text: string): number {
+	return Math.round(pixelsOf(text) * LAYOUT_STEPS) / LAYOUT_STEPS;
+}
+
+function clientBoxOf(element: HTMLElement, style: CSSStyleDeclaration): ClientBox {
+	return {
+		rect: element.getBoundingClientRect(),
+		size: { width: layoutPixelsOf(style.width), height: layoutPixelsOf(style.height) },
+	};
+}
+
+function originOf(style: CSSStyleDeclaration): Point {
+	const [x = 0, y = 0] = pixelList(style.transformOrigin);
+	return { x, y };
+}
+
+function boxRead(element: HTMLElement, parent: HTMLElement): BoxRead {
+	const style = getComputedStyle(element);
+	return {
+		child: clientBoxOf(element, style),
+		parent: clientBoxOf(parent, getComputedStyle(parent)),
+		chain: chainOf(parent),
+		own: affineOf(style.transform),
+		origin: originOf(style),
+	};
+}
+
+function offsetBox(element: HTMLElement): Rect {
 	return {
 		x: element.offsetLeft,
 		y: element.offsetTop,
 		width: element.offsetWidth,
 		height: element.offsetHeight,
-		placed: parentLayerIdOf(element) === layer.parent,
 	};
+}
+
+function domBox(layer: Layer): DrawnBox | null {
+	const element = elementOf(layer.id);
+	if (element === null) {
+		return null;
+	}
+	const parent = element.parentElement;
+	const box = parent === null ? null : layoutBox(boxRead(element, parent));
+	return { ...(box ?? offsetBox(element)), placed: parentLayerIdOf(element) === layer.parent };
 }
 
 function domInset(id: LayerId): Inset {
