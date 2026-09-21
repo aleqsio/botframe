@@ -4,6 +4,7 @@ import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import type { LayerMove } from "../state/userState";
 import { recellInGrid } from "./gridDrag";
+import type { Carry } from "./moveCarry";
 import { drawnReaderOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
@@ -51,12 +52,10 @@ function reorderInFlow(
 	layer: Layer,
 	display: "row" | "column",
 	point: Point,
-): void {
+): boolean {
 	const wanted = flowIndexOf(otherBoxes(target, layer), display, point);
 	const held = target.doc.siblingIds(layer.parent).indexOf(layer.id);
-	if (wanted !== held) {
-		target.doc.move(layer.id, layer.parent, wanted);
-	}
+	return wanted !== held && target.doc.move(layer.id, layer.parent, wanted);
 }
 
 function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): DisplayMode | null {
@@ -65,23 +64,34 @@ function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): Di
 	return laysOutInFlow(display, layer) ? display : null;
 }
 
+function replaceInFlow(
+	target: PointerTarget,
+	layer: Layer,
+	display: DisplayMode,
+	origin: Point,
+): boolean {
+	if (display === "row" || display === "column") {
+		return reorderInFlow(target, layer, display, origin);
+	}
+	return (
+		display === "grid" && layer.parent !== null && recellInGrid(target, layer, layer.parent, origin)
+	);
+}
+
 export function settleInFlow(
 	target: PointerTarget,
 	move: LayerMove,
 	canvas: Point,
-	lift: Point,
-): void {
+	carry: Carry,
+): boolean {
 	const layer = target.doc.layer(move.id);
 	const display = layer === null ? null : flowDisplayOf(target, move, layer);
 	if (layer === null || display === null) {
 		target.user.lift.set(null);
-		return;
+		return false;
 	}
 	const origin = parentPointOf(target, move.id, canvas);
-	target.user.lift.set({ id: move.id, at: lift });
-	if (display === "row" || display === "column") {
-		reorderInFlow(target, layer, display, origin);
-	} else if (display === "grid" && move.parent !== null) {
-		recellInGrid(target, layer, move.parent, origin);
-	}
+	target.user.lift.set({ id: move.id, at: carry.lift });
+	const replaced = replaceInFlow(target, layer, display, origin);
+	return replaced || !carry.placed;
 }

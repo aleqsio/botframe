@@ -1,8 +1,8 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 import { join } from "node:path";
-import { dragOn, stageOrigin } from "../support";
-import type { Point } from "../support";
+import { at, dragOn, drawWith, stageOrigin } from "../support";
+import type { Drag, Point } from "../support";
 
 const SITE = "https://botframe.test";
 const RENDERER = "out/renderer";
@@ -76,10 +76,36 @@ export async function turnLayer(page: Page, origin: Point, grab: Point): Promise
 	await expect(page.locator(".layer[data-selected]")).toHaveAttribute("style", /rotate\(30deg\)/u);
 }
 
-export async function makeRow(page: Page, origin: Point, scene: Scene): Promise<Locator> {
-	const child = scene.layers.nth(2);
-	await page.mouse.click(origin.x + 560, origin.y + 220);
+const INSIDE_THE_ARTBOARD = { x: 560, y: 220 };
+const EMPTY = { x: 900, y: 650 };
+const ROW: Drag = { from: { x: 300, y: 60 }, to: { x: 620, y: 240 } };
+const FIRST_SHAPE: Drag = { from: { x: 330, y: 100 }, to: { x: 390, y: 140 } };
+const SECOND_SHAPE: Drag = { from: { x: 410, y: 100 }, to: { x: 470, y: 140 } };
+const THIRD_SHAPE: Drag = { from: { x: 490, y: 100 }, to: { x: 550, y: 140 } };
+
+export async function clickAt(page: Page, origin: Point, point: Point): Promise<void> {
+	await page.mouse.click(at(origin, point).x, at(origin, point).y);
+}
+
+export async function makeRow(page: Page, origin: Point, lastChild: Locator): Promise<void> {
+	await clickAt(page, origin, INSIDE_THE_ARTBOARD);
 	await page.getByRole("group", { name: "Display" }).getByRole("button", { name: "Row" }).click();
-	await expect(child).toHaveCSS("position", "relative");
-	return child;
+	await expect(lastChild).toHaveCSS("position", "relative");
+}
+
+async function drawShape(page: Page, origin: Point, drag: Drag): Promise<void> {
+	await clickAt(page, origin, EMPTY);
+	await drawWith(page, origin, "r", drag);
+}
+
+export async function drawRowOfThree(page: Page, origin: Point): Promise<Locator> {
+	await drawWith(page, origin, "a", ROW);
+	await drawShape(page, origin, FIRST_SHAPE);
+	await drawShape(page, origin, SECOND_SHAPE);
+	await drawShape(page, origin, THIRD_SHAPE);
+	await clickAt(page, origin, EMPTY);
+	const children = page.locator("#viewport > .layer").nth(1).locator("> .layer");
+	await expect(children).toHaveCount(3);
+	await makeRow(page, origin, children.nth(2));
+	return children;
 }

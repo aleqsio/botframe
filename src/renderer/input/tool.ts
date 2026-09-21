@@ -24,7 +24,7 @@ export interface ToolBehavior {
 		point: StagePoint,
 		modifiers: Modifiers,
 	) => boolean;
-	drag?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => void;
+	drag?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => boolean;
 	dragEnd?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => void;
 	context?: (target: PointerTarget, client: Point) => boolean;
 }

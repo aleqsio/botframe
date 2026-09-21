@@ -34,7 +34,7 @@ export function composeBehaviors(behaviors: readonly ToolBehavior[]): ToolBehavi
 			return owner !== null;
 		},
 		drag(target, point, modifiers) {
-			owner?.drag?.(target, point, modifiers);
+			return owner?.drag?.(target, point, modifiers) ?? false;
 		},
 		dragEnd(target, point, modifiers) {
 			const held = owner;

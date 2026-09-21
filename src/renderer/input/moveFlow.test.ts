@@ -7,7 +7,16 @@ import { NO_MODIFIERS } from "./modifiers";
 import { cancelMove } from "./moveDrag";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import { drawnCenterOf, drawnOf, firstId, idAt, laidOutRow, pointAt } from "./toolFixtures";
+import {
+	ROW_CHILD,
+	drawnCenterOf,
+	drawnOf,
+	firstId,
+	idAt,
+	laidOutRow,
+	pointAt,
+	rowSlots,
+} from "./toolFixtures";
 import type { Slot } from "./toolFixtures";
 
 const ARTBOARD: LayerFields = {
@@ -180,5 +189,61 @@ describe("a fill child that leaves a row for the root", () => {
 
 		expect(target.doc.layer(first)).toMatchObject({ width: 60 });
 		expect(target.doc.layer(first)?.layout.width).toBe("fill");
+	});
+});
+
+describe("the frame after a reorder inside a row", () => {
+	it("asks for one more solve, which measures the lift against the new slot", () => {
+		const { target, ids } = laidOutRow();
+		const parent = firstId(target.doc);
+		const first = idAt(ids, 0);
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 420 + 30, y: 260 + 20 });
+		const moved = pointAt(camera, { x: press.stage.x + 70, y: press.stage.y });
+		behavior.dragStart?.(target, press, press, NO_MODIFIERS);
+
+		expect(behavior.drag?.(target, moved, NO_MODIFIERS)).toBe(true);
+
+		expect(target.doc.childIds(parent)).toEqual([idAt(ids, 1), first, idAt(ids, 2)]);
+		expect(target.user.lift.get()?.at).toEqual({ x: 70, y: 0 });
+		const placed = { ...target, drawn: drawnOf(rowSlots(parent, target.doc.childIds(parent))) };
+
+		expect(behavior.drag?.(placed, moved, NO_MODIFIERS)).toBe(false);
+
+		expect(target.user.lift.get()?.at).toEqual({ x: 10, y: 0 });
+	});
+});
+
+describe("the frame after a layer lands in a row", () => {
+	it("asks for one more solve, which measures the lift once the row places the layer", () => {
+		const { target, ids } = laidOutRow();
+		const parent = firstId(target.doc);
+		const outside = target.doc.createLayer({ ...ROW_CHILD, x: 700, y: 700 });
+		target.doc.update(outside, { layout: { position: "absolute" } });
+		target.doc.commit("add a loose layer");
+		let hits: readonly LayerId[] = [outside];
+		const scene = { ...target, layerIds: hits, layerIdsAt: () => hits };
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const press = pointAt(camera, { x: 730, y: 720 });
+		const moved = pointAt(camera, { x: 420 + 100, y: 260 + 20 });
+		behavior.dragStart?.(scene, press, press, NO_MODIFIERS);
+		hits = [outside, parent];
+
+		expect(behavior.drag?.(scene, moved, NO_MODIFIERS)).toBe(true);
+
+		expect(target.doc.childIds(parent)).toEqual([
+			idAt(ids, 0),
+			idAt(ids, 1),
+			outside,
+			idAt(ids, 2),
+		]);
+		expect(target.user.lift.get()?.at).toEqual({ x: 0, y: 0 });
+		const placed = { ...scene, drawn: drawnOf(rowSlots(parent, target.doc.childIds(parent))) };
+
+		expect(behavior.drag?.(placed, moved, NO_MODIFIERS)).toBe(false);
+
+		expect(target.user.lift.get()?.at).toEqual({ x: -50, y: 0 });
 	});
 });

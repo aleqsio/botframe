@@ -90,6 +90,7 @@ export function createHandleBehavior(): ToolBehavior {
 		},
 		drag(target, point, modifiers) {
 			apply(target, point.canvas, modifiers);
+			return false;
 		},
 		dragEnd(target, point, modifiers) {
 			const grip = held;

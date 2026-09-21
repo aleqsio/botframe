@@ -103,3 +103,15 @@ export async function openStage(): Promise<{
 		window,
 	};
 }
+
+export async function idOf(locator: Locator): Promise<string> {
+	const id = await locator.getAttribute("data-layer-id");
+	if (id === null) {
+		throw new Error("the layer has no id");
+	}
+	return id;
+}
+
+export function layerById(window: Page, id: string): Locator {
+	return window.locator(`.layer[data-layer-id="${id}"]`);
+}

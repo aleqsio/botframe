@@ -1,9 +1,11 @@
 import { useRef } from "react";
+import type { RefObject } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { zoneKey } from "./handles";
+import type { Modifiers } from "./modifiers";
 import { targetOf } from "./pointerTarget";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { behaviorFor } from "./toolBehavior";
@@ -11,15 +13,39 @@ import type { StageInputHandlers } from "./useStageInput";
 
 const NO_LAYERS: readonly LayerId[] = [];
 
-interface ToolGesture {
+interface ToolStart {
 	behavior: ToolBehavior;
 	target: PointerTarget;
+}
+
+interface ToolGesture extends ToolStart {
+	point: StagePoint;
+	modifiers: Modifiers;
+	frame: number;
+}
+
+function solveNextFrame(held: RefObject<ToolGesture | null>, current: ToolGesture): void {
+	if (current.frame !== 0) {
+		return;
+	}
+	current.frame = requestAnimationFrame(() => {
+		current.frame = 0;
+		if (held.current === current) {
+			solve(held, current);
+		}
+	});
+}
+
+function solve(held: RefObject<ToolGesture | null>, current: ToolGesture): void {
+	if (current.behavior.drag?.(current.target, current.point, current.modifiers) === true) {
+		solveNextFrame(held, current);
+	}
 }
 
 export function useToolInput(doc: DesignDocument, user: UserState): StageInputHandlers {
 	const gesture = useRef<ToolGesture | null>(null);
 
-	function begin(layerIds: readonly LayerId[]): ToolGesture {
+	function begin(layerIds: readonly LayerId[]): ToolStart {
 		return { behavior: behaviorFor(user.tool.get()), target: targetOf(doc, user, layerIds) };
 	}
 
@@ -32,14 +58,21 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 
 	return {
 		onDragStart(origin, point, layerIds, modifiers) {
-			const current = begin(layerIds);
+			const current = { ...begin(layerIds), point, modifiers, frame: 0 };
 			gesture.current = current;
 			user.dragging.set(true);
-			current.behavior.dragStart?.(current.target, origin, point, modifiers);
+			if (current.behavior.dragStart?.(current.target, origin, point, modifiers) === true) {
+				solveNextFrame(gesture, current);
+			}
 		},
 		onDragMove(point, modifiers) {
 			const current = gesture.current;
-			current?.behavior.drag?.(current.target, point, modifiers);
+			if (current === null) {
+				return;
+			}
+			current.point = point;
+			current.modifiers = modifiers;
+			solve(gesture, current);
 		},
 		onDragEnd(point, modifiers) {
 			const current = gesture.current;

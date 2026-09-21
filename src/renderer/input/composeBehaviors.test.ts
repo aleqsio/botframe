@@ -31,6 +31,7 @@ function recorder(name: string, claims: boolean, log: string[]): ToolBehavior {
 		},
 		drag() {
 			log.push(`${name}.drag`);
+			return false;
 		},
 		dragEnd() {
 			log.push(`${name}.dragEnd`);

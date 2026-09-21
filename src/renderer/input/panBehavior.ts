@@ -23,6 +23,7 @@ export function createPanBehavior(): ToolBehavior {
 		},
 		drag(target, point) {
 			panTo(target.user, point);
+			return false;
 		},
 		dragEnd(target, point) {
 			panTo(target.user, point);
