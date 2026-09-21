@@ -1,9 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId } from "../document/layer";
-import { drawnPadding, drawnRead } from "./input/drawn";
+import { DOM_DRAWN, drawnPadding, drawnRead } from "./input/drawn";
 import { layerChain } from "./input/layerSpace";
-import { layerTransform } from "./layerStyle";
+import { spaceTransform } from "./layerStyle";
 
 const NO_LAYER = (): void => {};
 const NO_FRAME = "";
@@ -49,13 +49,13 @@ export function useLayer(doc: DesignDocument, id: LayerId | null): Layer | null 
 
 function drawnChain(doc: DesignDocument, id: LayerId | null): Layer[] {
 	return layerChain(
-		drawnRead((layerId) => doc.layer(layerId)),
+		drawnRead(DOM_DRAWN, (layerId) => doc.layer(layerId)),
 		id,
 	);
 }
 
 function spaceText(chain: readonly Layer[]): string {
-	return chain.map((layer) => layerTransform(layer)).join(" ");
+	return chain.map((layer) => spaceTransform(layer)).join(" ");
 }
 
 function frameText(doc: DesignDocument, id: LayerId): string {

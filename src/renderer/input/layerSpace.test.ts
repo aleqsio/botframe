@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
-import { containsPoint, fromParentPoint, layerChain, toParentPoint } from "./layerSpace";
+import {
+	anchorOf,
+	anchoredPlace,
+	containsPoint,
+	fromParentPoint,
+	intoLayer,
+	layerChain,
+	outOfLayer,
+	pivotOf,
+	placedAround,
+	toParentPoint,
+	visualCenterOf,
+} from "./layerSpace";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {
@@ -104,5 +116,56 @@ describe("fromParentPoint", () => {
 
 		expect(fromParentPoint([FLAT, CHILD], inside).x).toBeCloseTo(canvas.x);
 		expect(fromParentPoint([FLAT, CHILD], inside).y).toBeCloseTo(canvas.y);
+	});
+});
+
+describe("a layer that turns about an origin away from its center", () => {
+	const CORNERED: Layer = { ...TURNED, origin: { x: 0, y: 0 } };
+
+	it("holds its top left corner in place on the screen", () => {
+		expect(fromParentPoint([CORNERED], { x: 0, y: 0 })).toEqual({ x: 100, y: 100 });
+		const far = fromParentPoint([CORNERED], { x: 200, y: 0 });
+		expect(far.x).toBeCloseTo(100);
+		expect(far.y).toBeCloseTo(300);
+	});
+
+	it("maps a parent point back to the same local point", () => {
+		const local = { x: 37, y: 81 };
+		const back = intoLayer(CORNERED, outOfLayer(CORNERED, local));
+		expect(back.x).toBeCloseTo(local.x);
+		expect(back.y).toBeCloseTo(local.y);
+	});
+
+	it("gives the pivot in the box of the layer from the origin and the size", () => {
+		expect(pivotOf(CORNERED)).toEqual({ x: 0, y: 0 });
+		expect(pivotOf({ ...CORNERED, origin: { x: 0.25, y: 1 } })).toEqual({ x: 50, y: 100 });
+	});
+});
+
+describe("anchoredPlace", () => {
+	const TILTED: Layer = { ...TURNED, rotation: 30, origin: { x: 0.2, y: 0.9 } };
+
+	it("puts the anchored point of the layer under the given parent point", () => {
+		const anchor = { x: 0.7, y: 0.1 };
+		const target = { x: 333, y: 222 };
+		const placed = { ...TILTED, ...anchoredPlace(TILTED, anchor, target) };
+		const landed = outOfLayer(placed, { x: anchor.x * placed.width, y: anchor.y * placed.height });
+		expect(landed.x).toBeCloseTo(target.x);
+		expect(landed.y).toBeCloseTo(target.y);
+	});
+
+	it("gives the anchor of a parent point back through anchorOf", () => {
+		const point = { x: 180, y: 140 };
+		const anchor = anchorOf(TILTED, point);
+		const placed = anchoredPlace(TILTED, anchor, point);
+		expect(placed.x).toBeCloseTo(TILTED.x);
+		expect(placed.y).toBeCloseTo(TILTED.y);
+	});
+
+	it("keeps the visual center where placedAround puts it", () => {
+		const center = { x: 500, y: 400 };
+		const placed = { ...TILTED, ...placedAround(TILTED, center) };
+		expect(visualCenterOf(placed).x).toBeCloseTo(center.x);
+		expect(visualCenterOf(placed).y).toBeCloseTo(center.y);
 	});
 });

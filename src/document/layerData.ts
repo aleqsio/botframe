@@ -1,5 +1,6 @@
 import { LoroMap } from "loro-crdt";
-import type { Geometry, LayerPatch, LayerTraits, Rect } from "./layer";
+import { CENTER_ORIGIN } from "./layer";
+import type { Geometry, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
 import { guidesOf } from "./guides";
 import type { Guide } from "./guides";
 import { DEFAULT_LAYOUT, layoutOf } from "./layout";
@@ -21,6 +22,8 @@ import { writeVariant } from "./write";
 const GEOMETRY = "geometry";
 const LAYOUT = "layout";
 const GUIDES = "guides";
+const ORIGIN_KEYS: Readonly<Record<keyof Origin, string>> = { x: "originX", y: "originY" };
+const ORIGIN_AXES: readonly (keyof Origin)[] = ["x", "y"];
 const UNIT_SUFFIX = "Unit";
 const BLACK = "#000000";
 
@@ -74,6 +77,13 @@ function resolveBox(lengths: LayerLengths, basis: Basis): Rect {
 	};
 }
 
+function readOrigin(data: LoroMap): Origin {
+	return {
+		x: readNumber(data, ORIGIN_KEYS.x, CENTER_ORIGIN.x),
+		y: readNumber(data, ORIGIN_KEYS.y, CENTER_ORIGIN.y),
+	};
+}
+
 function readLayout(data: LoroMap): LayerLayout {
 	const held = data.get(LAYOUT);
 	return layoutOf(held instanceof LoroMap ? held.toJSON() : undefined);
@@ -87,6 +97,7 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		layout: readLayout(data),
 		guides: guidesOf(data.get(GUIDES)),
 		rotation: readNumber(data, "rotation", 0),
+		origin: readOrigin(data),
 		fill: readString(data, "fill", BLACK),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
@@ -151,6 +162,17 @@ function writeGuides(data: LoroMap, guides: readonly Guide[]): void {
 	);
 }
 
+function writeOrigin(data: LoroMap, origin: Partial<Origin>): void {
+	for (const axis of ORIGIN_AXES) {
+		const value = origin[axis];
+		if (value === CENTER_ORIGIN[axis]) {
+			data.delete(ORIGIN_KEYS[axis]);
+		} else if (value !== undefined) {
+			data.set(ORIGIN_KEYS[axis], value);
+		}
+	}
+}
+
 function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	for (const [key, value] of Object.entries(patch)) {
 		writeLayoutKey(map, key, value);
@@ -158,7 +180,7 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 }
 
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, guides, layout, lengths, x, y, width, height, ...plain } = patch;
+	const { geometry, guides, layout, lengths, origin, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -172,5 +194,8 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	}
 	if (guides !== undefined) {
 		writeGuides(data, guides);
+	}
+	if (origin !== undefined) {
+		writeOrigin(data, origin);
 	}
 }

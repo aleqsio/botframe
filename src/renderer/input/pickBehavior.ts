@@ -2,14 +2,13 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
-import { drawnLayer } from "./drawn";
 import { insideSubtree } from "./dropTarget";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
 import { toggleSelected } from "./selection";
-import { parentPointOf, readerOf } from "./targetSpace";
+import { drawnReaderOf, parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 function select(user: UserState, layerId: LayerId | null): void {
@@ -36,7 +35,7 @@ function heldLayers(target: PointerTarget): Layer[] {
 }
 
 function coversPress(target: PointerTarget, layer: Layer, canvas: Point): boolean {
-	const drawn = drawnLayer(readerOf(target), layer);
+	const drawn = drawnReaderOf(target)(layer.id) ?? layer;
 	return containsPoint(drawn, parentPointOf(target, layer.id, canvas));
 }
 

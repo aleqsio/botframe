@@ -1,4 +1,13 @@
-import type { Geometry, Layer, LayerFields, LayerId, LayerPatch, WritableGeometry } from "./layer";
+import { isCenterOrigin } from "./layer";
+import type {
+	Geometry,
+	Layer,
+	LayerFields,
+	LayerId,
+	LayerPatch,
+	Origin,
+	WritableGeometry,
+} from "./layer";
 import type { Guide } from "./guides";
 import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
@@ -7,6 +16,7 @@ import type { LayerLengths } from "./length";
 export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
+	origin: Origin;
 	lengths: LayerLengths;
 	layout: LayerLayout;
 	guides: readonly Guide[];
@@ -56,6 +66,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,
+		origin: layer.origin,
 		lengths: layer.lengths,
 		layout: layer.layout,
 		guides: layer.guides,
@@ -66,6 +77,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 function copyPatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
+		...(isCenterOrigin(node.origin) ? {} : { origin: node.origin }),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
 		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),

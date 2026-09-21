@@ -1,6 +1,7 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
-import type { LayerFields, WritableGeometry } from "./layer";
+import { CENTER_ORIGIN } from "./layer";
+import type { LayerFields, Origin, WritableGeometry } from "./layer";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
@@ -19,8 +20,12 @@ export interface LayerEnvelope {
 }
 
 function count(bag: Bag, key: string): number {
+	return countOr(bag, key, 0);
+}
+
+function countOr(bag: Bag, key: string, fallback: number): number {
 	const value = bag[key];
-	return typeof value === "number" && Number.isFinite(value) ? value : 0;
+	return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
 function flag(bag: Bag, key: string): boolean {
@@ -79,12 +84,18 @@ function lengthsOf(value: unknown, fields: LayerFields): LayerLengths {
 	};
 }
 
+function originOf(value: unknown): Origin {
+	const bag = bagOf(value);
+	return { x: countOr(bag, "x", CENTER_ORIGIN.x), y: countOr(bag, "y", CENTER_ORIGIN.y) };
+}
+
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
 	return {
 		fields,
 		rotation: count(bag, "rotation"),
+		origin: originOf(bag["origin"]),
 		lengths: lengthsOf(bag["lengths"], fields),
 		layout: layoutOf(bag["layout"]),
 		guides: guidesOf(bag["guides"]),

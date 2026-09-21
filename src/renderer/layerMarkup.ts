@@ -14,7 +14,7 @@ const ESCAPES: Readonly<Record<string, string>> = {
 };
 
 function styledLayerOf(node: LayerNode): StyledLayer {
-	return { ...node.fields, rotation: node.rotation, layout: node.layout };
+	return { ...node.fields, rotation: node.rotation, origin: node.origin, layout: node.layout };
 }
 
 function propertyName(key: string): string {

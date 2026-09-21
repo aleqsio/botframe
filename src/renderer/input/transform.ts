@@ -6,11 +6,13 @@ import { HANDLE_AXIS } from "./handles";
 import type { Axis, Handle } from "./handles";
 import {
 	angleFrom,
-	centerOf,
 	halfSizeOf,
 	normalizeDegrees,
-	rotatePoint,
+	outOfLayer,
+	pivotOf,
+	placedAround,
 	toLayerPoint,
+	visualCenterOf,
 } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP, stepOf } from "./step";
@@ -67,19 +69,16 @@ export function resizedRect(
 		x: centerShift(axis.x, half.x, next.x, modifiers.alt),
 		y: centerShift(axis.y, half.y, next.y, modifiers.alt),
 	};
-	const pivot = centerOf(start);
-	const moved = rotatePoint(shift, start.rotation);
-	const center = { x: pivot.x + moved.x, y: pivot.y + moved.y };
-	return { x: center.x - next.x, y: center.y - next.y, width: next.x * 2, height: next.y * 2 };
+	const center = outOfLayer(start, { x: half.x + shift.x, y: half.y + shift.y });
+	const size = { width: next.x * 2, height: next.y * 2 };
+	return { ...placedAround({ ...start, ...size }, center), ...size };
 }
 
 export function scaledRect(start: Layer, factor: number): Rect {
 	const smallest = Math.min(start.width, start.height);
 	const applied = Math.max(factor, Math.min(1, MIN_LAYER_SIZE / smallest));
-	const width = start.width * applied;
-	const height = start.height * applied;
-	const center = centerOf(start);
-	return { x: center.x - width / 2, y: center.y - height / 2, width, height };
+	const size = { width: start.width * applied, height: start.height * applied };
+	return { ...placedAround({ ...start, ...size }, visualCenterOf(start)), ...size };
 }
 
 export function rotatedDegrees(
@@ -88,7 +87,8 @@ export function rotatedDegrees(
 	point: Point,
 	modifiers: Modifiers,
 ): number {
-	const center = centerOf(start);
+	const pivot = pivotOf(start);
+	const center = { x: start.x + pivot.x, y: start.y + pivot.y };
 	const turned = start.rotation + angleFrom(center, point) - angleFrom(center, origin);
 	const step = stepOf(ANGLE_SNAP, modifiers);
 	return normalizeDegrees(step === 0 ? turned : Math.round(turned / step) * step);

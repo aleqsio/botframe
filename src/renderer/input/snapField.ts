@@ -1,13 +1,12 @@
 import type { LayerId } from "../../document/layer";
-import { drawnInset, drawnRead } from "./drawn";
 import { snapFieldOf } from "./snap";
 import type { SnapField } from "./snap";
 import { snapShapeOf } from "./snapShape";
-import { readerOf } from "./targetSpace";
+import { drawnReaderOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 export function snapFieldAround(target: PointerTarget, dragged: LayerId): SnapField {
-	const read = drawnRead(readerOf(target));
+	const read = drawnReaderOf(target);
 	const parent = read(dragged)?.parent ?? null;
 	const container = parent === null ? null : read(parent);
 	const shapes = target.doc.siblingIds(parent).flatMap((id) => {
@@ -20,6 +19,6 @@ export function snapFieldAround(target: PointerTarget, dragged: LayerId): SnapFi
 		container:
 			container === null
 				? null
-				: { span: container, inset: drawnInset(container.id), guides: container.guides },
+				: { span: container, inset: target.drawn.inset(container.id), guides: container.guides },
 	});
 }

@@ -2,11 +2,12 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Size } from "../../document/length";
 import { isArtboard } from "../components/layerEntry";
 import {
-	centerOf,
+	chainTurn,
 	fromParentPoint,
-	halfSizeOf,
 	normalizeDegrees,
+	placedAround,
 	toParentPoint,
+	visualCenterOf,
 } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
 
@@ -36,21 +37,13 @@ export function dropParentOf(
 
 export type Placement = Pick<Layer, "x" | "y" | "rotation">;
 
-function chainRotation(chain: readonly Layer[]): number {
-	return chain.reduce((total, layer) => total + layer.rotation, 0);
-}
-
 export function heldPlacement(
 	layer: Layer,
 	from: readonly Layer[],
 	to: readonly Layer[],
 	size: Size,
 ): Placement {
-	const center = toParentPoint(to, fromParentPoint(from, centerOf(layer)));
-	const half = halfSizeOf(size);
-	return {
-		x: center.x - half.x,
-		y: center.y - half.y,
-		rotation: normalizeDegrees(layer.rotation + chainRotation(from) - chainRotation(to)),
-	};
+	const center = toParentPoint(to, fromParentPoint(from, visualCenterOf(layer)));
+	const rotation = normalizeDegrees(layer.rotation + chainTurn(from) - chainTurn(to));
+	return { ...placedAround({ ...size, rotation, origin: layer.origin }, center), rotation };
 }

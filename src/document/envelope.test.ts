@@ -117,6 +117,12 @@ describe("parseEnvelope", () => {
 		});
 	});
 
+	it("reads a layer that an older copy wrote without an origin as turned about its center", () => {
+		const parsed = parseEnvelope(envelopeWith({ layers: [{ fields: {}, origin: { x: "far" } }] }));
+
+		expect(parsed?.layers[0]?.origin).toEqual({ x: 0.5, y: 0.5 });
+	});
+
 	it("reads the layout of a layer and falls back to the default for a layout that is broken", () => {
 		const held = { ...ROOT, layout: { ...DEFAULT_LAYOUT, display: "grid" as const } };
 		const kept = parseEnvelope(

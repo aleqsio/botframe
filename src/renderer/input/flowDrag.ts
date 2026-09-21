@@ -3,9 +3,8 @@ import type { DisplayMode } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import type { LayerMove } from "../state/userState";
-import { drawnRead } from "./drawn";
 import { recellInGrid } from "./gridDrag";
-import { parentPointOf, readerOf } from "./targetSpace";
+import { drawnReaderOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 type Axis = "x" | "y";
@@ -40,7 +39,7 @@ function laysOutInFlow(display: DisplayMode | null, layer: Layer): boolean {
 }
 
 function otherBoxes(target: PointerTarget, layer: Layer): Rect[] {
-	const read = drawnRead(readerOf(target));
+	const read = drawnReaderOf(target);
 	return target.doc.siblingIds(layer.parent).flatMap((id) => {
 		const sibling = id === layer.id ? null : read(id);
 		return sibling === null ? [] : [sibling];
@@ -60,18 +59,26 @@ function reorderInFlow(
 	}
 }
 
-export function settleInFlow(target: PointerTarget, move: LayerMove, canvas: Point): void {
+function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): DisplayMode | null {
+	const parent = move.parent === null ? null : target.doc.layer(move.parent);
+	const display = parent?.layout.display ?? null;
+	return laysOutInFlow(display, layer) ? display : null;
+}
+
+export function settleInFlow(
+	target: PointerTarget,
+	move: LayerMove,
+	canvas: Point,
+	lift: Point,
+): void {
 	const layer = target.doc.layer(move.id);
-	const display = move.parent === null ? null : target.doc.layer(move.parent)?.layout.display;
-	const origin = parentPointOf(target, move.id, canvas);
-	if (layer === null || display === undefined || !laysOutInFlow(display ?? null, layer)) {
+	const display = layer === null ? null : flowDisplayOf(target, move, layer);
+	if (layer === null || display === null) {
 		target.user.lift.set(null);
 		return;
 	}
-	target.user.lift.set({
-		id: move.id,
-		at: { x: origin.x - move.grab.x, y: origin.y - move.grab.y },
-	});
+	const origin = parentPointOf(target, move.id, canvas);
+	target.user.lift.set({ id: move.id, at: lift });
 	if (display === "row" || display === "column") {
 		reorderInFlow(target, layer, display, origin);
 	} else if (display === "grid" && move.parent !== null) {

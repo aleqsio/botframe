@@ -2,32 +2,65 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import { SIDES } from "../../document/layout";
 import type { DisplayMode, Side } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
+import { LAYER_ATTRIBUTE, isLayerId } from "./hitTest";
 import type { ReadLayer } from "./layerSpace";
+
+type Inset = Readonly<Record<Side, number>>;
+
+interface DrawnGrid {
+	columns: readonly number[];
+	rows: readonly number[];
+	columnGap: number;
+	rowGap: number;
+}
+
+export interface DrawnBox extends Rect {
+	placed: boolean;
+}
+
+export interface DrawnReader {
+	box: (layer: Layer) => DrawnBox | null;
+	inset: (id: LayerId) => Inset;
+	grid: (id: LayerId) => DrawnGrid;
+}
+
+const NO_INSET: Inset = { top: 0, right: 0, bottom: 0, left: 0 };
+const NO_GRID: DrawnGrid = { columns: [], rows: [], columnGap: 0, rowGap: 0 };
+
+export const NO_DRAWN: DrawnReader = {
+	box: () => null,
+	inset: () => NO_INSET,
+	grid: () => NO_GRID,
+};
 
 export function drawnFrom(
 	layer: Layer,
 	parentDisplay: DisplayMode | null,
-	box: Rect | null,
+	box: DrawnBox | null,
 ): Layer {
 	if (box === null) {
 		return layer;
 	}
+	const placed = box.placed && !outOfFlow(parentDisplay, layer.layout.position);
 	return {
 		...layer,
-		...(outOfFlow(parentDisplay, layer.layout.position) ? {} : { x: box.x, y: box.y }),
+		...(placed ? { x: box.x, y: box.y } : {}),
 		...(layer.layout.width === "fixed" ? {} : { width: box.width }),
 		...(layer.layout.height === "fixed" ? {} : { height: box.height }),
 	};
 }
 
-const NO_INSET: Readonly<Record<Side, number>> = { top: 0, right: 0, bottom: 0, left: 0 };
-
 function elementOf(id: LayerId): HTMLElement | null {
 	if (typeof document === "undefined") {
 		return null;
 	}
-	const element = document.querySelector(`[data-layer-id="${id}"]`);
+	const element = document.querySelector(`[${LAYER_ATTRIBUTE}="${id}"]`);
 	return element instanceof HTMLElement ? element : null;
+}
+
+function parentLayerIdOf(element: HTMLElement): LayerId | null {
+	const value = element.parentElement?.getAttribute(LAYER_ATTRIBUTE) ?? null;
+	return value !== null && isLayerId(value) ? value : null;
 }
 
 function pixelsOf(text: string): number {
@@ -35,7 +68,25 @@ function pixelsOf(text: string): number {
 	return Number.isFinite(value) ? value : 0;
 }
 
-export function drawnInset(id: LayerId): Readonly<Record<Side, number>> {
+function pixelList(text: string): number[] {
+	return text.split(" ").flatMap((part) => (part.endsWith("px") ? [pixelsOf(part)] : []));
+}
+
+function domBox(layer: Layer): DrawnBox | null {
+	const element = elementOf(layer.id);
+	if (element === null) {
+		return null;
+	}
+	return {
+		x: element.offsetLeft,
+		y: element.offsetTop,
+		width: element.offsetWidth,
+		height: element.offsetHeight,
+		placed: parentLayerIdOf(element) === layer.parent,
+	};
+}
+
+function domInset(id: LayerId): Inset {
 	const element = elementOf(id);
 	if (element === null) {
 		return NO_INSET;
@@ -49,20 +100,7 @@ export function drawnInset(id: LayerId): Readonly<Record<Side, number>> {
 	};
 }
 
-export interface DrawnGrid {
-	columns: readonly number[];
-	rows: readonly number[];
-	columnGap: number;
-	rowGap: number;
-}
-
-const NO_GRID: DrawnGrid = { columns: [], rows: [], columnGap: 0, rowGap: 0 };
-
-function pixelList(text: string): number[] {
-	return text.split(" ").flatMap((part) => (part.endsWith("px") ? [pixelsOf(part)] : []));
-}
-
-export function drawnGrid(id: LayerId): DrawnGrid {
+function domGrid(id: LayerId): DrawnGrid {
 	const element = elementOf(id);
 	if (element === null) {
 		return NO_GRID;
@@ -76,32 +114,21 @@ export function drawnGrid(id: LayerId): DrawnGrid {
 	};
 }
 
+export const DOM_DRAWN: DrawnReader = { box: domBox, inset: domInset, grid: domGrid };
+
 export function drawnPadding(id: LayerId): string {
-	const inset = drawnInset(id);
+	const inset = DOM_DRAWN.inset(id);
 	return SIDES.map((side) => `${inset[side]}px`).join(" ");
 }
 
-function boxOf(id: LayerId): Rect | null {
-	const element = elementOf(id);
-	if (element === null) {
-		return null;
-	}
-	return {
-		x: element.offsetLeft,
-		y: element.offsetTop,
-		width: element.offsetWidth,
-		height: element.offsetHeight,
-	};
-}
-
-export function drawnLayer(read: ReadLayer, layer: Layer): Layer {
+function drawnLayer(drawn: DrawnReader, read: ReadLayer, layer: Layer): Layer {
 	const parent = layer.parent === null ? null : read(layer.parent);
-	return drawnFrom(layer, parent?.layout.display ?? null, boxOf(layer.id));
+	return drawnFrom(layer, parent?.layout.display ?? null, drawn.box(layer));
 }
 
-export function drawnRead(read: ReadLayer): ReadLayer {
+export function drawnRead(drawn: DrawnReader, read: ReadLayer): ReadLayer {
 	return (id) => {
 		const layer = read(id);
-		return layer === null ? null : drawnLayer(read, layer);
+		return layer === null ? null : drawnLayer(drawn, read, layer);
 	};
 }

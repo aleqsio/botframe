@@ -4,9 +4,11 @@ import type { Layer, Rect } from "../../document/layer";
 import { DEFAULT_LAYOUT } from "../../document/layout";
 import type { LayoutPatch } from "../../document/layout";
 import { drawnFrom } from "./drawn";
+import type { DrawnBox } from "./drawn";
 
 const BOX: Rect = { x: 10, y: 20, width: 30, height: 40 };
-const PLACED: Rect = { x: 3, y: 4, width: 300, height: 400 };
+const PLACED: DrawnBox = { x: 3, y: 4, width: 300, height: 400, placed: true };
+const MOVING: DrawnBox = { ...PLACED, placed: false };
 
 function layerOf(layout: LayoutPatch): Layer {
 	return {
@@ -44,6 +46,11 @@ describe("drawnFrom", () => {
 	it("takes the size of a hug or a fill axis", () => {
 		const mixed = drawnFrom(layerOf({ width: "fill", height: "hug" }), "row", PLACED);
 		expect(mixed).toMatchObject({ width: 300, height: 400 });
+	});
+
+	it("keeps the document place of a child whose element is not yet in its parent, and takes its size", () => {
+		const mixed = drawnFrom(layerOf({ width: "fill" }), "row", MOVING);
+		expect(mixed).toMatchObject({ x: 10, y: 20, width: 300, height: 40 });
 	});
 
 	it("keeps each field when the element has no box", () => {

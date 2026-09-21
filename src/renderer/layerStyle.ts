@@ -14,9 +14,10 @@ import type {
 	Span,
 	Track,
 } from "../document/layout";
-import { roundNumber } from "../document/length";
+import { PERCENT, roundNumber } from "../document/length";
 import type { Axis } from "../document/length";
-import { halfSizeOf } from "./input/layerSpace";
+import { pivotOf } from "./input/layerSpace";
+import type { Turned } from "./input/layerSpace";
 
 const HALF_TURN = 180;
 
@@ -26,8 +27,7 @@ declare module "react" {
 	}
 }
 
-export interface StyledLayer extends Rect {
-	rotation: number;
+export interface StyledLayer extends Rect, Turned {
 	fill: string;
 	clip: boolean;
 	geometry: Geometry;
@@ -100,15 +100,34 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 	return {};
 }
 
-function turnAbout(layer: StyledLayer): string {
-	const half = halfSizeOf(layer);
-	const turn = `rotate(${layer.rotation}deg)`;
-	return `translate(${half.x}px, ${half.y}px) ${turn} translate(${-half.x}px, ${-half.y}px)`;
+function turnText(layer: Turned): string {
+	return `rotate(${layer.rotation}deg)`;
 }
 
-export function layerTransform(layer: StyledLayer): string {
-	const place = `translate3d(${layer.x}px, ${layer.y}px, 0)`;
-	return layer.rotation === 0 ? place : `${place} ${turnAbout(layer)}`;
+function turnAbout(layer: Turned): string {
+	const pivot = pivotOf(layer);
+	const turn = turnText(layer);
+	return `translate(${pivot.x}px, ${pivot.y}px) ${turn} translate(${-pivot.x}px, ${-pivot.y}px)`;
+}
+
+function placeText(layer: Rect): string {
+	return `translate3d(${layer.x}px, ${layer.y}px, 0)`;
+}
+
+function layerTransform(layer: Rect & Turned): string {
+	return layer.rotation === 0 ? placeText(layer) : `${placeText(layer)} ${turnText(layer)}`;
+}
+
+export function spaceTransform(layer: Rect & Turned): string {
+	return layer.rotation === 0 ? placeText(layer) : `${placeText(layer)} ${turnAbout(layer)}`;
+}
+
+function originStyle(layer: Turned): CSSProperties {
+	if (layer.rotation === 0) {
+		return {};
+	}
+	const { x, y } = layer.origin;
+	return { transformOrigin: `${x * PERCENT}% ${y * PERCENT}%` };
 }
 
 export function outOfFlow(parentDisplay: DisplayMode | null, position: PositionMode): boolean {
@@ -134,12 +153,13 @@ function offsetStyle(layer: StyledLayer): CSSProperties {
 
 function placeStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	if (flow.outOfFlow) {
-		return { position: "absolute", transform: layerTransform(layer) };
+		return { position: "absolute", transform: layerTransform(layer), ...originStyle(layer) };
 	}
 	return {
 		position: "relative",
 		...offsetStyle(layer),
-		transform: layer.rotation === 0 ? undefined : turnAbout(layer),
+		transform: layer.rotation === 0 ? undefined : turnText(layer),
+		...originStyle(layer),
 	};
 }
 

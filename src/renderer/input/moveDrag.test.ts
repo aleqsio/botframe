@@ -7,7 +7,18 @@ import { cancelMove, changesParent } from "./moveDrag";
 import { parentChainOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import { NO_HITS, dragOver, dropScene, firstId, nestedTarget, pointAt } from "./toolFixtures";
+import {
+	NO_HITS,
+	ROW_CHILD,
+	dragOver,
+	dropScene,
+	firstId,
+	laidOutRow,
+	nestedTarget,
+	pointAt,
+	rowOfThree,
+	rowScene,
+} from "./toolFixtures";
 import type { DropScene } from "./toolFixtures";
 
 const ARTBOARD: LayerFields = {
@@ -300,42 +311,6 @@ describe("Escape during a move drag", () => {
 	});
 });
 
-function rowScene(): { target: PointerTarget; child: LayerId } {
-	const scene = nestedTarget(0);
-	scene.target.doc.update(firstId(scene.target.doc), { layout: { display: "row" } });
-	scene.target.doc.commit("set display");
-	return scene;
-}
-
-const ROW_CHILD: LayerFields = {
-	x: 10,
-	y: 20,
-	width: 60,
-	height: 40,
-	fill: "#d9d9d9",
-	name: "",
-	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
-};
-
-interface RowOfThree {
-	target: PointerTarget;
-	ids: readonly LayerId[];
-}
-
-function rowOfThree(): RowOfThree {
-	const { target } = rowScene();
-	const doc = target.doc;
-	const parent = firstId(doc);
-	for (const id of doc.childIds(parent)) {
-		doc.deleteLayer(id);
-	}
-	const ids = [10, 90, 170].map((at) => doc.createLayer({ ...ROW_CHILD, x: at }, parent));
-	doc.commit("fill the row");
-	const hits = [ids[0] ?? parent, parent];
-	return { target: { ...target, layerIds: hits, layerIdsAt: () => hits }, ids };
-}
-
 describe("a move drag of a child that the parent lays out", () => {
 	it("leaves the place of the child, because the row places it", () => {
 		const { target, child } = rowScene();
@@ -378,7 +353,7 @@ describe("a move drag of a child that the parent lays out", () => {
 	});
 
 	it("lifts the child under the pointer while the row holds its slot", () => {
-		const { target } = rowOfThree();
+		const { target } = laidOutRow();
 		const behavior = behaviorFor("select");
 		const camera = target.user.camera.get();
 		const press = pointAt(camera, { x: 450, y: 290 });
