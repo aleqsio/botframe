@@ -42,7 +42,9 @@ const RADIUS_BOUND: Bound = { kind: "clamp", min: 0, max: COORDINATE_LIMIT };
 const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
 export interface UnitChoice {
+	held: Unit;
 	possible: ReadonlySet<Unit>;
+	tips: Partial<Record<Unit, string>>;
 	convert: (unit: Unit) => LayerPatch;
 	parse: (text: string) => LayerPatch | null;
 }
@@ -79,12 +81,24 @@ function boxPatch(key: BoxKey, length: Length): LayerPatch {
 	return { lengths: { [key]: { value, unit: length.unit } } };
 }
 
+function unitTips(possible: ReadonlySet<Unit>): Partial<Record<Unit, string>> {
+	const tips: Partial<Record<Unit, string>> = {};
+	for (const unit of UNITS) {
+		if (!possible.has(unit)) {
+			tips[unit] = `Put the layer in another layer to use ${unit}.`;
+		}
+	}
+	return tips;
+}
+
 function unitChoice(key: BoxKey, layer: Layer, basis: Basis): UnitChoice {
 	const axis = AXIS_OF[key];
 	const held = layer.lengths[key].unit;
 	const possible = new Set<Unit>([held, ...availableUnits(axis, basis)]);
 	return {
+		held,
 		possible,
+		tips: unitTips(possible),
 		convert: (unit) => boxPatch(key, lengthIn(layer[key], unit, axis, basis)),
 		parse: (text) => {
 			const typed = parseUnitText(text, UNITS, held);

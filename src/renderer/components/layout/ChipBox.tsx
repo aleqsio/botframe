@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import type { LayerPatch } from "../../../document/layer";
-import { UNITS, isUnit } from "../../../document/length";
+import { UNITS } from "../../../document/length";
 import { DraftInput } from "../PropertyField";
 import { typedPatch } from "../layerFields";
 import type { LayerField } from "../layerFields";
@@ -41,15 +41,13 @@ function ChipUnit({ disabled, field, onCommit, onPatch }: ChipBoxProps): ReactEl
 			disabled={disabled}
 			label={field.label}
 			onPick={(unit) => {
-				if (!isUnit(unit)) {
-					return;
-				}
 				onPatch(choice.convert(unit));
 				onCommit();
 			}}
 			possible={choice.possible}
+			tips={choice.tips}
 			units={UNITS}
-			value={field.unit}
+			value={choice.held}
 		/>
 	);
 }
