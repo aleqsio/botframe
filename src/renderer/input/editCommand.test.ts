@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import { DRAWN, firstId } from "../../document/documentFixtures";
 import { UserState } from "../state/userState";
+import type { EditCommand } from "./command";
 import { EDIT_COMMANDS, commandById, commandForStroke, runEditCommand } from "./editCommand";
-import type { EditCommand } from "./editCommand";
 import type { KeyStroke } from "./layerCommand";
 
 const PLAIN = { shiftKey: false, altKey: false, ctrlKey: false, metaKey: false };

@@ -2,11 +2,13 @@ import type { DesignDocument } from "../document/document";
 import type { EditMenuItem } from "../shared/editMenu";
 import { bridge } from "./bridge";
 import type { Bridge } from "./bridge";
+import type { EditCommand } from "./input/command";
 import { EDIT_COMMANDS, commandById, runEditCommand } from "./input/editCommand";
-import type { EditCommand } from "./input/editCommand";
+import { LAYOUT_ACTIONS } from "./input/layoutAction";
 import type { UserState } from "./state/userState";
 
 const COPY_AS = { id: "copyAs", label: "Copy as", accelerator: "" };
+const ARRANGE = { id: "arrange", label: "Arrange", accelerator: "", separatorBefore: true };
 
 const MENU_COMMANDS = EDIT_COMMANDS.filter((command) => command.isFormat !== true);
 
@@ -24,6 +26,16 @@ function itemOf(command: EditCommand, isEnabled: ReadState, separator: boolean):
 	};
 }
 
+function opensGroup(previous: EditCommand | undefined, command: EditCommand): boolean {
+	return previous !== undefined && previous.group !== command.group;
+}
+
+function groupedItems(commands: readonly EditCommand[], isEnabled: ReadState): EditMenuItem[] {
+	return commands.map((command, index) =>
+		itemOf(command, isEnabled, opensGroup(commands[index - 1], command)),
+	);
+}
+
 function formatsOf(isEnabled: ReadState): EditMenuItem[] {
 	const formats = EDIT_COMMANDS.filter((command) => command.isFormat === true);
 	return formats.map((command) => itemOf(command, isEnabled, false));
@@ -34,15 +46,23 @@ function copyAsItem(isEnabled: ReadState): EditMenuItem {
 	return { ...COPY_AS, enabled: submenu.some((item) => item.enabled), submenu };
 }
 
-function opensGroup(previous: EditCommand | undefined, command: EditCommand): boolean {
-	return previous !== undefined && previous.group !== command.group;
+function arrangeItem(isEnabled: ReadState): EditMenuItem {
+	const submenu = groupedItems(LAYOUT_ACTIONS, isEnabled);
+	return { ...ARRANGE, enabled: submenu.some((item) => item.enabled), submenu };
+}
+
+function extrasFor(command: EditCommand, isEnabled: ReadState): EditMenuItem[] {
+	if (command.id === "copy") {
+		return [copyAsItem(isEnabled)];
+	}
+	return command.id === "delete" ? [arrangeItem(isEnabled)] : [];
 }
 
 function itemsOf(commands: readonly EditCommand[], isEnabled: ReadState): EditMenuItem[] {
-	return commands.flatMap((command, index) => {
-		const item = itemOf(command, isEnabled, opensGroup(commands[index - 1], command));
-		return command.id === "copy" ? [item, copyAsItem(isEnabled)] : [item];
-	});
+	return commands.flatMap((command, index) => [
+		itemOf(command, isEnabled, opensGroup(commands[index - 1], command)),
+		...extrasFor(command, isEnabled),
+	]);
 }
 
 function stateOf(doc: DesignDocument, user: UserState): ReadState {

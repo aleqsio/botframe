@@ -18,6 +18,12 @@ interface ItemProps {
 	user: UserState;
 }
 
+interface ListProps {
+	doc: DesignDocument;
+	items: readonly EditMenuItem[];
+	user: UserState;
+}
+
 function run(item: EditMenuItem, doc: DesignDocument, user: UserState): void {
 	user.menu.set(null);
 	const command = commandById(item.id);
@@ -53,20 +59,12 @@ function SubmenuItem({ doc, item, user }: ItemProps): ReactElement {
 			<Menu.Portal>
 				<Menu.Positioner align="start" side="right">
 					<Menu.Popup aria-label={item.label} className="layer-menu">
-						{(item.submenu ?? []).map((format) => (
-							<CommandItem doc={doc} item={format} key={format.id} user={user} />
-						))}
+						<MenuList doc={doc} items={item.submenu ?? []} user={user} />
 					</Menu.Popup>
 				</Menu.Positioner>
 			</Menu.Portal>
 		</Menu.SubmenuRoot>
 	);
-}
-
-function useContextItems(doc: DesignDocument, user: UserState): readonly EditMenuItem[] {
-	useSlot(user.selection);
-	useSlot(user.pasteReady);
-	return contextMenuItems(doc, user);
 }
 
 function MenuEntry({ doc, item, user }: ItemProps): ReactElement {
@@ -75,6 +73,25 @@ function MenuEntry({ doc, item, user }: ItemProps): ReactElement {
 	) : (
 		<SubmenuItem doc={doc} item={item} user={user} />
 	);
+}
+
+function MenuList({ doc, items, user }: ListProps): ReactElement {
+	return (
+		<>
+			{items.map((item) => (
+				<Fragment key={item.id}>
+					{item.separatorBefore === true && <Menu.Separator className="layer-menu-separator" />}
+					<MenuEntry doc={doc} item={item} user={user} />
+				</Fragment>
+			))}
+		</>
+	);
+}
+
+function useContextItems(doc: DesignDocument, user: UserState): readonly EditMenuItem[] {
+	useSlot(user.selection);
+	useSlot(user.pasteReady);
+	return contextMenuItems(doc, user);
 }
 
 export function EditMenuSection({
@@ -88,12 +105,7 @@ export function EditMenuSection({
 
 	return (
 		<Menu.Group aria-label={SECTION_LABEL} className="layer-menu-group">
-			{items.map((item) => (
-				<Fragment key={item.id}>
-					{item.separatorBefore === true && <Menu.Separator className="layer-menu-separator" />}
-					<MenuEntry doc={doc} item={item} user={user} />
-				</Fragment>
-			))}
+			<MenuList doc={doc} items={items} user={user} />
 		</Menu.Group>
 	);
 }

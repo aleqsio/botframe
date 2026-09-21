@@ -39,7 +39,7 @@ export function ArtboardOptions(placement: PresetPlacement): ReactElement {
 		<FloatingBar label="Artboard options">
 			<ToolButton
 				icon="swap"
-				label="Swap width and height"
+				label="Turn the presets"
 				onPress={() => {
 					setSwapped(!swapped);
 				}}

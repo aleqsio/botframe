@@ -3,30 +3,10 @@ import { copyAsHtml, copySelection, cutSelection, pasteFromClipboard } from "../
 import { deleteSelection, duplicateSelection } from "../layerEdit";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
+import { heldWithAccelerator, never, onApple, plainStroke } from "./command";
+import type { EditCommand } from "./command";
 import type { KeyStroke } from "./layerCommand";
-
-type EditCommandId =
-	| "undo"
-	| "redo"
-	| "cut"
-	| "copy"
-	| "copyAsHtml"
-	| "paste"
-	| "duplicate"
-	| "delete";
-
-type EditCommandGroup = "history" | "clipboard" | "layer";
-
-export interface EditCommand {
-	id: EditCommandId;
-	label: string;
-	group: EditCommandGroup;
-	accelerator: string;
-	matches: (stroke: KeyStroke) => boolean;
-	apply: (doc: DesignDocument, user: UserState) => boolean;
-	enabled: (doc: DesignDocument, user: UserState) => boolean;
-	isFormat?: boolean;
-}
+import { LAYOUT_ACTIONS } from "./layoutAction";
 
 const UNDO_KEY = "z";
 const REDO_KEY = "y";
@@ -35,14 +15,6 @@ const COPY_KEY = "c";
 const PASTE_KEY = "v";
 const DUPLICATE_KEY = "d";
 const REMOVE_KEYS: ReadonlySet<string> = new Set(["Delete", "Backspace"]);
-
-export function onApple(): boolean {
-	return navigator.userAgent.includes("Mac");
-}
-
-function heldWithAccelerator(stroke: KeyStroke): boolean {
-	return (stroke.metaKey || stroke.ctrlKey) && !stroke.altKey;
-}
 
 function undoStroke(stroke: KeyStroke): boolean {
 	return heldWithAccelerator(stroke) && !stroke.shiftKey && stroke.key.toLowerCase() === UNDO_KEY;
@@ -54,15 +26,6 @@ function redoStroke(stroke: KeyStroke): boolean {
 	}
 	const key = stroke.key.toLowerCase();
 	return stroke.shiftKey ? key === UNDO_KEY : key === REDO_KEY;
-}
-
-function plainStroke(key: string): (stroke: KeyStroke) => boolean {
-	return (stroke) =>
-		heldWithAccelerator(stroke) && !stroke.shiftKey && stroke.key.toLowerCase() === key;
-}
-
-function never(): boolean {
-	return false;
 }
 
 function removeStroke(stroke: KeyStroke): boolean {
@@ -158,12 +121,14 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 	},
 ];
 
+const ALL_COMMANDS: readonly EditCommand[] = [...EDIT_COMMANDS, ...LAYOUT_ACTIONS];
+
 export function commandForStroke(stroke: KeyStroke): EditCommand | null {
-	return EDIT_COMMANDS.find((command) => command.matches(stroke)) ?? null;
+	return ALL_COMMANDS.find((command) => command.matches(stroke)) ?? null;
 }
 
 export function commandById(id: string): EditCommand | null {
-	return EDIT_COMMANDS.find((command) => command.id === id) ?? null;
+	return ALL_COMMANDS.find((command) => command.id === id) ?? null;
 }
 
 export function runEditCommand(
@@ -172,6 +137,9 @@ export function runEditCommand(
 	user: UserState,
 ): boolean {
 	if (user.dragging.get() || user.draw.get() !== null || user.rowDrag.get() !== null) {
+		return false;
+	}
+	if (!command.enabled(doc, user)) {
 		return false;
 	}
 	if (command.apply(doc, user)) {
