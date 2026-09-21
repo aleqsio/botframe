@@ -5,7 +5,7 @@ import { drawRowOfThree, openRenderer, rectOf } from "./support";
 const FIRST_CHILD = { x: 330, y: 80 };
 const PAST_THE_SECOND = 70;
 
-test("a reorder inside a row keeps the child under the pointer on the frame after the reorder", async ({
+test("a reorder inside a row keeps the child under the pointer after the reorder", async ({
 	page,
 }) => {
 	const { origin } = await openRenderer(page);

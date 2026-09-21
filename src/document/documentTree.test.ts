@@ -21,7 +21,7 @@ describe("the layer tree", () => {
 		const parent = doc.createLayer(DRAWN);
 		const first = doc.createLayer(DRAWN, parent);
 		const second = doc.createLayer(DRAWN, parent);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 
 		expect(doc.childIds(parent)).toEqual([first, second]);
 		expect(DesignDocument.open(doc.snapshot()).childIds(parent)).toEqual([first, second]);

@@ -2,7 +2,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
 import { drawnFields, finishDraw, placeLayer } from "../components/layerDefaults";
 import type { DrawDefaults } from "../components/layerDefaults";
-import { isArtboard, nextLayerName } from "../components/layerEntry";
+import { isFrame, nextLayerName } from "../components/layerEntry";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { Point } from "../state/camera";
 import { NOTHING_SELECTED } from "../state/userState";
@@ -21,7 +21,7 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 
 function chainUnder(target: PointerTarget): Layer[] {
 	const read = (id: LayerId): Layer | null => target.doc.layer(id);
-	return layerChain(read, target.layerIds.find((id) => isArtboard(read(id))) ?? null);
+	return layerChain(read, target.layerIds.find((id) => isFrame(read(id))) ?? null);
 }
 
 interface Stroke {

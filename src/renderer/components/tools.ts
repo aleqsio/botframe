@@ -9,7 +9,7 @@ interface ToolDefinition {
 
 export const TOOLS = [
 	{ id: "select", label: "Select", icon: "select", key: "v" },
-	{ id: "artboard", label: "Artboard", icon: "artboard", key: "a" },
+	{ id: "frame", label: "Frame", icon: "frame", key: "a" },
 	{ id: "rectangle", label: "Rectangle", icon: "rectangle", key: "r" },
 	{ id: "ellipse", label: "Ellipse", icon: "ellipse", key: "o" },
 	{ id: "hand", label: "Hand", icon: "hand", key: "h" },
@@ -23,17 +23,17 @@ export type ToolId = Tool["id"];
 
 export type ToolGroup = readonly [Tool, ...Tool[]];
 
-export type ToolOptions = "artboard" | "shape" | "none";
+export type ToolOptions = "frame" | "shape" | "none";
 
 export const DEFAULT_TOOL: ToolId = "select";
 
-const [SELECT, ARTBOARD, RECTANGLE, ELLIPSE, HAND, TEXT, IMAGE] = TOOLS;
+const [SELECT, FRAME, RECTANGLE, ELLIPSE, HAND, TEXT, IMAGE] = TOOLS;
 
 export const SHAPE_TOOLS = [RECTANGLE, ELLIPSE] as const satisfies ToolGroup;
 
 export const TOOL_GROUPS: readonly ToolGroup[] = [
 	[SELECT],
-	[ARTBOARD],
+	[FRAME],
 	SHAPE_TOOLS,
 	[HAND],
 	[TEXT],
@@ -45,8 +45,8 @@ export function groupTool(group: ToolGroup, active: ToolId): Tool {
 }
 
 export function toolOptionsOf(tool: ToolId): ToolOptions {
-	if (tool === ARTBOARD.id) {
-		return "artboard";
+	if (tool === FRAME.id) {
+		return "frame";
 	}
 	return SHAPE_TOOLS.some((shape) => shape.id === tool) ? "shape" : "none";
 }

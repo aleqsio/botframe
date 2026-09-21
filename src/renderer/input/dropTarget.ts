@@ -1,6 +1,6 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Size } from "../../document/length";
-import { isArtboard } from "../components/layerEntry";
+import { isFrame } from "../components/layerEntry";
 import {
 	chainTurn,
 	fromParentPoint,
@@ -28,7 +28,7 @@ export function dropParentOf(
 	dragged: LayerId,
 ): LayerId | null {
 	for (const id of ids) {
-		if (!insideSubtree(read, id, dragged) && isArtboard(read(id))) {
+		if (!insideSubtree(read, id, dragged) && isFrame(read(id))) {
 			return id;
 		}
 	}

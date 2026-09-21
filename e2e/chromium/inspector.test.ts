@@ -24,7 +24,7 @@ async function expectChipInside(page: Page, chip: Chip, panel: Box): Promise<voi
 	expect(box.x + box.width).toBeLessThanOrEqual(panel.x + panel.width);
 }
 
-test("the origin chips write the transform origin, and the selection frame sits on the turned layer", async ({
+test("the origin chips write the transform origin, and the selection outline sits on the turned layer", async ({
 	page,
 }) => {
 	const { layers, origin } = await openRenderer(page);
@@ -34,11 +34,11 @@ test("the origin chips write the transform origin, and the selection frame sits 
 
 	await expect(layers.first()).toHaveCSS("transform-origin", "0px 80px");
 	const layer = await rectOf(layers.first());
-	const frame = await rectOf(page.locator(".selection"));
-	expect(frame.x).toBeCloseTo(layer.x, 0);
-	expect(frame.y).toBeCloseTo(layer.y, 0);
-	expect(frame.width).toBeCloseTo(layer.width, 0);
-	expect(frame.height).toBeCloseTo(layer.height, 0);
+	const outline = await rectOf(page.locator(".selection"));
+	expect(outline.x).toBeCloseTo(layer.x, 0);
+	expect(outline.y).toBeCloseTo(layer.y, 0);
+	expect(outline.width).toBeCloseTo(layer.width, 0);
+	expect(outline.height).toBeCloseTo(layer.height, 0);
 });
 
 for (const scheme of SCHEMES) {

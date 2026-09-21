@@ -132,7 +132,7 @@ describe("runEditCommand", () => {
 		const user = new UserState();
 		const seed = firstId(doc);
 		const drawn = doc.createLayer(DRAWN);
-		doc.commit("create artboard");
+		doc.commit("create frame");
 		user.selection.set([seed, drawn]);
 		user.menu.set({ client: { x: 1, y: 2 }, layerIds: [drawn] });
 

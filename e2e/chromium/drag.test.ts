@@ -5,7 +5,7 @@ import { clickAt, dragCenterBy, makeRow, openRenderer, turnLayer, typeChip } fro
 
 const GRAB = { x: 460, y: 300 };
 const DELTA = { x: 80, y: -40 };
-const ARTBOARD: Drag = { from: { x: 300, y: 60 }, to: { x: 600, y: 240 } };
+const FRAME: Drag = { from: { x: 300, y: 60 }, to: { x: 600, y: 240 } };
 const INSIDE: Drag = { from: { x: 340, y: 100 }, to: { x: 440, y: 160 } };
 const CHILD_IN_ROW = { x: 350, y: 90 };
 const FILL_CHILD_IN_ROW = { x: 450, y: 90 };
@@ -41,7 +41,7 @@ test("a child dragged out of a row lands at the root with its center moved by th
 	page,
 }) => {
 	const { layers, origin } = await openRenderer(page);
-	await drawWith(page, origin, "a", ARTBOARD);
+	await drawWith(page, origin, "a", FRAME);
 	await drawWith(page, origin, "r", INSIDE);
 	const child = layers.nth(2);
 	await makeRow(page, origin, child);
@@ -54,7 +54,7 @@ test("a child dragged out of a row lands at the root with its center moved by th
 
 test("a fill child keeps its painted width when it leaves the row", async ({ page }) => {
 	const { layers, origin } = await openRenderer(page);
-	await drawWith(page, origin, "a", ARTBOARD);
+	await drawWith(page, origin, "a", FRAME);
 	await drawWith(page, origin, "r", INSIDE);
 	const child = layers.nth(2);
 	await makeRow(page, origin, child);

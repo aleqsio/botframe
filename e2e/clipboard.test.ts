@@ -16,11 +16,11 @@ interface MenuEntry {
 	children: string[];
 }
 
-const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const OVER_EMPTY = { x: 500, y: 300 };
 const OVER_THE_SHAPE = { x: 540, y: 340 };
-const OVER_THE_ARTBOARD = { x: 300, y: 60 };
-const OFF_THE_ARTBOARD = { x: 120, y: 400 };
+const OVER_THE_FRAME = { x: 300, y: 60 };
+const OFF_THE_FRAME = { x: 120, y: 400 };
 
 function clipboardFlavors(app: ElectronApplication): Promise<boolean> {
 	return app.evaluate(({ clipboard }, flavor) => clipboard.has(flavor), LAYERS_FLAVOR);
@@ -64,7 +64,7 @@ async function enabledOf(app: ElectronApplication, label: string): Promise<boole
 test("a copy and a paste give a second layer with the same box", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "r", ARTBOARD);
+	await drawWith(window, origin, "r", FRAME);
 	await expect(layers).toHaveCount(2);
 	const drawn = layers.nth(1);
 	await expect(drawn).toHaveAttribute("data-selected", "");
@@ -86,26 +86,26 @@ test("a copy and a paste give a second layer with the same box", async () => {
 	await app.close();
 });
 
-test("a paste puts the layer into the selected artboard, not the layer under the pointer", async () => {
+test("a paste puts the layer into the selected frame, not the layer under the pointer", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await expect(layers).toHaveCount(2);
-	const artboard = layers.nth(1);
+	const frame = layers.nth(1);
 
 	await clickAt(window, at(origin, OVER_THE_SHAPE));
 	await expect(layers.nth(0)).toHaveAttribute("data-selected", "");
 	await window.keyboard.press(COPY);
 	await expect.poll(() => clipboardFlavors(app)).toBe(true);
 
-	await clickAt(window, at(origin, OVER_THE_ARTBOARD));
-	await expect(artboard).toHaveAttribute("data-selected", "");
-	await window.mouse.move(at(origin, OFF_THE_ARTBOARD).x, at(origin, OFF_THE_ARTBOARD).y);
+	await clickAt(window, at(origin, OVER_THE_FRAME));
+	await expect(frame).toHaveAttribute("data-selected", "");
+	await window.mouse.move(at(origin, OFF_THE_FRAME).x, at(origin, OFF_THE_FRAME).y);
 	await window.keyboard.press(PASTE);
 
 	await expect(layers).toHaveCount(3);
-	await expect(artboard.locator("> .layer")).toHaveCount(1);
-	await expect(artboard.locator("> .layer")).toHaveAttribute("data-selected", "");
+	await expect(frame.locator("> .layer")).toHaveCount(1);
+	await expect(frame.locator("> .layer")).toHaveAttribute("data-selected", "");
 
 	await app.close();
 });
@@ -127,7 +127,7 @@ test("the Edit menu holds the clipboard commands and a Copy as submenu", async (
 	]);
 	expect(await copyAsLabels(app)).toEqual(["HTML"]);
 
-	await drawWith(window, origin, "r", ARTBOARD);
+	await drawWith(window, origin, "r", FRAME);
 	await expect(layers).toHaveCount(2);
 	await expect.poll(() => enabledOf(app, "Copy as")).toBe(true);
 
@@ -137,7 +137,7 @@ test("the Edit menu holds the clipboard commands and a Copy as submenu", async (
 test("a cut takes the layer away, and one undo brings it back", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "r", ARTBOARD);
+	await drawWith(window, origin, "r", FRAME);
 	await expect(layers).toHaveCount(2);
 
 	await window.keyboard.press(CUT);
@@ -153,7 +153,7 @@ test("a cut takes the layer away, and one undo brings it back", async () => {
 test("a copy inside a text field of the panel stays a text copy", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "r", ARTBOARD);
+	await drawWith(window, origin, "r", FRAME);
 	await expect(layers).toHaveCount(2);
 	await app.evaluate(({ clipboard }) => {
 		clipboard.clear();

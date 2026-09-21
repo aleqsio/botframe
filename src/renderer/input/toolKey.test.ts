@@ -11,7 +11,7 @@ function stroke(key: string, held: Partial<KeyStroke> = {}): KeyStroke {
 describe("toolFor", () => {
 	it("takes the letter of each tool the bar shows", () => {
 		expect(toolFor(stroke("v"))).toBe("select");
-		expect(toolFor(stroke("a"))).toBe("artboard");
+		expect(toolFor(stroke("a"))).toBe("frame");
 		expect(toolFor(stroke("r"))).toBe("rectangle");
 		expect(toolFor(stroke("o"))).toBe("ellipse");
 		expect(toolFor(stroke("h"))).toBe("hand");

@@ -76,7 +76,7 @@ export async function turnLayer(page: Page, origin: Point, grab: Point): Promise
 	await expect(page.locator(".layer[data-selected]")).toHaveAttribute("style", /rotate\(30deg\)/u);
 }
 
-const INSIDE_THE_ARTBOARD = { x: 560, y: 220 };
+const INSIDE_THE_FRAME = { x: 560, y: 220 };
 export const EMPTY = { x: 900, y: 650 };
 const ROW: Drag = { from: { x: 300, y: 60 }, to: { x: 620, y: 240 } };
 const FIRST_SHAPE: Drag = { from: { x: 330, y: 100 }, to: { x: 390, y: 140 } };
@@ -88,7 +88,7 @@ export async function clickAt(page: Page, origin: Point, point: Point): Promise<
 }
 
 export async function makeRow(page: Page, origin: Point, lastChild: Locator): Promise<void> {
-	await clickAt(page, origin, INSIDE_THE_ARTBOARD);
+	await clickAt(page, origin, INSIDE_THE_FRAME);
 	await page.getByRole("group", { name: "Display" }).getByRole("button", { name: "Row" }).click();
 	await expect(lastChild).toHaveCSS("position", "relative");
 }

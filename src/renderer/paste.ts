@@ -1,5 +1,5 @@
 import type { LayerId, LayerPatch } from "../document/layer";
-import { isArtboard } from "./components/layerEntry";
+import { isFrame } from "./components/layerEntry";
 import type { ReadLayer } from "./input/layerSpace";
 
 export const PASTE_OFFSET = 20;
@@ -14,7 +14,7 @@ export function pasteParent(
 	if (layer === null) {
 		return null;
 	}
-	return isArtboard(layer) && !sourceIds.includes(layer.id) ? layer.id : layer.parent;
+	return isFrame(layer) && !sourceIds.includes(layer.id) ? layer.id : layer.parent;
 }
 
 export interface LayerShift {

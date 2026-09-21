@@ -1,6 +1,6 @@
 import type { Size } from "./layerFields";
 
-export interface ArtboardPreset {
+export interface FramePreset {
 	name: string;
 	width: number;
 	height: number;
@@ -8,7 +8,7 @@ export interface ArtboardPreset {
 
 export interface PresetGroup {
 	name: string;
-	presets: readonly ArtboardPreset[];
+	presets: readonly FramePreset[];
 }
 
 export const CUSTOM_PRESET = "Custom";
@@ -55,9 +55,9 @@ export const PRESET_GROUPS: readonly PresetGroup[] = [
 	},
 ];
 
-const PRESETS: readonly ArtboardPreset[] = PRESET_GROUPS.flatMap((group) => group.presets);
+const PRESETS: readonly FramePreset[] = PRESET_GROUPS.flatMap((group) => group.presets);
 
-export function presetNamed(name: string): ArtboardPreset | null {
+export function presetNamed(name: string): FramePreset | null {
 	return PRESETS.find((preset) => preset.name === name) ?? null;
 }
 

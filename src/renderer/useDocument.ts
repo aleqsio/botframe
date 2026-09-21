@@ -7,10 +7,10 @@ import { boundsOf } from "./input/selectionBounds";
 import { spaceTransform } from "./layerStyle";
 
 const NO_LAYER = (): void => {};
-const NO_FRAME = "";
-const FRAME_PART = "|";
+const NO_TEXT = "";
+const OUTLINE_PART = "|";
 
-export interface DrawnFrame {
+export interface DrawnOutline {
 	transform: string;
 	width: number;
 	height: number;
@@ -59,17 +59,17 @@ function spaceText(chain: readonly Layer[]): string {
 	return chain.map((layer) => spaceTransform(layer)).join(" ");
 }
 
-function frameText(doc: DesignDocument, id: LayerId): string {
+function outlineText(doc: DesignDocument, id: LayerId): string {
 	const chain = drawnChain(doc, id);
 	const drawn = chain.at(-1);
 	if (drawn === undefined) {
-		return NO_FRAME;
+		return NO_TEXT;
 	}
-	return [drawn.width, drawn.height, drawnPadding(id), spaceText(chain)].join(FRAME_PART);
+	return [drawn.width, drawn.height, drawnPadding(id), spaceText(chain)].join(OUTLINE_PART);
 }
 
-function frameOf(text: string): DrawnFrame | null {
-	const [width, height, padding, ...rest] = text.split(FRAME_PART);
+function outlineOf(text: string): DrawnOutline | null {
+	const [width, height, padding, ...rest] = text.split(OUTLINE_PART);
 	if (width === undefined || height === undefined || padding === undefined) {
 		return null;
 	}
@@ -77,7 +77,7 @@ function frameOf(text: string): DrawnFrame | null {
 		width: Number(width),
 		height: Number(height),
 		padding,
-		transform: rest.join(FRAME_PART),
+		transform: rest.join(OUTLINE_PART),
 	};
 }
 
@@ -87,11 +87,11 @@ function subscribeAfterCommit(doc: DesignDocument, listener: () => void): Unsubs
 	});
 }
 
-export function useDrawnFrame(doc: DesignDocument, id: LayerId): DrawnFrame | null {
-	return frameOf(
+export function useDrawnOutline(doc: DesignDocument, id: LayerId): DrawnOutline | null {
+	return outlineOf(
 		useSyncExternalStore(
 			useCallback((listener: () => void) => subscribeAfterCommit(doc, listener), [doc]),
-			useCallback(() => frameText(doc, id), [doc, id]),
+			useCallback(() => outlineText(doc, id), [doc, id]),
 		),
 	);
 }
@@ -150,7 +150,7 @@ function boxText(doc: DesignDocument, ids: readonly LayerId[]): string {
 		drawnRead(DOM_DRAWN, (id) => doc.layer(id)),
 		ids,
 	);
-	return box === null ? NO_FRAME : [box.x, box.y, box.width, box.height].join(BOX_PART);
+	return box === null ? NO_TEXT : [box.x, box.y, box.width, box.height].join(BOX_PART);
 }
 
 function boxOf(text: string): Rect | null {

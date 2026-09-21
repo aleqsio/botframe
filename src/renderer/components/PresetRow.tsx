@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import { sidewaysPixels } from "../input/wheel";
 import { swappedBox } from "./layerFields";
 import { PRESET_GROUPS, thumbnailOf } from "./presets";
-import type { ArtboardPreset } from "./presets";
+import type { FramePreset } from "./presets";
 
 const THUMBNAIL_BOX = 22;
 
@@ -11,8 +11,8 @@ function PresetButton({
 	onPlace,
 	preset,
 }: {
-	onPlace: (preset: ArtboardPreset) => void;
-	preset: ArtboardPreset;
+	onPlace: (preset: FramePreset) => void;
+	preset: FramePreset;
 }): ReactElement {
 	const thumbnail = thumbnailOf(preset, THUMBNAIL_BOX);
 
@@ -38,7 +38,7 @@ export function PresetRow({
 	onPlace,
 	swapped,
 }: {
-	onPlace: (preset: ArtboardPreset) => void;
+	onPlace: (preset: FramePreset) => void;
 	swapped: boolean;
 }): ReactElement {
 	return (

@@ -12,8 +12,8 @@ export interface DrawDefaults {
 	geometry: WritableGeometry;
 }
 
-export const ARTBOARD_DEFAULTS: DrawDefaults = {
-	label: "Artboard",
+export const FRAME_DEFAULTS: DrawDefaults = {
+	label: "Frame",
 	fill: "#ffffff",
 	clip: true,
 	level: true,

@@ -144,8 +144,8 @@ describe("a move drag near a sibling", () => {
 	});
 });
 
-describe("a move drag inside an artboard", () => {
-	it("snaps to the edge of the artboard and draws the line across it", () => {
+describe("a move drag inside a frame", () => {
+	it("snaps to the edge of the frame and draws the line across it", () => {
 		const { target, child } = nestedTarget(0);
 		const behavior = behaviorFor("select");
 		const camera = target.user.camera.get();
@@ -158,7 +158,7 @@ describe("a move drag inside an artboard", () => {
 		expect(target.user.snap.get()?.parent).toBe(target.doc.layer(child)?.parent);
 	});
 
-	it("snaps the center of the layer to a guide of the artboard", () => {
+	it("snaps the center of the layer to a guide of the frame", () => {
 		const { target, child } = nestedTarget(0);
 		const parent = target.doc.layer(child)?.parent;
 		if (parent === null || parent === undefined) {
@@ -179,8 +179,8 @@ describe("a move drag inside an artboard", () => {
 	});
 });
 
-describe("a resize drag inside an artboard", () => {
-	it("attaches the dragged edge to the edge of the artboard and draws the line", () => {
+describe("a resize drag inside a frame", () => {
+	it("attaches the dragged edge to the edge of the frame and draws the line", () => {
 		const { target, child } = nestedTarget(0);
 
 		const behavior = gripChild(target, WEST_HANDLE, NEAR_THE_LEFT_EDGE);

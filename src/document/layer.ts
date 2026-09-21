@@ -5,6 +5,9 @@ import type { LayerLengths } from "./length";
 
 export type LayerId = TreeID;
 
+// `writeVariant` in ./write.ts stores each property name, so the name `artboard` is
+// the key in every `.botframe` file and clipboard envelope that exists. A new name
+// makes each frame in a saved file become a plain rectangle. See documentFormat.test.ts.
 export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; artboard: boolean }
 	| { kind: "ellipse" }

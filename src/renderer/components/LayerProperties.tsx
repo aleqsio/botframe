@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
-import { ArtboardFooter } from "./ArtboardFooter";
 import { ColorField } from "./ColorField";
+import { FrameFooter } from "./FrameFooter";
 import { PropertyField } from "./PropertyField";
-import { isArtboard } from "./layerEntry";
+import { isFrame } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
 import { GuideList } from "./layout/GuideList";
@@ -82,8 +82,8 @@ export function LayerProperties({
 				value={layer.fill}
 			/>
 			<ClipSwitch doc={doc} layer={layer} />
-			{isArtboard(layer) ? <GuideList doc={doc} layer={layer} /> : null}
-			{isArtboard(layer) ? <ArtboardFooter doc={doc} layer={layer} /> : null}
+			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
+			{isFrame(layer) ? <FrameFooter doc={doc} layer={layer} /> : null}
 		</>
 	);
 }

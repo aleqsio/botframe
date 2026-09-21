@@ -18,7 +18,7 @@ function withChild(): { doc: DesignDocument; parent: LayerId; child: LayerId } {
 	const doc = DesignDocument.create();
 	const parent = doc.createLayer(DRAWN);
 	const child = doc.createLayer({ ...DRAWN, name: "Inside" }, parent);
-	doc.commit("create artboard");
+	doc.commit("create frame");
 	return { doc, parent, child };
 }
 

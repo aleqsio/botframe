@@ -1,6 +1,6 @@
 import type { ReactElement, RefObject } from "react";
 import type { DesignDocument } from "../document/document";
-import { ArtboardLabel, LayerView } from "./LayerView";
+import { FrameLabel, LayerView } from "./LayerView";
 import { Overlay } from "./Overlay";
 import { Viewport } from "./Viewport";
 import { changesParent } from "./input/moveDrag";
@@ -45,7 +45,7 @@ export function Stage({
 					/>
 				))}
 				{ids.map((id) => (
-					<ArtboardLabel doc={doc} id={id} key={id} selection={user.selection} />
+					<FrameLabel doc={doc} id={id} key={id} selection={user.selection} />
 				))}
 				<Overlay doc={doc} user={user} />
 			</Viewport>

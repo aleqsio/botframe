@@ -159,26 +159,26 @@ export function spreadSelection(doc: DesignDocument, user: UserState, spec: Axis
 	return true;
 }
 
-function childrenOf(doc: DesignDocument, frame: Layer): readonly Layer[] {
-	return doc.childIds(frame.id).flatMap((id) => doc.layer(id) ?? []);
+function childrenOf(doc: DesignDocument, parent: Layer): readonly Layer[] {
+	return doc.childIds(parent.id).flatMap((id) => doc.layer(id) ?? []);
 }
 
 export function fitToChildren(doc: DesignDocument, user: UserState, message: string): boolean {
-	const [frame] = selectedLayers(doc, user);
-	if (frame === undefined) {
+	const [parent] = selectedLayers(doc, user);
+	if (parent === undefined) {
 		return false;
 	}
 	const read = readerOf(doc);
-	const children = childrenOf(doc, frame);
+	const children = childrenOf(doc, parent);
 	const hull = hullOfRects(children.map((child) => localBoxOf(shownOf(read, child))));
 	if (hull === null) {
 		return false;
 	}
 	const size = { width: hull.width, height: hull.height };
-	const place = anchoredPlace({ ...frame, ...size }, BOX_ORIGIN, outOfLayer(frame, hull));
-	doc.update(frame.id, {
+	const place = anchoredPlace({ ...parent, ...size }, BOX_ORIGIN, outOfLayer(parent, hull));
+	doc.update(parent.id, {
 		...size,
-		...placedOn(freeAxesFor(read, frame), place),
+		...placedOn(freeAxesFor(read, parent), place),
 		layout: { width: "fixed", height: "fixed" },
 	});
 	for (const child of children) {
@@ -237,12 +237,12 @@ export function canSpread(doc: DesignDocument, layers: readonly Layer[], spec: A
 }
 
 export function canFit(doc: DesignDocument, layers: readonly Layer[]): boolean {
-	const [frame, peer] = layers;
+	const [parent, peer] = layers;
 	return (
-		frame !== undefined &&
+		parent !== undefined &&
 		peer === undefined &&
-		frame.layout.display === "block" &&
-		childrenOf(doc, frame).length > 0
+		parent.layout.display === "block" &&
+		childrenOf(doc, parent).length > 0
 	);
 }
 

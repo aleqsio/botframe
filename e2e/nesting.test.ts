@@ -3,23 +3,23 @@ import type { Page } from "@playwright/test";
 import { at, boxOf, dragOn, drawWith, idOf, layerById, openStage, pressInto } from "./support";
 import type { Drag, Point } from "./support";
 
-const ARTBOARD: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
+const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const OVER_THE_EDGE: Drag = { from: { x: 420, y: 120 }, to: { x: 540, y: 240 } };
-const MOVE_ARTBOARD: Drag = { from: { x: 460, y: 60 }, to: { x: 510, y: 110 } };
+const MOVE_FRAME: Drag = { from: { x: 460, y: 60 }, to: { x: 510, y: 110 } };
 const OUTSIDE_THE_CLIP = { x: 510, y: 210 };
 const CLIPPED_DRAG: Drag = { from: OUTSIDE_THE_CLIP, to: { x: 540, y: 230 } };
 const SELECTION_BLUE = "rgb(13, 153, 255)";
-const OVER_THE_ARTBOARD = { x: 440, y: 150 };
-const INTO_THE_ARTBOARD: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_ARTBOARD };
+const OVER_THE_FRAME = { x: 440, y: 150 };
+const INTO_THE_FRAME: Drag = { from: { x: 540, y: 340 }, to: OVER_THE_FRAME };
 const BEYOND_THE_CLIP = { x: 520, y: 150 };
 const CARRIED = { x: -100, y: -190 };
 const OVER_THE_SHAPE: Drag = { from: { x: 460, y: 300 }, to: { x: 560, y: 360 } };
 const NESTED: Drag = { from: { x: 300, y: 60 }, to: { x: 460, y: 160 } };
 const GRAB_THE_SHAPE = { x: 540, y: 340 };
-const OVER_THE_ROOT_ARTBOARD = { x: 470, y: 170 };
-const OVER_THE_NESTED_ARTBOARD = { x: 440, y: 150 };
-const INSIDE_THE_NESTED_ARTBOARD: Drag = { from: OVER_THE_NESTED_ARTBOARD, to: { x: 420, y: 130 } };
+const OVER_THE_ROOT_FRAME = { x: 470, y: 170 };
+const OVER_THE_NESTED_FRAME = { x: 440, y: 150 };
+const INSIDE_THE_NESTED_FRAME: Drag = { from: OVER_THE_NESTED_FRAME, to: { x: 420, y: 130 } };
 
 function layerIdAt(window: Page, point: Point): Promise<string | null> {
 	return window.evaluate(
@@ -31,15 +31,15 @@ function layerIdAt(window: Page, point: Point): Promise<string | null> {
 	);
 }
 
-test("a draw inside an artboard puts the new layer in the artboard", async () => {
+test("a draw inside a frame puts the new layer in the frame", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const rows = window.locator(".layer-row");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
 
-	const artboard = layers.nth(1);
-	const child = artboard.locator("> .layer");
+	const frame = layers.nth(1);
+	const child = frame.locator("> .layer");
 	await expect(child).toHaveCount(1);
 	await expect(child).toHaveAttribute("style", /translate3d\(40px, 40px, 0px\)/u);
 	await expect(child).toHaveCSS("width", "100px");
@@ -47,57 +47,57 @@ test("a draw inside an artboard puts the new layer in the artboard", async () =>
 	expect(await boxOf(child)).toEqual(at(origin, INSIDE.from));
 	expect(await boxOf(window.locator(".selection"))).toEqual(at(origin, INSIDE.from));
 
-	await expect(rows).toHaveText(["Rectangle", "Artboard 1", "Rectangle 2"]);
+	await expect(rows).toHaveText(["Rectangle", "Frame 1", "Rectangle 2"]);
 	expect((await boxOf(rows.nth(2))).x - (await boxOf(rows.nth(1))).x).toBe(14);
 
 	await rows.nth(1).click();
-	await expect(artboard).toHaveAttribute("data-selected", "");
+	await expect(frame).toHaveAttribute("data-selected", "");
 	await expect(child).not.toHaveAttribute("data-selected", "");
 
 	await app.close();
 });
 
-test("a child of an artboard moves with the artboard", async () => {
+test("a child of a frame moves with the frame", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", INSIDE);
-	const artboard = layers.nth(1);
-	const child = artboard.locator("> .layer");
+	const frame = layers.nth(1);
+	const child = frame.locator("> .layer");
 	const before = await boxOf(child);
 
-	await dragOn(window, origin, MOVE_ARTBOARD);
+	await dragOn(window, origin, MOVE_FRAME);
 
-	await expect(artboard).toHaveAttribute("style", /translate3d\(330px, 90px, 0px\)/u);
+	await expect(frame).toHaveAttribute("style", /translate3d\(330px, 90px, 0px\)/u);
 	await expect(child).toHaveAttribute("style", /translate3d\(40px, 40px, 0px\)/u);
 	expect(await boxOf(child)).toEqual({ x: before.x + 50, y: before.y + 50 });
 
 	await app.close();
 });
 
-test("an artboard clips the part of a child outside its box", async () => {
+test("a frame clips the part of a child outside its box", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", OVER_THE_EDGE);
-	const artboard = layers.nth(1);
-	const child = artboard.locator("> .layer");
-	await expect(artboard).toHaveCSS("overflow", "hidden");
+	const frame = layers.nth(1);
+	const child = frame.locator("> .layer");
+	await expect(frame).toHaveCSS("overflow", "hidden");
 	await expect(child).toHaveCSS("width", "120px");
 
 	await window.mouse.click(at(origin, OUTSIDE_THE_CLIP).x, at(origin, OUTSIDE_THE_CLIP).y);
 	await expect(child).toHaveAttribute("data-selected", "");
 
-	await window.mouse.click(at(origin, OVER_THE_ARTBOARD).x, at(origin, OVER_THE_ARTBOARD).y);
+	await window.mouse.click(at(origin, OVER_THE_FRAME).x, at(origin, OVER_THE_FRAME).y);
 	await expect(child).toHaveAttribute("data-selected", "");
 
 	await app.close();
 });
 
-test("a drag from outside the artboard takes the clipped child to the root", async () => {
+test("a drag from outside the frame takes the clipped child to the root", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", OVER_THE_EDGE);
 	const child = layers.nth(2);
 	await window.mouse.click(at(origin, OUTSIDE_THE_CLIP).x, at(origin, OUTSIDE_THE_CLIP).y);
@@ -114,10 +114,10 @@ test("a drag from outside the artboard takes the clipped child to the root", asy
 	await app.close();
 });
 
-test("the selection border draws outside the clip of the artboard", async () => {
+test("the selection border draws outside the clip of the frame", async () => {
 	const { app, layers, origin, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "r", OVER_THE_EDGE);
 	const child = layers.nth(1).locator("> .layer");
 	const selection = window.locator(".selection");
@@ -130,22 +130,22 @@ test("the selection border draws outside the clip of the artboard", async () => 
 	await app.close();
 });
 
-test("a drag into a clipped artboard gives the layer the new parent during the drag", async () => {
+test("a drag into a clipped frame gives the layer the new parent during the drag", async () => {
 	const { app, layers, origin, stage, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
-	const artboard = layerById(window, await idOf(layers.nth(1)));
+	await drawWith(window, origin, "a", FRAME);
+	const frame = layerById(window, await idOf(layers.nth(1)));
 	const dragged = await idOf(layers.nth(0));
 	const before = await boxOf(layerById(window, dragged));
 
-	await pressInto(window, origin, INTO_THE_ARTBOARD);
+	await pressInto(window, origin, INTO_THE_FRAME);
 
-	const child = artboard.locator("> .layer");
+	const child = frame.locator("> .layer");
 	await expect(child).toHaveCount(1);
 	await expect(stage).toHaveAttribute("data-drop", "");
 	await expect(stage).toHaveCSS("cursor", "copy");
 	await expect(child).toHaveCSS("cursor", "copy");
-	await expect.poll(() => layerIdAt(window, at(origin, OVER_THE_ARTBOARD))).toBe(dragged);
+	await expect.poll(() => layerIdAt(window, at(origin, OVER_THE_FRAME))).toBe(dragged);
 	await expect.poll(() => layerIdAt(window, at(origin, BEYOND_THE_CLIP))).toBeNull();
 
 	await window.mouse.up();
@@ -161,17 +161,17 @@ test("a drag into a clipped artboard gives the layer the new parent during the d
 test("Escape during a move drag puts the layer back in the first parent", async () => {
 	const { app, layers, origin, stage, window } = await openStage();
 
-	await drawWith(window, origin, "a", ARTBOARD);
-	const artboard = layerById(window, await idOf(layers.nth(1)));
+	await drawWith(window, origin, "a", FRAME);
+	const frame = layerById(window, await idOf(layers.nth(1)));
 	const layer = layerById(window, await idOf(layers.nth(0)));
 	const before = await boxOf(layer);
 
-	await pressInto(window, origin, INTO_THE_ARTBOARD);
-	await expect(artboard.locator("> .layer")).toHaveCount(1);
+	await pressInto(window, origin, INTO_THE_FRAME);
+	await expect(frame.locator("> .layer")).toHaveCount(1);
 
 	await window.keyboard.press("Escape");
 
-	await expect(artboard.locator("> .layer")).toHaveCount(0);
+	await expect(frame.locator("> .layer")).toHaveCount(0);
 	await expect(stage).not.toHaveAttribute("data-drop", "");
 	await expect(layer).toHaveAttribute("style", /translate3d\(420px, 260px, 0px\)/u);
 
@@ -197,11 +197,11 @@ test("a draw over a shape puts the new layer at the root, not in the shape", asy
 	await app.close();
 });
 
-test("the parent of the dragged layer keeps a highlight, and a root artboard takes none", async () => {
+test("the parent of the dragged layer keeps a highlight, and a root frame takes none", async () => {
 	const { app, layers, origin, window } = await openStage();
-	const frame = window.locator(".drop-frame");
+	const outline = window.locator(".drop-outline");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await drawWith(window, origin, "a", NESTED);
 	const nested = layerById(window, await idOf(layers.nth(1).locator("> .layer")));
 	await expect(nested).toHaveCount(1);
@@ -209,34 +209,32 @@ test("the parent of the dragged layer keeps a highlight, and a root artboard tak
 	await window.mouse.move(at(origin, GRAB_THE_SHAPE).x, at(origin, GRAB_THE_SHAPE).y);
 	await window.mouse.down();
 
-	await window.mouse.move(
-		at(origin, OVER_THE_ROOT_ARTBOARD).x,
-		at(origin, OVER_THE_ROOT_ARTBOARD).y,
-		{ steps: 8 },
-	);
-	await expect(frame).toHaveCount(0);
+	await window.mouse.move(at(origin, OVER_THE_ROOT_FRAME).x, at(origin, OVER_THE_ROOT_FRAME).y, {
+		steps: 8,
+	});
+	await expect(outline).toHaveCount(0);
 
 	await window.mouse.move(
-		at(origin, OVER_THE_NESTED_ARTBOARD).x,
-		at(origin, OVER_THE_NESTED_ARTBOARD).y,
+		at(origin, OVER_THE_NESTED_FRAME).x,
+		at(origin, OVER_THE_NESTED_FRAME).y,
 		{ steps: 8 },
 	);
-	await expect(frame).toHaveCount(1);
-	await expect(frame).toHaveCSS("outline-color", SELECTION_BLUE);
-	expect(await boxOf(frame)).toEqual(at(origin, NESTED.from));
+	await expect(outline).toHaveCount(1);
+	await expect(outline).toHaveCSS("outline-color", SELECTION_BLUE);
+	expect(await boxOf(outline)).toEqual(at(origin, NESTED.from));
 
 	await window.mouse.up();
 
-	await expect(frame).toHaveCount(0);
+	await expect(outline).toHaveCount(0);
 	await expect(nested.locator("> .layer")).toHaveCount(1);
 
-	await pressInto(window, origin, INSIDE_THE_NESTED_ARTBOARD);
-	await expect(frame).toHaveCount(1);
-	expect(await boxOf(frame)).toEqual(at(origin, NESTED.from));
+	await pressInto(window, origin, INSIDE_THE_NESTED_FRAME);
+	await expect(outline).toHaveCount(1);
+	expect(await boxOf(outline)).toEqual(at(origin, NESTED.from));
 
 	await window.mouse.up();
 
-	await expect(frame).toHaveCount(0);
+	await expect(outline).toHaveCount(0);
 	await expect(nested.locator("> .layer")).toHaveCount(1);
 
 	await app.close();

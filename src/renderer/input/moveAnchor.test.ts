@@ -9,7 +9,7 @@ import { behaviorFor } from "./toolBehavior";
 import { NO_DRAWN } from "./drawn";
 import { anchorOnScreen, pointAt, turnOnScreen } from "./toolFixtures";
 
-const ARTBOARD: LayerFields = {
+const FRAME: LayerFields = {
 	x: 0,
 	y: 0,
 	width: 400,
@@ -21,7 +21,7 @@ const ARTBOARD: LayerFields = {
 };
 
 const SHAPE: LayerFields = {
-	...ARTBOARD,
+	...FRAME,
 	width: 60,
 	height: 40,
 	fill: "#d9d9d9",
@@ -57,7 +57,7 @@ interface Scene {
 }
 
 function turnedBoard(doc: DesignDocument, random: () => number, at: Point): LayerId {
-	const board = doc.createLayer({ ...ARTBOARD, ...at });
+	const board = doc.createLayer({ ...FRAME, ...at });
 	doc.update(board, {
 		rotation: between(random, 0, FULL_TURN),
 		origin: { x: between(random, -0.5, 1.5), y: between(random, -0.5, 1.5) },
@@ -147,7 +147,7 @@ describe("the grabbed point of a layer stays under the pointer", () => {
 		}
 	});
 
-	it("when the layer leaves its parent, lands in a turned artboard, and comes back", () => {
+	it("when the layer leaves its parent, lands in a turned frame, and comes back", () => {
 		const random = randomOf(SEED + 1);
 		for (let run = 0; run < RUNS; run += 1) {
 			const scene = sceneOf(random);

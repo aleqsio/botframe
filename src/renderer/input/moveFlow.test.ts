@@ -19,7 +19,7 @@ import {
 } from "./toolFixtures";
 import type { Slot } from "./toolFixtures";
 
-const ARTBOARD: LayerFields = {
+const FRAME: LayerFields = {
 	x: 100,
 	y: 100,
 	width: 300,
@@ -31,7 +31,7 @@ const ARTBOARD: LayerFields = {
 };
 
 const RECTANGLE: LayerFields = {
-	...ARTBOARD,
+	...FRAME,
 	clip: false,
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
 };
@@ -77,18 +77,18 @@ describe("a drag out of a row", () => {
 });
 
 describe("a child of a turned parent that fills a row", () => {
-	function turnedFillScene(): { target: PointerTarget; child: LayerId; artboard: LayerId } {
+	function turnedFillScene(): { target: PointerTarget; child: LayerId; frame: LayerId } {
 		const doc = DesignDocument.create();
 		const row = firstId(doc);
 		doc.update(row, { x: 100, y: 100, width: 600, height: 200, layout: { display: "row" } });
-		const artboard = doc.createLayer({ ...ARTBOARD, x: 0, y: 0, width: 60, height: 200 }, row);
-		doc.update(artboard, { rotation: 30, layout: { width: "fill" } });
-		const child = doc.createLayer({ ...RECTANGLE, x: 50, y: 50, width: 40, height: 40 }, artboard);
+		const frame = doc.createLayer({ ...FRAME, x: 0, y: 0, width: 60, height: 200 }, row);
+		doc.update(frame, { rotation: 30, layout: { width: "fill" } });
+		const child = doc.createLayer({ ...RECTANGLE, x: 50, y: 50, width: 40, height: 40 }, frame);
 		doc.commit("scene");
 		const boxes = new Map<LayerId, Slot>([
-			[artboard, { parent: row, x: 0, y: 0, width: 600, height: 200 }],
+			[frame, { parent: row, x: 0, y: 0, width: 600, height: 200 }],
 		]);
-		const hits = [child, artboard, row];
+		const hits = [child, frame, row];
 		const target = {
 			doc,
 			user: new UserState(),
@@ -96,7 +96,7 @@ describe("a child of a turned parent that fills a row", () => {
 			layerIdsAt: () => hits,
 			drawn: drawnOf(boxes),
 		};
-		return { target, child, artboard };
+		return { target, child, frame };
 	}
 
 	it("moves the child by the pointer delta on the screen, with the drawn size as the pivot", () => {
@@ -135,7 +135,7 @@ describe("a child with an offset position in a row", () => {
 });
 
 describe("a child that fills a row", () => {
-	it("keeps its painted width on the frame it leaves the row, so the grab does not jump", () => {
+	it("keeps its painted width on the animation frame it leaves the row, so the grab does not jump", () => {
 		const { target, ids } = laidOutRow();
 		const parent = firstId(target.doc);
 		const first = idAt(ids, 0);
@@ -192,7 +192,7 @@ describe("a fill child that leaves a row for the root", () => {
 	});
 });
 
-describe("the frame after a reorder inside a row", () => {
+describe("the animation frame after a reorder inside a row", () => {
 	it("asks for one more solve, which measures the lift against the new slot", () => {
 		const { target, ids } = laidOutRow();
 		const parent = firstId(target.doc);
@@ -215,7 +215,7 @@ describe("the frame after a reorder inside a row", () => {
 	});
 });
 
-describe("the frame after a layer lands in a row", () => {
+describe("the animation frame after a layer lands in a row", () => {
 	it("asks for one more solve, which measures the lift once the row places the layer", () => {
 		const { target, ids } = laidOutRow();
 		const parent = firstId(target.doc);

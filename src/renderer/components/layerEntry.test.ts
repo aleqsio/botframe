@@ -4,8 +4,8 @@ import type { Layer, LayerId } from "../../document/layer";
 import {
 	glyphOf,
 	inspectorHeading,
-	isArtboard,
-	isRootArtboard,
+	isFrame,
+	isRootFrame,
 	layerEntry,
 	nextLayerName,
 } from "./layerEntry";
@@ -27,7 +27,7 @@ function rectangle(id: LayerId, fill: string): Layer {
 	};
 }
 
-function artboard(id: LayerId): Layer {
+function frame(id: LayerId): Layer {
 	return {
 		...rectangle(id, "#ffffff"),
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
@@ -35,21 +35,21 @@ function artboard(id: LayerId): Layer {
 	};
 }
 
-describe("isRootArtboard", () => {
-	it("takes an artboard that sits at the root of the document", () => {
-		expect(isRootArtboard(artboard("1@1"))).toBe(true);
+describe("isRootFrame", () => {
+	it("takes a frame that sits at the root of the document", () => {
+		expect(isRootFrame(frame("1@1"))).toBe(true);
 	});
 
-	it("passes over an artboard inside a parent", () => {
-		expect(isRootArtboard({ ...artboard("1@1"), parent: "2@1" })).toBe(false);
+	it("passes over a frame inside a parent", () => {
+		expect(isRootFrame({ ...frame("1@1"), parent: "2@1" })).toBe(false);
 	});
 
 	it("passes over a shape at the root, and over no layer", () => {
-		expect(isRootArtboard(rectangle("1@1", "#000000"))).toBe(false);
-		expect(isRootArtboard({ ...rectangle("1@1", "#000000"), geometry: { kind: "ellipse" } })).toBe(
+		expect(isRootFrame(rectangle("1@1", "#000000"))).toBe(false);
+		expect(isRootFrame({ ...rectangle("1@1", "#000000"), geometry: { kind: "ellipse" } })).toBe(
 			false,
 		);
-		expect(isRootArtboard(null)).toBe(false);
+		expect(isRootFrame(null)).toBe(false);
 	});
 });
 
@@ -71,21 +71,21 @@ describe("layerEntry", () => {
 		expect(layerEntry({ ...layer, geometry: { kind: "path", d: "M0 0" } }).label).toBe("Path");
 	});
 
-	it("names a rectangle that holds the artboard flag an artboard", () => {
-		expect(layerEntry(artboard("1@1")).label).toBe("Artboard");
+	it("names a rectangle that holds the frame flag a frame", () => {
+		expect(layerEntry(frame("1@1")).label).toBe("Frame");
 	});
 
-	it("tells an artboard from a plain rectangle and from a layer that the document lost", () => {
-		expect(isArtboard(artboard("1@1"))).toBe(true);
-		expect(isArtboard(rectangle("2@1", "#000000"))).toBe(false);
-		expect(isArtboard(null)).toBe(false);
+	it("tells a frame from a plain rectangle and from a layer that the document lost", () => {
+		expect(isFrame(frame("1@1"))).toBe(true);
+		expect(isFrame(rectangle("2@1", "#000000"))).toBe(false);
+		expect(isFrame(null)).toBe(false);
 	});
 
 	it("takes the name of the layer over the name of the kind", () => {
 		const layer = rectangle("1@1", "#000000");
 
 		expect(layerEntry({ ...layer, name: "Header" }).label).toBe("Header");
-		expect(layerEntry({ ...artboard("2@1"), name: "Phone" }).label).toBe("Phone");
+		expect(layerEntry({ ...frame("2@1"), name: "Phone" }).label).toBe("Phone");
 	});
 
 	it("gives a plain entry for a layer that the document lost", () => {
@@ -95,10 +95,10 @@ describe("layerEntry", () => {
 
 describe("nextLayerName", () => {
 	it("counts the layers of that kind and adds one", () => {
-		const layers = [rectangle("1@1", "#000000"), artboard("2@1"), rectangle("3@1", "#d9d9d9")];
+		const layers = [rectangle("1@1", "#000000"), frame("2@1"), rectangle("3@1", "#d9d9d9")];
 
 		expect(nextLayerName("Rectangle", layers)).toBe("Rectangle 3");
-		expect(nextLayerName("Artboard", layers)).toBe("Artboard 2");
+		expect(nextLayerName("Frame", layers)).toBe("Frame 2");
 	});
 
 	it("counts a layer that a person renamed by its kind", () => {
@@ -108,15 +108,15 @@ describe("nextLayerName", () => {
 	});
 
 	it("starts at one in an empty document", () => {
-		expect(nextLayerName("Artboard", [])).toBe("Artboard 1");
+		expect(nextLayerName("Frame", [])).toBe("Frame 1");
 	});
 });
 
 describe("glyphOf", () => {
-	it("draws an artboard, an ellipse, and a rectangle with their own glyph", () => {
+	it("draws a frame, an ellipse, and a rectangle with their own glyph", () => {
 		const layer = rectangle("1@1", "#000000");
 
-		expect(glyphOf(artboard("2@1"))).toBe("artboard");
+		expect(glyphOf(frame("2@1"))).toBe("frame");
 		expect(glyphOf({ ...layer, geometry: { kind: "ellipse" } })).toBe("ellipse");
 		expect(glyphOf(layer)).toBe("rectangle");
 	});
@@ -140,10 +140,10 @@ describe("inspectorHeading", () => {
 	});
 
 	it("heads a layer with its name and its kind", () => {
-		expect(inspectorHeading({ ...artboard("1@1"), name: "Phone" })).toEqual({
-			glyph: "artboard",
+		expect(inspectorHeading({ ...frame("1@1"), name: "Phone" })).toEqual({
+			glyph: "frame",
 			name: "Phone",
-			kind: "Artboard",
+			kind: "Frame",
 		});
 		expect(
 			inspectorHeading({ ...rectangle("2@1", "#000000"), geometry: { kind: "ellipse" } }),

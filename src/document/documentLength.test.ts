@@ -47,7 +47,7 @@ describe("a length that is not in pixels", () => {
 		expect(doc.layer(child)).toMatchObject({ x: 120, y: 80 });
 	});
 
-	it("resolves vw and vh against the artboard at the root", () => {
+	it("resolves vw and vh against the frame at the root", () => {
 		const { doc, root, child } = scene();
 		const grandchild = doc.createLayer(CHILD, child);
 
@@ -59,7 +59,7 @@ describe("a length that is not in pixels", () => {
 		expect(doc.layer(grandchild)).toMatchObject({ width: 24, height: 16 });
 	});
 
-	it("gives a layer at the root no container and no artboard", () => {
+	it("gives a layer at the root no container and no frame", () => {
 		const { doc, root } = scene();
 
 		expect(doc.basisOf(root)).toEqual({
@@ -193,7 +193,7 @@ describe("a length when the tree changes", () => {
 		expect(copy === null ? null : doc.layer(copy)).toMatchObject({ width: 120 });
 	});
 
-	it("resolves a grandchild in vw under a child in pixels after the artboard grows", () => {
+	it("resolves a grandchild in vw under a child in pixels after the frame grows", () => {
 		const { doc, root, child } = scene();
 		const grandchild = doc.createLayer(CHILD, child);
 		doc.update(grandchild, { lengths: { width: { value: 10, unit: "vw" } } });

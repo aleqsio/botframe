@@ -4,11 +4,11 @@ import type { Layer, LayerId, LayerPatch } from "../document/layer";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 
 const ROOT_RECTANGLE = "1@1" as LayerId;
-const ARTBOARD = "2@1" as LayerId;
-const NESTED_ARTBOARD = "3@1" as LayerId;
+const FRAME = "2@1" as LayerId;
+const NESTED_FRAME = "3@1" as LayerId;
 const CHILD = "4@1" as LayerId;
 
-function layerOf(id: LayerId, parent: LayerId | null, artboard: boolean): Layer {
+function layerOf(id: LayerId, parent: LayerId | null, frame: boolean): Layer {
 	return {
 		id,
 		x: 0,
@@ -18,18 +18,18 @@ function layerOf(id: LayerId, parent: LayerId | null, artboard: boolean): Layer 
 		...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 		rotation: 0,
 		fill: "#000000",
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: frame },
 		name: "",
-		clip: artboard,
+		clip: frame,
 		parent,
 	};
 }
 
 const LAYERS: Readonly<Record<string, Layer>> = {
 	[ROOT_RECTANGLE]: layerOf(ROOT_RECTANGLE, null, false),
-	[ARTBOARD]: layerOf(ARTBOARD, null, true),
-	[NESTED_ARTBOARD]: layerOf(NESTED_ARTBOARD, ARTBOARD, true),
-	[CHILD]: layerOf(CHILD, ARTBOARD, false),
+	[FRAME]: layerOf(FRAME, null, true),
+	[NESTED_FRAME]: layerOf(NESTED_FRAME, FRAME, true),
+	[CHILD]: layerOf(CHILD, FRAME, false),
 };
 
 function read(id: LayerId): Layer | null {
@@ -37,26 +37,26 @@ function read(id: LayerId): Layer | null {
 }
 
 describe("pasteParent", () => {
-	it("takes the selected artboard", () => {
-		expect(pasteParent(read, [ARTBOARD], [])).toBe(ARTBOARD);
+	it("takes the selected frame", () => {
+		expect(pasteParent(read, [FRAME], [])).toBe(FRAME);
 	});
 
-	it("takes the selected nested artboard, not the artboard that holds it", () => {
-		expect(pasteParent(read, [NESTED_ARTBOARD], [])).toBe(NESTED_ARTBOARD);
+	it("takes the selected nested frame, not the frame that holds it", () => {
+		expect(pasteParent(read, [NESTED_FRAME], [])).toBe(NESTED_FRAME);
 	});
 
-	it("takes the parent of the selected artboard when the copy came from that artboard", () => {
-		expect(pasteParent(read, [NESTED_ARTBOARD], [NESTED_ARTBOARD])).toBe(ARTBOARD);
-		expect(pasteParent(read, [ARTBOARD], [ARTBOARD, CHILD])).toBeNull();
+	it("takes the parent of the selected frame when the copy came from that frame", () => {
+		expect(pasteParent(read, [NESTED_FRAME], [NESTED_FRAME])).toBe(FRAME);
+		expect(pasteParent(read, [FRAME], [FRAME, CHILD])).toBeNull();
 	});
 
-	it("takes the parent of a selected layer that is not an artboard", () => {
-		expect(pasteParent(read, [CHILD], [])).toBe(ARTBOARD);
+	it("takes the parent of a selected layer that is not a frame", () => {
+		expect(pasteParent(read, [CHILD], [])).toBe(FRAME);
 	});
 
 	it("takes the first selected layer when the selection holds more than one layer", () => {
-		expect(pasteParent(read, [ARTBOARD, ROOT_RECTANGLE], [])).toBe(ARTBOARD);
-		expect(pasteParent(read, [ROOT_RECTANGLE, ARTBOARD], [])).toBeNull();
+		expect(pasteParent(read, [FRAME, ROOT_RECTANGLE], [])).toBe(FRAME);
+		expect(pasteParent(read, [ROOT_RECTANGLE, FRAME], [])).toBeNull();
 	});
 
 	it("takes the root when nothing is selected", () => {

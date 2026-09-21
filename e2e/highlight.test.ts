@@ -8,7 +8,7 @@ const EMPTY = { x: 120, y: 80 };
 const SE_CORNER = { x: 660, y: 420 };
 const PANEL_STEP = 50;
 const LABEL_STEP = 3;
-const ARTBOARD: Drag = { from: { x: 200, y: 420 }, to: { x: 460, y: 600 } };
+const FRAME: Drag = { from: { x: 200, y: 420 }, to: { x: 460, y: 600 } };
 
 test("the select tool outlines the layer under the pointer until the press selects it", async () => {
 	const { app, layers, origin, window } = await openStage();
@@ -38,12 +38,12 @@ test("the select tool outlines the layer under the pointer until the press selec
 	await app.close();
 });
 
-test("the name above an artboard outlines the artboard that the press selects", async () => {
+test("the name above a frame outlines the frame that the press selects", async () => {
 	const { app, origin, window } = await openStage();
-	const label = window.locator(".artboard-label");
+	const label = window.locator(".frame-label");
 	const highlight = window.locator(".highlight");
 
-	await drawWith(window, origin, "a", ARTBOARD);
+	await drawWith(window, origin, "a", FRAME);
 	await expect(label).toHaveCount(1);
 
 	await window.keyboard.press("v");

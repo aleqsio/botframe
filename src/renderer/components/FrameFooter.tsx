@@ -42,13 +42,7 @@ function PresetSelect({ doc, layer }: { doc: DesignDocument; layer: Layer }): Re
 	);
 }
 
-export function ArtboardFooter({
-	doc,
-	layer,
-}: {
-	doc: DesignDocument;
-	layer: Layer;
-}): ReactElement {
+export function FrameFooter({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	return (
 		<div className="card-footer">
 			<span className="property-label">Preset</span>
