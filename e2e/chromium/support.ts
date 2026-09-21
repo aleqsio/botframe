@@ -39,7 +39,7 @@ export async function rectOf(locator: Locator): Promise<Box> {
 	return box;
 }
 
-async function centerOf(locator: Locator): Promise<Point> {
+export async function centerOf(locator: Locator): Promise<Point> {
 	const box = await rectOf(locator);
 	return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
@@ -77,7 +77,7 @@ export async function turnLayer(page: Page, origin: Point, grab: Point): Promise
 }
 
 const INSIDE_THE_ARTBOARD = { x: 560, y: 220 };
-const EMPTY = { x: 900, y: 650 };
+export const EMPTY = { x: 900, y: 650 };
 const ROW: Drag = { from: { x: 300, y: 60 }, to: { x: 620, y: 240 } };
 const FIRST_SHAPE: Drag = { from: { x: 330, y: 100 }, to: { x: 390, y: 140 } };
 const SECOND_SHAPE: Drag = { from: { x: 410, y: 100 }, to: { x: 470, y: 140 } };
