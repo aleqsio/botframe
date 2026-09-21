@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
-import type { LayerFields, LayerId } from "../../document/layer";
+import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import type { MarginSide, Side } from "../../document/layout";
 import type { Point } from "../state/camera";
 import { NO_DRAWN } from "./drawn";
 import type { DrawnReader } from "./drawn";
+import { handlePointOf } from "./handles";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import { dragOver, dropScene, firstId, nestedTarget, pointAt, tapAt } from "./toolFixtures";
+import {
+	anchorOnScreen,
+	dragOver,
+	dropScene,
+	firstId,
+	nestedTarget,
+	pointAt,
+	tapAt,
+} from "./toolFixtures";
 
 const CONTROL: Modifiers = { ...NO_MODIFIERS, control: true };
 const SIBLING: LayerFields = {
@@ -31,6 +40,7 @@ const NEAR_THE_LEFT_EDGE = { x: 423, y: 300 };
 const NEAR_THE_PADDING = { x: 433, y: 300 };
 const NORTH_HANDLE = { x: 470, y: 280 };
 const NEAR_THE_TOP_EDGE = { x: 470, y: 263 };
+const WEST_MIDDLE = { x: 0, y: 0.5 };
 const PADDED: DrawnReader = {
 	...NO_DRAWN,
 	inset: () => ({ top: 0, right: 0, bottom: 0, left: 10 }),
@@ -45,6 +55,14 @@ const LEFT_MARGIN: Record<Side, MarginSide> = {
 
 function dragChild(target: PointerTarget, release: Point, modifiers = NO_MODIFIERS): void {
 	dragOver(behaviorFor("select"), target, { press: GRAB_THE_CHILD, release, modifiers });
+}
+
+function turnedLayer(target: PointerTarget, id: LayerId): Layer {
+	const layer = target.doc.layer(id);
+	if (layer === null) {
+		throw new Error("the document lost the layer");
+	}
+	return layer;
 }
 
 function gripChild(
@@ -193,6 +211,33 @@ describe("a resize drag inside an artboard", () => {
 
 		expect(doc.layer(child)?.layout.margin.left).toEqual({ value: 0, unit: "px" });
 		expect(doc.layer(child)).toMatchObject({ x: 20, width: 60 });
+	});
+});
+
+describe("a resize drag of a turned layer", () => {
+	it("puts the west edge of a turned child on the edge the snap line draws", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(child, { rotation: 30 });
+		const west = anchorOnScreen(target, child, WEST_MIDDLE);
+
+		gripChild(target, west, { x: west.x - 26, y: west.y });
+
+		const landed = turnedLayer(target, child);
+		expect(landed).toMatchObject({ x: -5.88, y: 13.07, width: 87.74, height: 40 });
+		expect(target.user.snap.get()?.segments).toEqual([{ axis: "x", at: 0, from: 0, to: 160 }]);
+		expect(handlePointOf(landed, landed, "w").x).toBeCloseTo(0, 2);
+	});
+
+	it("drops a snap the turned edge runs parallel to", () => {
+		const { target, child } = nestedTarget(0);
+		target.doc.update(firstId(target.doc), { guides: [{ axis: "x", at: 52 }] });
+		target.doc.update(child, { rotation: 90 });
+		const west = anchorOnScreen(target, child, WEST_MIDDLE);
+
+		gripChild(target, west, { x: west.x, y: west.y - 4 });
+
+		expect(target.doc.layer(child)).toMatchObject({ x: 18, y: 18, width: 64, height: 40 });
+		expect(target.user.snap.get()).toBeNull();
 	});
 });
 

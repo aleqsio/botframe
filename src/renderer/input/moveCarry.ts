@@ -34,6 +34,7 @@ function pullFor(move: LayerMove, box: DraggedBox, wanted: Point): SnapPull {
 	return {
 		field: move.field,
 		axes: box.axes,
+		turn: 0,
 		parent: box.drawn.parent,
 		points: snapShapeOf({ ...box.drawn, ...wanted }).points,
 	};
