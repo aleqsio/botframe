@@ -1,7 +1,9 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import type { UserState } from "../state/userState";
 import { ColorField } from "./ColorField";
+import { LayoutActions } from "./LayoutActions";
 import { DraftInput, PropertyField } from "./PropertyField";
 import type { FieldGroup, LayerField } from "./layerFields";
 import { sharedField, sharedGroups, updateAll, writeAll, writeField } from "./mixedFields";
@@ -71,7 +73,11 @@ function MixedClip({ doc, layers }: PanelProps): ReactElement {
 	);
 }
 
-export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
+export function MixedProperties({
+	doc,
+	layers,
+	user,
+}: PanelProps & { user: UserState }): ReactElement {
 	return (
 		<>
 			<PropertyField
@@ -81,6 +87,7 @@ export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 				}}
 				value={mixedText(sharedOf(layers.map((layer) => layer.name)), sameText)}
 			/>
+			<LayoutActions doc={doc} layers={layers} user={user} />
 			{sharedGroups(layers).map((group) => (
 				<MixedGroup doc={doc} group={group} key={group.name} layers={layers} />
 			))}

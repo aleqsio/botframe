@@ -4,7 +4,7 @@ import type { Layer } from "../../document/layer";
 import { acceleratorText } from "../acceleratorText";
 import type { CommandGroup } from "../input/command";
 import { runEditCommand } from "../input/editCommand";
-import { LAYOUT_ACTIONS } from "../input/layoutAction";
+import { LAYOUT_ACTIONS, actionTip } from "../input/layoutAction";
 import type { LayoutAction } from "../input/layoutAction";
 import type { UserState } from "../state/userState";
 import { Icon } from "./Icon";
@@ -12,11 +12,6 @@ import { Icon } from "./Icon";
 const SECTION_NAME = "Arrange";
 
 const GROUPS: readonly CommandGroup[] = ["align", "spread", "place", "turn"];
-
-function tipOf(action: LayoutAction): string {
-	const keys = acceleratorText(action.accelerator);
-	return keys === "" ? action.label : `${action.label} (${keys})`;
-}
 
 function ActionButton({
 	action,
@@ -29,15 +24,17 @@ function ActionButton({
 	layers: readonly Layer[];
 	user: UserState;
 }): ReactElement {
+	const ready = action.ready(doc, layers);
+
 	return (
 		<button
+			aria-disabled={!ready}
 			aria-label={action.label}
 			className="arrange-button"
-			disabled={!action.ready(doc, layers)}
 			onClick={() => {
 				runEditCommand(action, doc, user);
 			}}
-			title={tipOf(action)}
+			title={actionTip(action, ready, acceleratorText(action.accelerator))}
 			type="button"
 		>
 			<Icon name={action.icon} />
@@ -53,11 +50,7 @@ export function LayoutActions({
 	doc: DesignDocument;
 	layers: readonly Layer[];
 	user: UserState;
-}): ReactElement | null {
-	if (layers.length === 0) {
-		return null;
-	}
-
+}): ReactElement {
 	return (
 		<section aria-label={SECTION_NAME} className="arrange">
 			<span className="group-label">{SECTION_NAME}</span>

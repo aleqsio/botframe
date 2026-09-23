@@ -4,7 +4,7 @@ import { firstId } from "../../document/documentFixtures";
 import type { Layer, LayerFields, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { hullOf } from "./layerSpace";
-import { boundsOf, canvasCornersOf, rectCorners } from "./selectionBounds";
+import { boundsOf, canvasContentHullOf, canvasCornersOf, rectCorners } from "./selectionBounds";
 
 const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#d9d9d9",
@@ -68,6 +68,34 @@ describe("canvasCornersOf", () => {
 
 		expect(box.width).toBeCloseTo(10);
 		expect(box.height).toBeCloseTo(20);
+	});
+});
+
+describe("canvasContentHullOf", () => {
+	it("takes the padding off each side of the box", () => {
+		const { doc, read } = scene();
+		const id = doc.createLayer({ ...SQUARE, x: 100, y: 50, width: 200, height: 100 });
+		const inset = { top: 5, right: 20, bottom: 15, left: 10 };
+
+		expect(canvasContentHullOf(read, layerOf(doc, id), inset)).toEqual({
+			x: 110,
+			y: 55,
+			width: 170,
+			height: 80,
+		});
+	});
+
+	it("keeps an empty box inside a layer that the padding fills", () => {
+		const { doc, read } = scene();
+		const id = doc.createLayer({ ...SQUARE, x: 0, y: 0, width: 20, height: 20 });
+		const inset = { top: 30, right: 30, bottom: 30, left: 30 };
+
+		expect(canvasContentHullOf(read, layerOf(doc, id), inset)).toEqual({
+			x: 20,
+			y: 20,
+			width: 0,
+			height: 0,
+		});
 	});
 });
 

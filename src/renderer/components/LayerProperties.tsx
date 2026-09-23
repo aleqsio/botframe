@@ -1,8 +1,10 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import type { UserState } from "../state/userState";
 import { ColorField } from "./ColorField";
 import { FrameFooter } from "./FrameFooter";
+import { LayoutActions } from "./LayoutActions";
 import { PropertyField } from "./PropertyField";
 import { isFrame } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
@@ -53,9 +55,11 @@ function ClipSwitch({ doc, layer }: { doc: DesignDocument; layer: Layer }): Reac
 export function LayerProperties({
 	doc,
 	layer,
+	user,
 }: {
 	doc: DesignDocument;
 	layer: Layer;
+	user: UserState;
 }): ReactElement {
 	return (
 		<>
@@ -67,6 +71,7 @@ export function LayerProperties({
 				}}
 				value={layer.name}
 			/>
+			<LayoutActions doc={doc} layers={[layer]} user={user} />
 			<LayoutPanel doc={doc} layer={layer} />
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />

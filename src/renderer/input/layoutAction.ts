@@ -25,6 +25,7 @@ type Ready = (doc: DesignDocument, layers: readonly Layer[]) => boolean;
 export interface LayoutAction extends EditCommand {
 	icon: IconName;
 	ready: Ready;
+	needs: string;
 }
 
 interface ActionRow {
@@ -51,6 +52,16 @@ const SPREAD_MESSAGE = "distribute layers";
 const FLIP_MESSAGE = "flip layers";
 const TURN_MESSAGE = "turn layers";
 
+const FREE_PARENT = "a frame that does not lay out its children";
+const NEEDS_OF_SCOPE: Readonly<Record<AimSpec["scope"], string>> = {
+	selection: `Select two or more layers, or a layer in ${FREE_PARENT}`,
+	parent: `Select a layer in ${FREE_PARENT}`,
+	bounds: "Select a layer that can move",
+};
+const SPREAD_NEEDS = "Select three or more layers that can move";
+const FIT_NEEDS = "Select one frame that has children and no auto layout";
+const SELECTION_NEEDS = "Select a layer";
+
 function shiftStroke(key: string): (stroke: KeyStroke) => boolean {
 	if (key === "") {
 		return never;
@@ -67,7 +78,12 @@ function turnStroke(counter: boolean): (stroke: KeyStroke) => boolean {
 		(stroke.key === "]" || stroke.key === "}");
 }
 
-function actionOf(row: ActionRow, ready: Ready, apply: EditCommand["apply"]): LayoutAction {
+function actionOf(
+	row: ActionRow,
+	ready: Ready,
+	apply: EditCommand["apply"],
+	needs: string,
+): LayoutAction {
 	return {
 		id: row.id,
 		label: row.label,
@@ -76,6 +92,7 @@ function actionOf(row: ActionRow, ready: Ready, apply: EditCommand["apply"]): La
 		accelerator: row.key === "" ? "" : SHIFT_PREFIX + row.key,
 		matches: shiftStroke(row.key),
 		ready,
+		needs,
 		enabled: (doc, user) => ready(doc, selectedLayers(doc, user)),
 		apply,
 	};
@@ -92,6 +109,7 @@ function aimAction(row: AimRow, aim: Aiming): LayoutAction {
 		row,
 		(doc, layers) => canAim(doc, layers, row.spec),
 		(doc, user) => aim(doc, user, row.spec),
+		NEEDS_OF_SCOPE[row.spec.scope],
 	);
 }
 
@@ -104,6 +122,7 @@ function spreadAction(row: SpreadRow): LayoutAction {
 		row,
 		(doc, layers) => canSpread(doc, layers, row.spec),
 		(doc, user) => spreadSelection(doc, user, row.spec),
+		SPREAD_NEEDS,
 	);
 }
 
@@ -114,7 +133,12 @@ interface TurnRow extends ActionRow {
 
 function turnAction(row: TurnRow): LayoutAction {
 	return {
-		...actionOf(row, hasSelection, (doc, user) => turnSelection(doc, user, row.spec)),
+		...actionOf(
+			row,
+			hasSelection,
+			(doc, user) => turnSelection(doc, user, row.spec),
+			SELECTION_NEEDS,
+		),
 		accelerator: row.counter ? "CmdOrCtrl+Shift+]" : "CmdOrCtrl+]",
 		matches: turnStroke(row.counter),
 	};
@@ -285,8 +309,18 @@ export const LAYOUT_ACTIONS: readonly LayoutAction[] = [
 	...ALIGNS.map((row) => aimAction(row, alignSelection)),
 	...SPREADS.map((row) => spreadAction(row)),
 	...CENTERS.map((row) => aimAction(row, alignSelection)),
-	actionOf(FIT, canFit, (doc, user) => fitToChildren(doc, user, "size to fit")),
+	actionOf(FIT, canFit, (doc, user) => fitToChildren(doc, user, "size to fit"), FIT_NEEDS),
 	...FLIPS.map((row) => aimAction(row, flipSelection)),
 	...TURNS.map((row) => turnAction(row)),
-	actionOf(SWAP, hasSelection, (doc, user) => swapSelection(doc, user, "swap width and height")),
+	actionOf(
+		SWAP,
+		hasSelection,
+		(doc, user) => swapSelection(doc, user, "swap width and height"),
+		SELECTION_NEEDS,
+	),
 ];
+
+export function actionTip(action: LayoutAction, ready: boolean, keys: string): string {
+	const title = keys === "" ? action.label : `${action.label} (${keys})`;
+	return ready ? title : `${title}\n${action.needs}`;
+}

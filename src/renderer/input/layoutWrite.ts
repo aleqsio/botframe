@@ -23,7 +23,7 @@ import {
 	shiftAlong,
 	spreadOffsets,
 } from "./layoutGeometry";
-import { boundsOf, canvasHullOf, hullOfRects } from "./selectionBounds";
+import { boundsOf, canvasContentHullOf, canvasHullOf, hullOfRects } from "./selectionBounds";
 import { freeAxesOf, placedOn } from "./snapAxes";
 
 const BOX_ORIGIN: Point = { x: 0, y: 0 };
@@ -67,7 +67,7 @@ function freeAxesFor(read: ReadLayer, layer: Layer): readonly GuideAxis[] {
 
 function parentHullOf(read: ReadLayer, layer: Layer): Rect | null {
 	const parent = layer.parent === null ? null : read(layer.parent);
-	return parent === null ? null : canvasHullOf(read, parent);
+	return parent === null ? null : canvasContentHullOf(read, parent, DOM_DRAWN.inset(parent.id));
 }
 
 function sharedBoxOf(read: ReadLayer, layers: readonly Layer[], scope: AimScope): Rect | null {

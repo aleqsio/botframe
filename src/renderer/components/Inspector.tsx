@@ -5,7 +5,6 @@ import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 import { useLayerCount, useLayers } from "../useDocument";
 import { LayerProperties } from "./LayerProperties";
-import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { groupHeading, inspectorHeading } from "./layerEntry";
 import type { InspectorHeading } from "./layerEntry";
@@ -40,9 +39,11 @@ function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 function InspectorBody({
 	doc,
 	layers,
+	user,
 }: {
 	doc: DesignDocument;
 	layers: readonly Layer[];
+	user: UserState;
 }): ReactNode {
 	const [first, peer] = layers;
 
@@ -50,9 +51,9 @@ function InspectorBody({
 		return <PageProperties doc={doc} />;
 	}
 	return peer === undefined ? (
-		<LayerProperties doc={doc} layer={first} />
+		<LayerProperties doc={doc} layer={first} user={user} />
 	) : (
-		<MixedProperties doc={doc} layers={layers} />
+		<MixedProperties doc={doc} layers={layers} user={user} />
 	);
 }
 
@@ -63,8 +64,7 @@ export function Inspector({ doc, user }: { doc: DesignDocument; user: UserState 
 		<aside aria-label="Inspector" id="inspector">
 			<InspectorHeader heading={headingOf(layers)} />
 			<div className="inspector-body">
-				<LayoutActions doc={doc} layers={layers} user={user} />
-				<InspectorBody doc={doc} layers={layers} />
+				<InspectorBody doc={doc} layers={layers} user={user} />
 			</div>
 		</aside>
 	);
