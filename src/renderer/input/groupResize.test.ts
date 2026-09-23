@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import { UserState } from "../state/userState";
-import { NO_DRAWN } from "./drawn";
+import { NO_DRAWN, drawnRead } from "./drawn";
 import { visualCenterOf } from "./layerSpace";
+import type { ReadLayer } from "./layerSpace";
 import { boundsOf } from "./selectionBounds";
-import { drawnReaderOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { SQUARE, dragOver, laidOutRow, pointAt } from "./toolFixtures";
@@ -17,6 +17,14 @@ interface GroupScene {
 	box: Rect;
 }
 
+function boxOf(read: ReadLayer, ids: readonly LayerId[]): Rect {
+	const box = boundsOf(read, ids);
+	if (box === null) {
+		throw new Error("the selection has no box");
+	}
+	return box;
+}
+
 function groupScene(turn: number): GroupScene {
 	const doc = DesignDocument.create();
 	const one = doc.createLayer({ ...SQUARE, x: 0, y: 0, width: 20, height: 20 });
@@ -25,10 +33,7 @@ function groupScene(turn: number): GroupScene {
 	doc.commit("create the layers");
 	const user = new UserState();
 	user.selection.set([one, other]);
-	const box = boundsOf((id) => doc.layer(id), [one, other]);
-	if (box === null) {
-		throw new Error("the selection has no box");
-	}
+	const box = boxOf((id) => doc.layer(id), [one, other]);
 	return {
 		target: { doc, user, layerIds: [], layerIdsAt: () => [], drawn: NO_DRAWN },
 		one,
@@ -139,10 +144,10 @@ describe("a resize of more than one layer", () => {
 		const { target, ids } = laidOutRow();
 		const pair = ids.slice(0, 2);
 		target.user.selection.set(pair);
-		const box = boundsOf(drawnReaderOf(target), pair);
-		if (box === null) {
-			throw new Error("the selection has no box");
-		}
+		const box = boxOf(
+			drawnRead(target.drawn, (id) => target.doc.layer(id)),
+			pair,
+		);
 		const corner = pointAt(target.user.camera.get(), {
 			x: box.x + box.width,
 			y: box.y + box.height,
