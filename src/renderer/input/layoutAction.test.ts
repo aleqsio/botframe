@@ -7,6 +7,7 @@ import type { EditCommand } from "./command";
 import { commandById, commandForStroke, runEditCommand } from "./editCommand";
 import type { KeyStroke } from "./layerCommand";
 import { LAYOUT_ACTIONS, actionTip } from "./layoutAction";
+import type { LayoutAction } from "./layoutAction";
 
 const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#d9d9d9",
@@ -77,19 +78,21 @@ function run(held: Scene, id: string): void {
 	runEditCommand(actionOf(id), held.doc, held.user);
 }
 
+function layoutActionOf(id: string): LayoutAction {
+	const action = LAYOUT_ACTIONS.find((each) => each.id === id);
+	if (action === undefined) {
+		throw new Error(`no layout action with the id ${id}`);
+	}
+	return action;
+}
+
 describe("actionTip", () => {
-	const spread = actionOf("spreadX");
-
 	it("names the action and its keys while it is ready", () => {
-		const action = LAYOUT_ACTIONS.find((each) => each.id === spread.id);
-
-		expect(action && actionTip(action, true, "⇧⌘J")).toBe("Distribute horizontally (⇧⌘J)");
+		expect(actionTip(layoutActionOf("spreadX"), true, "⇧⌘J")).toBe("Distribute horizontally (⇧⌘J)");
 	});
 
 	it("tells what the action needs while it is off", () => {
-		const action = LAYOUT_ACTIONS.find((each) => each.id === spread.id);
-
-		expect(action && actionTip(action, false, "")).toBe(
+		expect(actionTip(layoutActionOf("spreadX"), false, "")).toBe(
 			"Distribute horizontally\nSelect three or more layers that can move",
 		);
 	});
