@@ -3,7 +3,7 @@ import type { Locator, Page } from "@playwright/test";
 import { drawWith, openStage } from "./support";
 import type { Drag } from "./support";
 
-const PRESET = { name: "iPhone 16", width: 393, height: 852 };
+const PRESET = { name: "iPhone 18", width: 402, height: 874 };
 const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const SHIFT_DRAG = 2;
@@ -115,8 +115,8 @@ test("the preset list of a selected frame resizes it", async () => {
 
 	await window.getByLabel("Preset", { exact: true }).selectOption("A4");
 
-	await expect(drawn).toHaveCSS("width", "595px");
-	await expect(drawn).toHaveCSS("height", "842px");
+	await expect(drawn).toHaveCSS("width", "794px");
+	await expect(drawn).toHaveCSS("height", "1123px");
 
 	await app.close();
 });

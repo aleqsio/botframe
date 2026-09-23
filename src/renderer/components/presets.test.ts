@@ -32,8 +32,8 @@ describe("PRESET_GROUPS", () => {
 
 describe("presetNamed", () => {
 	it("finds a preset in any group", () => {
-		expect(presetNamed("iPhone 16")).toEqual({ name: "iPhone 16", width: 393, height: 852 });
-		expect(presetNamed("A4")).toEqual({ name: "A4", width: 595, height: 842 });
+		expect(presetNamed("iPhone 18")).toEqual({ name: "iPhone 18", width: 402, height: 874 });
+		expect(presetNamed("A4")).toEqual({ name: "A4", width: 794, height: 1123 });
 	});
 
 	it("gives null for a name that no group holds", () => {
@@ -43,7 +43,8 @@ describe("presetNamed", () => {
 
 describe("presetNameFor", () => {
 	it("names the size of a preset", () => {
-		expect(presetNameFor(393, 852)).toBe("iPhone 16");
+		expect(presetNameFor(402, 874)).toBe("iPhone 18");
+		expect(presetNameFor(440, 956)).toBe("iPhone 18 Pro Max");
 	});
 
 	it("names the size of a preset in a later group", () => {
@@ -51,7 +52,7 @@ describe("presetNameFor", () => {
 	});
 
 	it("names a size that no preset holds Custom", () => {
-		expect(presetNameFor(393, 851)).toBe(CUSTOM_PRESET);
+		expect(presetNameFor(402, 873)).toBe(CUSTOM_PRESET);
 	});
 });
 
