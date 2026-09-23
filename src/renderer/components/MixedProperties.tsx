@@ -18,10 +18,6 @@ interface PanelProps {
 	layers: readonly Layer[];
 }
 
-function sameText(value: string): string {
-	return value;
-}
-
 function MixedChip({ doc, field, layers }: PanelProps & { field: LayerField }): ReactElement {
 	return (
 		<div className="number-chip">
@@ -84,7 +80,7 @@ export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 				onCommit={() => {
 					doc.commit(FILL_MESSAGE);
 				}}
-				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), sameText)}
+				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), String)}
 			/>
 			<MixedClip doc={doc} layers={layers} />
 		</>

@@ -88,10 +88,6 @@
 	width: var(--layout-control);
 }
 
-.arrange-more .icon {
-	stroke-width: 2.5;
-}
-
 .arrange-button[data-popup-open] {
 	background-color: var(--panel-selected);
 	color: var(--panel-text);

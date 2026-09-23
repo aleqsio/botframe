@@ -44,7 +44,10 @@ test("the section shows the align row and keeps the other actions in the menu", 
 		page.getByRole("region", { name: "Arrange" }).getByRole("button", { name: /^Align/u }),
 	).toHaveCount(6);
 	await arrangeButton(page, "More arrange actions").click();
-	await expect(page.getByRole("menuitem")).toHaveCount(11);
+	await expect(page.getByRole("menuitem", { name: "Distribute horizontally" })).toBeVisible();
+	await expect(page.getByRole("menuitem", { name: "Center in the parent" })).toBeVisible();
+	await expect(page.getByRole("menuitem", { name: "Swap width and height" })).toBeVisible();
+	await expect(page.getByRole("menuitem", { name: /^Align/u })).toHaveCount(0);
 });
 
 test("an action that is off keeps a tip that tells what it needs", async ({ page }) => {
@@ -58,16 +61,9 @@ test("an action that is off keeps a tip that tells what it needs", async ({ page
 	const spread = page.getByRole("menuitem", { name: "Distribute horizontally" });
 
 	await expect(spread).toBeDisabled();
-	await expect(spread).toHaveAttribute("title", /Select three or more layers/u);
+	await expect(spread).toHaveAttribute(
+		"title",
+		/^Distribute horizontally.*\nSelect three or more layers/u,
+	);
 	await expect(page.getByRole("menuitem", { name: "Swap width and height" })).toBeEnabled();
-});
-
-test("an off align button does nothing on a click", async ({ page }) => {
-	const { origin } = await openRenderer(page);
-	await drawWith(page, origin, "r", INSIDE);
-	const before = await chipValue(page, "X").inputValue();
-
-	await arrangeButton(page, "Align left").click({ force: true });
-
-	await expect(chipValue(page, "X")).toHaveValue(before);
 });

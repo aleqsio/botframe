@@ -14,7 +14,8 @@ import { Icon } from "./Icon";
 const SECTION_NAME = "Arrange";
 const MORE_LABEL = "More arrange actions";
 
-const MENU_GROUPS: readonly CommandGroup[] = ["spread", "place", "turn"];
+const ROW_GROUP: CommandGroup = "align";
+const MENU_ACTIONS = LAYOUT_ACTIONS.filter((action) => action.group !== ROW_GROUP);
 
 interface ActionProps {
 	action: LayoutAction;
@@ -29,8 +30,12 @@ interface SectionProps {
 	user: UserState;
 }
 
-function actionsIn(group: CommandGroup): readonly LayoutAction[] {
-	return LAYOUT_ACTIONS.filter((action) => action.group === group);
+function tipOf(action: LayoutAction, ready: boolean): string {
+	return actionTip(action, ready, acceleratorText(action.accelerator));
+}
+
+function startsGroup(index: number): boolean {
+	return index > 0 && MENU_ACTIONS[index - 1]?.group !== MENU_ACTIONS[index]?.group;
 }
 
 function ActionButton({ action, doc, layers, user }: ActionProps): ReactElement {
@@ -44,7 +49,7 @@ function ActionButton({ action, doc, layers, user }: ActionProps): ReactElement 
 			onClick={() => {
 				runEditCommand(action, doc, user);
 			}}
-			title={actionTip(action, ready, acceleratorText(action.accelerator))}
+			title={tipOf(action, ready)}
 			type="button"
 		>
 			<Icon name={action.icon} />
@@ -62,7 +67,7 @@ function ActionItem({ action, doc, layers, user }: ActionProps): ReactElement {
 			onClick={() => {
 				runEditCommand(action, doc, user);
 			}}
-			title={ready ? undefined : action.needs}
+			title={tipOf(action, ready)}
 		>
 			<Icon name={action.icon} />
 			<span className="layer-menu-label">{action.label}</span>
@@ -84,18 +89,10 @@ function MoreMenu({ doc, layers, user }: SectionProps): ReactElement {
 			<Menu.Portal>
 				<Menu.Positioner align="end" side="bottom">
 					<Menu.Popup aria-label={MORE_LABEL} className="layer-menu">
-						{MENU_GROUPS.map((group, index) => (
-							<Fragment key={group}>
-								{index > 0 && <Menu.Separator className="layer-menu-separator" />}
-								{actionsIn(group).map((action) => (
-									<ActionItem
-										action={action}
-										doc={doc}
-										key={action.id}
-										layers={layers}
-										user={user}
-									/>
-								))}
+						{MENU_ACTIONS.map((action, index) => (
+							<Fragment key={action.id}>
+								{startsGroup(index) && <Menu.Separator className="layer-menu-separator" />}
+								<ActionItem action={action} doc={doc} layers={layers} user={user} />
 							</Fragment>
 						))}
 					</Menu.Popup>
@@ -113,7 +110,7 @@ export function LayoutActions({ doc, layers, user }: SectionProps): ReactElement
 				<MoreMenu doc={doc} layers={layers} user={user} />
 			</header>
 			<div className="arrange-row">
-				{actionsIn("align").map((action) => (
+				{LAYOUT_ACTIONS.filter((action) => action.group === ROW_GROUP).map((action) => (
 					<ActionButton action={action} doc={doc} key={action.id} layers={layers} user={user} />
 				))}
 			</div>

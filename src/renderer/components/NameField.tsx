@@ -5,10 +5,6 @@ import { PropertyField } from "./PropertyField";
 import { writeAll } from "./mixedFields";
 import { mixedText, sharedOf } from "./mixedValue";
 
-function sameText(value: string): string {
-	return value;
-}
-
 export function NameField({
 	doc,
 	layers,
@@ -22,7 +18,7 @@ export function NameField({
 			onCommit={(text) => {
 				writeAll(doc, layers, { name: text }, layers.length > 1 ? "rename layers" : "rename layer");
 			}}
-			value={mixedText(sharedOf(layers.map((layer) => layer.name)), sameText)}
+			value={mixedText(sharedOf(layers.map((layer) => layer.name)), String)}
 		/>
 	);
 }
