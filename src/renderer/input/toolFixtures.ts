@@ -28,14 +28,14 @@ const NESTED_CHILD: LayerFields = {
 	fill: "#d9d9d9",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 const COVER: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#ffffff",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 export const NO_HITS = (): readonly LayerId[] => [];
@@ -112,7 +112,7 @@ export function nestedTarget(rotation: number): { target: PointerTarget; child: 
 	const parent = firstId(doc);
 	doc.update(parent, {
 		rotation,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 	});
 	const child = doc.createLayer(NESTED_CHILD, parent);
 	const layerIdsAt = (): readonly LayerId[] => [child, parent];
@@ -199,7 +199,7 @@ export const ROW_CHILD: LayerFields = {
 	fill: "#d9d9d9",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 const SLOT_WIDTH = 60;

@@ -22,7 +22,7 @@ function layerWith(geometry: Geometry, rotation = 0): Layer {
 	};
 }
 
-const PLAIN: Geometry = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false };
+const PLAIN: Geometry = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false };
 const ROUNDED: Geometry = { ...PLAIN, cornerRadius: 6 };
 
 function pointsOf(layer: Layer): readonly Point[] {

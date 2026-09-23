@@ -19,7 +19,7 @@ const SHAPE: Layer = {
 	...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 	rotation: 0,
 	fill: "#000000",
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 	name: "",
 	clip: false,
 	parent: null,
@@ -31,12 +31,12 @@ const WORLD: readonly Layer[] = [
 		...SHAPE,
 		id: FRAME,
 		parent: ROOT_FRAME,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 	},
 	{
 		...SHAPE,
 		id: ROOT_FRAME,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 	},
 ];
 

@@ -13,7 +13,7 @@ function layerAt(rotation: number): Layer {
 		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation,
 		fill: "#000000",
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 		name: "",
 		clip: false,
 		parent: null,

@@ -18,7 +18,7 @@ function layerOf(id: LayerId, parent: LayerId | null, frame: boolean): Layer {
 		...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 		rotation: 0,
 		fill: "#000000",
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: frame },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame },
 		name: "",
 		clip: frame,
 		parent,

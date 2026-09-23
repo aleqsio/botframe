@@ -28,7 +28,7 @@ export interface LayerEntry {
 
 export function isFrame(layer: Layer | null): boolean {
 	const geometry = layer?.geometry;
-	return geometry?.kind === "rectangle" && geometry.artboard;
+	return geometry?.kind === "rectangle" && geometry.frame;
 }
 
 export function isRootFrame(layer: Layer | null): boolean {

@@ -20,7 +20,7 @@ function rectangle(id: LayerId, fill: string): Layer {
 		...pixelBox({ x: 0, y: 0, width: 240, height: 160 }),
 		rotation: 0,
 		fill,
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 		name: "",
 		clip: false,
 		parent: null,
@@ -30,7 +30,7 @@ function rectangle(id: LayerId, fill: string): Layer {
 function frame(id: LayerId): Layer {
 	return {
 		...rectangle(id, "#ffffff"),
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 		clip: true,
 	};
 }

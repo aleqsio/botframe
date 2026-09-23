@@ -17,7 +17,7 @@ export const FRAME_DEFAULTS: DrawDefaults = {
 	fill: "#ffffff",
 	clip: true,
 	level: true,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 };
 
 export const RECTANGLE_DEFAULTS: DrawDefaults = {
@@ -25,7 +25,7 @@ export const RECTANGLE_DEFAULTS: DrawDefaults = {
 	fill: "#d9d9d9",
 	clip: false,
 	level: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 export const ELLIPSE_DEFAULTS: DrawDefaults = {

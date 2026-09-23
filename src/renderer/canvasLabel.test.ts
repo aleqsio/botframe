@@ -16,7 +16,7 @@ function frame(rotation: number): Layer {
 		...pixelBox(BOX),
 		rotation,
 		fill: "#ffffff",
-		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 		name: "iPhone 16",
 		clip: true,
 		parent: null,

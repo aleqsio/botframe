@@ -21,7 +21,7 @@ const SEED_RECTANGLE: LayerFields = {
 	fill: "#000000",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {

@@ -95,14 +95,14 @@ describe("layerStyle geometry", () => {
 
 	it("draws a rectangle with its corner radius and leaves the corner shape unset when smoothing is zero", () => {
 		const square = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false }),
+			layerWith({ kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false }),
 			null,
 		);
 		expect(square.borderRadius).toBe("0px");
 		expect(square.cornerShape).toBeUndefined();
 
 		const rounded = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0, artboard: false }),
+			layerWith({ kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0, frame: false }),
 			null,
 		);
 		expect(rounded.borderRadius).toBe("12px");
@@ -111,7 +111,7 @@ describe("layerStyle geometry", () => {
 
 	it("draws a squircle with a superellipse corner shape when smoothing is above zero", () => {
 		const style = layerStyle(
-			layerWith({ kind: "rectangle", cornerRadius: 16, cornerSmoothing: 0.5, artboard: false }),
+			layerWith({ kind: "rectangle", cornerRadius: 16, cornerSmoothing: 0.5, frame: false }),
 			null,
 		);
 		expect(style).toMatchObject({ borderRadius: "16px", cornerShape: "superellipse(3.5)" });

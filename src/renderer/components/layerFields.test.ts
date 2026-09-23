@@ -20,7 +20,7 @@ const CHILD_FIELDS: LayerFields = {
 	fill: "#d9d9d9",
 	name: "Child",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 function layerOf(doc: DesignDocument): Layer {

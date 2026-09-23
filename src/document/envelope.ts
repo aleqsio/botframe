@@ -10,7 +10,7 @@ import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
 
 const KIND = "botframe/layers";
-const VERSION = 1;
+const VERSION = 2;
 const DEFAULT_FILL = "#000000";
 
 export interface LayerEnvelope {
@@ -42,7 +42,7 @@ const SHAPES: Readonly<Record<WritableGeometry["kind"], (bag: Bag) => WritableGe
 		kind: "rectangle",
 		cornerRadius: count(bag, "cornerRadius"),
 		cornerSmoothing: count(bag, "cornerSmoothing"),
-		artboard: flag(bag, "artboard"),
+		frame: flag(bag, "frame"),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (bag) => ({ kind: "path", d: words(bag, "d", "") }),

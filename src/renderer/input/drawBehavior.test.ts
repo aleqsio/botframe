@@ -22,7 +22,7 @@ const FRAME_GEOMETRY = {
 	kind: "rectangle",
 	cornerRadius: 0,
 	cornerSmoothing: 0,
-	artboard: true,
+	frame: true,
 } as const;
 
 function frameTarget(): PointerTarget {
@@ -47,7 +47,7 @@ describe("the draw tools", () => {
 			fill: "#ffffff",
 			clip: true,
 			name: "Frame 1",
-			geometry: { kind: "rectangle", artboard: true },
+			geometry: { kind: "rectangle", frame: true },
 		});
 		expect(target.doc.layerIds()).toHaveLength(2);
 		expect(target.doc.changeCount()).toBe(changes + 1);
@@ -64,7 +64,7 @@ describe("the draw tools", () => {
 			fill: "#d9d9d9",
 			clip: false,
 			name: "Rectangle 2",
-			geometry: { kind: "rectangle", artboard: false },
+			geometry: { kind: "rectangle", frame: false },
 		});
 	});
 

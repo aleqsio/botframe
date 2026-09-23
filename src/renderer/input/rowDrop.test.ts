@@ -48,7 +48,7 @@ function geometryOf(id: LayerId): Layer["geometry"] {
 	if (!FRAMES.has(id)) {
 		return { kind: "ellipse" };
 	}
-	return { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true };
+	return { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true };
 }
 
 function read(id: LayerId): Layer | null {

@@ -24,7 +24,7 @@ export const DRAWN: LayerFields = {
 	fill: "#ffffff",
 	name: "Frame 1",
 	clip: true,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 };
 
 function pixelLengths(rect: Rect): LayerLengths {
