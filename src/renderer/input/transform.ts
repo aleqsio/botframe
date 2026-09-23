@@ -14,6 +14,7 @@ import {
 	toLayerPoint,
 	visualCenterOf,
 } from "./layerSpace";
+import type { Placed } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP, stepOf } from "./step";
 
@@ -52,7 +53,7 @@ function centerShift(direction: number, half: number, next: number, fromCenter: 
 }
 
 export function resizedRect(
-	start: Layer,
+	start: Placed,
 	handle: Handle,
 	point: Point,
 	modifiers: Modifiers,

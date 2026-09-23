@@ -154,13 +154,10 @@ body {
 	will-change: transform;
 }
 
-.selection {
+.selection,
+.selection-box {
 	--handle: calc(var(--handle-size) / var(--zoom));
 
-	outline: calc(2px / var(--zoom)) solid var(--selection);
-}
-
-.selection-box {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
 

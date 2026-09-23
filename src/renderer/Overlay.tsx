@@ -16,13 +16,21 @@ declare module "react" {
 	}
 }
 
+const HANDLE_STYLE: CSSProperties = { "--handle-size": `${HANDLE_SIZE}px` };
+
 function outlineStyle(outline: DrawnOutline): CSSProperties {
 	return {
 		transform: outline.transform,
 		width: `${outline.width}px`,
 		height: `${outline.height}px`,
-		"--handle-size": `${HANDLE_SIZE}px`,
+		...HANDLE_STYLE,
 	};
+}
+
+function CornerHandles(): ReactNode {
+	return CORNERS.map((corner) => (
+		<span className="selection-handle" data-corner={corner} key={corner} />
+	));
 }
 
 function LayerOutline({
@@ -73,9 +81,7 @@ function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 	return (
 		<LayerOutline className="selection" doc={doc} id={id}>
 			<PaddingBand doc={doc} id={id} />
-			{CORNERS.map((corner) => (
-				<span className="selection-handle" data-corner={corner} key={corner} />
-			))}
+			<CornerHandles />
 		</LayerOutline>
 	);
 }
@@ -88,7 +94,11 @@ function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId
 			{ids.map((id) => (
 				<LayerOutline className="selection-peer" doc={doc} id={id} key={id} />
 			))}
-			{box === null ? null : <div className="selection-box" style={boxStyle(box)} />}
+			{box === null ? null : (
+				<div className="selection-box" style={{ ...boxStyle(box), ...HANDLE_STYLE }}>
+					<CornerHandles />
+				</div>
+			)}
 		</>
 	);
 }

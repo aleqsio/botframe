@@ -2,6 +2,7 @@ import { ELLIPSE_DEFAULTS, FRAME_DEFAULTS, RECTANGLE_DEFAULTS } from "../compone
 import type { ToolId } from "../components/tools";
 import { composeBehaviors } from "./composeBehaviors";
 import { createDrawBehavior } from "./drawBehavior";
+import { createGroupHandleBehavior } from "./groupHandleBehavior";
 import { createHandleBehavior } from "./handleBehavior";
 import { createMarqueeBehavior } from "./marqueeBehavior";
 import { createPanBehavior } from "./panBehavior";
@@ -10,13 +11,15 @@ import type { ToolBehavior } from "./tool";
 
 type BehaviorFactory = () => ToolBehavior;
 
+const HANDLES: readonly BehaviorFactory[] = [createHandleBehavior, createGroupHandleBehavior];
+
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
-	select: [createHandleBehavior, createPickBehavior, createMarqueeBehavior],
-	frame: [createHandleBehavior, createDrawBehavior(FRAME_DEFAULTS)],
-	rectangle: [createHandleBehavior, createDrawBehavior(RECTANGLE_DEFAULTS)],
-	ellipse: [createHandleBehavior, createDrawBehavior(ELLIPSE_DEFAULTS)],
-	text: [createHandleBehavior],
-	image: [createHandleBehavior],
+	select: [...HANDLES, createPickBehavior, createMarqueeBehavior],
+	frame: [...HANDLES, createDrawBehavior(FRAME_DEFAULTS)],
+	rectangle: [...HANDLES, createDrawBehavior(RECTANGLE_DEFAULTS)],
+	ellipse: [...HANDLES, createDrawBehavior(ELLIPSE_DEFAULTS)],
+	text: HANDLES,
+	image: HANDLES,
 	hand: [createPanBehavior],
 };
 
