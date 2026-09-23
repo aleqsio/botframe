@@ -33,13 +33,41 @@ test("an align to the frame stops at the padding of the frame", async ({ page })
 	await expect(chipValue(page, "Y")).toHaveValue(PADDING);
 });
 
-test("an action that is off keeps a tip that tells what it needs", async ({ page }) => {
+test("the section shows the align row and keeps the other actions in the menu", async ({
+	page,
+}) => {
 	const { origin } = await openRenderer(page);
 	await drawWith(page, origin, "a", FRAME);
 	await drawWith(page, origin, "r", INSIDE);
-	const spread = arrangeButton(page, "Distribute horizontally");
+
+	await expect(
+		page.getByRole("region", { name: "Arrange" }).getByRole("button", { name: /^Align/u }),
+	).toHaveCount(6);
+	await arrangeButton(page, "More arrange actions").click();
+	await expect(page.getByRole("menuitem")).toHaveCount(11);
+});
+
+test("an action that is off keeps a tip that tells what it needs", async ({ page }) => {
+	const { origin } = await openRenderer(page);
+	await drawWith(page, origin, "r", INSIDE);
+	await expect(arrangeButton(page, "Align left")).toHaveAttribute(
+		"title",
+		/^Align left \(.+\)\nSelect two or more layers/u,
+	);
+	await arrangeButton(page, "More arrange actions").click();
+	const spread = page.getByRole("menuitem", { name: "Distribute horizontally" });
 
 	await expect(spread).toBeDisabled();
 	await expect(spread).toHaveAttribute("title", /Select three or more layers/u);
-	await expect(arrangeButton(page, "Align left")).toHaveAttribute("title", /^Align left/u);
+	await expect(page.getByRole("menuitem", { name: "Swap width and height" })).toBeEnabled();
+});
+
+test("an off align button does nothing on a click", async ({ page }) => {
+	const { origin } = await openRenderer(page);
+	await drawWith(page, origin, "r", INSIDE);
+	const before = await chipValue(page, "X").inputValue();
+
+	await arrangeButton(page, "Align left").click({ force: true });
+
+	await expect(chipValue(page, "X")).toHaveValue(before);
 });
