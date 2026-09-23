@@ -40,7 +40,7 @@ function MixedChip({ doc, field, layers }: PanelProps & { field: LayerField }): 
 
 function MixedGroup({ doc, group, layers }: PanelProps & { group: FieldGroup }): ReactElement {
 	return (
-		<ChipSection name={group.name}>
+		<ChipSection marksOrigin={group.marksOrigin} name={group.name}>
 			{group.fields.map((field) => (
 				<MixedChip doc={doc} field={field} key={field.label} layers={layers} />
 			))}

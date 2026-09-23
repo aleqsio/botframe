@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
+import { isCenterOrigin } from "../document/layer";
 import type { LayerId, Rect } from "../document/layer";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
@@ -7,7 +8,7 @@ import type { SnapSegment } from "./input/snap";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useDrawnOutline, useDrawnSpace, useSelectionBox } from "./useDocument";
+import { useDrawnOutline, useDrawnSpace, useLayer, useSelectionBox } from "./useDocument";
 import type { DrawnOutline } from "./useDocument";
 
 declare module "react" {
@@ -69,6 +70,23 @@ function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 	return <span className="selection-padding" style={{ borderWidth: outline.padding }} />;
 }
 
+function OriginMark({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+	const layer = useLayer(doc, id);
+
+	if (layer === null) {
+		return null;
+	}
+
+	const { origin } = layer;
+	return (
+		<span
+			className="origin-mark"
+			data-off-center={!isCenterOrigin(origin) || undefined}
+			style={{ left: `calc(${origin.x} * 100%)`, top: `calc(${origin.y} * 100%)` }}
+		/>
+	);
+}
+
 function boxStyle(box: Rect): CSSProperties {
 	return {
 		transform: `translate3d(${box.x}px, ${box.y}px, 0)`,
@@ -82,6 +100,7 @@ function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 		<LayerOutline className="selection" doc={doc} id={id}>
 			<PaddingBand doc={doc} id={id} />
 			<CornerHandles />
+			<OriginMark doc={doc} id={id} />
 		</LayerOutline>
 	);
 }
@@ -92,7 +111,9 @@ function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId
 	return (
 		<>
 			{ids.map((id) => (
-				<LayerOutline className="selection-peer" doc={doc} id={id} key={id} />
+				<LayerOutline className="selection-peer" doc={doc} id={id} key={id}>
+					<OriginMark doc={doc} id={id} />
+				</LayerOutline>
 			))}
 			{box === null ? null : (
 				<div className="selection-box" style={{ ...boxStyle(box), ...HANDLE_STYLE }}>

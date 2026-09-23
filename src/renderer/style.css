@@ -247,6 +247,28 @@ body {
 	left: 0;
 }
 
+.origin-mark {
+	--mark: calc(var(--handle-size) / var(--zoom));
+
+	position: absolute;
+	display: none;
+	width: var(--mark);
+	height: var(--mark);
+	margin: calc(var(--mark) / -2);
+	border: calc(1.5px / var(--zoom)) solid var(--selection);
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		var(--selection) calc(1.5px / var(--zoom)),
+		var(--handle-fill) calc(1.5px / var(--zoom))
+	);
+}
+
+.origin-mark[data-off-center],
+body:has([data-marks-origin]:is(:hover, :focus-within)) .origin-mark {
+	display: block;
+}
+
 #stage[data-zone="resize-nw"],
 #stage[data-zone="resize-se"] {
 	cursor: nwse-resize;

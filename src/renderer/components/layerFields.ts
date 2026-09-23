@@ -63,6 +63,7 @@ export interface LayerField {
 export interface FieldGroup {
 	name: string;
 	fields: readonly LayerField[];
+	marksOrigin: boolean;
 }
 
 function placeKey(key: BoxKey): boolean {
@@ -159,11 +160,12 @@ function originField(label: string, axis: keyof Origin): LayerField {
 	};
 }
 
-const TURN_GROUP: FieldGroup = { name: "Rotation", fields: [TURN_FIELD] };
+const TURN_GROUP: FieldGroup = { name: "Rotation", fields: [TURN_FIELD], marksOrigin: true };
 
 const ORIGIN_GROUP: FieldGroup = {
 	name: "Origin",
 	fields: [originField("Origin X", "x"), originField("Origin Y", "y")],
+	marksOrigin: true,
 };
 
 function cornerGroup(geometry: RectangleGeometry): FieldGroup {
@@ -173,6 +175,7 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 			cornerField("Radius", "cornerRadius", geometry),
 			cornerField("Smoothing", "cornerSmoothing", geometry),
 		],
+		marksOrigin: false,
 	};
 }
 
