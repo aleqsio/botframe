@@ -87,14 +87,11 @@ export function groupZoneAt(
 export function groupGripOf(
 	read: ReadLayer,
 	ids: readonly LayerId[],
-	point: Point,
-	zoom: number,
+	{ box, zone }: BoxZone,
 ): GroupGrip | null {
-	const aim = groupZoneAt(read, ids, point, zoom);
-	if (aim === null || aim.zone.mode === "rotate") {
+	if (zone.mode === "rotate") {
 		return null;
 	}
-	const { box, zone } = aim;
 	const parts = ids.flatMap((id) => partOf(read, id));
 	return honors(zone.handle, parts) ? { box, handle: zone.handle, parts } : null;
 }

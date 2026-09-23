@@ -77,9 +77,21 @@ describe("the pivot of more than one selected layer", () => {
 		expect(hoverKey(target, 60, 40)).toBe("origin");
 		dragOver(behaviorFor("select"), target, { press: { x: 60, y: 40 }, release: { x: 0, y: 0 } });
 
-		expect(target.user.groupPivot.get()?.point).toEqual({ x: 0, y: 0 });
+		expect(target.user.groupPivot.get()?.at).toEqual({ x: 0, y: 0 });
 		expect(hoverKey(target, 0, 0)).toBe("origin");
 		expect(target.doc.changeCount()).toBe(count);
+	});
+
+	it("keeps its place in the selection box when the layers move", () => {
+		const { target, one, other } = sceneOf(0);
+		target.user.selection.set([one, other]);
+		dragOver(behaviorFor("select"), target, { press: { x: 60, y: 40 }, release: { x: 0, y: 0 } });
+
+		target.doc.update(one, { x: 500 });
+		target.doc.update(other, { x: 600 });
+
+		expect(hoverKey(target, 500, 0)).toBe("origin");
+		expect(hoverKey(target, 0, 0)).toBeUndefined();
 	});
 
 	it("goes back to the center when the selection changes", () => {

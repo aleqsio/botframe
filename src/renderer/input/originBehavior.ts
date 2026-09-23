@@ -1,7 +1,14 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { ORIGIN_ZONE } from "./handles";
-import { ORIGIN_MESSAGE, groupPivotOf, layerPivot, movedOrigin, nearPivot } from "./pivot";
+import {
+	ORIGIN_MESSAGE,
+	groupPivotOf,
+	layerPivot,
+	movedOrigin,
+	nearPivot,
+	pinnedPivot,
+} from "./pivot";
 import { boundsOf } from "./selectionBounds";
 import {
 	drawnReaderOf,
@@ -59,7 +66,7 @@ function applyGrip(target: PointerTarget, grip: PivotGrip, canvas: Point): void 
 		moveLayerOrigin(target, grip.start, canvas);
 		return;
 	}
-	target.user.groupPivot.set({ ids: grip.ids, point: canvas });
+	target.user.groupPivot.set(pinnedPivot(drawnReaderOf(target), grip.ids, canvas));
 }
 
 export function createOriginBehavior(): ToolBehavior {

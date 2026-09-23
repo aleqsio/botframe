@@ -6,7 +6,7 @@ import { groupTurned } from "./groupRotate";
 import type { GroupTurn } from "./groupRotate";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
-import { groupPivotOf } from "./pivot";
+import { groupPivotOf, pinnedPivot } from "./pivot";
 import { drawnReaderOf, isLoose, parentDisplayOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizePatch } from "./transform";
@@ -19,14 +19,8 @@ function allLoose(target: PointerTarget, parts: readonly GroupPart[]): boolean {
 	return parts.every((part) => isLoose(target, part.start));
 }
 
-function resizeHold(target: PointerTarget, canvas: Point): GroupHold | null {
-	const { user } = target;
-	const grip = groupGripOf(
-		drawnReaderOf(target),
-		user.selection.get(),
-		canvas,
-		user.camera.get().zoom,
-	);
+function resizeHold(target: PointerTarget, found: BoxZone): GroupHold | null {
+	const grip = groupGripOf(drawnReaderOf(target), target.user.selection.get(), found);
 	return grip !== null && allLoose(target, grip.parts) ? { kind: "resize", ...grip } : null;
 }
 
@@ -46,9 +40,12 @@ function holdAt(target: PointerTarget, canvas: Point): GroupHold | null {
 		return null;
 	}
 	const found = groupZoneAt(drawnReaderOf(target), ids, canvas, target.user.camera.get().zoom);
-	return found?.zone.mode === "rotate"
+	if (found === null) {
+		return null;
+	}
+	return found.zone.mode === "rotate"
 		? rotateHold(target, canvas, found)
-		: resizeHold(target, canvas);
+		: resizeHold(target, found);
 }
 
 function applyTurn(
@@ -62,6 +59,8 @@ function applyTurn(
 		const moved = resizePatch(start, parentDisplayOf(target, start), rect);
 		target.doc.update(start.id, { ...moved, rotation });
 	}
+	const ids = turn.parts.map((part) => part.start.id);
+	target.user.groupPivot.set(pinnedPivot(drawnReaderOf(target), ids, turn.pivot));
 }
 
 function applyHold(
@@ -97,9 +96,6 @@ export function createGroupHandleBehavior(): ToolBehavior {
 			held = holdAt(target, origin.canvas);
 			if (held === null) {
 				return false;
-			}
-			if (held.kind === "rotate") {
-				target.user.groupPivot.set({ ids: target.user.selection.get(), point: held.pivot });
 			}
 			applyHold(target, held, point.canvas, modifiers);
 			return true;

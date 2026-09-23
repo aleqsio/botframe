@@ -63,7 +63,7 @@ export interface SnapGuides {
 
 export interface GroupPivot {
 	ids: readonly LayerId[];
-	point: Point;
+	at: Point;
 }
 
 export interface LayerMenu {

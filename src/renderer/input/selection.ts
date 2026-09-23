@@ -12,9 +12,12 @@ export function outermost(read: ReadLayer, ids: readonly LayerId[]): readonly La
 	return ids.filter((id) => !ids.some((other) => other !== id && insideSubtree(read, id, other)));
 }
 
+export function sameIds(one: readonly LayerId[], other: readonly LayerId[]): boolean {
+	return one.length === other.length && one.every((id, index) => id === other[index]);
+}
+
 export function selectIds(selection: Slot<readonly LayerId[]>, ids: readonly LayerId[]): void {
-	const held = selection.get();
-	if (ids.length === held.length && ids.every((id, index) => id === held[index])) {
+	if (sameIds(ids, selection.get())) {
 		return;
 	}
 	selection.set(ids.length === 0 ? NOTHING_SELECTED : ids);
