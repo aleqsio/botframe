@@ -8,7 +8,7 @@ import { parentDisplayOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 const CANCEL_COMMIT = "cancel move";
-const SMALLEST_GROUP = 2;
+export const SMALLEST_GROUP = 2;
 
 function startsOf(target: PointerTarget, ids: readonly LayerId[]): readonly GroupStart[] {
 	return ids.flatMap((id) => {

@@ -31,6 +31,13 @@ const NESTED_CHILD: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
+export const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
+	fill: "#d9d9d9",
+	name: "",
+	clip: false,
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
+};
+
 const COVER: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#ffffff",
 	name: "",

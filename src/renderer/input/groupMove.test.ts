@@ -1,20 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
-import type { LayerFields, LayerId } from "../../document/layer";
+import type { LayerId } from "../../document/layer";
 import { UserState } from "../state/userState";
 import { NO_DRAWN } from "./drawn";
 import { cancelGroupMove } from "./groupMove";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { NO_MODIFIERS } from "./modifiers";
-import { dragOver, pointAt } from "./toolFixtures";
-
-const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
-	fill: "#d9d9d9",
-	name: "",
-	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
-};
+import { SQUARE, dragOver, pointAt } from "./toolFixtures";
 
 interface GroupScene {
 	target: PointerTarget;
