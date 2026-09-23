@@ -17,7 +17,7 @@ export const PRESET_GROUPS: readonly PresetGroup[] = [
 	{
 		name: "Phone",
 		presets: [
-			{ name: "iPhone 16", width: 393, height: 852 },
+			{ name: "iPhone 18", width: 402, height: 874 },
 			{ name: "Android", width: 412, height: 915 },
 		],
 	},
@@ -49,8 +49,8 @@ export const PRESET_GROUPS: readonly PresetGroup[] = [
 	{
 		name: "Paper",
 		presets: [
-			{ name: "A4", width: 595, height: 842 },
-			{ name: "Letter", width: 612, height: 792 },
+			{ name: "A4", width: 794, height: 1123 },
+			{ name: "Letter", width: 816, height: 1056 },
 		],
 	},
 ];

@@ -3,7 +3,7 @@ import type { Locator, Page } from "@playwright/test";
 import { drawWith, openStage } from "./support";
 import type { Drag } from "./support";
 
-const PRESET = { name: "iPhone 16", width: 393, height: 852 };
+const PRESET = { name: "iPhone 18", width: 402, height: 874 };
 const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const SHIFT_DRAG = 2;
