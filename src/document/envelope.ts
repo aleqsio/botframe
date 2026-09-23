@@ -10,7 +10,7 @@ import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
 
 const KIND = "botframe/layers";
-const VERSION = 1;
+const VERSION = 2;
 const DEFAULT_FILL = "#000000";
 
 export interface LayerEnvelope {

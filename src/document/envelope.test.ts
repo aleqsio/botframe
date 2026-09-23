@@ -38,7 +38,7 @@ const ROOT: LayerNode = {
 };
 
 function envelopeWith(body: Record<string, unknown>): string {
-	return JSON.stringify({ kind: "botframe/layers", version: 1, sourceParent: null, ...body });
+	return JSON.stringify({ kind: "botframe/layers", version: 2, sourceParent: null, ...body });
 }
 
 describe("serializeEnvelope", () => {
@@ -67,7 +67,7 @@ describe("parseEnvelope", () => {
 
 	it("gives null for a kind, a version, or a layer list that it does not know", () => {
 		expect(parseEnvelope(envelopeWith({ kind: "text/plain", layers: [] }))).toBeNull();
-		expect(parseEnvelope(envelopeWith({ version: 2, layers: [] }))).toBeNull();
+		expect(parseEnvelope(envelopeWith({ version: 1, layers: [] }))).toBeNull();
 		expect(parseEnvelope(envelopeWith({ layers: "one layer" }))).toBeNull();
 		expect(parseEnvelope(envelopeWith({}))).toBeNull();
 	});
