@@ -155,9 +155,13 @@ body {
 }
 
 .selection,
-.selection-box {
+.selection-box,
+.selection-peer {
 	--handle: calc(var(--handle-size) / var(--zoom));
+}
 
+.selection,
+.selection-box {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
 
@@ -217,12 +221,16 @@ body {
 	min-width: calc(8px / var(--zoom));
 }
 
-.selection-handle {
+.selection-handle,
+.origin-mark {
 	position: absolute;
 	width: var(--handle);
 	height: var(--handle);
 	margin: calc(var(--handle) / -2);
 	border: calc(1.5px / var(--zoom)) solid var(--selection);
+}
+
+.selection-handle {
 	border-radius: calc(2px / var(--zoom));
 	background: var(--handle-fill);
 }
@@ -248,14 +256,7 @@ body {
 }
 
 .origin-mark {
-	--mark: calc(var(--handle-size) / var(--zoom));
-
-	position: absolute;
 	display: none;
-	width: var(--mark);
-	height: var(--mark);
-	margin: calc(var(--mark) / -2);
-	border: calc(1.5px / var(--zoom)) solid var(--selection);
 	border-radius: 50%;
 	background: radial-gradient(
 		circle,
@@ -265,7 +266,7 @@ body {
 }
 
 .origin-mark[data-off-center],
-body:has([data-marks-origin]:is(:hover, :focus-within)) .origin-mark {
+#stage:has(~ #inspector [data-marks-origin]:is(:hover, :focus-within)) .origin-mark {
 	display: block;
 }
 

@@ -2,11 +2,11 @@ import type { ReactElement, ReactNode } from "react";
 
 export function ChipSection({
 	name,
-	marksOrigin = false,
+	marksOrigin,
 	children,
 }: {
 	name: string;
-	marksOrigin?: boolean;
+	marksOrigin: boolean;
 	children: ReactNode;
 }): ReactElement {
 	return (
