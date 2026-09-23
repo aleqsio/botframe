@@ -17,7 +17,7 @@ const FRAME: LayerFields = {
 	fill: "#ffffff",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 };
 
 const SHAPE: LayerFields = {
@@ -25,7 +25,7 @@ const SHAPE: LayerFields = {
 	width: 60,
 	height: 40,
 	fill: "#d9d9d9",
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 const NO_SNAP: Modifiers = { shift: false, alt: false, control: true };

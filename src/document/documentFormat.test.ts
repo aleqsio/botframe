@@ -7,7 +7,7 @@ import type { LayerFields, LayerId } from "./layer";
 
 const PLAIN: LayerFields = {
 	...DRAWN,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 function loaded(snapshot: Uint8Array): LoroDoc {
@@ -34,10 +34,10 @@ describe("the stored layer format", () => {
 		const reopened = DesignDocument.open(doc.snapshot());
 
 		expect(reopened.layer(frame)).toMatchObject({
-			geometry: { kind: "rectangle", artboard: true },
+			geometry: { kind: "rectangle", frame: true },
 		});
 		expect(reopened.layer(plain)).toMatchObject({
-			geometry: { kind: "rectangle", artboard: false },
+			geometry: { kind: "rectangle", frame: false },
 		});
 	});
 
@@ -46,7 +46,7 @@ describe("the stored layer format", () => {
 		const frame = doc.createLayer(DRAWN);
 		doc.commit("create frame");
 
-		expect(rectangleBag(loaded(doc.snapshot()), frame).get("artboard")).toBe(true);
+		expect(rectangleBag(loaded(doc.snapshot()), frame).get("frame")).toBe(true);
 	});
 
 	it("reads the frame flag of a file that only holds the stored key", () => {
@@ -55,11 +55,11 @@ describe("the stored layer format", () => {
 		doc.commit("create rectangle");
 
 		const saved = loaded(doc.snapshot());
-		rectangleBag(saved, id).set("artboard", true);
+		rectangleBag(saved, id).set("frame", true);
 		saved.commit();
 
 		expect(DesignDocument.open(saved.export({ mode: "snapshot" })).layer(id)).toMatchObject({
-			geometry: { kind: "rectangle", artboard: true },
+			geometry: { kind: "rectangle", frame: true },
 		});
 	});
 });

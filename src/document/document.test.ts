@@ -307,7 +307,7 @@ describe("the layer writer", () => {
 		expect(doc.layer(node.id)).toMatchObject({
 			name: "",
 			clip: false,
-			geometry: { kind: "rectangle", artboard: false },
+			geometry: { kind: "rectangle", frame: false },
 		});
 	});
 
@@ -402,11 +402,11 @@ describe("the field writers", () => {
 		const id = firstId(doc);
 
 		doc.update(id, {
-			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, artboard: true },
+			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, frame: true },
 		});
 
 		expect(doc.layer(id)).toMatchObject({
-			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, artboard: true },
+			geometry: { kind: "rectangle", cornerRadius: 12, cornerSmoothing: 0.6, frame: true },
 		});
 	});
 
@@ -421,7 +421,7 @@ describe("the field writers", () => {
 
 		listener.mockClear();
 		doc.update(id, {
-			geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, artboard: false },
+			geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, frame: false },
 		});
 		expect(listener).toHaveBeenCalled();
 	});

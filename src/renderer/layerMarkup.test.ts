@@ -15,7 +15,7 @@ const FIELDS: LayerFields = {
 	fill: "#123456",
 	name: "Box",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 4, cornerSmoothing: 0, frame: false },
 };
 
 function nodeOf(

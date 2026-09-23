@@ -25,7 +25,7 @@ function layerOf(spec: Spec): Layer {
 			kind: "rectangle",
 			cornerRadius: 0,
 			cornerSmoothing: 0,
-			artboard: spec.frame,
+			frame: spec.frame,
 		},
 		name: "",
 		clip: false,

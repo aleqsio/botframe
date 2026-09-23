@@ -30,7 +30,7 @@ const ROOT: LayerNode = {
 		fill: "#00ff00",
 		name: "Root",
 		clip: false,
-		geometry: { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0.5, artboard: true },
+		geometry: { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0.5, frame: true },
 	},
 	rotation: 0,
 	...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),

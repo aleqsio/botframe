@@ -29,13 +29,13 @@ const FRAME: LayerFields = {
 	fill: "#ffffff",
 	name: "",
 	clip: true,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: true },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 };
 
 const RECTANGLE: LayerFields = {
 	...FRAME,
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 const GRAB = { x: 440, y: 280 };

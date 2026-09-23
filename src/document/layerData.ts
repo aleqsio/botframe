@@ -40,7 +40,7 @@ const GEOMETRY_READERS: Readonly<
 		kind: "rectangle",
 		cornerRadius: readNumber(fields, "cornerRadius", 0),
 		cornerSmoothing: readNumber(fields, "cornerSmoothing", 0),
-		artboard: readBoolean(fields, "artboard", false),
+		frame: readBoolean(fields, "frame", false),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),

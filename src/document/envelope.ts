@@ -42,7 +42,7 @@ const SHAPES: Readonly<Record<WritableGeometry["kind"], (bag: Bag) => WritableGe
 		kind: "rectangle",
 		cornerRadius: count(bag, "cornerRadius"),
 		cornerSmoothing: count(bag, "cornerSmoothing"),
-		artboard: flag(bag, "artboard"),
+		frame: flag(bag, "frame"),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (bag) => ({ kind: "path", d: words(bag, "d", "") }),

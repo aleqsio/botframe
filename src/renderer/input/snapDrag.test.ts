@@ -28,7 +28,7 @@ const SIBLING: LayerFields = {
 	fill: "#d9d9d9",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 const GRAB = { x: 440, y: 280 };
 const NEAR_THE_SIBLING = { x: 483, y: 280 };

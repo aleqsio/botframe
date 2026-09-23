@@ -6,7 +6,7 @@ import type { LayerLengths } from "./length";
 export type LayerId = TreeID;
 
 export type Geometry =
-	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; artboard: boolean }
+	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
 	| { kind: "ellipse" }
 	| { kind: "path"; d: string }
 	| { kind: "unsupported" };

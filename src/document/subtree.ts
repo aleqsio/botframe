@@ -37,7 +37,7 @@ export const PLAIN_RECTANGLE: WritableGeometry = {
 	kind: "rectangle",
 	cornerRadius: 0,
 	cornerSmoothing: 0,
-	artboard: false,
+	frame: false,
 };
 
 function writableGeometry(geometry: Geometry): WritableGeometry {

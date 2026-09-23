@@ -11,7 +11,7 @@ const CHILD: LayerFields = {
 	fill: "#d9d9d9",
 	name: "",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, artboard: false },
+	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
 interface Scene {
