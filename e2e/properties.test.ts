@@ -44,6 +44,11 @@ function arrangeButton(window: Page, label: string): Locator {
 	return window.getByRole("region", { name: "Arrange" }).getByRole("button", { name: label });
 }
 
+async function moreItem(window: Page, label: string): Promise<Locator> {
+	await arrangeButton(window, "More arrange actions").click();
+	return window.getByRole("menuitem", { name: label });
+}
+
 async function pickUnit(window: Page, label: string, unit: string): Promise<void> {
 	await window.getByLabel(`${label} unit`, { exact: true }).click();
 	await window.getByRole("option", { name: unit, exact: true }).click();
@@ -77,14 +82,14 @@ test("a preset places a frame of that size at the middle of the stage", async ()
 	await app.close();
 });
 
-test("the arrange row exchanges the width and the height", async () => {
+test("the arrange menu exchanges the width and the height", async () => {
 	const { app, layers, window } = await openStage();
 	await placePreset(window, PRESET.name);
 	const drawn = layers.nth(1);
 	const preset = window.getByLabel("Preset", { exact: true });
 	await expect(preset).toHaveValue(PRESET.name);
 
-	await arrangeButton(window, "Swap width and height").click();
+	await (await moreItem(window, "Swap width and height")).click();
 
 	await expect(drawn).toHaveCSS("width", `${PRESET.height}px`);
 	await expect(drawn).toHaveCSS("height", `${PRESET.width}px`);
@@ -99,7 +104,8 @@ test("the arrange row aligns a layer to the box of its frame", async () => {
 	await drawWith(window, origin, "r", INSIDE);
 
 	await expect(chipValue(window, "X")).toHaveValue("40");
-	await expect(arrangeButton(window, "Distribute horizontally")).toBeDisabled();
+	await expect(await moreItem(window, "Distribute horizontally")).toBeDisabled();
+	await window.keyboard.press("Escape");
 
 	await arrangeButton(window, "Align left").click();
 

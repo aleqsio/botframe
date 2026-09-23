@@ -6,7 +6,8 @@ import { UserState } from "../state/userState";
 import type { EditCommand } from "./command";
 import { commandById, commandForStroke, runEditCommand } from "./editCommand";
 import type { KeyStroke } from "./layerCommand";
-import { LAYOUT_ACTIONS } from "./layoutAction";
+import { LAYOUT_ACTIONS, actionTip } from "./layoutAction";
+import type { LayoutAction } from "./layoutAction";
 
 const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#d9d9d9",
@@ -77,6 +78,26 @@ function run(held: Scene, id: string): void {
 	runEditCommand(actionOf(id), held.doc, held.user);
 }
 
+function layoutActionOf(id: string): LayoutAction {
+	const action = LAYOUT_ACTIONS.find((each) => each.id === id);
+	if (action === undefined) {
+		throw new Error(`no layout action with the id ${id}`);
+	}
+	return action;
+}
+
+describe("actionTip", () => {
+	it("names the action and its keys while it is ready", () => {
+		expect(actionTip(layoutActionOf("spreadX"), true, "⇧⌘J")).toBe("Distribute horizontally (⇧⌘J)");
+	});
+
+	it("tells what the action needs while it is off", () => {
+		expect(actionTip(layoutActionOf("spreadX"), false, "")).toBe(
+			"Distribute horizontally\nSelect three or more layers that can move",
+		);
+	});
+});
+
 describe("the layout action table", () => {
 	it("gives each action a label, an icon and a unique id", () => {
 		const ids = LAYOUT_ACTIONS.map((action) => action.id);
@@ -85,6 +106,7 @@ describe("the layout action table", () => {
 		for (const action of LAYOUT_ACTIONS) {
 			expect(action.label.length).toBeGreaterThan(0);
 			expect(action.icon.length).toBeGreaterThan(0);
+			expect(action.needs.length).toBeGreaterThan(0);
 		}
 	});
 

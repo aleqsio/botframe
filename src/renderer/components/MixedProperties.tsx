@@ -2,14 +2,13 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { ColorField } from "./ColorField";
-import { DraftInput, PropertyField } from "./PropertyField";
+import { DraftInput } from "./PropertyField";
 import type { FieldGroup, LayerField } from "./layerFields";
 import { sharedField, sharedGroups, updateAll, writeAll, writeField } from "./mixedFields";
 import { MIXED_TEXT, mixedText, sharedOf } from "./mixedValue";
 import { formatNumber } from "./numberValue";
 import { ChipSection } from "./layout/ChipSection";
 
-const NAME_MESSAGE = "rename layers";
 const FILL_MESSAGE = "set fill";
 const CLIP_MESSAGE = "set clip";
 const CLIP_LABEL = "Clip content";
@@ -17,10 +16,6 @@ const CLIP_LABEL = "Clip content";
 interface PanelProps {
 	doc: DesignDocument;
 	layers: readonly Layer[];
-}
-
-function sameText(value: string): string {
-	return value;
 }
 
 function MixedChip({ doc, field, layers }: PanelProps & { field: LayerField }): ReactElement {
@@ -74,13 +69,6 @@ function MixedClip({ doc, layers }: PanelProps): ReactElement {
 export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 	return (
 		<>
-			<PropertyField
-				label="Name"
-				onCommit={(text) => {
-					writeAll(doc, layers, { name: text }, NAME_MESSAGE);
-				}}
-				value={mixedText(sharedOf(layers.map((layer) => layer.name)), sameText)}
-			/>
 			{sharedGroups(layers).map((group) => (
 				<MixedGroup doc={doc} group={group} key={group.name} layers={layers} />
 			))}
@@ -92,7 +80,7 @@ export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 				onCommit={() => {
 					doc.commit(FILL_MESSAGE);
 				}}
-				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), sameText)}
+				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), String)}
 			/>
 			<MixedClip doc={doc} layers={layers} />
 		</>

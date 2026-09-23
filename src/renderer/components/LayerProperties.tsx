@@ -3,7 +3,6 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { ColorField } from "./ColorField";
 import { FrameFooter } from "./FrameFooter";
-import { PropertyField } from "./PropertyField";
 import { isFrame } from "./layerEntry";
 import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
@@ -59,14 +58,6 @@ export function LayerProperties({
 }): ReactElement {
 	return (
 		<>
-			<PropertyField
-				label="Name"
-				onCommit={(text) => {
-					doc.update(layer.id, { name: text });
-					doc.commit("rename layer");
-				}}
-				value={layer.name}
-			/>
 			<LayoutPanel doc={doc} layer={layer} />
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
