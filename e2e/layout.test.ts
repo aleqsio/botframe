@@ -122,12 +122,12 @@ test("the swap button turns each preset, and a vertical wheel scrolls the preset
 
 	await expect(window.locator(".layer")).toHaveCount(1);
 	await window.keyboard.press("a");
-	await expect(firstSize).toHaveText("393 × 852");
+	await expect(firstSize).toHaveText("402 × 874");
 
 	await swap.click();
 
 	await expect(swap).toHaveAttribute("aria-pressed", "true");
-	await expect(firstSize).toHaveText("852 × 393");
+	await expect(firstSize).toHaveText("874 × 402");
 
 	const start = await row.evaluate((element) => element.scrollLeft);
 	await row.hover();

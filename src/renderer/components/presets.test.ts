@@ -44,6 +44,7 @@ describe("presetNamed", () => {
 describe("presetNameFor", () => {
 	it("names the size of a preset", () => {
 		expect(presetNameFor(402, 874)).toBe("iPhone 18");
+		expect(presetNameFor(440, 956)).toBe("iPhone 18 Pro Max");
 	});
 
 	it("names the size of a preset in a later group", () => {

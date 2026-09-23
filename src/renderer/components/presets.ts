@@ -18,6 +18,7 @@ export const PRESET_GROUPS: readonly PresetGroup[] = [
 		name: "Phone",
 		presets: [
 			{ name: "iPhone 18", width: 402, height: 874 },
+			{ name: "iPhone 18 Pro Max", width: 440, height: 956 },
 			{ name: "Android", width: 412, height: 915 },
 		],
 	},

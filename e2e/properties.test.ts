@@ -115,8 +115,8 @@ test("the preset list of a selected frame resizes it", async () => {
 
 	await window.getByLabel("Preset", { exact: true }).selectOption("A4");
 
-	await expect(drawn).toHaveCSS("width", "595px");
-	await expect(drawn).toHaveCSS("height", "842px");
+	await expect(drawn).toHaveCSS("width", "794px");
+	await expect(drawn).toHaveCSS("height", "1123px");
 
 	await app.close();
 });
