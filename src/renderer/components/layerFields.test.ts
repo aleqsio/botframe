@@ -147,15 +147,6 @@ describe("fieldGroupsOf", () => {
 		]);
 	});
 
-	it("marks the origin for the rotation and the origin groups only", () => {
-		const groups = fieldGroupsOf(layerOf(DesignDocument.create()));
-		expect(groups.map((group) => [group.name, group.marksOrigin])).toEqual([
-			["Rotation", true],
-			["Origin", true],
-			["Corners", false],
-		]);
-	});
-
 	it("lists no corner group for a geometry that has no corner", () => {
 		const doc = DesignDocument.create();
 		doc.update(firstId(doc), { geometry: { kind: "ellipse" } });

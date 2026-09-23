@@ -10,6 +10,7 @@ import {
 } from "../../document/length";
 import type { Basis, BoxKey, Length, Unit } from "../../document/length";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
+import { ORIGIN_MESSAGE } from "../input/pivot";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
 import type { StepRule } from "../input/step";
 import { MIN_LAYER_SIZE } from "../input/transform";
@@ -25,7 +26,6 @@ const DEGREES = "deg";
 const NO_UNIT = "";
 const PERCENT_UNIT = "%";
 const CORNER_MESSAGE = "set corners";
-const ORIGIN_MESSAGE = "set origin";
 
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
@@ -63,7 +63,6 @@ export interface LayerField {
 export interface FieldGroup {
 	name: string;
 	fields: readonly LayerField[];
-	marksOrigin: boolean;
 }
 
 function placeKey(key: BoxKey): boolean {
@@ -160,12 +159,11 @@ function originField(label: string, axis: keyof Origin): LayerField {
 	};
 }
 
-const TURN_GROUP: FieldGroup = { name: "Rotation", fields: [TURN_FIELD], marksOrigin: true };
+const TURN_GROUP: FieldGroup = { name: "Rotation", fields: [TURN_FIELD] };
 
 const ORIGIN_GROUP: FieldGroup = {
 	name: "Origin",
 	fields: [originField("Origin X", "x"), originField("Origin Y", "y")],
-	marksOrigin: true,
 };
 
 function cornerGroup(geometry: RectangleGeometry): FieldGroup {
@@ -175,7 +173,6 @@ function cornerGroup(geometry: RectangleGeometry): FieldGroup {
 			cornerField("Radius", "cornerRadius", geometry),
 			cornerField("Smoothing", "cornerSmoothing", geometry),
 		],
-		marksOrigin: false,
 	};
 }
 

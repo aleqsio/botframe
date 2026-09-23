@@ -1,7 +1,7 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import { zoneAt } from "./handles";
-import type { Zone } from "./handles";
+import type { HandleZone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { resizeGripOf, snappedResize } from "./resizeSnap";
@@ -15,7 +15,7 @@ type Grip = ({ kind: "resize" } & ResizeGrip) | { kind: "rotate"; start: Layer; 
 interface Aim {
 	layer: Layer;
 	point: Point;
-	zone: Zone | null;
+	zone: HandleZone | null;
 }
 
 function aimAt(target: PointerTarget, canvas: Point): Aim | null {
@@ -27,7 +27,7 @@ function aimAt(target: PointerTarget, canvas: Point): Aim | null {
 	return { layer, point, zone: zoneAt(layer, point, target.user.camera.get().zoom) };
 }
 
-function zoneUnder(target: PointerTarget, canvas: Point): Zone | null {
+function zoneUnder(target: PointerTarget, canvas: Point): HandleZone | null {
 	return aimAt(target, canvas)?.zone ?? null;
 }
 

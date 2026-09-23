@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
-import { isCenterOrigin } from "../document/layer";
-import type { LayerId } from "../document/layer";
+import type { LayerId, Rect } from "../document/layer";
+import { groupPivotOf } from "./input/pivot";
 import type { SnapSegment } from "./input/snap";
 import { originPlace } from "./layerStyle";
 import { useSlot } from "./state/useSlot";
-import type { UserState } from "./state/userState";
+import type { Slot } from "./state/slot";
+import type { GroupPivot, UserState } from "./state/userState";
 import { useDrawnSpace, useLayer } from "./useDocument";
 
 export function OriginMark({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
@@ -15,12 +16,24 @@ export function OriginMark({ doc, id }: { doc: DesignDocument; id: LayerId }): R
 		return null;
 	}
 
-	const { origin } = layer;
+	return <span className="origin-mark" style={originPlace(layer.origin)} />;
+}
+
+export function GroupPivotMark({
+	box,
+	ids,
+	pivot,
+}: {
+	box: Rect;
+	ids: readonly LayerId[];
+	pivot: Slot<GroupPivot | null>;
+}): ReactNode {
+	const point = groupPivotOf(useSlot(pivot), ids, box);
+
 	return (
 		<span
 			className="origin-mark"
-			data-off-center={!isCenterOrigin(origin) || undefined}
-			style={originPlace(origin)}
+			style={{ left: `${point.x - box.x}px`, top: `${point.y - box.y}px` }}
 		/>
 	);
 }

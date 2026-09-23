@@ -256,18 +256,12 @@ body {
 }
 
 .origin-mark {
-	display: none;
 	border-radius: 50%;
 	background: radial-gradient(
 		circle,
 		var(--selection) calc(1.5px / var(--zoom)),
 		var(--handle-fill) calc(1.5px / var(--zoom))
 	);
-}
-
-.origin-mark[data-off-center],
-#stage:has(~ #inspector [data-marks-origin]:is(:hover, :focus-within)) .origin-mark {
-	display: block;
 }
 
 #stage[data-zone="resize-nw"],
@@ -288,6 +282,10 @@ body {
 #stage[data-zone="resize-e"],
 #stage[data-zone="resize-w"] {
 	cursor: ew-resize;
+}
+
+#stage[data-zone="origin"] {
+	cursor: move;
 }
 
 #stage[data-zone^="rotate-"] {

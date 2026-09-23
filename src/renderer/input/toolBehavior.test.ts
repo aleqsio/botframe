@@ -172,7 +172,7 @@ describe("the resize and turn handles", () => {
 			mode: "rotate",
 			handle: "se",
 		});
-		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBeNull();
+		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toEqual({ mode: "origin" });
 	});
 });
 
@@ -213,7 +213,7 @@ describe("the handles under a draw tool", () => {
 			mode: "rotate",
 			handle: "se",
 		});
-		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBeNull();
+		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toEqual({ mode: "origin" });
 	});
 
 	it("draws no new layer when the press of a draw tool lands on a handle", () => {

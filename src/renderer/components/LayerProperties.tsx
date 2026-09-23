@@ -24,7 +24,7 @@ function ChipGroup({
 	layer: Layer;
 }): ReactElement {
 	return (
-		<ChipSection marksOrigin={group.marksOrigin} name={group.name}>
+		<ChipSection name={group.name}>
 			{group.fields.map((field) => (
 				<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
 			))}

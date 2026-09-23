@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId, Rect } from "../document/layer";
-import { OriginMark, SnapLines } from "./CanvasMarks";
+import { GroupPivotMark, OriginMark, SnapLines } from "./CanvasMarks";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
 import { useSelected } from "./state/useSelected";
@@ -87,19 +87,26 @@ function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 	);
 }
 
-function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId[] }): ReactNode {
+function GroupOutline({
+	doc,
+	ids,
+	user,
+}: {
+	doc: DesignDocument;
+	ids: readonly LayerId[];
+	user: UserState;
+}): ReactNode {
 	const box = useSelectionBox(doc, ids);
 
 	return (
 		<>
 			{ids.map((id) => (
-				<LayerOutline className="selection-peer" doc={doc} id={id} key={id}>
-					<OriginMark doc={doc} id={id} />
-				</LayerOutline>
+				<LayerOutline className="selection-peer" doc={doc} id={id} key={id} />
 			))}
 			{box === null ? null : (
 				<div className="selection-box" style={{ ...boxStyle(box), ...HANDLE_STYLE }}>
 					<CornerHandles />
+					<GroupPivotMark box={box} ids={ids} pivot={user.groupPivot} />
 				</div>
 			)}
 		</>
@@ -116,7 +123,7 @@ function SelectionOutline({ doc, user }: { doc: DesignDocument; user: UserState 
 	return peer === undefined ? (
 		<SoleOutline doc={doc} id={id} />
 	) : (
-		<GroupOutline doc={doc} ids={ids} />
+		<GroupOutline doc={doc} ids={ids} user={user} />
 	);
 }
 

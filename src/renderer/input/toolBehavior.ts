@@ -2,16 +2,12 @@ import { ELLIPSE_DEFAULTS, FRAME_DEFAULTS, RECTANGLE_DEFAULTS } from "../compone
 import type { ToolId } from "../components/tools";
 import { composeBehaviors } from "./composeBehaviors";
 import { createDrawBehavior } from "./drawBehavior";
-import { createGroupHandleBehavior } from "./groupHandleBehavior";
-import { createHandleBehavior } from "./handleBehavior";
+import { HANDLES } from "./handleBehaviors";
+import type { BehaviorFactory } from "./handleBehaviors";
 import { createMarqueeBehavior } from "./marqueeBehavior";
 import { createPanBehavior } from "./panBehavior";
 import { createPickBehavior } from "./pickBehavior";
 import type { ToolBehavior } from "./tool";
-
-type BehaviorFactory = () => ToolBehavior;
-
-const HANDLES: readonly BehaviorFactory[] = [createHandleBehavior, createGroupHandleBehavior];
 
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
 	select: [...HANDLES, createPickBehavior, createMarqueeBehavior],

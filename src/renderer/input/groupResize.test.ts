@@ -55,7 +55,9 @@ function hoverAt(scene: GroupScene, x: number, y: number): string | null {
 		scene.target,
 		pointAt(scene.target.user.camera.get(), { x, y }),
 	);
-	return zone === null || zone === undefined ? null : `${zone.mode}-${zone.handle}`;
+	return zone === null || zone === undefined || zone.mode === "origin"
+		? null
+		: `${zone.mode}-${zone.handle}`;
 }
 
 describe("a resize of more than one layer", () => {

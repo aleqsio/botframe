@@ -61,6 +61,11 @@ export interface SnapGuides {
 	segments: readonly SnapSegment[];
 }
 
+export interface GroupPivot {
+	ids: readonly LayerId[];
+	point: Point;
+}
+
 export interface LayerMenu {
 	client: Point;
 	layerIds: readonly LayerId[];
@@ -84,6 +89,7 @@ export class UserState {
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
 	readonly layersOpen = new Slot<boolean>(true);
+	readonly groupPivot = new Slot<GroupPivot | null>(null);
 }
 
 export function toggleCollapsed(collapsed: Slot<ReadonlySet<LayerId>>, id: LayerId): void {

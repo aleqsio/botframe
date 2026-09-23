@@ -1,6 +1,7 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
 import type { Point } from "../state/camera";
+import { outOfFlow } from "../layerStyle";
 import { drawnRead } from "./drawn";
 import { parentChain, toParentPoint } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
@@ -29,4 +30,8 @@ export function parentDisplayOf(target: PointerTarget, layer: Layer): DisplayMod
 export function soleLayer(target: PointerTarget): Layer | null {
 	const [id, peer] = target.user.selection.get();
 	return id === undefined || peer !== undefined ? null : drawnReaderOf(target)(id);
+}
+
+export function isLoose(target: PointerTarget, layer: Layer): boolean {
+	return outOfFlow(parentDisplayOf(target, layer), layer.layout.position);
 }
