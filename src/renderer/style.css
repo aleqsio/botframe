@@ -1343,3 +1343,14 @@ button.layer-chevron[aria-expanded="false"]::before {
 	color: var(--bar-icon);
 	opacity: 0.5;
 }
+
+.layer-media {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: inherit;
+	corner-shape: inherit;
+	pointer-events: none;
+}

@@ -1,4 +1,4 @@
-import type { LayerId } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 
 const LAYER_ID = /^\d+@\d+$/u;
@@ -48,12 +48,14 @@ export function isFullyTransparent(color: string): boolean {
 	return alpha !== undefined && ZERO_ALPHA.test(alpha.trim());
 }
 
+export type Paint = Pick<Layer, "fill" | "media">;
+
 export function visibleLayerIds(
 	ids: readonly LayerId[],
-	fillOf: (id: LayerId) => string | null,
+	paintOf: (id: LayerId) => Paint | null,
 ): LayerId[] {
 	return ids.filter((id) => {
-		const fill = fillOf(id);
-		return fill !== null && !isFullyTransparent(fill);
+		const paint = paintOf(id);
+		return paint !== null && (paint.media !== null || !isFullyTransparent(paint.fill));
 	});
 }

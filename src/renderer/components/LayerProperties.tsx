@@ -4,6 +4,7 @@ import type { Layer } from "../../document/layer";
 import { ColorField } from "./ColorField";
 import { FrameFooter } from "./FrameFooter";
 import { isFrame } from "./layerEntry";
+import { MediaField } from "./MediaField";
 import { fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
 import { GuideList } from "./layout/GuideList";
@@ -74,6 +75,7 @@ export function LayerProperties({
 				}}
 				value={layer.fill}
 			/>
+			<MediaField doc={doc} layer={layer} />
 			<ClipSwitch doc={doc} layer={layer} />
 			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
 			{isFrame(layer) ? <FrameFooter doc={doc} layer={layer} /> : null}

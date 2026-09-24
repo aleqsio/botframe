@@ -5,6 +5,7 @@ import type { LayerFields, Origin, WritableGeometry } from "./layer";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
+import { mediaOf } from "./media";
 import type { LayerLengths, Length } from "./length";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -100,6 +101,7 @@ function nodeOf(value: unknown): LayerNode {
 		lengths: lengthsOf(bag["lengths"], fields),
 		layout: layoutOf(bag["layout"]),
 		guides: guidesOf(bag["guides"]),
+		media: mediaOf(bag["media"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

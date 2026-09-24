@@ -7,6 +7,7 @@ import { DEFAULT_LAYOUT } from "./layout";
 import type { LayerLayout } from "./layout";
 import { PIXELS } from "./length";
 import type { LayerLengths } from "./length";
+import type { MediaFill } from "./media";
 
 export function firstId(doc: DesignDocument): LayerId {
 	const [id] = doc.layerIds();
@@ -41,6 +42,7 @@ export interface PixelBox {
 	layout: LayerLayout;
 	guides: readonly Guide[];
 	origin: Origin;
+	media: MediaFill | null;
 }
 
 export function pixelBox(rect: Rect): PixelBox {
@@ -49,5 +51,6 @@ export function pixelBox(rect: Rect): PixelBox {
 		layout: DEFAULT_LAYOUT,
 		guides: NO_GUIDES,
 		origin: CENTER_ORIGIN,
+		media: null,
 	};
 }

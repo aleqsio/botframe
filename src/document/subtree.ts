@@ -12,6 +12,7 @@ import type { Guide } from "./guides";
 import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
 import type { LayerLengths } from "./length";
+import type { MediaFill } from "./media";
 
 export interface LayerNode {
 	fields: LayerFields;
@@ -21,6 +22,7 @@ export interface LayerNode {
 	lengths: LayerLengths;
 	layout: LayerLayout;
 	guides: readonly Guide[];
+	media: MediaFill | null;
 	children: readonly LayerNode[];
 }
 
@@ -72,6 +74,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		lengths: layer.lengths,
 		layout: layer.layout,
 		guides: layer.guides,
+		media: layer.media,
 		children,
 	};
 }
@@ -84,6 +87,7 @@ function copyPatch(node: LayerNode): LayerPatch {
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
 		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),
+		...(node.media === null ? {} : { media: node.media }),
 	};
 }
 

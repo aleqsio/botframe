@@ -849,9 +849,13 @@
 	cursor: default;
 }
 
-.guide-button:hover {
+.guide-button:hover:not(:disabled) {
 	background-color: var(--panel-selected);
 	color: var(--panel-text);
+}
+
+.guide-button:disabled {
+	opacity: 0.35;
 }
 
 .guide-button:focus-visible {
