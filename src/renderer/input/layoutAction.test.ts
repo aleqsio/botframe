@@ -327,6 +327,23 @@ describe("flip", () => {
 		expect(layerOf(held.doc, id)).toMatchObject({ x: 20, y: 20, rotation: 30, mirrored: false });
 	});
 
+	it("turns and leans a skewed rectangle the other way and does not mirror it", () => {
+		const held = scene();
+		const id = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }]));
+		held.doc.update(id, { rotation: 30, skewX: 15, skewY: -20 });
+		held.doc.commit("turn");
+
+		expect(actionOf("flipX").enabled(held.doc, held.user)).toBe(true);
+		run(held, "flipX");
+
+		expect(layerOf(held.doc, id)).toMatchObject({
+			rotation: 330,
+			skewX: -15,
+			skewY: 20,
+			mirrored: false,
+		});
+	});
+
 	it("moves the children of a frame to the other side and keeps the frame unmirrored", () => {
 		const held = scene();
 		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));

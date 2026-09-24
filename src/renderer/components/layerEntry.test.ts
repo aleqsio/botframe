@@ -19,6 +19,8 @@ function rectangle(id: LayerId, fill: string): Layer {
 		height: 160,
 		...pixelBox({ x: 0, y: 0, width: 240, height: 160 }),
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill,
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },

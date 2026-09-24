@@ -1,11 +1,20 @@
 import type { Geometry, Layer } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
-import { HALF_TURN, cornersOf, fromParentPoint } from "./layerSpace";
+import { cornersOf, fromParentPoint, posePoint } from "./layerSpace";
 
 export type Curve =
 	| { kind: "segment"; from: Point; to: Point }
-	| { kind: "arc"; center: Point; radii: Point; turn: number; from: number; to: number };
+	| { kind: "arc"; center: Point; arms: Arms; from: number; to: number };
+
+export interface Arms {
+	cos: Point;
+	sin: Point;
+}
+
+function armsOf(radii: Point): Arms {
+	return { cos: { x: radii.x, y: 0 }, sin: { x: 0, y: radii.y } };
+}
 
 export interface SnapShape {
 	points: readonly Point[];
@@ -68,13 +77,13 @@ function cornerArcsOf(box: Size, radius: number): Curve[] {
 	if (radius <= 0) {
 		return [];
 	}
-	const radii = { x: radius, y: radius };
+	const arms = armsOf({ x: radius, y: radius });
 	const far = { x: box.width - radius, y: box.height - radius };
 	return [
-		{ kind: "arc", center: { x: radius, y: radius }, radii, turn: 0, from: 180, to: 270 },
-		{ kind: "arc", center: { x: far.x, y: radius }, radii, turn: 0, from: 270, to: 360 },
-		{ kind: "arc", center: far, radii, turn: 0, from: 0, to: 90 },
-		{ kind: "arc", center: { x: radius, y: far.y }, radii, turn: 0, from: 90, to: 180 },
+		{ kind: "arc", center: { x: radius, y: radius }, arms, from: 180, to: 270 },
+		{ kind: "arc", center: { x: far.x, y: radius }, arms, from: 270, to: 360 },
+		{ kind: "arc", center: far, arms, from: 0, to: 90 },
+		{ kind: "arc", center: { x: radius, y: far.y }, arms, from: 90, to: 180 },
 	];
 }
 
@@ -90,7 +99,7 @@ function ellipseShapeOf(layer: Layer): SnapShape {
 	const middle = middleOf(layer);
 	return {
 		points: [middle, ...edgeMiddlesOf(layer)],
-		curves: [{ kind: "arc", center: middle, radii: middle, turn: 0, from: 0, to: 360 }],
+		curves: [{ kind: "arc", center: middle, arms: armsOf(middle), from: 0, to: 360 }],
 	};
 }
 
@@ -114,12 +123,8 @@ function movedCurve(layer: Layer, curve: Curve): Curve {
 			to: fromParentPoint(chain, curve.to),
 		};
 	}
-	const center = fromParentPoint(chain, curve.center);
-	if (layer.mirrored) {
-		const sweep = { from: HALF_TURN - curve.to, to: HALF_TURN - curve.from };
-		return { ...curve, ...sweep, center, turn: layer.rotation - curve.turn };
-	}
-	return { ...curve, center, turn: curve.turn + layer.rotation };
+	const arms = { cos: posePoint(curve.arms.cos, layer), sin: posePoint(curve.arms.sin, layer) };
+	return { ...curve, center: fromParentPoint(chain, curve.center), arms };
 }
 
 export function snapShapeOf(layer: Layer): SnapShape {

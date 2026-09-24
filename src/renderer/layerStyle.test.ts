@@ -30,6 +30,8 @@ function layerWith(geometry: Geometry): Layer {
 		...BOX,
 		...pixelBox(BOX),
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#123456",
 		geometry,
@@ -94,13 +96,35 @@ describe("layerStyle geometry", () => {
 		expect(spaceTransform({ ...turned, rotation: 0 })).toBe("translate3d(10px, 20px, 0)");
 	});
 
+	it("skews a layer between its turn and its mirror", () => {
+		const flat = layerWith({ kind: "ellipse" });
+		expect(
+			layerStyle({ ...flat, rotation: 30, skewX: 15, skewY: 0, mirrored: true }, null),
+		).toMatchObject({
+			transform: "translate3d(10px, 20px, 0) rotate(30deg) skewX(15deg) scaleX(-1)",
+			transformOrigin: "50% 50%",
+		});
+		expect(layerStyle({ ...flat, skewX: -10, skewY: 5 }, null).transform).toBe(
+			"translate3d(10px, 20px, 0) rotate(0deg) skewX(-10deg) skewY(5deg)",
+		);
+	});
+
 	it("mirrors a layer after its turn, about the same origin", () => {
 		const flat = layerWith({ kind: "ellipse" });
-		expect(layerStyle({ ...flat, mirrored: true }, null)).toMatchObject({
+		expect(layerStyle({ ...flat, skewX: 0, skewY: 0, mirrored: true }, null)).toMatchObject({
 			transform: "translate3d(10px, 20px, 0) rotate(0deg) scaleX(-1)",
 			transformOrigin: "50% 50%",
 		});
-		expect(spaceTransform({ ...flat, rotation: 30, mirrored: true, origin: { x: 0, y: 0 } })).toBe(
+		expect(
+			spaceTransform({
+				...flat,
+				rotation: 30,
+				skewX: 0,
+				skewY: 0,
+				mirrored: true,
+				origin: { x: 0, y: 0 },
+			}),
+		).toBe(
 			"translate3d(10px, 20px, 0) translate(0px, 0px) rotate(30deg) scaleX(-1) translate(0px, 0px)",
 		);
 	});

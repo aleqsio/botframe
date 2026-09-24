@@ -5,7 +5,8 @@ import type { LayerMove, UserState } from "../state/userState";
 import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import { anchorOf, chainPose, composePose, poseInside } from "./layerSpace";
+import { anchorOf, poseInside, seenLinear } from "./layerSpace";
+import type { Linear } from "./linear";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
 import { carryLayer } from "./moveCarry";
@@ -25,8 +26,8 @@ function anchorAt(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return anchorOf(drawn, parentPointOf(target, layer.id, canvas));
 }
 
-function poseOf(target: PointerTarget, layer: Layer): Pose {
-	return composePose(chainPose(parentChainOf(target, layer.id)), layer);
+function seenOf(target: PointerTarget, layer: Layer): Linear {
+	return seenLinear(parentChainOf(target, layer.id), layer);
 }
 
 function fixedFill(target: PointerTarget, id: LayerId): LayerPatch {
@@ -64,7 +65,7 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 	if (parent === move.parent || !target.doc.move(move.id, parent)) {
 		return move;
 	}
-	const pose = poseInside(parentChainOf(target, move.id), move.pose);
+	const pose = poseInside(parentChainOf(target, move.id), move.seen, move.start);
 	target.doc.update(move.id, landedPatch(target, move, parent, pose));
 	const next = { ...move, parent, field: snapFieldAround(target, move.id) };
 	target.user.move.set(next);
@@ -82,6 +83,8 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 			width: layer.width,
 			height: layer.height,
 			rotation: layer.rotation,
+			skewX: layer.skewX,
+			skewY: layer.skewY,
 			mirrored: layer.mirrored,
 			position: layer.layout.position,
 			sizing: { width: layer.layout.width, height: layer.layout.height },
@@ -89,7 +92,7 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		},
 		anchor: anchorAt(target, layer, canvas),
-		pose: poseOf(target, layer),
+		seen: seenOf(target, layer),
 		field: snapFieldAround(target, layer.id),
 	});
 }
@@ -127,8 +130,7 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	user.snap.set(null);
 	user.lift.set(null);
 	doc.move(move.id, move.from, move.start.index);
-	const { x, y, width, height, rotation, mirrored, position, cell, sizing } = move.start;
-	const layout = { position, cell, ...sizing };
-	doc.update(move.id, { x, y, width, height, rotation, mirrored, layout });
+	const { position, cell, sizing, index: _index, ...placed } = move.start;
+	doc.update(move.id, { ...placed, layout: { position, cell, ...sizing } });
 	doc.commit(CANCEL_COMMIT);
 }

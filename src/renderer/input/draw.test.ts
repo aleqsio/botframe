@@ -107,6 +107,8 @@ describe("levelRect", () => {
 		...BOX,
 		...pixelBox(BOX),
 		rotation: 30,
+		skewX: 0,
+		skewY: 0,
 		mirrored: true,
 		fill: "#ffffff",
 		name: "",
@@ -117,6 +119,8 @@ describe("levelRect", () => {
 	it("mirrors and turns a layer drawn in a mirrored parent, so it stands level on the screen", () => {
 		expect(levelRect([PARENT], { x: 10, y: 10, width: 20, height: 20 })).toMatchObject({
 			rotation: 30,
+			skewX: 0,
+			skewY: 0,
 			mirrored: true,
 		});
 	});

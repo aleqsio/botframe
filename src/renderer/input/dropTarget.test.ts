@@ -20,6 +20,8 @@ function layerOf(spec: Spec): Layer {
 		height: 100,
 		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation: spec.rotation ?? 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		geometry: {
@@ -100,10 +102,10 @@ describe("heldPlacement", () => {
 	});
 
 	it("mirrors the layer against a mirrored parent, so each corner keeps its place on the screen", () => {
-		const mirrored: Layer = { ...TURNED, mirrored: true };
+		const mirrored: Layer = { ...TURNED, skewX: 0, skewY: 0, mirrored: true };
 		const inside = placed(CHILD, [], [mirrored]);
 
-		expect(inside).toMatchObject({ rotation: 60, mirrored: true });
+		expect(inside).toMatchObject({ rotation: 60, skewX: 0, skewY: 0, mirrored: true });
 		for (const corner of [
 			{ x: 0, y: 0 },
 			{ x: 60, y: 20 },

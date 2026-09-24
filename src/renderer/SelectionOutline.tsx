@@ -12,6 +12,7 @@ import type { DrawnOutline } from "./useDocument";
 declare module "react" {
 	interface CSSProperties {
 		"--handle-size"?: string | undefined;
+		"--upright"?: string | undefined;
 	}
 }
 
@@ -22,6 +23,7 @@ function outlineStyle(outline: DrawnOutline): CSSProperties {
 		transform: unscaled(outline.transform),
 		width: zoomed(outline.width),
 		height: zoomed(outline.height),
+		"--upright": outline.upright,
 		...HANDLE_STYLE,
 	};
 }

@@ -64,6 +64,8 @@ function read(id: LayerId): Layer | null {
 		height: 10,
 		...pixelBox({ x: 0, y: 0, width: 10, height: 10 }),
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		geometry: geometryOf(id),
@@ -241,7 +243,14 @@ describe("carriedPlacement", () => {
 	});
 
 	it("takes the placement into the space of a flat new parent", () => {
-		expect(carriedInto(FIRST, BRANCH)).toEqual({ x: 200, y: 150, rotation: 0, mirrored: false });
+		expect(carriedInto(FIRST, BRANCH)).toEqual({
+			x: 200,
+			y: 150,
+			rotation: 0,
+			skewX: 0,
+			skewY: 0,
+			mirrored: false,
+		});
 	});
 
 	it("turns the layer against a turned new parent, so it keeps its place on the screen", () => {
@@ -269,6 +278,8 @@ describe("carriedPlacement", () => {
 			x: held.x - 20,
 			y: held.y - 10,
 			rotation: held.rotation,
+			skewX: 0,
+			skewY: 0,
 			mirrored: false,
 		});
 	});

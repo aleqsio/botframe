@@ -1,5 +1,5 @@
 import { LoroMap } from "loro-crdt";
-import { CENTER_ORIGIN } from "./layer";
+import { CENTER_ORIGIN, heldSkew } from "./layer";
 import type { Geometry, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
 import { guidesOf } from "./guides";
 import type { Guide } from "./guides";
@@ -100,6 +100,8 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		layout: readLayout(data),
 		guides: guidesOf(data.get(GUIDES)),
 		rotation: readNumber(data, "rotation", 0),
+		skewX: heldSkew(readNumber(data, "skewX", 0)),
+		skewY: heldSkew(readNumber(data, "skewY", 0)),
 		mirrored: readBoolean(data, "mirrored", false),
 		origin: readOrigin(data),
 		fill: readString(data, "fill", BLACK),

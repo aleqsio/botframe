@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { IDENTITY, layoutBox, multiply } from "./drawnBox";
-import type { Affine, BoxRead, ClientBox, Linear } from "./drawnBox";
+import { IDENTITY, layoutBox } from "./drawnBox";
+import type { Affine, BoxRead, ClientBox } from "./drawnBox";
+import { multiplyLinear } from "./linear";
+import type { Linear } from "./linear";
 
 const PARENT_SIZE = { width: 100, height: 60 };
 const THIRD = 100 / 3;
@@ -122,7 +124,7 @@ describe("layoutBox", () => {
 	it("undoes a turned and zoomed parent chain around a lifted and turned child", () => {
 		const box = { x: 10, y: 20, width: 30, height: 50 };
 		const space = {
-			chain: multiply(scale(2), turn(30)),
+			chain: multiplyLinear(scale(2), turn(30)),
 			shift: { x: 100, y: 50 },
 			own: { ...turn(45), e: 12, f: -8 },
 			origin: { x: 15, y: 25 },

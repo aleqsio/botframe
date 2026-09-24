@@ -1,9 +1,10 @@
-import type { Layer, LayerId, Pose, Rect } from "../../document/layer";
+import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { LayerLayout, Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { ZoneKey } from "../input/handles";
 import type { RowDrag } from "../input/rowDrop";
+import type { Linear } from "../input/linear";
 import type { SnapField, SnapSegment } from "../input/snap";
 import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";
@@ -18,7 +19,10 @@ export interface Draw {
 	origin: Point;
 }
 
-interface MoveStart extends Pick<Layer, "x" | "y" | "width" | "height" | "rotation" | "mirrored"> {
+interface MoveStart extends Pick<
+	Layer,
+	"x" | "y" | "width" | "height" | "rotation" | "skewX" | "skewY" | "mirrored"
+> {
 	position: PositionMode;
 	sizing: Pick<LayerLayout, "width" | "height">;
 	cell: Placement;
@@ -31,7 +35,7 @@ export interface LayerMove {
 	parent: LayerId | null;
 	start: MoveStart;
 	anchor: Point;
-	pose: Pose;
+	seen: Linear;
 	field: SnapField;
 }
 

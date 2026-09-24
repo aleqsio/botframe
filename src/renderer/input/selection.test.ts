@@ -19,6 +19,8 @@ function layerOf(id: LayerId, parent: LayerId | null): Layer {
 		height: 100,
 		...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },

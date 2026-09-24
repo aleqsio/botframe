@@ -2,7 +2,7 @@ import type { Size } from "../../document/length";
 import type { Guide, GuideAxis } from "../../document/guides";
 import type { Side } from "../../document/layout";
 import type { Point } from "../state/camera";
-import { normalizeDegrees, rotatePoint } from "./layerSpace";
+import { normalizeDegrees } from "./layerSpace";
 import type { Curve } from "./snapShape";
 
 type SegmentCurve = Extract<Curve, { kind: "segment" }>;
@@ -97,13 +97,6 @@ function targetsOf(spec: FieldSpec, axis: GuideAxis): SnapTarget[] {
 	return [...pointTargets(spec.points, axis), ...lines].toSorted(byPosition);
 }
 
-function armsOf(curve: ArcCurve): { cos: Point; sin: Point } {
-	return {
-		cos: rotatePoint({ x: curve.radii.x, y: 0 }, curve.turn),
-		sin: rotatePoint({ x: 0, y: curve.radii.y }, curve.turn),
-	};
-}
-
 function boundsOf(curve: Curve): BoundedCurve {
 	if (curve.kind === "segment") {
 		return {
@@ -112,7 +105,7 @@ function boundsOf(curve: Curve): BoundedCurve {
 			max: { x: Math.max(curve.from.x, curve.to.x), y: Math.max(curve.from.y, curve.to.y) },
 		};
 	}
-	const arms = armsOf(curve);
+	const { arms } = curve;
 	const reachX = Math.abs(arms.cos.x) + Math.abs(arms.sin.x);
 	const reachY = Math.abs(arms.cos.y) + Math.abs(arms.sin.y);
 	return {
@@ -152,7 +145,7 @@ function withinSweep(curve: ArcCurve, radians: number): boolean {
 
 function arcCrossings(curve: ArcCurve, axis: GuideAxis, other: number): number[] {
 	const across = otherAxis(axis);
-	const arms = armsOf(curve);
+	const { arms } = curve;
 	const radius = Math.hypot(arms.cos[across], arms.sin[across]);
 	const gap = other - curve.center[across];
 	if (radius === 0 || Math.abs(gap) > radius) {

@@ -18,6 +18,8 @@ const SHAPE: Layer = {
 	height: 100,
 	...pixelBox({ x: 0, y: 0, width: 100, height: 100 }),
 	rotation: 0,
+	skewX: 0,
+	skewY: 0,
 	mirrored: false,
 	fill: "#000000",
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
@@ -56,6 +58,8 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 			width: 1,
 			height: 1,
 			rotation: 0,
+			skewX: 0,
+			skewY: 0,
 			mirrored: false,
 			position: "default",
 			sizing: { width: "fixed", height: "fixed" },
@@ -63,7 +67,7 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 			index: 0,
 		},
 		anchor: { x: 0, y: 0 },
-		pose: { rotation: 0, mirrored: false },
+		seen: { a: 1, b: 0, c: 0, d: 1 },
 		field: snapFieldOf({ points: [], curves: [], container: null }),
 	};
 }

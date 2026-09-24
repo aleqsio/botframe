@@ -119,6 +119,14 @@ describe("a resize of more than one layer", () => {
 		expect(hoverAt(scene, box.x + box.width, box.y + box.height)).toBe("resize-se");
 	});
 
+	it("gives no edge handle when a layer has a skew, because a scale on one axis changes the skew", () => {
+		const scene = groupScene(0);
+		scene.target.doc.update(scene.other, { skewX: 20, skewY: 0 });
+		const box = boxOf((id) => scene.target.doc.layer(id), [scene.one, scene.other]);
+
+		expect(hoverAt(scene, box.x + box.width, box.y + box.height / 2)).toBeNull();
+	});
+
 	it("gives an edge handle when no layer has a turn", () => {
 		const scene = groupScene(0);
 

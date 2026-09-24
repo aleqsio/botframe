@@ -25,7 +25,7 @@ function pullFor(grip: ResizeGrip, rect: Rect): SnapPull {
 	return {
 		field: grip.field,
 		axes: handleAxesOf(grip.handle),
-		turn: grip.start.rotation,
+		pose: grip.start,
 		parent: grip.start.parent,
 		points: [handlePointOf(grip.start, rect, grip.handle)],
 	};

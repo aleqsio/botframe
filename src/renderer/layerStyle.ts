@@ -99,12 +99,18 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 }
 
 function isPosed(layer: Turned): boolean {
-	return layer.rotation !== 0 || layer.mirrored;
+	return layer.rotation !== 0 || layer.skewX !== 0 || layer.skewY !== 0 || layer.mirrored;
 }
 
 function turnText(layer: Turned): string {
 	const turn = `rotate(${layer.rotation}deg)`;
-	return layer.mirrored ? `${turn} scaleX(-1)` : turn;
+	const parts = [
+		turn,
+		...(layer.skewX === 0 ? [] : [`skewX(${layer.skewX}deg)`]),
+		...(layer.skewY === 0 ? [] : [`skewY(${layer.skewY}deg)`]),
+		...(layer.mirrored ? ["scaleX(-1)"] : []),
+	];
+	return parts.join(" ");
 }
 
 function turnAbout(layer: Turned): string {

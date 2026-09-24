@@ -1,26 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
+import { SKEW_LIMIT } from "../../document/layer";
 import type { Layer, LayerId } from "../../document/layer";
 import {
 	anchorOf,
 	anchoredPlace,
+	chainLinear,
 	chainPose,
-	composePose,
 	containsPoint,
 	cornersOf,
 	fromParentPoint,
 	hullOf,
 	intoLayer,
-	inversePose,
 	layerChain,
 	outOfLayer,
 	pivotOf,
 	placedAround,
+	poseInside,
 	posePoint,
+	seenLinear,
 	toParentPoint,
 	turnedOnScreen,
+	uprightLinear,
 	visualCenterOf,
 } from "./layerSpace";
+import { NO_POSE, multiplyLinear, poseOf } from "./linear";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {
@@ -31,6 +35,8 @@ function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 		height: 100,
 		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
@@ -204,7 +210,7 @@ describe("cornersOf", () => {
 	});
 });
 
-const MIRRORED: Layer = { ...FLAT, mirrored: true };
+const MIRRORED: Layer = { ...FLAT, skewX: 0, skewY: 0, mirrored: true };
 
 const PLACES = 1e6;
 
@@ -237,28 +243,96 @@ describe("a mirrored layer", () => {
 	});
 });
 
-describe("composePose", () => {
+describe("a skewed layer", () => {
+	const SKEWED: Layer = { ...FLAT, skewX: 45, skewY: 0 };
+
+	it("leans its bottom edge to the right about its origin", () => {
+		expect(rounded(outOfLayer(SKEWED, { x: 0, y: 100 }))).toEqual({ x: 150, y: 200 });
+		expect(rounded(outOfLayer(SKEWED, { x: 0, y: 0 }))).toEqual({ x: 50, y: 100 });
+	});
+
+	it("maps a parent point back to the same local point", () => {
+		const turned = { ...SKEWED, rotation: 30, skewX: -20, skewY: 0, mirrored: true };
+		expect(rounded(intoLayer(turned, outOfLayer(turned, { x: 17, y: 42 })))).toEqual({
+			x: 17,
+			y: 42,
+		});
+	});
+
+	it("holds a point inside the leaned box and refuses one inside the flat box only", () => {
+		expect(containsPoint(SKEWED, { x: 290, y: 190 })).toBe(true);
+		expect(containsPoint(SKEWED, { x: 110, y: 190 })).toBe(false);
+	});
+});
+
+describe("uprightLinear", () => {
+	it("undoes the skew and the mirror of a chain and keeps only a turn", () => {
+		const chain = [
+			{ ...FLAT, rotation: 30, skewX: 20, skewY: -10, mirrored: true },
+			{ ...CHILD, skewX: 0, skewY: 15 },
+		];
+		const seen = poseOf(multiplyLinear(chainLinear(chain), uprightLinear(chain)));
+
+		expect(seen.skewX).toBeCloseTo(0);
+		expect(seen.skewY).toBeCloseTo(0);
+		expect(seen.mirrored).toBe(false);
+	});
+});
+
+describe("poseInside", () => {
+	it("writes no skew and an exact turn for a flat layer that joins a turned parent", () => {
+		for (const turn of [10, 20, 28, 121]) {
+			const parent = { ...FLAT, rotation: turn };
+			expect(poseInside([parent], seenLinear([], NO_POSE), NO_POSE)).toEqual({
+				rotation: 360 - turn,
+				skewX: 0,
+				skewY: 0,
+				mirrored: false,
+			});
+		}
+	});
+
+	it("holds a skew from a chain inside the limit of the document", () => {
+		const chain = [
+			{ ...FLAT, skewY: 70 },
+			{ ...CHILD, skewX: 70 },
+		];
+		expect(Math.abs(chainPose(chain).skewX)).toBeLessThanOrEqual(SKEW_LIMIT);
+	});
+
+	it("gives back the pose of a layer that stays in a skewed and turned parent", () => {
+		const parents = [
+			{ ...FLAT, rotation: 40, skewX: 25, skewY: 0 },
+			{ ...CHILD, skewX: -10, skewY: 0, mirrored: true },
+		];
+		const layer = { rotation: 30, skewX: 15, skewY: -20, mirrored: false };
+
+		expect(poseInside(parents, seenLinear(parents, layer), layer)).toEqual(layer);
+	});
+});
+
+describe("seenLinear", () => {
 	const poses = [
-		{ rotation: 0, mirrored: false },
-		{ rotation: 30, mirrored: false },
-		{ rotation: 30, mirrored: true },
-		{ rotation: -75, mirrored: true },
+		{ rotation: 0, skewX: 0, skewY: 0, mirrored: false },
+		{ rotation: 30, skewX: 0, skewY: 0, mirrored: false },
+		{ rotation: 30, skewX: 0, skewY: 0, mirrored: true },
+		{ rotation: -75, skewX: 0, skewY: 0, mirrored: true },
 	];
 	const point = { x: 3, y: 7 };
 
 	it("moves a point as the inner pose, then the outer pose", () => {
 		for (const outer of poses) {
 			for (const inner of poses) {
-				expect(rounded(posePoint(point, composePose(outer, inner)))).toEqual(
-					rounded(posePoint(posePoint(point, inner), outer)),
-				);
+				expect(
+					rounded(posePoint(point, poseInside([], seenLinear([outer], inner), NO_POSE))),
+				).toEqual(rounded(posePoint(posePoint(point, inner), outer)));
 			}
 		}
 	});
 
 	it("gives the identity with the inverse pose", () => {
 		for (const pose of poses) {
-			expect(rounded(posePoint(point, composePose(inversePose(pose), pose)))).toEqual(
+			expect(rounded(posePoint(point, poseInside([pose], seenLinear([], pose), NO_POSE)))).toEqual(
 				rounded(point),
 			);
 		}
@@ -266,7 +340,7 @@ describe("composePose", () => {
 
 	it("gives the pose of a chain on the screen", () => {
 		const chain = [MIRRORED, { ...CHILD, rotation: 30 }];
-		expect(chainPose(chain)).toEqual({ rotation: -30, mirrored: true });
+		expect(chainPose(chain)).toEqual({ rotation: -30, skewX: 0, skewY: 0, mirrored: true });
 	});
 });
 

@@ -226,6 +226,7 @@ body {
 }
 
 .selection-handle {
+	transform: var(--upright, none);
 	border-radius: 2px;
 	background: var(--handle-fill);
 }
@@ -251,6 +252,7 @@ body {
 }
 
 .origin-mark {
+	transform: var(--upright, none);
 	border-radius: 50%;
 	background: radial-gradient(circle, var(--selection) 1.5px, var(--handle-fill) 1.5px);
 }

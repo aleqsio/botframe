@@ -17,6 +17,8 @@ function styledLayerOf(node: LayerNode): StyledLayer {
 	return {
 		...node.fields,
 		rotation: node.rotation,
+		skewX: node.skewX,
+		skewY: node.skewY,
 		mirrored: node.mirrored,
 		origin: node.origin,
 		layout: node.layout,

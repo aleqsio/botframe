@@ -20,6 +20,8 @@ export interface KeyStroke {
 	metaKey: boolean;
 }
 
+export const SKEW_MESSAGE = "skew layer";
+
 export const COMMIT_MESSAGES: Readonly<Record<LayerCommand["kind"], string>> = {
 	move: "move layer",
 	resize: "resize layer",

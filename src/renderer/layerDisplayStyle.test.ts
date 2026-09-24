@@ -14,6 +14,8 @@ function layerOf(layout: LayoutPatch): Layer {
 		...BOX,
 		...pixelBox(BOX),
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#123456",
 		geometry: { kind: "ellipse" },

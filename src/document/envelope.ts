@@ -1,6 +1,6 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
-import { CENTER_ORIGIN } from "./layer";
+import { CENTER_ORIGIN, heldSkew } from "./layer";
 import type { LayerFields, Origin, WritableGeometry } from "./layer";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
@@ -96,6 +96,8 @@ function nodeOf(value: unknown): LayerNode {
 	return {
 		fields,
 		rotation: count(bag, "rotation"),
+		skewX: heldSkew(count(bag, "skewX")),
+		skewY: heldSkew(count(bag, "skewY")),
 		mirrored: flag(bag, "mirrored"),
 		origin: originOf(bag["origin"]),
 		lengths: lengthsOf(bag["lengths"], fields),

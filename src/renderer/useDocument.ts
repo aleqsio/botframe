@@ -2,7 +2,7 @@ import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId, Rect } from "../document/layer";
 import { DOM_DRAWN, drawnPadding, drawnRead } from "./input/drawn";
-import { layerChain } from "./input/layerSpace";
+import { layerChain, uprightLinear } from "./input/layerSpace";
 import { boundsOf } from "./input/selectionBounds";
 import { spaceTransform } from "./layerStyle";
 
@@ -15,6 +15,7 @@ export interface DrawnOutline {
 	width: number;
 	height: number;
 	padding: string;
+	upright: string;
 }
 
 export function useRootIds(doc: DesignDocument): readonly LayerId[] {
@@ -59,24 +60,36 @@ function spaceText(chain: readonly Layer[]): string {
 	return chain.map((layer) => spaceTransform(layer)).join(" ");
 }
 
+function uprightText(chain: readonly Layer[]): string {
+	const { a, b, c, d } = uprightLinear(chain);
+	return `matrix(${a}, ${b}, ${c}, ${d}, 0, 0)`;
+}
+
 function outlineText(doc: DesignDocument, id: LayerId): string {
 	const chain = drawnChain(doc, id);
 	const drawn = chain.at(-1);
 	if (drawn === undefined) {
 		return NO_TEXT;
 	}
-	return [drawn.width, drawn.height, drawnPadding(id), spaceText(chain)].join(OUTLINE_PART);
+	const parts = [drawn.width, drawn.height, drawnPadding(id), uprightText(chain), spaceText(chain)];
+	return parts.join(OUTLINE_PART);
 }
 
 function outlineOf(text: string): DrawnOutline | null {
-	const [width, height, padding, ...rest] = text.split(OUTLINE_PART);
-	if (width === undefined || height === undefined || padding === undefined) {
+	const [width, height, padding, upright, ...rest] = text.split(OUTLINE_PART);
+	if (
+		width === undefined ||
+		height === undefined ||
+		padding === undefined ||
+		upright === undefined
+	) {
 		return null;
 	}
 	return {
 		width: Number(width),
 		height: Number(height),
 		padding,
+		upright,
 		transform: rest.join(OUTLINE_PART),
 	};
 }

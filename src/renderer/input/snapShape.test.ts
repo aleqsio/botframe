@@ -3,7 +3,7 @@ import { pixelBox } from "../../document/documentFixtures";
 import type { Geometry, Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { SNAP_REPORTERS, snapShapeOf } from "./snapShape";
-import type { Curve } from "./snapShape";
+import type { Arms, Curve } from "./snapShape";
 
 function layerWith(geometry: Geometry, rotation = 0): Layer {
 	return {
@@ -14,6 +14,8 @@ function layerWith(geometry: Geometry, rotation = 0): Layer {
 		width: 40,
 		height: 20,
 		rotation,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		name: "",
@@ -32,6 +34,14 @@ function pointsOf(layer: Layer): readonly Point[] {
 
 function curvesOf(layer: Layer): readonly Curve[] {
 	return snapShapeOf(layer).curves;
+}
+
+function firstArms(layer: Layer): Arms {
+	const arc = curvesOf(layer).find((curve) => curve.kind === "arc");
+	if (arc?.kind !== "arc") {
+		throw new Error("the layer gives no arc");
+	}
+	return arc.arms;
 }
 
 function segmentEndsOf(layer: Layer): Point[] {
@@ -124,8 +134,7 @@ describe("the curves of snapShapeOf", () => {
 		expect(curves).toContainEqual({
 			kind: "arc",
 			center: { x: 106, y: 56 },
-			radii: { x: 6, y: 6 },
-			turn: 0,
+			arms: { cos: { x: 6, y: 0 }, sin: { x: 0, y: 6 } },
 			from: 180,
 			to: 270,
 		});
@@ -136,8 +145,7 @@ describe("the curves of snapShapeOf", () => {
 			{
 				kind: "arc",
 				center: { x: 120, y: 60 },
-				radii: { x: 20, y: 10 },
-				turn: 0,
+				arms: { cos: { x: 20, y: 0 }, sin: { x: 0, y: 10 } },
 				from: 0,
 				to: 360,
 			},
@@ -157,18 +165,27 @@ describe("the curves of snapShapeOf", () => {
 		expect(ends[1]?.y).toBeCloseTo(80);
 	});
 
-	it("moves a corner arc of a mirrored layer to the other side and reverses its sweep", () => {
+	it("moves a corner arc of a mirrored layer to the other side and mirrors its arms", () => {
 		const arc = curvesOf({ ...layerWith(ROUNDED), mirrored: true }).find(
 			(curve) => curve.kind === "arc",
 		);
-		expect(arc).toMatchObject({ center: { x: 134, y: 56 }, turn: 0, from: -90, to: 0 });
+		expect(arc).toMatchObject({
+			center: { x: 134, y: 56 },
+			arms: { cos: { x: -6, y: 0 }, sin: { x: 0, y: 6 } },
+			from: 180,
+			to: 270,
+		});
 	});
 
-	it("adds the rotation of the layer to the turn of an arc", () => {
-		expect(curvesOf(layerWith({ kind: "ellipse" }, 30))[0]).toMatchObject({
-			kind: "arc",
-			center: { x: 120, y: 60 },
-			turn: 30,
-		});
+	it("turns the arms of an arc with the layer", () => {
+		const arms = firstArms(layerWith({ kind: "ellipse" }, 90));
+		expect(arms.cos.y).toBeCloseTo(20);
+		expect(arms.sin.x).toBeCloseTo(-10);
+	});
+
+	it("leans the arms of an arc with the skew of the layer", () => {
+		const arms = firstArms({ ...layerWith({ kind: "ellipse" }), skewX: 45, skewY: 0 });
+		expect(arms.sin.x).toBeCloseTo(10);
+		expect(arms.cos).toEqual({ x: 20, y: 0 });
 	});
 });

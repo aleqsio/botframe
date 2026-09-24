@@ -32,8 +32,16 @@ export function isCenterOrigin(origin: Origin): boolean {
 	return origin.x === CENTER_ORIGIN.x && origin.y === CENTER_ORIGIN.y;
 }
 
+export const SKEW_LIMIT = 80;
+
+export function heldSkew(degrees: number): number {
+	return Number.isFinite(degrees) ? Math.min(Math.max(degrees, -SKEW_LIMIT), SKEW_LIMIT) : 0;
+}
+
 export interface Pose {
 	rotation: number;
+	skewX: number;
+	skewY: number;
 	mirrored: boolean;
 }
 
@@ -57,6 +65,8 @@ export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 
 export interface LayerFields extends Rect {
 	rotation?: number;
+	skewX?: number;
+	skewY?: number;
 	mirrored?: boolean;
 	fill: string;
 	name: string;

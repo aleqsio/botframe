@@ -3,6 +3,7 @@ import type { LoroMap } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
 import { DRAWN, firstId } from "./documentFixtures";
+import { SKEW_LIMIT } from "./layer";
 import type { LayerId } from "./layer";
 import { readString } from "./read";
 
@@ -43,6 +44,20 @@ describe("DesignDocument", () => {
 		doc.update(id, { rotation: 45 });
 
 		expect(doc.layer(id)).toMatchObject({ x: 10, y: 20, width: 30, height: 40, rotation: 45 });
+	});
+
+	it("holds a skew that a peer wrote inside the limit, so the layer stays drawable", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+
+		doc.update(id, { skewX: 89, skewY: 0 });
+		expect(doc.layer(id)?.skewX).toBe(SKEW_LIMIT);
+
+		doc.update(id, { skewX: -30, skewY: 0 });
+		expect(doc.layer(id)?.skewX).toBe(-30);
+
+		doc.update(id, { skewX: Number.NaN, skewY: 0 });
+		expect(doc.layer(id)?.skewX).toBe(0);
 	});
 
 	it("reads a layer that no peer has turned as a layer at zero degrees", () => {

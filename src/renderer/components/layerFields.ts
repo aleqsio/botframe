@@ -1,4 +1,5 @@
 import type { Layer, LayerPatch, Origin, Rect, RectangleGeometry } from "../../document/layer";
+import { SKEW_LIMIT } from "../../document/layer";
 import {
 	AXIS_OF,
 	PERCENT,
@@ -9,7 +10,7 @@ import {
 	parseUnitText,
 } from "../../document/length";
 import type { Basis, BoxKey, Length, Unit } from "../../document/length";
-import { COMMIT_MESSAGES } from "../input/layerCommand";
+import { COMMIT_MESSAGES, SKEW_MESSAGE } from "../input/layerCommand";
 import { ORIGIN_MESSAGE } from "../input/pivot";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
 import type { StepRule } from "../input/step";
@@ -38,6 +39,7 @@ const RELATIVE_SIZE_BOUND: Bound = {
 	max: RELATIVE_LIMIT,
 };
 const TURN_BOUND: Bound = { kind: "wrap", min: 0, max: FULL_TURN };
+const SKEW_BOUND: Bound = { kind: "clamp", min: -SKEW_LIMIT, max: SKEW_LIMIT };
 const RADIUS_BOUND: Bound = { kind: "clamp", min: 0, max: COORDINATE_LIMIT };
 const SMOOTHING_BOUND: Bound = { kind: "clamp", min: 0, max: SMOOTHING_LIMIT };
 
@@ -145,6 +147,24 @@ const TURN_FIELD: LayerField = {
 	read: (layer) => layer.rotation,
 	patch: (value) => ({ rotation: value }),
 };
+
+function skewField(label: string, key: "skewX" | "skewY"): LayerField {
+	return {
+		label,
+		unit: DEGREES,
+		choice: null,
+		bound: SKEW_BOUND,
+		step: ANGLE_STEP,
+		message: SKEW_MESSAGE,
+		read: (layer) => layer[key],
+		patch: (value) => ({ [key]: value }),
+	};
+}
+
+export const SKEW_FIELDS: readonly LayerField[] = [
+	skewField("Skew X", "skewX"),
+	skewField("Skew Y", "skewY"),
+];
 
 function originField(label: string, axis: keyof Origin): LayerField {
 	return {

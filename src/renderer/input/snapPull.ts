@@ -1,7 +1,7 @@
 import type { GuideAxis } from "../../document/guides";
-import type { LayerId } from "../../document/layer";
+import type { LayerId, Pose } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { rotatePoint } from "./layerSpace";
+import { posePoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { SNAP_REACH, snapSegmentsOf, snapTo, snappedPoint } from "./snap";
 import type { Snap, SnapField, SnapSegment } from "./snap";
@@ -11,7 +11,7 @@ import type { PointerTarget } from "./tool";
 export interface SnapPull {
 	field: SnapField;
 	axes: readonly GuideAxis[];
-	turn: number;
+	pose: Pose;
 	parent: LayerId | null;
 	points: readonly Point[];
 }
@@ -29,7 +29,7 @@ function travelOf(pull: SnapPull): Travel {
 	if (only === undefined || second !== undefined) {
 		return { axes: pull.axes, carrier: null };
 	}
-	const along = rotatePoint(UNIT[only], pull.turn);
+	const along = posePoint(UNIT[only], pull.pose);
 	const reach = along[only];
 	if (Math.abs(reach) < PARALLEL) {
 		return { axes: NO_AXES, carrier: null };

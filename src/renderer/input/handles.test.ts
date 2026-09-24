@@ -12,6 +12,8 @@ function layerAt(rotation: number): Layer {
 		height: 100,
 		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },

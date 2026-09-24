@@ -10,20 +10,18 @@ export function MirrorToggle({ doc, layer }: { doc: DesignDocument; layer: Layer
 	const { mirrored } = layer;
 
 	return (
-		<div className="chip-row">
-			<button
-				aria-pressed={mirrored}
-				className="layout-flag"
-				onClick={() => {
-					doc.update(layer.id, { mirrored: !mirrored });
-					doc.commit("set mirrored");
-				}}
-				title={MIRROR_TIP}
-				type="button"
-			>
-				<Icon name="flipX" />
-				Mirrored
-			</button>
-		</div>
+		<button
+			aria-pressed={mirrored}
+			className="layout-flag"
+			onClick={() => {
+				doc.update(layer.id, { mirrored: !mirrored });
+				doc.commit("set mirrored");
+			}}
+			title={MIRROR_TIP}
+			type="button"
+		>
+			<Icon name="flipX" />
+			Mirrored
+		</button>
 	);
 }

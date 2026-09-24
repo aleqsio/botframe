@@ -27,6 +27,8 @@ function nodeOf(
 	return {
 		fields: merged,
 		rotation: 0,
+		skewX: 0,
+		skewY: 0,
 		mirrored: false,
 		...pixelBox(merged),
 		layout,
@@ -54,7 +56,15 @@ describe("layerMarkup", () => {
 
 		for (const [key, value] of Object.entries(
 			layerStyle(
-				{ ...node.fields, rotation: 0, mirrored: false, origin: node.origin, layout: node.layout },
+				{
+					...node.fields,
+					rotation: 0,
+					skewX: 0,
+					skewY: 0,
+					mirrored: false,
+					origin: node.origin,
+					layout: node.layout,
+				},
 				null,
 			),
 		)) {
@@ -90,6 +100,8 @@ describe("layerMarkup", () => {
 		const node: LayerNode = {
 			fields: FIELDS,
 			rotation: 30,
+			skewX: 0,
+			skewY: 0,
 			mirrored: false,
 			...pixelBox(FIELDS),
 			layout: DEFAULT_LAYOUT,

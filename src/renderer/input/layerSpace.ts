@@ -2,16 +2,23 @@ import { CENTER_ORIGIN } from "../../document/layer";
 import type { Layer, LayerId, Origin, Pose, Rect } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
-
-export const HALF_TURN = 180;
+import {
+	HALF_TURN,
+	NO_POSE,
+	applyLinear,
+	invertLinear,
+	linearOf,
+	multiplyLinear,
+	poseOf,
+	radiansOf,
+} from "./linear";
+import type { Linear } from "./linear";
 
 export type ReadLayer = (id: LayerId) => Layer | null;
 
 export interface Turned extends Size, Pose {
 	origin: Origin;
 }
-
-export const NO_POSE: Pose = { rotation: 0, mirrored: false };
 
 export type Placed = Turned & Rect;
 
@@ -28,37 +35,22 @@ export function pivotOf(layer: Turned): Point {
 }
 
 export function rotatePoint(point: Point, degrees: number): Point {
-	const radians = (degrees * Math.PI) / HALF_TURN;
+	const radians = radiansOf(degrees);
 	const cos = Math.cos(radians);
 	const sin = Math.sin(radians);
 	return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos };
 }
 
-function mirrorPoint(point: Point, mirrored: boolean): Point {
-	return mirrored ? { x: -point.x, y: point.y } : point;
-}
-
 export function posePoint(point: Point, pose: Pose): Point {
-	return rotatePoint(mirrorPoint(point, pose.mirrored), pose.rotation);
+	return applyLinear(linearOf(pose), point);
 }
 
 function unposePoint(point: Point, pose: Pose): Point {
-	return mirrorPoint(rotatePoint(point, -pose.rotation), pose.mirrored);
-}
-
-export function composePose(outer: Pose, inner: Pose): Pose {
-	return {
-		rotation: outer.rotation + (outer.mirrored ? -inner.rotation : inner.rotation),
-		mirrored: outer.mirrored !== inner.mirrored,
-	};
-}
-
-export function inversePose(pose: Pose): Pose {
-	return pose.mirrored ? pose : { rotation: -pose.rotation, mirrored: false };
+	return applyLinear(invertLinear(linearOf(pose)), point);
 }
 
 export function normalizedPose(pose: Pose): Pose {
-	return { rotation: normalizeDegrees(pose.rotation), mirrored: pose.mirrored };
+	return { ...pose, rotation: normalizeDegrees(pose.rotation) };
 }
 
 export function intoLayer(layer: Placed, point: Point): Point {
@@ -167,12 +159,34 @@ export function parentChain(read: ReadLayer, id: LayerId): Layer[] {
 	return layerChain(read, read(id)?.parent ?? null);
 }
 
-export function chainPose(chain: readonly Pose[]): Pose {
-	return chain.reduce<Pose>((total, layer) => composePose(total, layer), NO_POSE);
+export function chainLinear(chain: readonly Pose[]): Linear {
+	return chain.reduce<Linear>(
+		(total, layer) => multiplyLinear(total, linearOf(layer)),
+		linearOf(NO_POSE),
+	);
 }
 
-export function poseInside(parents: readonly Pose[], seen: Pose): Pose {
-	return normalizedPose(composePose(inversePose(chainPose(parents)), seen));
+export function chainPose(chain: readonly Pose[]): Pose {
+	return poseOf(chainLinear(chain));
+}
+
+export function uprightLinear(chain: readonly Pose[]): Linear {
+	const seen = chainLinear(chain);
+	const turns = chain.reduce((total, layer) => total + layer.rotation, 0);
+	const turn = linearOf({
+		...NO_POSE,
+		rotation: poseOf(seen, { ...NO_POSE, rotation: turns }).rotation,
+	});
+	return multiplyLinear(invertLinear(seen), turn);
+}
+
+export function seenLinear(parents: readonly Pose[], layer: Pose): Linear {
+	return multiplyLinear(chainLinear(parents), linearOf(layer));
+}
+
+export function poseInside(parents: readonly Pose[], seen: Linear, near: Pose): Pose {
+	const inside = multiplyLinear(invertLinear(chainLinear(parents)), seen);
+	return normalizedPose(poseOf(inside, near));
 }
 
 export function turnedOnScreen(
