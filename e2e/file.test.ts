@@ -62,7 +62,7 @@ test("Open shows the file in place of an unchanged Untitled window", async () =>
 	await app.close();
 });
 
-test("Open puts the file in a new window when the current document has changes", async () => {
+test("Open puts the file in a new window when the current document has changes, once", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const path = await writtenFile();
 	await answerDialogs(app, path);
@@ -77,6 +77,10 @@ test("Open puts the file in a new window when the current document has changes",
 	await expect(next.locator(".layer")).toHaveCount(1);
 	await expect(window.locator("#file-bar .file-name")).toHaveText("Untitled");
 	await expect(layers).toHaveCount(2);
+
+	await pickFileItem(window, "Open…");
+	await expect.poll(() => next.evaluate(() => document.hasFocus())).toBe(true);
+	expect(app.windows()).toHaveLength(2);
 
 	await app.close();
 });

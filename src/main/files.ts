@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { basename, extname } from "node:path";
-import { BrowserWindow, dialog, ipcMain } from "electron";
+import { basename } from "node:path";
+import { BrowserWindow, dialog, ipcMain, webContents } from "electron";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import {
 	FILE_EXTENSION,
@@ -14,15 +14,23 @@ import type { OpenedFile } from "../shared/file";
 
 const FILTERS = [{ name: "botframe", extensions: [FILE_EXTENSION] }];
 const SAVE_FAILED = "The file was not saved";
+const OPEN_FAILED = "The file was not opened";
+const DOT_EXTENSION = `.${FILE_EXTENSION}`;
 
 const paths = new Map<number, string>();
 
 function nameOf(path: string): string {
-	return basename(path, extname(path));
+	return basename(path, DOT_EXTENSION);
 }
 
 function withExtension(path: string): string {
-	return extname(path) === "" ? `${path}.${FILE_EXTENSION}` : path;
+	return path.endsWith(DOT_EXTENSION) ? path : `${path}${DOT_EXTENSION}`;
+}
+
+function windowWith(path: string): BrowserWindow | null {
+	const id = [...paths].find(([, held]) => held === path)?.[0];
+	const contents = id === undefined ? undefined : webContents.fromId(id);
+	return contents === undefined ? null : BrowserWindow.fromWebContents(contents);
 }
 
 function remember(contents: WebContents, path: string): void {
@@ -61,6 +69,11 @@ async function openFile(
 	const window = BrowserWindow.fromWebContents(event.sender);
 	const path = window === null ? null : await chooseOpenPath(window);
 	if (path === null) {
+		return;
+	}
+	const holder = windowWith(path);
+	if (holder !== null) {
+		holder.focus();
 		return;
 	}
 	if (pristine === true && !paths.has(event.sender.id)) {
@@ -107,8 +120,9 @@ async function loadFile(event: IpcMainInvokeEvent): Promise<OpenedFile | null> {
 	}
 	try {
 		return { name: nameOf(path), bytes: new Uint8Array(await readFile(path)) };
-	} catch {
+	} catch (error) {
 		paths.delete(event.sender.id);
+		dialog.showErrorBox(OPEN_FAILED, String(error));
 		return null;
 	}
 }

@@ -90,6 +90,7 @@ export function connectEditMenu(doc: DesignDocument, user: UserState): void {
 		pushMenu(shell, doc, user);
 	};
 	push();
+	window.addEventListener("focus", push);
 	doc.subscribeHistory(push);
 	user.selection.subscribe(push);
 	user.pasteReady.subscribe(push);
