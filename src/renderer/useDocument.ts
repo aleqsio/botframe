@@ -49,7 +49,7 @@ export function useLayer(doc: DesignDocument, id: LayerId | null): Layer | null 
 	);
 }
 
-function drawnChain(doc: DesignDocument, id: LayerId | null): Layer[] {
+export function drawnChain(doc: DesignDocument, id: LayerId | null): Layer[] {
 	return layerChain(
 		drawnRead(DOM_DRAWN, (layerId) => doc.layer(layerId)),
 		id,
@@ -94,7 +94,7 @@ function outlineOf(text: string): DrawnOutline | null {
 	};
 }
 
-function subscribeAfterCommit(doc: DesignDocument, listener: () => void): Unsubscribe {
+export function subscribeAfterCommit(doc: DesignDocument, listener: () => void): Unsubscribe {
 	return doc.subscribeChanges(() => {
 		queueMicrotask(listener);
 	});

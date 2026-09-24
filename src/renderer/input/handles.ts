@@ -2,6 +2,7 @@ import type { Layer, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { fromParentPoint, halfSizeOf, toLayerPoint } from "./layerSpace";
 import type { Placed } from "./layerSpace";
+import type { SkewZone } from "./skewHandle";
 
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
@@ -14,14 +15,14 @@ type ZoneMode = "resize" | "rotate";
 
 export type Corner = `${Vertical}${Horizontal}`;
 export type Handle = Corner | Vertical | Horizontal;
-export type ZoneKey = `${ZoneMode}-${Handle}` | "origin";
+export type ZoneKey = `${ZoneMode | SkewZone["mode"]}-${Handle}` | "origin";
 
 export interface HandleZone {
 	mode: ZoneMode;
 	handle: Handle;
 }
 
-export type Zone = HandleZone | { mode: "origin" };
+export type Zone = HandleZone | SkewZone | { mode: "origin" };
 
 export interface Axis {
 	x: number;
