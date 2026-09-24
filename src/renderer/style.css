@@ -79,7 +79,8 @@ body {
 	pointer-events: none;
 }
 
-#viewport {
+#viewport,
+#overlay {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -155,27 +156,21 @@ body {
 }
 
 .selection,
-.selection-box,
-.selection-peer {
-	--handle: calc(var(--handle-size) / var(--zoom));
-}
-
-.selection,
 .selection-box {
-	outline: calc(2px / var(--zoom)) solid var(--selection);
+	outline: 2px solid var(--selection);
 }
 
 .selection-peer {
-	outline: calc(1.5px / var(--zoom)) solid var(--selection);
+	outline: 1.5px solid var(--selection);
 }
 
 .marquee {
-	outline: calc(1px / var(--zoom)) solid var(--selection);
+	outline: 1px solid var(--selection);
 	background-color: var(--marquee-fill);
 }
 
 .highlight {
-	outline: calc(1.5px / var(--zoom)) solid var(--highlight);
+	outline: 1.5px solid var(--highlight);
 }
 
 .selection-padding {
@@ -186,8 +181,8 @@ body {
 }
 
 .drop-outline {
-	outline: calc(2px / var(--zoom)) solid var(--selection);
-	outline-offset: calc(1px / var(--zoom));
+	outline: 2px solid var(--selection);
+	outline-offset: 1px;
 }
 
 .layer[data-dragging] {
@@ -212,26 +207,26 @@ body {
 }
 
 .snap-line[data-axis="x"] {
-	width: calc(1px / var(--zoom));
-	min-height: calc(8px / var(--zoom));
+	width: 1px;
+	min-height: 8px;
 }
 
 .snap-line[data-axis="y"] {
-	height: calc(1px / var(--zoom));
-	min-width: calc(8px / var(--zoom));
+	height: 1px;
+	min-width: 8px;
 }
 
 .selection-handle,
 .origin-mark {
 	position: absolute;
-	width: var(--handle);
-	height: var(--handle);
-	margin: calc(var(--handle) / -2);
-	border: calc(1.5px / var(--zoom)) solid var(--selection);
+	width: var(--handle-size);
+	height: var(--handle-size);
+	margin: calc(var(--handle-size) / -2);
+	border: 1.5px solid var(--selection);
 }
 
 .selection-handle {
-	border-radius: calc(2px / var(--zoom));
+	border-radius: 2px;
 	background: var(--handle-fill);
 }
 
@@ -257,11 +252,7 @@ body {
 
 .origin-mark {
 	border-radius: 50%;
-	background: radial-gradient(
-		circle,
-		var(--selection) calc(1.5px / var(--zoom)),
-		var(--handle-fill) calc(1.5px / var(--zoom))
-	);
+	background: radial-gradient(circle, var(--selection) 1.5px, var(--handle-fill) 1.5px);
 }
 
 #stage[data-zone="resize-nw"],
@@ -1043,6 +1034,14 @@ button.layer-chevron[aria-expanded="false"]::before {
 	font-size: 11px;
 }
 
+.guide-space {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	transform-origin: 0 0;
+}
+
 .guide-line {
 	position: absolute;
 	top: 0;
@@ -1053,12 +1052,12 @@ button.layer-chevron[aria-expanded="false"]::before {
 
 .guide-line[data-axis="x"] {
 	bottom: 0;
-	width: calc(1px / var(--zoom));
+	width: 1px;
 }
 
 .guide-line[data-axis="y"] {
 	right: 0;
-	height: calc(1px / var(--zoom));
+	height: 1px;
 }
 
 .card-footer {

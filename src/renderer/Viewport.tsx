@@ -14,6 +14,10 @@ function viewportStyle(camera: Camera): CSSProperties {
 	return { transform: cameraTransform(camera), "--zoom": camera.zoom };
 }
 
+function overlayStyle(camera: Camera): CSSProperties {
+	return { transform: `translate(${camera.x}px, ${camera.y}px)`, "--zoom": camera.zoom };
+}
+
 function dotGridStyle(camera: Camera): CSSProperties {
 	const { spacing, offset } = dotGrid(camera);
 	return {
@@ -25,9 +29,11 @@ function dotGridStyle(camera: Camera): CSSProperties {
 export function Viewport({
 	camera,
 	children,
+	overlay,
 }: {
 	camera: Slot<Camera>;
 	children: ReactNode;
+	overlay: ReactNode;
 }): ReactElement {
 	const view = useSlot(camera);
 
@@ -36,6 +42,9 @@ export function Viewport({
 			<div id="dot-grid" style={dotGridStyle(view)} />
 			<div id="viewport" style={viewportStyle(view)}>
 				{children}
+			</div>
+			<div id="overlay" style={overlayStyle(view)}>
+				{overlay}
 			</div>
 		</>
 	);

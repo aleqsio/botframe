@@ -33,7 +33,7 @@ export function Stage({
 			ref={stage}
 			{...handlers}
 		>
-			<Viewport camera={user.camera}>
+			<Viewport camera={user.camera} overlay={<Overlay doc={doc} user={user} />}>
 				{ids.map((id) => (
 					<LayerView
 						doc={doc}
@@ -47,7 +47,6 @@ export function Stage({
 				{ids.map((id) => (
 					<FrameLabel doc={doc} id={id} key={id} selection={user.selection} />
 				))}
-				<Overlay doc={doc} user={user} />
 			</Viewport>
 		</main>
 	);

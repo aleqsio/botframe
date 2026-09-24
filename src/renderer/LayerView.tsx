@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
-import type { Guide } from "../document/guides";
 import type { LayerId } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
+import { GuideLines } from "./GuideLines";
 import { layerStyle } from "./layerStyle";
 import type { Slot } from "./state/slot";
 import type { Lifted } from "./state/userState";
@@ -16,10 +16,6 @@ function liftedStyle(style: CSSProperties, lift: string): CSSProperties {
 	return lift === NOT_LIFTED
 		? style
 		: { ...style, transform: `${lift} ${style.transform ?? ""}`.trimEnd() };
-}
-
-function guideStyle(guide: Guide): CSSProperties {
-	return guide.axis === "x" ? { left: `${guide.at}px` } : { top: `${guide.at}px` };
 }
 
 export function LayerView({
@@ -62,9 +58,7 @@ export function LayerView({
 					selection={selection}
 				/>
 			))}
-			{Array.from(layer.guides.entries(), ([index, guide]) => (
-				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />
-			))}
+			<GuideLines guides={layer.guides} />
 		</div>
 	);
 }
