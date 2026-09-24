@@ -70,7 +70,7 @@ describe("visibleLayerIds", () => {
 		const instance: Paint = {
 			fill: "#00000000",
 			media: null,
-			content: { kind: "component", component: "abc", props: {} },
+			content: { kind: "component", component: "abc", props: {}, values: {} },
 		};
 
 		expect(visibleLayerIds([TOP, BOTTOM], (id) => (id === TOP ? instance : null))).toEqual([TOP]);

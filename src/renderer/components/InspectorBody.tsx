@@ -3,11 +3,12 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import type { UserState } from "../state/userState";
 import { useLayerCount } from "../useDocument";
-import { ComponentProps } from "./ComponentProps";
 import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { NameField } from "./NameField";
+import { FieldPanels, LayerPanels } from "./variables/ComponentPanels";
+import { DocumentPanels } from "./variables/VariablesSection";
 
 function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 	const count = useLayerCount(doc);
@@ -32,18 +33,24 @@ export function InspectorBody({
 	const [first, peer] = layers;
 
 	if (first === undefined) {
-		return <PageProperties doc={doc} />;
+		return (
+			<>
+				<PageProperties doc={doc} />
+				<DocumentPanels doc={doc} />
+			</>
+		);
 	}
 	return (
 		<>
 			<NameField doc={doc} layers={layers} />
-			{peer === undefined ? <ComponentProps doc={doc} layer={first} /> : null}
+			{peer === undefined ? <LayerPanels doc={doc} layer={first} user={user} /> : null}
 			<LayoutActions doc={doc} layers={layers} user={user} />
 			{peer === undefined ? (
 				<LayerProperties doc={doc} layer={first} />
 			) : (
 				<MixedProperties doc={doc} layers={layers} />
 			)}
+			{peer === undefined ? <FieldPanels doc={doc} layer={first} user={user} /> : null}
 		</>
 	);
 }

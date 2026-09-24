@@ -1,5 +1,5 @@
 import type { ComponentSource } from "../document/component";
-import type { Sources } from "../document/componentLibrary";
+import type { PackedComponent } from "../document/componentPack";
 import { isComponentFile, readComponentFolder } from "../document/componentFiles";
 import type { FileText, FolderRead } from "../document/componentFiles";
 import type { DesignDocument } from "../document/document";
@@ -38,9 +38,17 @@ function addressed(sources: readonly ComponentSource[]): Promise<[string, Compon
 	);
 }
 
-export async function verifiedSources(sources: Sources): Promise<Sources> {
-	const checked = await addressed(Object.values(sources));
-	return Object.fromEntries(checked.filter(([id, source]) => sources[id] === source));
+async function holdsAddress(packed: PackedComponent): Promise<boolean> {
+	const { body } = packed;
+	return body.kind === "layers" || (await componentId(body.source)) === body.address;
+}
+
+export async function verifiedPacks(
+	packs: Readonly<Record<string, PackedComponent>>,
+): Promise<Readonly<Record<string, PackedComponent>>> {
+	const entries = Object.entries(packs);
+	const held = await Promise.all(entries.map(([, packed]) => holdsAddress(packed)));
+	return Object.fromEntries(entries.filter((_entry, index) => held[index] === true));
 }
 
 export async function importFolder(
@@ -51,6 +59,6 @@ export async function importFolder(
 		files.filter((file) => isComponentFile(pathOf(file))).map((file) => textOf(file)),
 	);
 	const read = readComponentFolder(texts);
-	doc.components.add(Object.fromEntries(await addressed(read.sources)));
+	doc.components.importHtml(await addressed(read.sources));
 	return importReport(read);
 }

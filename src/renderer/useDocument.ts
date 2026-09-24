@@ -1,6 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
-import type { Component } from "../document/component";
-import type { CatalogEntry } from "../document/componentLibrary";
+import type { ComponentEntry, ComponentsView } from "../document/components";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId, Rect } from "../document/layer";
 import { DOM_DRAWN, drawnPadding, drawnRead } from "./input/drawn";
@@ -51,20 +50,61 @@ export function useLayer(doc: DesignDocument, id: LayerId | null): Layer | null 
 	);
 }
 
-export function useComponent(doc: DesignDocument, id: string | null): Component | null {
-	return useSyncExternalStore(
-		useCallback(
-			(listener: () => void) => (id === null ? NO_LAYER : doc.components.subscribe(listener)),
-			[doc, id],
-		),
-		useCallback(() => (id === null ? null : doc.components.component(id)), [doc, id]),
+export interface ComponentRow extends ComponentEntry {
+	copies: number;
+}
+
+function rowsOf(doc: DesignDocument): readonly ComponentRow[] {
+	return doc.components
+		.entries()
+		.map((entry): ComponentRow => {
+			const { id, name, body } = entry;
+			return { id, name, body, copies: doc.tree.copyCount(id) };
+		})
+		.filter((row) => row.body.kind === "html" || row.copies > 0);
+}
+
+function sameRows(left: readonly ComponentRow[], right: readonly ComponentRow[]): boolean {
+	return (
+		left.length === right.length &&
+		left.every((row, index) => {
+			const other = right[index];
+			return (
+				other !== undefined &&
+				other.id === row.id &&
+				other.name === row.name &&
+				other.copies === row.copies
+			);
+		})
 	);
 }
 
-export function useCatalog(doc: DesignDocument): readonly CatalogEntry[] {
+export function useComponentRows(doc: DesignDocument): readonly ComponentRow[] {
+	const held = useRef<readonly ComponentRow[]>([]);
+	return useSyncExternalStore(
+		useCallback(
+			(listener: () => void) => {
+				const drops = [doc.subscribeStructure(listener), doc.components.subscribe(listener)];
+				return () => {
+					for (const drop of drops) {
+						drop();
+					}
+				};
+			},
+			[doc],
+		),
+		useCallback(() => {
+			const next = rowsOf(doc);
+			held.current = sameRows(held.current, next) ? held.current : next;
+			return held.current;
+		}, [doc]),
+	);
+}
+
+export function useComponentsView(doc: DesignDocument): ComponentsView {
 	return useSyncExternalStore(
 		useCallback((listener: () => void) => doc.components.subscribe(listener), [doc]),
-		useCallback(() => doc.components.catalog(), [doc]),
+		useCallback(() => doc.components.view(), [doc]),
 	);
 }
 

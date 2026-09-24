@@ -1,7 +1,7 @@
 import type { Layer, LayerId } from "../../document/layer";
+import { isLayerId as isPathId } from "../../document/path";
 import type { Point } from "../state/camera";
 
-const LAYER_ID = /^\d+@\d+$/u;
 export const LAYER_ATTRIBUTE = "data-layer-id";
 const ZERO_ALPHA_HEX = /^#(?:[\da-f]{3}0|[\da-f]{6}00)$/u;
 const COLOR_FUNCTION = /^rgba?\((?<body>.*)\)$/u;
@@ -11,15 +11,13 @@ export interface HitElement {
 	getAttribute: (name: string) => string | null;
 }
 
-export function isLayerId(value: string): value is LayerId {
-	return LAYER_ID.test(value);
-}
+export { isLayerId } from "../../document/path";
 
 export function layerIdsUnder(elements: Iterable<HitElement>): LayerId[] {
 	const ids: LayerId[] = [];
 	for (const candidate of elements) {
 		const value = candidate.getAttribute(LAYER_ATTRIBUTE);
-		if (value !== null && isLayerId(value)) {
+		if (value !== null && isPathId(value)) {
 			ids.push(value);
 		}
 	}

@@ -2,11 +2,11 @@ import type { DesignDocument } from "../document/document";
 import { parseEnvelope, serializeEnvelope } from "../document/envelope";
 import type { LayerEnvelope } from "../document/envelope";
 import type { LayerId } from "../document/layer";
-import { componentIdsOf } from "../document/subtree";
+import { adoptComponents } from "../document/componentActions";
 import type { LayerNode } from "../document/subtree";
 import { bridge } from "./bridge";
-import { verifiedSources } from "./componentImport";
-import { layerMarkup } from "./layerMarkup";
+import { markupOf, packedFor } from "./clipboardContent";
+import { verifiedPacks } from "./componentImport";
 import type { Bridge } from "./bridge";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
@@ -19,10 +19,6 @@ function selectedNodes(doc: DesignDocument, user: UserState): LayerNode[] {
 function sourceParentOf(doc: DesignDocument, user: UserState): LayerId | null {
 	const [selected] = user.selection.get();
 	return selected === undefined ? null : (doc.layer(selected)?.parent ?? null);
-}
-
-function markupOf(doc: DesignDocument, nodes: readonly LayerNode[]): string {
-	return nodes.map((node) => layerMarkup(node, (id) => doc.components.component(id))).join("");
 }
 
 async function sendToClipboard(
@@ -59,7 +55,7 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 	if (envelope.layers.length === 0) {
 		return;
 	}
-	doc.components.adopt(envelope.components);
+	adoptComponents(doc, envelope.components);
 	const parent = pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
@@ -73,7 +69,7 @@ async function readClipboard(shell: Bridge, doc: DesignDocument, user: UserState
 	if (envelope !== null) {
 		createLayers(doc, user, {
 			...envelope,
-			components: await verifiedSources(envelope.components),
+			components: await verifiedPacks(envelope.components),
 		});
 	}
 }
@@ -87,14 +83,14 @@ export function copySelection(doc: DesignDocument, user: UserState): boolean {
 		sourceParent: sourceParentOf(doc, user),
 		sourceIds: user.selection.get(),
 		layers: nodes,
-		components: doc.components.sourcesOf(componentIdsOf(nodes)),
+		components: packedFor(doc, nodes),
 	};
-	return write(user, markupOf(doc, nodes), serializeEnvelope(envelope));
+	return write(user, markupOf(doc, user.selection.get()), serializeEnvelope(envelope));
 }
 
 export function copyAsHtml(doc: DesignDocument, user: UserState): boolean {
 	const nodes = selectedNodes(doc, user);
-	return nodes.length > 0 && write(user, markupOf(doc, nodes), null);
+	return nodes.length > 0 && write(user, markupOf(doc, user.selection.get()), null);
 }
 
 export function cutSelection(doc: DesignDocument, user: UserState): boolean {

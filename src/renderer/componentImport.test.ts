@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ComponentSource } from "../document/component";
+import type { PackedComponent } from "../document/componentPack";
 import { DesignDocument } from "../document/document";
-import { componentId, importFolder, verifiedSources } from "./componentImport";
+import { componentId, importFolder, verifiedPacks } from "./componentImport";
 
 const TAG: ComponentSource = { name: "Tag", html: "<b>{{label}}</b>", css: "", props: [] };
 
@@ -32,7 +33,9 @@ describe("importFolder", () => {
 			"Imported 1 component.",
 			"Skipped Open. Its HTML file has a section that is not closed.",
 		]);
-		expect(doc.components.catalog()).toEqual([{ name: "Tag", id: await componentId(TAG) }]);
+		const [entry] = doc.components.entries();
+		expect(entry?.name).toBe("Tag");
+		expect(entry?.body).toEqual({ kind: "html", source: await componentId(TAG) });
 		expect(doc.canUndo()).toBe(false);
 	});
 
@@ -40,15 +43,23 @@ describe("importFolder", () => {
 		const doc = DesignDocument.create();
 
 		expect(await importFolder(doc, [fileAt("notes.txt", "")])).toEqual(["Imported 0 components."]);
-		expect(doc.components.catalog()).toEqual([]);
+		expect(doc.components.entries()).toEqual([]);
 	});
 });
 
-describe("verifiedSources", () => {
-	it("keeps a pasted source only when its address is the hash of the source", async () => {
-		const address = await componentId(TAG);
-		const changed = { ...TAG, html: "<i>{{label}}</i>" };
+function pack(held: string, source: ComponentSource): PackedComponent {
+	return { name: "Tag", body: { kind: "html", address: held, source }, variables: [], cells: [] };
+}
 
-		expect(await verifiedSources({ [address]: TAG, forged: changed })).toEqual({ [address]: TAG });
+describe("verifiedPacks", () => {
+	it("keeps a pasted HTML component only when its address is the hash of its source", async () => {
+		const address = await componentId(TAG);
+		const good = pack(address, TAG);
+
+		expect(
+			await verifiedPacks({ good, forged: pack(address, { ...TAG, html: "<i></i>" }) }),
+		).toEqual({
+			good,
+		});
 	});
 });

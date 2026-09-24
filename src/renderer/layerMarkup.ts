@@ -1,6 +1,4 @@
 import type { CSSProperties } from "react";
-import { componentMarkup } from "../document/component";
-import type { Component } from "../document/component";
 import type { LayerContent } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
@@ -45,16 +43,11 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
-export type FindComponent = (id: string) => Component | null;
+export type FindComponent = (content: LayerContent) => string | null;
 
 function shadowOf(content: LayerContent, find: FindComponent): string {
-	if (content.kind !== "component") {
-		return "";
-	}
-	const component = find(content.component);
-	return component === null
-		? ""
-		: `<template shadowrootmode="open">${componentMarkup(component, content.props)}</template>`;
+	const markup = find(content);
+	return markup === null ? "" : `<template shadowrootmode="open">${markup}</template>`;
 }
 
 function markupOf(node: LayerNode, parentDisplay: DisplayMode | null, find: FindComponent): string {

@@ -1,14 +1,13 @@
 import { useMemo } from "react";
-import { componentMarkup } from "../document/component";
-import type { Component } from "../document/component";
 import type { DesignDocument } from "../document/document";
+import { htmlMarkupOf } from "../document/htmlMarkup";
 import type { LayerContent } from "../document/layer";
-import { useComponent } from "./useDocument";
+import { isReference } from "../document/variable";
 
 const EDITOR_STYLE = "<style>:host > :not(slot) { pointer-events: none; }</style>";
 const EMPTY_SHADOW = "<slot></slot>";
 
-export function markupSize(markup: string): { width: number; height: number } {
+function markupSize(markup: string): { width: number; height: number } {
 	const probe = document.createElement("div");
 	probe.style.cssText =
 		"position: absolute; visibility: hidden; display: flex; width: fit-content; height: fit-content";
@@ -19,10 +18,20 @@ export function markupSize(markup: string): { width: number; height: number } {
 	return size;
 }
 
-function shadowMarkupOf(content: LayerContent, component: Component | null): string | null {
-	return content.kind === "component" && component !== null
-		? componentMarkup(component, content.props)
-		: null;
+export function initialSize(
+	doc: DesignDocument,
+	component: string,
+): { width: number; height: number } {
+	const values = Object.fromEntries(
+		doc.components
+			.scope(component)
+			.variables()
+			.flatMap((variable) =>
+				isReference(variable.initial) ? [] : [[variable.id, variable.initial] as const],
+			),
+	);
+	const content = { kind: "component", component, props: {}, values } as const;
+	return markupSize(htmlMarkupOf(doc.components, content) ?? "");
 }
 
 function shadowWriter(markup: string | null): (element: HTMLElement | null) => void {
@@ -43,7 +52,6 @@ export function useShadowWriter(
 	doc: DesignDocument,
 	content: LayerContent | null,
 ): (element: HTMLElement | null) => void {
-	const component = useComponent(doc, content?.kind === "component" ? content.component : null);
-	const markup = content === null ? null : shadowMarkupOf(content, component);
+	const markup = content === null ? null : htmlMarkupOf(doc.components, content);
 	return useMemo(() => shadowWriter(markup), [markup]);
 }

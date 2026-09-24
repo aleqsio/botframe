@@ -3,10 +3,10 @@ import type { ReactElement } from "react";
 import { importFolder } from "../componentImport";
 import { placeComponent } from "../componentPlace";
 import type { Placement } from "../componentPlace";
-import { useCatalog } from "../useDocument";
+import { useComponentRows } from "../useDocument";
 
 const EMPTY_NOTE =
-	"Import a folder. Each component is a Name.html file, with Name.css and Name.json.";
+	"Make a component from a frame, or import a folder. Each HTML component is a Name.html file, with Name.css and Name.json.";
 
 function ImportButton({ onImport }: { onImport: (files: readonly File[]) => void }): ReactElement {
 	return (
@@ -31,7 +31,7 @@ function ImportButton({ onImport }: { onImport: (files: readonly File[]) => void
 }
 
 export function ComponentList(placement: Placement): ReactElement {
-	const catalog = useCatalog(placement.doc);
+	const rows = useComponentRows(placement.doc);
 	const [report, setReport] = useState<readonly string[]>([]);
 
 	return (
@@ -43,23 +43,24 @@ export function ComponentList(placement: Placement): ReactElement {
 					});
 				}}
 			/>
-			{[...report, ...(catalog.length === 0 ? [EMPTY_NOTE] : [])].map((line) => (
+			{[...report, ...(rows.length === 0 ? [EMPTY_NOTE] : [])].map((line) => (
 				<p className="component-note" key={line}>
 					{line}
 				</p>
 			))}
 			<ul className="layer-list">
-				{catalog.map((entry) => (
-					<li key={entry.name}>
+				{rows.map((row) => (
+					<li key={row.id}>
 						<button
 							className="layer-row"
 							onClick={() => {
-								placeComponent(placement, entry);
+								placeComponent(placement, row);
 							}}
 							type="button"
 						>
 							<span className="layer-glyph layer-glyph-component" />
-							{entry.name}
+							<span className="component-row-name">{row.name}</span>
+							<span className="component-row-count">{row.copies}</span>
 						</button>
 					</li>
 				))}

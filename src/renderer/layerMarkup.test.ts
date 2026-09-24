@@ -5,7 +5,6 @@ import type { LayerLayout } from "../document/layout";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
-import { componentOf } from "../document/component";
 import { layerMarkup } from "./layerMarkup";
 
 const NO_COMPONENTS = (): null => null;
@@ -118,22 +117,18 @@ describe("layerMarkup", () => {
 });
 
 describe("layerMarkup of a component instance", () => {
-	it("writes the component markup into a declarative shadow root before the children", () => {
-		const component = componentOf("v1", {
-			name: "Tag",
-			html: "<b>{{label}}</b>",
-			css: "b{}",
-			props: [{ name: "label", kind: "text", initial: "New" }],
-		});
+	it("writes the markup of an HTML copy into a declarative shadow root before the children", () => {
 		const node = {
 			...nodeOf({}, [nodeOf({ x: 1 })]),
-			content: { kind: "component" as const, component: "v1", props: { label: "<Hot>" } },
+			content: { kind: "component" as const, component: "v1", props: {}, values: {} },
 		};
 
-		const markup = layerMarkup(node, (id) => (id === "v1" ? component : null));
+		const markup = layerMarkup(node, (content) =>
+			content.kind === "component" ? "<b>Hot</b><slot></slot>" : null,
+		);
 
 		expect(markup).toMatch(
-			/^<div style="[^"]*"><template shadowrootmode="open"><style>[^<]*b\{\}<\/style><b>&lt;Hot&gt;<\/b><slot><\/slot><\/template><div style=/u,
+			/^<div style="[^"]*"><template shadowrootmode="open"><b>Hot<\/b><slot><\/slot><\/template><div style=/u,
 		);
 		expect(layerMarkup(node, NO_COMPONENTS)).not.toContain("<template");
 	});
