@@ -3,7 +3,15 @@ import { CENTER_ORIGIN } from "../../document/layer";
 import { visualCenterOf } from "./layerSpace";
 import { movedOrigin } from "./pivot";
 
-const FLAT = { x: 0, y: 0, width: 40, height: 20, rotation: 0, origin: CENTER_ORIGIN };
+const FLAT = {
+	x: 0,
+	y: 0,
+	width: 40,
+	height: 20,
+	rotation: 0,
+	mirrored: false,
+	origin: CENTER_ORIGIN,
+};
 
 describe("movedOrigin", () => {
 	it("keeps the middle on an axis that has no extent", () => {

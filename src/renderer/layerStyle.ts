@@ -98,8 +98,13 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 	return {};
 }
 
+function isPosed(layer: Turned): boolean {
+	return layer.rotation !== 0 || layer.mirrored;
+}
+
 function turnText(layer: Turned): string {
-	return `rotate(${layer.rotation}deg)`;
+	const turn = `rotate(${layer.rotation}deg)`;
+	return layer.mirrored ? `${turn} scaleX(-1)` : turn;
 }
 
 function turnAbout(layer: Turned): string {
@@ -113,11 +118,11 @@ function placeText(layer: Rect): string {
 }
 
 function layerTransform(layer: Rect & Turned): string {
-	return layer.rotation === 0 ? placeText(layer) : `${placeText(layer)} ${turnText(layer)}`;
+	return isPosed(layer) ? `${placeText(layer)} ${turnText(layer)}` : placeText(layer);
 }
 
 export function spaceTransform(layer: Rect & Turned): string {
-	return layer.rotation === 0 ? placeText(layer) : `${placeText(layer)} ${turnAbout(layer)}`;
+	return isPosed(layer) ? `${placeText(layer)} ${turnAbout(layer)}` : placeText(layer);
 }
 
 export function originPlace(origin: Origin): { left: string; top: string } {
@@ -125,7 +130,7 @@ export function originPlace(origin: Origin): { left: string; top: string } {
 }
 
 function originStyle(layer: Turned): CSSProperties {
-	if (layer.rotation === 0) {
+	if (!isPosed(layer)) {
 		return {};
 	}
 	const { left, top } = originPlace(layer.origin);
@@ -160,7 +165,7 @@ function placeStyle(layer: StyledLayer, flow: ParentFlow): CSSProperties {
 	return {
 		position: "relative",
 		...offsetStyle(layer),
-		transform: layer.rotation === 0 ? undefined : turnText(layer),
+		transform: isPosed(layer) ? turnText(layer) : undefined,
 		...originStyle(layer),
 	};
 }

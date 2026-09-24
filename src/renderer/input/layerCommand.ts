@@ -1,7 +1,7 @@
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { normalizeDegrees } from "./layerSpace";
+import { parentChain, turnedOnScreen } from "./layerSpace";
 import { modifiersOf } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, stepOf } from "./step";
@@ -87,7 +87,9 @@ export function applyCommand(doc: DesignDocument, layer: Layer, command: LayerCo
 			break;
 		}
 		case "rotate": {
-			doc.update(layer.id, { rotation: normalizeDegrees(layer.rotation + command.degrees) });
+			const parents = parentChain((id) => doc.layer(id), layer.id);
+			const rotation = turnedOnScreen(parents, layer.rotation, command.degrees);
+			doc.update(layer.id, { rotation });
 			break;
 		}
 	}

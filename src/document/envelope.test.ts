@@ -17,6 +17,7 @@ const CHILD: LayerNode = {
 		geometry: { kind: "path", d: "M0 0 L1 1 Z" },
 	},
 	rotation: 15,
+	mirrored: true,
 	...pixelBox({ x: 1, y: 2, width: 3, height: 4 }),
 	children: [],
 };
@@ -33,6 +34,7 @@ const ROOT: LayerNode = {
 		geometry: { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0.5, frame: true },
 	},
 	rotation: 0,
+	mirrored: false,
 	...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),
 	children: [CHILD],
 };
@@ -98,7 +100,13 @@ describe("parseEnvelope", () => {
 
 	it("reads a field of the wrong type as the fallback of that field", () => {
 		const raw = envelopeWith({
-			layers: [{ fields: { x: "far", fill: 7, name: null, clip: "yes" }, rotation: "half" }],
+			layers: [
+				{
+					fields: { x: "far", fill: 7, name: null, clip: "yes" },
+					rotation: "half",
+					mirrored: "yes",
+				},
+			],
 		});
 		expect(parseEnvelope(raw)?.layers[0]).toEqual({
 			fields: {
@@ -112,6 +120,7 @@ describe("parseEnvelope", () => {
 				geometry: PLAIN_RECTANGLE,
 			},
 			rotation: 0,
+			mirrored: false,
 			...pixelBox({ x: 0, y: 0, width: 0, height: 0 }),
 			children: [],
 		});

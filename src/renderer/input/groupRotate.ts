@@ -1,13 +1,7 @@
 import type { Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
 import type { GroupPart } from "./groupResize";
-import {
-	angleFrom,
-	normalizeDegrees,
-	placedAround,
-	rotatePoint,
-	toParentPoint,
-} from "./layerSpace";
+import { angleFrom, placedAround, rotatePoint, toParentPoint, turnedOnScreen } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP, stepOf } from "./step";
 
@@ -37,7 +31,7 @@ function turnedAbout(pivot: Point, point: Point, degrees: number): Point {
 export function groupTurned(turn: GroupTurn, point: Point, modifiers: Modifiers): TurnedPart[] {
 	const degrees = turnOf(turn, point, modifiers);
 	return turn.parts.map(({ start, chain, center }) => {
-		const rotation = normalizeDegrees(start.rotation + degrees);
+		const rotation = turnedOnScreen(chain, start.rotation, degrees);
 		const moved = toParentPoint(chain, turnedAbout(turn.pivot, center, degrees));
 		return { start, rotation, place: placedAround({ ...start, rotation }, moved) };
 	});

@@ -4,16 +4,21 @@ import type { Layer, LayerId } from "../../document/layer";
 import {
 	anchorOf,
 	anchoredPlace,
+	chainPose,
+	composePose,
 	containsPoint,
 	cornersOf,
 	fromParentPoint,
 	hullOf,
 	intoLayer,
+	inversePose,
 	layerChain,
 	outOfLayer,
 	pivotOf,
 	placedAround,
+	posePoint,
 	toParentPoint,
+	turnedOnScreen,
 	visualCenterOf,
 } from "./layerSpace";
 
@@ -26,6 +31,7 @@ function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 		height: 100,
 		...pixelBox({ x: 100, y: 100, width: 200, height: 100 }),
 		rotation,
+		mirrored: false,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 		name: "",
@@ -195,5 +201,82 @@ describe("cornersOf", () => {
 			{ x: 10, y: 20 },
 			{ x: 0, y: 20 },
 		]);
+	});
+});
+
+const MIRRORED: Layer = { ...FLAT, mirrored: true };
+
+const PLACES = 1e6;
+
+function rounded(point: { x: number; y: number }): { x: number; y: number } {
+	return {
+		x: Math.round(point.x * PLACES) / PLACES + 0,
+		y: Math.round(point.y * PLACES) / PLACES + 0,
+	};
+}
+
+describe("a mirrored layer", () => {
+	it("shows its left edge on the right side of the screen", () => {
+		expect(rounded(outOfLayer(MIRRORED, { x: 0, y: 0 }))).toEqual({ x: 300, y: 100 });
+		expect(rounded(outOfLayer(MIRRORED, { x: 200, y: 100 }))).toEqual({ x: 100, y: 200 });
+	});
+
+	it("maps a parent point back to the same local point", () => {
+		const turned = { ...MIRRORED, rotation: 30, origin: { x: 0.2, y: 0.9 } };
+		expect(rounded(intoLayer(turned, outOfLayer(turned, { x: 17, y: 42 })))).toEqual({
+			x: 17,
+			y: 42,
+		});
+	});
+
+	it("gives the anchor of a parent point back through anchorOf", () => {
+		const turned = { ...MIRRORED, rotation: 30 };
+		const place = anchoredPlace(turned, { x: 0.1, y: 0.3 }, { x: 50, y: 60 });
+		const anchor = anchorOf({ ...turned, ...place }, { x: 50, y: 60 });
+		expect(rounded(anchor)).toEqual({ x: 0.1, y: 0.3 });
+	});
+});
+
+describe("composePose", () => {
+	const poses = [
+		{ rotation: 0, mirrored: false },
+		{ rotation: 30, mirrored: false },
+		{ rotation: 30, mirrored: true },
+		{ rotation: -75, mirrored: true },
+	];
+	const point = { x: 3, y: 7 };
+
+	it("moves a point as the inner pose, then the outer pose", () => {
+		for (const outer of poses) {
+			for (const inner of poses) {
+				expect(rounded(posePoint(point, composePose(outer, inner)))).toEqual(
+					rounded(posePoint(posePoint(point, inner), outer)),
+				);
+			}
+		}
+	});
+
+	it("gives the identity with the inverse pose", () => {
+		for (const pose of poses) {
+			expect(rounded(posePoint(point, composePose(inversePose(pose), pose)))).toEqual(
+				rounded(point),
+			);
+		}
+	});
+
+	it("gives the pose of a chain on the screen", () => {
+		const chain = [MIRRORED, { ...CHILD, rotation: 30 }];
+		expect(chainPose(chain)).toEqual({ rotation: -30, mirrored: true });
+	});
+});
+
+describe("turnedOnScreen", () => {
+	it("adds the turn inside flat and turned parents", () => {
+		expect(turnedOnScreen([FLAT, TURNED], 10, 15)).toBe(25);
+	});
+
+	it("reverses the turn inside a mirrored parent, so the layer turns the same way on the screen", () => {
+		expect(turnedOnScreen([MIRRORED], 10, 15)).toBe(355);
+		expect(turnedOnScreen([MIRRORED, MIRRORED], 10, 15)).toBe(25);
 	});
 });

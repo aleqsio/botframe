@@ -344,6 +344,18 @@ describe("rotate and swap", () => {
 		expect(layerOf(held.doc, id).rotation).toBe(270);
 	});
 
+	it("turns a layer the same way on the screen inside a mirrored parent", () => {
+		const held = scene();
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], parent));
+		held.doc.update(parent, { mirrored: true });
+		held.doc.commit("mirror");
+
+		run(held, "turnRight");
+
+		expect(layerOf(held.doc, child).rotation).toBe(270);
+	});
+
 	it("exchanges the width and the height about the middle of the layer", () => {
 		const held = scene();
 		const id = only(place(held, [{ x: 0, y: 0, width: 40, height: 20 }]));

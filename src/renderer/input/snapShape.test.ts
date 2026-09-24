@@ -14,6 +14,7 @@ function layerWith(geometry: Geometry, rotation = 0): Layer {
 		width: 40,
 		height: 20,
 		rotation,
+		mirrored: false,
 		fill: "#000000",
 		name: "",
 		clip: false,
@@ -154,6 +155,13 @@ describe("the curves of snapShapeOf", () => {
 		expect(ends[0]?.y).toBeCloseTo(40);
 		expect(ends[1]?.x).toBeCloseTo(130);
 		expect(ends[1]?.y).toBeCloseTo(80);
+	});
+
+	it("moves a corner arc of a mirrored layer to the other side and reverses its sweep", () => {
+		const arc = curvesOf({ ...layerWith(ROUNDED), mirrored: true }).find(
+			(curve) => curve.kind === "arc",
+		);
+		expect(arc).toMatchObject({ center: { x: 134, y: 56 }, turn: 0, from: -90, to: 0 });
 	});
 
 	it("adds the rotation of the layer to the turn of an arc", () => {

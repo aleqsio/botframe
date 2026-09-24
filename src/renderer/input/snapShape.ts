@@ -1,7 +1,7 @@
 import type { Geometry, Layer } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
-import { cornersOf, fromParentPoint } from "./layerSpace";
+import { HALF_TURN, cornersOf, fromParentPoint } from "./layerSpace";
 
 export type Curve =
 	| { kind: "segment"; from: Point; to: Point }
@@ -114,11 +114,12 @@ function movedCurve(layer: Layer, curve: Curve): Curve {
 			to: fromParentPoint(chain, curve.to),
 		};
 	}
-	return {
-		...curve,
-		center: fromParentPoint(chain, curve.center),
-		turn: curve.turn + layer.rotation,
-	};
+	const center = fromParentPoint(chain, curve.center);
+	if (layer.mirrored) {
+		const sweep = { from: HALF_TURN - curve.to, to: HALF_TURN - curve.from };
+		return { ...curve, ...sweep, center, turn: layer.rotation - curve.turn };
+	}
+	return { ...curve, center, turn: curve.turn + layer.rotation };
 }
 
 export function snapShapeOf(layer: Layer): SnapShape {

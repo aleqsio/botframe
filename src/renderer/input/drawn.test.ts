@@ -17,6 +17,7 @@ function layerOf(layout: LayoutPatch): Layer {
 		...pixelBox(BOX),
 		layout: { ...DEFAULT_LAYOUT, ...layout },
 		rotation: 0,
+		mirrored: false,
 		fill: "#000000",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 		name: "",

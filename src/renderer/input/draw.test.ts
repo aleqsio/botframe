@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
-import { DEFAULT_DRAW_SIZE, drawnRect, tappedRect } from "./draw";
+import { pixelBox } from "../../document/documentFixtures";
+import type { Layer } from "../../document/layer";
+import { DEFAULT_DRAW_SIZE, drawnRect, levelRect, tappedRect } from "./draw";
 import { MIN_LAYER_SIZE } from "./transform";
 
 const ORIGIN = { x: 100, y: 100 };
@@ -93,6 +95,29 @@ describe("tappedRect", () => {
 			y: 100,
 			width: DEFAULT_DRAW_SIZE,
 			height: DEFAULT_DRAW_SIZE,
+		});
+	});
+});
+
+describe("levelRect", () => {
+	const BOX = { x: 0, y: 0, width: 200, height: 100 };
+	const PARENT: Layer = {
+		id: "1@1",
+		parent: null,
+		...BOX,
+		...pixelBox(BOX),
+		rotation: 30,
+		mirrored: true,
+		fill: "#ffffff",
+		name: "",
+		clip: false,
+		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
+	};
+
+	it("mirrors and turns a layer drawn in a mirrored parent, so it stands level on the screen", () => {
+		expect(levelRect([PARENT], { x: 10, y: 10, width: 20, height: 20 })).toMatchObject({
+			rotation: 30,
+			mirrored: true,
 		});
 	});
 });

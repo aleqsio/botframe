@@ -1,12 +1,12 @@
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
-import type { Layer, LayerFields, LayerId, Rect } from "../../document/layer";
+import type { Layer, LayerFields, LayerId, Pose, Rect } from "../../document/layer";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera, Point, StagePoint } from "../state/camera";
 import { UserState } from "../state/userState";
 import { NO_DRAWN } from "./drawn";
 import type { DrawnReader } from "./drawn";
-import { centerOf, chainTurn, fromParentPoint, layerChain, normalizeDegrees } from "./layerSpace";
+import { centerOf, chainPose, fromParentPoint, layerChain, normalizedPose } from "./layerSpace";
 import { drawnReaderOf, parentChainOf } from "./targetSpace";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
@@ -164,8 +164,8 @@ export function anchorOnScreen(target: PointerTarget, id: LayerId, anchor: Point
 	return fromParentPoint(chain, { x: anchor.x * layer.width, y: anchor.y * layer.height });
 }
 
-export function turnOnScreen(target: PointerTarget, id: LayerId): number {
-	return normalizeDegrees(chainTurn(layerChain(drawnReaderOf(target), id)));
+export function poseOnScreen(target: PointerTarget, id: LayerId): Pose {
+	return normalizedPose(chainPose(layerChain(drawnReaderOf(target), id)));
 }
 
 export function lastDrawn(target: PointerTarget): Layer {

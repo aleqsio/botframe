@@ -12,6 +12,7 @@ import {
 	parentChain,
 	placedAround,
 	toParentPoint,
+	turnedOnScreen,
 	visualCenterOf,
 } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
@@ -195,7 +196,8 @@ export interface TurnSpec {
 
 export function turnSelection(doc: DesignDocument, user: UserState, spec: TurnSpec): boolean {
 	for (const layer of selectedLayers(doc, user)) {
-		doc.update(layer.id, { rotation: normalizeDegrees(layer.rotation + spec.degrees) });
+		const parents = parentChain((id) => doc.layer(id), layer.id);
+		doc.update(layer.id, { rotation: turnedOnScreen(parents, layer.rotation, spec.degrees) });
 	}
 	doc.commit(spec.message);
 	return true;
