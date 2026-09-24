@@ -1,4 +1,6 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
+import type { Component } from "../document/component";
+import type { CatalogEntry } from "../document/componentLibrary";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId, Rect } from "../document/layer";
 import { DOM_DRAWN, drawnPadding, drawnRead } from "./input/drawn";
@@ -46,6 +48,23 @@ export function useLayer(doc: DesignDocument, id: LayerId | null): Layer | null 
 			[doc, id],
 		),
 		useCallback(() => (id === null ? null : doc.layer(id)), [doc, id]),
+	);
+}
+
+export function useComponent(doc: DesignDocument, id: string | null): Component | null {
+	return useSyncExternalStore(
+		useCallback(
+			(listener: () => void) => (id === null ? NO_LAYER : doc.components.subscribe(listener)),
+			[doc, id],
+		),
+		useCallback(() => (id === null ? null : doc.components.component(id)), [doc, id]),
+	);
+}
+
+export function useCatalog(doc: DesignDocument): readonly CatalogEntry[] {
+	return useSyncExternalStore(
+		useCallback((listener: () => void) => doc.components.subscribe(listener), [doc]),
+		useCallback(() => doc.components.catalog(), [doc]),
 	);
 }
 

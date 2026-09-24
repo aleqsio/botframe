@@ -1,4 +1,5 @@
 import type { TreeID } from "loro-crdt";
+import type { PropValues } from "./component";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
@@ -45,6 +46,14 @@ export interface Pose {
 	mirrored: boolean;
 }
 
+export type LayerContent =
+	| { kind: "none" }
+	| { kind: "component"; component: string; props: PropValues };
+
+export type ComponentContent = Extract<LayerContent, { kind: "component" }>;
+
+export const NO_CONTENT: LayerContent = { kind: "none" };
+
 export interface Layer extends Rect, Pose {
 	id: LayerId;
 	origin: Origin;
@@ -57,6 +66,7 @@ export interface Layer extends Rect, Pose {
 	lengths: LayerLengths;
 	layout: LayerLayout;
 	guides: readonly Guide[];
+	content: LayerContent;
 }
 
 export type LayerTraits = Omit<Layer, "id" | "parent">;
@@ -80,4 +90,6 @@ export type LayerPatch = Partial<LayerFields> & {
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 	media?: MediaFill | null;
+	content?: ComponentContent;
+	props?: PropValues;
 };

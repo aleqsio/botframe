@@ -48,7 +48,11 @@ export function isFullyTransparent(color: string): boolean {
 	return alpha !== undefined && ZERO_ALPHA.test(alpha.trim());
 }
 
-export type Paint = Pick<Layer, "fill" | "media">;
+export type Paint = Pick<Layer, "fill" | "media" | "content">;
+
+function isPainted(paint: Paint): boolean {
+	return paint.content.kind === "component" || !isFullyTransparent(paint.fill);
+}
 
 export function visibleLayerIds(
 	ids: readonly LayerId[],
@@ -56,6 +60,6 @@ export function visibleLayerIds(
 ): LayerId[] {
 	return ids.filter((id) => {
 		const paint = paintOf(id);
-		return paint !== null && (paint.media !== null || !isFullyTransparent(paint.fill));
+		return paint !== null && (paint.media !== null || isPainted(paint));
 	});
 }

@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import type { UserState } from "../state/userState";
 import { useLayerCount } from "../useDocument";
+import { ComponentProps } from "./ComponentProps";
 import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
@@ -36,6 +37,7 @@ export function InspectorBody({
 	return (
 		<>
 			<NameField doc={doc} layers={layers} />
+			{peer === undefined ? <ComponentProps doc={doc} layer={first} /> : null}
 			<LayoutActions doc={doc} layers={layers} user={user} />
 			{peer === undefined ? (
 				<LayerProperties doc={doc} layer={first} />

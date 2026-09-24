@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
 import { DRAWN, firstId, pixelBox } from "./documentFixtures";
 import type { Layer, LayerFields, LayerId } from "./layer";
-import { PLAIN_RECTANGLE } from "./subtree";
+import { PLAIN_RECTANGLE, componentIdsOf } from "./subtree";
 import type { LayerNode } from "./subtree";
 
 const CHILD: LayerFields = {
@@ -183,5 +183,21 @@ describe("createSubtree", () => {
 		doc.commit("paste layers");
 
 		expect(doc.changeCount()).toBe(before + 1);
+	});
+});
+
+describe("componentIdsOf", () => {
+	it("gives each component that a tree of copied layers uses, once", () => {
+		const doc = DesignDocument.create();
+		const root = doc.createLayer(DRAWN, null);
+		const child = doc.createLayer(CHILD, root);
+		const grandchild = doc.createLayer(GRANDCHILD, child);
+		doc.update(child, { content: { kind: "component", component: "a", props: {} } });
+		doc.update(grandchild, { content: { kind: "component", component: "a", props: {} } });
+		const other = doc.createLayer(DRAWN, null);
+		doc.update(other, { content: { kind: "component", component: "b", props: {} } });
+
+		const nodes = [root, other].flatMap((id) => doc.readSubtree(id) ?? []);
+		expect([...componentIdsOf(nodes)].toSorted()).toEqual(["a", "b"]);
 	});
 });

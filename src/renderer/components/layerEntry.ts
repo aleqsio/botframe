@@ -8,8 +8,9 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 };
 
 const FRAME_LABEL = "Frame";
+const COMPONENT_LABEL = "Component";
 
-export type LayerGlyph = "frame" | "ellipse" | "rectangle";
+export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component";
 
 export interface InspectorHeading {
 	glyph: LayerGlyph | "page" | "group";
@@ -39,6 +40,9 @@ function kindLabel(layer: Layer | null): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}
+	if (layer.content.kind === "component") {
+		return COMPONENT_LABEL;
+	}
 	return isFrame(layer) ? FRAME_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
 }
 
@@ -50,6 +54,9 @@ export function layerEntry(layer: Layer | null): LayerEntry {
 }
 
 export function glyphOf(layer: Layer | null): LayerGlyph {
+	if (layer?.content.kind === "component") {
+		return "component";
+	}
 	if (isFrame(layer)) {
 		return "frame";
 	}

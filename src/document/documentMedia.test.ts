@@ -71,6 +71,7 @@ describe("the media fill of a layer", () => {
 				sourceParent: null,
 				sourceIds: [],
 				layers: [],
+				components: {},
 			}).replace('"layers":[]', `"layers":[{"media":{"asset":"${asset}","fit":"zoom"}}]`),
 		);
 

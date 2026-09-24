@@ -1,6 +1,16 @@
 import { LoroMap } from "loro-crdt";
-import { CENTER_ORIGIN, heldSkew } from "./layer";
-import type { Geometry, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
+import { isPropValue } from "./component";
+import type { PropValues } from "./component";
+import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
+import type {
+	ComponentContent,
+	Geometry,
+	LayerContent,
+	LayerPatch,
+	LayerTraits,
+	Origin,
+	Rect,
+} from "./layer";
 import { guidesOf } from "./guides";
 import type { Guide } from "./guides";
 import { DEFAULT_LAYOUT, layoutOf } from "./layout";
@@ -19,12 +29,15 @@ import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
 import { mediaOf } from "./media";
 import type { MediaFill } from "./media";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
+import type { FieldSource } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
 const LAYOUT = "layout";
 const GUIDES = "guides";
 const MEDIA = "media";
+const COMPONENT = "component";
+const PROPS = "props";
 const ORIGIN_KEYS: Readonly<Record<keyof Origin, string>> = { x: "originX", y: "originY" };
 const ORIGIN_AXES: readonly (keyof Origin)[] = ["x", "y"];
 const UNIT_SUFFIX = "Unit";
@@ -92,6 +105,28 @@ function readLayout(data: LoroMap): LayerLayout {
 	return layoutOf(held instanceof LoroMap ? held.toJSON() : undefined);
 }
 
+function readProps(data: LoroMap): PropValues {
+	const held = data.get(PROPS);
+	if (!(held instanceof LoroMap)) {
+		return {};
+	}
+	const values: FieldSource = held;
+	return Object.fromEntries(
+		held
+			.keys()
+			.filter((key: unknown): key is string => typeof key === "string")
+			.flatMap((key) => {
+				const value = values.get(key);
+				return isPropValue(value) ? [[key, value]] : [];
+			}),
+	);
+}
+
+function readContent(data: LoroMap): LayerContent {
+	const component = readString(data, COMPONENT, "");
+	return component === "" ? NO_CONTENT : { kind: "component", component, props: readProps(data) };
+}
+
 export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 	const lengths = readLengths(data);
 	return {
@@ -109,6 +144,7 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
 		clip: readBoolean(data, "clip", false),
+		content: readContent(data),
 	};
 }
 
@@ -194,8 +230,53 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	}
 }
 
+function writeProps(data: LoroMap, props: PropValues): void {
+	const map = data.ensureMergeableMap(PROPS);
+	for (const [key, value] of Object.entries(props)) {
+		map.set(key, value);
+	}
+}
+
+function writeContent(data: LoroMap, content: ComponentContent): void {
+	data.set(COMPONENT, content.component);
+	const held = data.ensureMergeableMap(PROPS);
+	for (const key of held.keys()) {
+		if (typeof key === "string" && !Object.hasOwn(content.props, key)) {
+			held.delete(key);
+		}
+	}
+	writeProps(data, content.props);
+}
+
+function writeParts(
+	data: LoroMap,
+	content: ComponentContent | undefined,
+	props: PropValues | undefined,
+): void {
+	if (content !== undefined) {
+		writeContent(data, content);
+	}
+	if (props !== undefined) {
+		writeProps(data, props);
+	}
+}
+
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, guides, layout, lengths, media, origin, x, y, width, height, ...plain } = patch;
+	const {
+		content,
+		geometry,
+		guides,
+		layout,
+		lengths,
+		media,
+		origin,
+		props,
+		x,
+		y,
+		width,
+		height,
+		...plain
+	} = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -216,4 +297,5 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	if (media !== undefined) {
 		writeMedia(data, media);
 	}
+	writeParts(data, content, props);
 }

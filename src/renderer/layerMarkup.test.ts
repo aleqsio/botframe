@@ -5,7 +5,10 @@ import type { LayerLayout } from "../document/layout";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
+import { componentOf } from "../document/component";
 import { layerMarkup } from "./layerMarkup";
+
+const NO_COMPONENTS = (): null => null;
 
 const FIELDS: LayerFields = {
 	x: 10,
@@ -39,11 +42,11 @@ function nodeOf(
 describe("layerMarkup", () => {
 	it("gives the same bytes for the same subtree", () => {
 		const node = nodeOf({}, [nodeOf({ x: 1 })]);
-		expect(layerMarkup(node)).toBe(layerMarkup(node));
+		expect(layerMarkup(node, NO_COMPONENTS)).toBe(layerMarkup(node, NO_COMPONENTS));
 	});
 
 	it("writes the style properties in one order that does not follow the order of the object", () => {
-		expect(layerMarkup(nodeOf({}))).toBe(
+		expect(layerMarkup(nodeOf({}), NO_COMPONENTS)).toBe(
 			'<div style="background: #123456; border-radius: 4px; display: block;' +
 				" height: 40px; position: absolute;" +
 				' transform: translate3d(10px, 20px, 0); width: 30px"></div>',
@@ -52,7 +55,7 @@ describe("layerMarkup", () => {
 
 	it("holds each declaration that the render path gives", () => {
 		const node = nodeOf({ clip: true, geometry: { kind: "ellipse" } });
-		const markup = layerMarkup(node);
+		const markup = layerMarkup(node, NO_COMPONENTS);
 
 		for (const [key, value] of Object.entries(
 			layerStyle(
@@ -77,7 +80,7 @@ describe("layerMarkup", () => {
 
 	it("places a child of a flex parent in the flow and holds its size", () => {
 		const row: LayerLayout = { ...DEFAULT_LAYOUT, display: "row" };
-		const markup = layerMarkup(nodeOf({}, [nodeOf({ x: 1 })], row));
+		const markup = layerMarkup(nodeOf({}, [nodeOf({ x: 1 })], row), NO_COMPONENTS);
 		const child = markup.slice(markup.indexOf("<div", 1));
 		expect(child).toContain("position: relative");
 		expect(child).toContain("flex-shrink: 0");
@@ -85,13 +88,16 @@ describe("layerMarkup", () => {
 	});
 
 	it("keeps the shape of the tree", () => {
-		const markup = layerMarkup(nodeOf({}, [nodeOf({ x: 1 }, [nodeOf({ x: 2 })])]));
+		const markup = layerMarkup(nodeOf({}, [nodeOf({ x: 1 }, [nodeOf({ x: 2 })])]), NO_COMPONENTS);
 		expect(markup.match(/<div/gu)).toHaveLength(3);
 		expect(markup.endsWith("</div></div></div>")).toBe(true);
 	});
 
 	it("escapes the text that a path geometry puts in the attribute", () => {
-		const markup = layerMarkup(nodeOf({ geometry: { kind: "path", d: '" onload="alert(1)' } }));
+		const markup = layerMarkup(
+			nodeOf({ geometry: { kind: "path", d: '" onload="alert(1)' } }),
+			NO_COMPONENTS,
+		);
 		expect(markup).toContain("clip-path: path(&quot;&quot; onload=&quot;alert(1)&quot;)");
 		expect(markup).not.toContain('onload="');
 	});
@@ -107,6 +113,28 @@ describe("layerMarkup", () => {
 			layout: DEFAULT_LAYOUT,
 			children: [],
 		};
-		expect(layerMarkup(node)).toContain("rotate(30deg)");
+		expect(layerMarkup(node, NO_COMPONENTS)).toContain("rotate(30deg)");
+	});
+});
+
+describe("layerMarkup of a component instance", () => {
+	it("writes the component markup into a declarative shadow root before the children", () => {
+		const component = componentOf("v1", {
+			name: "Tag",
+			html: "<b>{{label}}</b>",
+			css: "b{}",
+			props: [{ name: "label", kind: "text", initial: "New" }],
+		});
+		const node = {
+			...nodeOf({}, [nodeOf({ x: 1 })]),
+			content: { kind: "component" as const, component: "v1", props: { label: "<Hot>" } },
+		};
+
+		const markup = layerMarkup(node, (id) => (id === "v1" ? component : null));
+
+		expect(markup).toMatch(
+			/^<div style="[^"]*"><template shadowrootmode="open"><style>[^<]*b\{\}<\/style><b>&lt;Hot&gt;<\/b><slot><\/slot><\/template><div style=/u,
+		);
+		expect(layerMarkup(node, NO_COMPONENTS)).not.toContain("<template");
 	});
 });

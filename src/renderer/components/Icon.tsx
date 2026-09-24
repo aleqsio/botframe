@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 
 const PATHS = {
+	component:
+		"M12 3.5 15 6.5 12 9.5 9 6.5zM12 14.5 15 17.5 12 20.5 9 17.5zM6.5 9 9.5 12 6.5 15 3.5 12zM17.5 9 20.5 12 17.5 15 14.5 12z",
 	alignBottom: "M4 20h16M6 6h4v10H6zM14 10h4v6h-4z",
 	alignCenterX: "M12 3v18M7 6h10v4H7zM9 14h6v4H9z",
 	alignCenterY: "M3 12h18M6 7h4v10H6zM14 9h4v6h-4z",

@@ -1,8 +1,8 @@
 import type { DesignDocument } from "./document";
 import { NO_GUIDES } from "./guides";
 import type { Guide } from "./guides";
-import { CENTER_ORIGIN } from "./layer";
-import type { LayerFields, LayerId, Origin, Rect } from "./layer";
+import { CENTER_ORIGIN, NO_CONTENT } from "./layer";
+import type { LayerContent, LayerFields, LayerId, Origin, Rect } from "./layer";
 import { DEFAULT_LAYOUT } from "./layout";
 import type { LayerLayout } from "./layout";
 import { PIXELS } from "./length";
@@ -43,6 +43,7 @@ export interface PixelBox {
 	guides: readonly Guide[];
 	origin: Origin;
 	media: MediaFill | null;
+	content: LayerContent;
 }
 
 export function pixelBox(rect: Rect): PixelBox {
@@ -52,5 +53,6 @@ export function pixelBox(rect: Rect): PixelBox {
 		guides: NO_GUIDES,
 		origin: CENTER_ORIGIN,
 		media: null,
+		content: NO_CONTENT,
 	};
 }

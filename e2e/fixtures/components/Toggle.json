@@ -1,0 +1,7 @@
+{
+	"label": "Wi-Fi",
+	"on": true,
+	"size": ["md", "sm", "lg"],
+	"surface": ["light", "dark"],
+	"disabled": false
+}

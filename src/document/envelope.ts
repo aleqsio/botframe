@@ -1,7 +1,9 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
-import { CENTER_ORIGIN, heldSkew } from "./layer";
-import type { LayerFields, Origin, WritableGeometry } from "./layer";
+import { componentSourceOf, isPropValue } from "./component";
+import type { ComponentSource } from "./component";
+import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
+import type { LayerContent, LayerFields, Origin, WritableGeometry } from "./layer";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
@@ -18,6 +20,7 @@ export interface LayerEnvelope {
 	sourceParent: string | null;
 	sourceIds: readonly string[];
 	layers: readonly LayerNode[];
+	components: Readonly<Record<string, ComponentSource>>;
 }
 
 function count(bag: Bag, key: string): number {
@@ -90,6 +93,29 @@ function originOf(value: unknown): Origin {
 	return { x: countOr(bag, "x", CENTER_ORIGIN.x), y: countOr(bag, "y", CENTER_ORIGIN.y) };
 }
 
+function contentOf(value: unknown): LayerContent {
+	const bag = bagOf(value);
+	const component = words(bag, "component", "");
+	if (bag["kind"] !== "component" || component === "") {
+		return NO_CONTENT;
+	}
+	const props = Object.fromEntries(
+		Object.entries(bagOf(bag["props"])).flatMap(([key, held]) =>
+			isPropValue(held) ? [[key, held] as const] : [],
+		),
+	);
+	return { kind: "component", component, props };
+}
+
+function componentsOf(value: unknown): Readonly<Record<string, ComponentSource>> {
+	return Object.fromEntries(
+		Object.entries(bagOf(value)).flatMap(([id, source]) => {
+			const held = componentSourceOf(source);
+			return held === null ? [] : [[id, held]];
+		}),
+	);
+}
+
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
@@ -104,6 +130,7 @@ function nodeOf(value: unknown): LayerNode {
 		layout: layoutOf(bag["layout"]),
 		guides: guidesOf(bag["guides"]),
 		media: mediaOf(bag["media"]),
+		content: contentOf(bag["content"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }
@@ -123,6 +150,7 @@ export function serializeEnvelope(envelope: LayerEnvelope): string {
 		sourceParent: envelope.sourceParent,
 		sourceIds: envelope.sourceIds,
 		layers: envelope.layers,
+		components: envelope.components,
 	});
 }
 
@@ -136,5 +164,6 @@ export function parseEnvelope(raw: string): LayerEnvelope | null {
 		sourceParent: typeof parent === "string" ? parent : null,
 		sourceIds: listOf(bag["sourceIds"]).filter((id) => typeof id === "string"),
 		layers: listOf(bag["layers"]).map((layer) => nodeOf(layer)),
+		components: componentsOf(bag["components"]),
 	};
 }

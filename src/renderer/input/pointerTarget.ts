@@ -11,7 +11,7 @@ function paintOf(doc: DesignDocument, id: LayerId): Paint | null {
 	if (layer === null || layer.media === null || doc.assets.has(layer.media.asset)) {
 		return layer;
 	}
-	return { fill: layer.fill, media: null };
+	return { fill: layer.fill, media: null, content: layer.content };
 }
 
 function visibleOf(doc: DesignDocument): (ids: readonly LayerId[]) => readonly LayerId[] {

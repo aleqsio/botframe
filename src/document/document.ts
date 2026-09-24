@@ -1,7 +1,8 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
 import { AssetStore } from "./assets";
-import { DocumentHistory } from "./history";
+import { ComponentLibrary } from "./componentLibrary";
+import { DocumentHistory, KEPT_ORIGIN } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
 import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
@@ -48,6 +49,7 @@ function sizeOf(layer: Layer): Size {
 }
 
 export class DesignDocument {
+	readonly components: ComponentLibrary;
 	readonly #doc: LoroDoc;
 	readonly #history: DocumentHistory;
 	readonly assets: AssetStore;
@@ -66,6 +68,12 @@ export class DesignDocument {
 		this.#doc = doc;
 		this.#history = new DocumentHistory(doc);
 		this.assets = new AssetStore(doc);
+		this.components = new ComponentLibrary(doc, (message, write) => {
+			this.commit(message);
+			write();
+			this.#doc.commit({ origin: KEPT_ORIGIN, message });
+			this.#refreshHistory();
+		});
 		this.#doc.subscribe((event) => {
 			const items = treeItems(event);
 			if (items.length === 0) {

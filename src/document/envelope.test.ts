@@ -49,25 +49,48 @@ function envelopeWith(body: Record<string, unknown>): string {
 
 describe("serializeEnvelope", () => {
 	it("gives the same bytes for the same subtree", () => {
-		const once = serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] });
-		const again = serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] });
+		const once = serializeEnvelope({
+			sourceParent: "1@1",
+			sourceIds: ["2@1"],
+			layers: [ROOT],
+			components: {},
+		});
+		const again = serializeEnvelope({
+			sourceParent: "1@1",
+			sourceIds: ["2@1"],
+			layers: [ROOT],
+			components: {},
+		});
 		expect(once).toBe(again);
 	});
 
 	it("carries the parent of the source and the tree", () => {
 		expect(
-			parseEnvelope(serializeEnvelope({ sourceParent: "1@1", sourceIds: ["2@1"], layers: [ROOT] })),
+			parseEnvelope(
+				serializeEnvelope({
+					sourceParent: "1@1",
+					sourceIds: ["2@1"],
+					layers: [ROOT],
+					components: {},
+				}),
+			),
 		).toEqual({
 			sourceParent: "1@1",
 			sourceIds: ["2@1"],
 			layers: [ROOT],
+			components: {},
 		});
 	});
 });
 
 describe("parseEnvelope", () => {
 	it("reads a tree that a copy wrote", () => {
-		const raw = serializeEnvelope({ sourceParent: null, sourceIds: [], layers: [ROOT, CHILD] });
+		const raw = serializeEnvelope({
+			sourceParent: null,
+			sourceIds: [],
+			layers: [ROOT, CHILD],
+			components: {},
+		});
 		expect(parseEnvelope(raw)?.layers).toEqual([ROOT, CHILD]);
 	});
 
@@ -141,7 +164,7 @@ describe("parseEnvelope", () => {
 	it("reads the layout of a layer and falls back to the default for a layout that is broken", () => {
 		const held = { ...ROOT, layout: { ...DEFAULT_LAYOUT, display: "grid" as const } };
 		const kept = parseEnvelope(
-			serializeEnvelope({ sourceParent: null, sourceIds: [], layers: [held] }),
+			serializeEnvelope({ sourceParent: null, sourceIds: [], layers: [held], components: {} }),
 		);
 		expect(kept?.layers[0]?.layout.display).toBe("grid");
 
@@ -163,5 +186,32 @@ describe("parseEnvelope", () => {
 		const raw = envelopeWith({ sourceIds: ["2@1", 7, null], layers: [] });
 		expect(parseEnvelope(raw)?.sourceIds).toEqual(["2@1"]);
 		expect(parseEnvelope(envelopeWith({ layers: [] }))?.sourceIds).toEqual([]);
+	});
+
+	it("carries a component instance and the sources it uses, and drops a source that is broken", () => {
+		const instance: LayerNode = {
+			...CHILD,
+			content: { kind: "component", component: "v1", props: { label: "Agree", checked: true } },
+		};
+		const source = { name: "Checkbox", html: "<b>{{label}}</b>", css: "", props: [] };
+		const raw = serializeEnvelope({
+			sourceParent: null,
+			sourceIds: [],
+			layers: [instance],
+			components: { v1: source },
+		});
+		const broken = envelopeWith({
+			layers: [{ content: { kind: "component", component: "v1", props: { label: 4 } } }],
+			components: { v1: { name: "Checkbox", html: "{{#open}}", css: "" } },
+		});
+
+		expect(parseEnvelope(raw)?.layers[0]?.content).toEqual(instance.content);
+		expect(parseEnvelope(raw)?.components).toEqual({ v1: source });
+		expect(parseEnvelope(broken)?.layers[0]?.content).toEqual({
+			kind: "component",
+			component: "v1",
+			props: {},
+		});
+		expect(parseEnvelope(broken)?.components).toEqual({});
 	});
 });

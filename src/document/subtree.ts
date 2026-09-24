@@ -2,6 +2,7 @@ import { isCenterOrigin } from "./layer";
 import type {
 	Geometry,
 	Layer,
+	LayerContent,
 	LayerFields,
 	LayerId,
 	LayerPatch,
@@ -25,6 +26,7 @@ export interface LayerNode {
 	layout: LayerLayout;
 	guides: readonly Guide[];
 	media: MediaFill | null;
+	content: LayerContent;
 	children: readonly LayerNode[];
 }
 
@@ -79,6 +81,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		layout: layer.layout,
 		guides: layer.guides,
 		media: layer.media,
+		content: layer.content,
 		children,
 	};
 }
@@ -94,6 +97,7 @@ function copyPatch(node: LayerNode): LayerPatch {
 		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),
 		...(node.media === null ? {} : { media: node.media }),
+		...(node.content.kind === "none" ? {} : { content: node.content }),
 	};
 }
 
@@ -104,4 +108,16 @@ export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerI
 		createSubtree(sink, child, id);
 	}
 	return id;
+}
+
+export function componentIdsOf(nodes: readonly LayerNode[]): ReadonlySet<string> {
+	const ids = new Set<string>();
+	const pending = [...nodes];
+	for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
+		if (node.content.kind === "component") {
+			ids.add(node.content.component);
+		}
+		pending.push(...node.children);
+	}
+	return ids;
 }
