@@ -3,7 +3,7 @@ import type { Layer, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { turnedBounds } from "./layerSpace";
 
-const SIZE_ALONG: Readonly<Record<GuideAxis, "width" | "height">> = {
+export const SIZE_ALONG: Readonly<Record<GuideAxis, "width" | "height">> = {
 	x: "width",
 	y: "height",
 };

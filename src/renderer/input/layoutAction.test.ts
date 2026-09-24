@@ -306,26 +306,77 @@ describe("flip", () => {
 		expect(ids.map((id) => boxOf(held.doc, id).x)).toEqual([80, 0]);
 	});
 
-	it("holds one layer in its place and turns its rotation the other way", () => {
+	it("is off for one rectangle that looks the same when it is mirrored", () => {
 		const held = scene();
-		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
+		place(held, [{ x: 20, y: 30, width: 40, height: 20 }]);
 
-		run(held, "flipX");
-
-		expect(boxOf(held.doc, child)).toEqual({ x: 20, y: 30 });
+		expect(actionOf("flipX").enabled(held.doc, held.user)).toBe(false);
+		expect(actionOf("flipY").enabled(held.doc, held.user)).toBe(false);
 	});
 
-	it("turns the rotation of the layer the other way", () => {
+	it("turns a rectangle the other way and does not mirror it", () => {
 		const held = scene();
-		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
-		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], parent));
-		held.doc.update(child, { rotation: 30 });
+		const id = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }]));
+		held.doc.update(id, { rotation: 30 });
 		held.doc.commit("turn");
 
 		run(held, "flipX");
+		expect(layerOf(held.doc, id)).toMatchObject({ rotation: 330, mirrored: false });
 
-		expect(layerOf(held.doc, child).rotation).toBe(330);
+		run(held, "flipY");
+		expect(layerOf(held.doc, id)).toMatchObject({ x: 20, y: 20, rotation: 30, mirrored: false });
+	});
+
+	it("moves the children of a frame to the other side and keeps the frame unmirrored", () => {
+		const held = scene();
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
+		held.user.selection.set([parent]);
+
+		run(held, "flipX");
+
+		expect(layerOf(held.doc, parent)).toMatchObject({ x: 0, y: 0, mirrored: false });
+		expect(layerOf(held.doc, child)).toMatchObject({ x: 140, y: 30, mirrored: false });
+	});
+
+	it("mirrors a path in a parent that lays out its children, and does not move it", () => {
+		const held = scene();
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
+		held.doc.update(parent, { layout: { display: "row" } });
+		held.doc.update(child, { geometry: { kind: "path", d: "M0 0 L40 0 L0 20 Z" } });
+		held.doc.commit("set display");
+		held.user.selection.set([child]);
+
+		expect(actionOf("flipX").enabled(held.doc, held.user)).toBe(true);
+		run(held, "flipX");
+
+		expect(layerOf(held.doc, child)).toMatchObject({ x: 20, y: 30, mirrored: true });
+	});
+
+	it("flips a child with its selected parent, and not a second time on its own", () => {
+		const held = scene();
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
+		held.user.selection.set([parent, child]);
+
+		run(held, "flipX");
+
+		expect(layerOf(held.doc, child)).toMatchObject({ x: 140, y: 30, mirrored: false });
+	});
+
+	it("flips a layer on the screen axis when its parent is turned", () => {
+		const held = scene();
+		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
+		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], parent));
+		held.doc.update(parent, { rotation: 90 });
+		held.doc.update(child, { geometry: { kind: "path", d: "M0 0 L40 0 L0 20 Z" } });
+		held.doc.commit("turn");
+		held.user.selection.set([child]);
+
+		run(held, "flipX");
+
+		expect(layerOf(held.doc, child)).toMatchObject({ rotation: 180, mirrored: true });
 	});
 });
 

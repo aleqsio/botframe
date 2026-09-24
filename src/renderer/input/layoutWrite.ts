@@ -5,9 +5,9 @@ import { swappedBox } from "../components/layerFields";
 import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { DOM_DRAWN, drawnRead } from "./drawn";
+import { childrenOf, flipKeeps, flipLayer } from "./flip";
 import {
 	anchoredPlace,
-	normalizeDegrees,
 	outOfLayer,
 	parentChain,
 	placedAround,
@@ -123,10 +123,15 @@ export function alignSelection(doc: DesignDocument, user: UserState, spec: AimSp
 	return true;
 }
 
+function outermostAims(read: ReadLayer, aims: readonly Aim[]): readonly Aim[] {
+	const chosen = new Set(aims.map((aim) => aim.layer.id));
+	return aims.filter((aim) => !parentChain(read, aim.layer.id).some((up) => chosen.has(up.id)));
+}
+
 export function flipSelection(doc: DesignDocument, user: UserState, spec: AimSpec): boolean {
 	const read = readerOf(doc);
-	for (const aim of aimsOf(doc, user, spec.scope)) {
-		doc.update(aim.layer.id, { rotation: normalizeDegrees(-aim.layer.rotation) });
+	for (const aim of outermostAims(read, aimsOf(doc, user, spec.scope))) {
+		flipLayer({ doc, read }, aim.layer, spec.axes);
 		const turned = read(aim.layer.id);
 		if (turned !== null) {
 			const box = canvasHullOf(read, turned);
@@ -158,10 +163,6 @@ export function spreadSelection(doc: DesignDocument, user: UserState, spec: Axis
 	}
 	doc.commit(spec.message);
 	return true;
-}
-
-function childrenOf(doc: DesignDocument, parent: Layer): readonly Layer[] {
-	return doc.childIds(parent.id).flatMap((id) => doc.layer(id) ?? []);
 }
 
 export function fitToChildren(doc: DesignDocument, user: UserState, message: string): boolean {
@@ -227,6 +228,14 @@ export function canAim(doc: DesignDocument, layers: readonly Layer[], spec: AimS
 		(layer) =>
 			(shared || parentHullOf(read, layer) !== null) &&
 			freeAxesFor(read, layer).some((axis) => spec.axes.includes(axis)),
+	);
+}
+
+export function canFlip(doc: DesignDocument, layers: readonly Layer[], spec: AimSpec): boolean {
+	const [only, peer] = layers;
+	return (
+		only !== undefined &&
+		(peer !== undefined || !flipKeeps({ doc, read: readerOf(doc) }, only, spec.axes))
 	);
 }
 
