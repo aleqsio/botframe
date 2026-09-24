@@ -2,6 +2,7 @@ import { Menu, app } from "electron";
 import type { BrowserWindow, MenuItemConstructorOptions } from "electron";
 import { EDIT_COMMAND } from "../shared/editMenu";
 import type { EditMenuItem } from "../shared/editMenu";
+import { FILE_COMMANDS } from "../shared/file";
 
 function isEditMenuItem(value: unknown): value is EditMenuItem {
 	if (typeof value !== "object" || value === null) {
@@ -60,9 +61,12 @@ function withSeparators(
 	);
 }
 
-function firstMenu(): MenuItemConstructorOptions {
-	if (process.platform === "darwin") {
-		return {
+function appMenus(): MenuItemConstructorOptions[] {
+	if (process.platform !== "darwin") {
+		return [];
+	}
+	return [
+		{
 			label: app.name,
 			submenu: [
 				{ role: "about" },
@@ -71,14 +75,31 @@ function firstMenu(): MenuItemConstructorOptions {
 				{ type: "separator" },
 				{ role: "quit" },
 			],
-		};
-	}
-	return { label: "File", submenu: [{ role: "quit" }] };
+		},
+	];
+}
+
+function fileMenu(window: BrowserWindow): MenuItemConstructorOptions {
+	const commands = FILE_COMMANDS.map((command): MenuItemConstructorOptions => ({
+		label: command.label,
+		accelerator: command.accelerator,
+		click: () => {
+			sendCommand(window, command.id);
+		},
+	}));
+	const quit: MenuItemConstructorOptions[] =
+		process.platform === "darwin" ? [] : [{ type: "separator" }, { role: "quit" }];
+	return { label: "File", submenu: [...commands, ...quit] };
 }
 
 export function setEditMenu(value: unknown, window: BrowserWindow): void {
 	const edit = withSeparators(readItems(value), window);
 	Menu.setApplicationMenu(
-		Menu.buildFromTemplate([firstMenu(), { label: "Edit", submenu: edit }, { role: "windowMenu" }]),
+		Menu.buildFromTemplate([
+			...appMenus(),
+			fileMenu(window),
+			{ label: "Edit", submenu: edit },
+			{ role: "windowMenu" },
+		]),
 	);
 }

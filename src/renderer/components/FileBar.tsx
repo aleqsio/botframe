@@ -1,21 +1,23 @@
 import type { ReactElement } from "react";
-import type { Slot } from "../state/slot";
+import type { DesignDocument } from "../../document/document";
 import { useSlot } from "../state/useSlot";
+import type { UserState } from "../state/userState";
+import { FileMenu } from "./FileMenu";
 import { Icon } from "./Icon";
 
-const DOCUMENT_NAME = "Untitled";
-
-export function FileBar({ layersOpen }: { layersOpen: Slot<boolean> }): ReactElement {
-	const open = useSlot(layersOpen);
+export function FileBar({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
+	const open = useSlot(user.layersOpen);
+	const name = useSlot(user.fileName);
 
 	return (
 		<div id="file-bar">
-			<strong className="file-name">{DOCUMENT_NAME}</strong>
+			<FileMenu doc={doc} user={user} />
+			<strong className="file-name">{name}</strong>
 			<button
 				aria-pressed={open}
 				className="pill-button"
 				onClick={() => {
-					layersOpen.set(!open);
+					user.layersOpen.set(!open);
 				}}
 				type="button"
 			>

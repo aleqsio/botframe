@@ -3,8 +3,9 @@ import { BrowserWindow, app, ipcMain } from "electron";
 import { SET_EDIT_MENU } from "../shared/editMenu";
 import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
+import { connectFiles } from "./files";
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
 	const window = new BrowserWindow({
 		width: 1200,
 		height: 800,
@@ -28,9 +29,10 @@ function createWindow(): void {
 	const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
 	if (devServerUrl === undefined) {
 		void window.loadFile(join(import.meta.dirname, "../renderer/index.html"));
-		return;
+		return window;
 	}
 	void window.loadURL(devServerUrl);
+	return window;
 }
 
 ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
@@ -42,6 +44,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 
 app.on("ready", () => {
 	connectClipboard();
+	connectFiles(createWindow);
 	createWindow();
 });
 

@@ -2,7 +2,7 @@
 	color-scheme: light dark;
 	--edge: 10px;
 	--card-top: 52px;
-	--layers-width: 210px;
+	--layers-width: 260px;
 	--inspector-width: 280px;
 	--stage-background: light-dark(#f2f2f2, #1d1c22);
 	--stage-dots: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
@@ -541,7 +541,7 @@ body {
 #file-bar {
 	left: var(--edge);
 	-webkit-app-region: drag;
-	min-width: var(--layers-width);
+	width: var(--layers-width);
 	padding: 0 4px 0 78px;
 }
 
@@ -575,6 +575,9 @@ body {
 
 .file-name {
 	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	font-size: 13px;
 	font-weight: 600;
 	white-space: nowrap;
@@ -608,7 +611,8 @@ body {
 	background-color: var(--panel-hover);
 }
 
-.pill-button[aria-pressed="true"] {
+.pill-button[aria-pressed="true"],
+.pill-button[data-popup-open] {
 	background-color: var(--panel-selected);
 }
 

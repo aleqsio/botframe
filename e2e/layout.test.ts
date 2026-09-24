@@ -245,7 +245,7 @@ test("the window drags by the file pill, and the top edge of the canvas takes pr
 
 	await expect(window.locator(".layer")).toHaveCount(1);
 	const name = await boxOf(window.locator("#file-bar .file-name"));
-	const toggle = await boxOf(window.locator("#file-bar .pill-button"));
+	const toggle = await boxOf(window.locator("#file-bar").getByRole("button", { name: "Layers" }));
 
 	expect(await regionsAt(TOP_OF_CANVAS)).toEqual([]);
 	expect((await regionsAt({ x: name.x + 2, y: name.y + 2 }))[0]).toBe("drag");

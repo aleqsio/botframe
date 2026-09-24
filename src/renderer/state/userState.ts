@@ -7,6 +7,7 @@ import type { RowDrag } from "../input/rowDrop";
 import type { SnapField, SnapSegment } from "../input/snap";
 import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";
+import { UNTITLED } from "../../shared/file";
 import { Slot } from "./slot";
 
 export const NOTHING_SELECTED: readonly LayerId[] = [];
@@ -89,6 +90,7 @@ export class UserState {
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
 	readonly layersOpen = new Slot<boolean>(true);
+	readonly fileName = new Slot<string>(UNTITLED);
 	readonly groupPivot = new Slot<GroupPivot | null>(null);
 }
 
