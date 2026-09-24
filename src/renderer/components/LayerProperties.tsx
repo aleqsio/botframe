@@ -5,7 +5,7 @@ import { ColorField } from "./ColorField";
 import { FrameFooter } from "./FrameFooter";
 import { isFrame } from "./layerEntry";
 import { MediaField } from "./MediaField";
-import { fieldGroupsOf } from "./layerFields";
+import { SKEW_FIELDS, fieldGroupsOf } from "./layerFields";
 import type { FieldGroup } from "./layerFields";
 import { GuideList } from "./layout/GuideList";
 import { ChipSection } from "./layout/ChipSection";
@@ -27,12 +27,27 @@ function ChipGroup({
 }): ReactElement {
 	const turns = group.name === TURN_GROUP;
 	return (
-		<ChipSection after={turns ? <MirrorToggle doc={doc} layer={layer} /> : null} name={group.name}>
+		<ChipSection after={turns ? <SkewRows doc={doc} layer={layer} /> : null} name={group.name}>
 			{group.fields.map((field) => (
 				<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
 			))}
 			{turns ? <TurnToggle doc={doc} layer={layer} /> : null}
 		</ChipSection>
+	);
+}
+
+function SkewRows({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
+	return (
+		<>
+			<div className="chip-row">
+				{SKEW_FIELDS.map((field) => (
+					<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
+				))}
+			</div>
+			<div className="chip-row">
+				<MirrorToggle doc={doc} layer={layer} />
+			</div>
+		</>
 	);
 }
 

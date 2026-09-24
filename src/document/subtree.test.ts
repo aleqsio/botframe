@@ -49,7 +49,7 @@ function threeLevels(doc: DesignDocument): { root: LayerId; child: LayerId } {
 	const root = doc.createLayer(DRAWN);
 	const child = doc.createLayer(CHILD, root);
 	doc.createLayer(GRANDCHILD, child);
-	doc.update(child, { rotation: 45, mirrored: true });
+	doc.update(child, { rotation: 45, skewX: 12, skewY: 0, mirrored: true });
 	doc.commit("create layers");
 	return { root, child };
 }
@@ -62,18 +62,24 @@ describe("readSubtree", () => {
 		expect(doc.readSubtree(root)).toEqual({
 			fields: DRAWN,
 			rotation: 0,
+			skewX: 0,
+			skewY: 0,
 			mirrored: false,
 			...pixelBox(DRAWN),
 			children: [
 				{
 					fields: CHILD,
 					rotation: 45,
+					skewX: 12,
+					skewY: 0,
 					mirrored: true,
 					...pixelBox(CHILD),
 					children: [
 						{
 							fields: GRANDCHILD,
 							rotation: 0,
+							skewX: 0,
+							skewY: 0,
 							mirrored: false,
 							...pixelBox(GRANDCHILD),
 							children: [],
@@ -158,7 +164,12 @@ describe("createSubtree", () => {
 
 		const copy = doc.createSubtree(node, null);
 
-		expect(firstChildOf(doc, copy)).toMatchObject({ rotation: 45, mirrored: true });
+		expect(firstChildOf(doc, copy)).toMatchObject({
+			rotation: 45,
+			skewX: 12,
+			skewY: 0,
+			mirrored: true,
+		});
 		expect(doc.layer(copy)?.mirrored).toBe(false);
 	});
 

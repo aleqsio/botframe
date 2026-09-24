@@ -3,8 +3,10 @@ import { SIDES } from "../../document/layout";
 import type { DisplayMode, Side } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
-import { IDENTITY, layoutBox, multiply } from "./drawnBox";
-import type { Affine, BoxRead, ClientBox, Linear } from "./drawnBox";
+import { IDENTITY, layoutBox } from "./drawnBox";
+import type { Affine, BoxRead, ClientBox } from "./drawnBox";
+import { multiplyLinear } from "./linear";
+import type { Linear } from "./linear";
 import { LAYER_ATTRIBUTE, isLayerId } from "./hitTest";
 import type { ReadLayer } from "./layerSpace";
 
@@ -90,7 +92,7 @@ function chainOf(parent: HTMLElement): Linear {
 	let chain: Linear = IDENTITY;
 	let held: HTMLElement | null = parent;
 	while (held !== null) {
-		chain = multiply(affineOf(getComputedStyle(held).transform), chain);
+		chain = multiplyLinear(affineOf(getComputedStyle(held).transform), chain);
 		held = held.id === VIEWPORT_ID ? null : held.parentElement;
 	}
 	return chain;

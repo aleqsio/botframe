@@ -2,6 +2,7 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { NO_INSET } from "./drawn";
 import { fromParentPoint, intoLayer, parentChain, visualCenterOf } from "./layerSpace";
+import { NO_POSE } from "./linear";
 import type { Modifiers } from "./modifiers";
 import { snapFieldOf } from "./snap";
 import type { SnapField, SnapSegment } from "./snap";
@@ -16,7 +17,7 @@ function boxField(span: Pick<Rect, "width" | "height">, points: readonly Point[]
 }
 
 function pullOf(field: SnapField, parent: LayerId | null, dragged: Point): SnapPull {
-	return { field, axes: BOTH_AXES, turn: 0, parent, points: [dragged] };
+	return { field, axes: BOTH_AXES, pose: NO_POSE, parent, points: [dragged] };
 }
 
 export function snappedInLayer(

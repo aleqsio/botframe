@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { roundNumber } from "../document/length";
-import { normalizeDegrees, outOfLayer } from "./input/layerSpace";
+import { normalizeDegrees, outOfLayer, posePoint } from "./input/layerSpace";
+import { degreesOf } from "./input/linear";
 import type { Placed } from "./input/layerSpace";
 
 const QUARTER_TURN = 90;
@@ -16,7 +17,8 @@ function readsUpsideDown(turn: number): boolean {
 
 export function canvasLabelStyle(layer: Placed): CSSProperties {
 	const corner = outOfLayer(layer, { x: layer.mirrored ? layer.width : 0, y: 0 });
-	const turn = normalizeDegrees(layer.rotation);
+	const edge = posePoint({ x: layer.mirrored ? -1 : 1, y: 0 }, layer);
+	const turn = normalizeDegrees(degreesOf(Math.atan2(edge.y, edge.x)));
 	const flipped = readsUpsideDown(turn);
 	return {
 		translate: `${roundNumber(corner.x)}px ${roundNumber(corner.y)}px`,

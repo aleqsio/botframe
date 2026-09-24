@@ -3,6 +3,7 @@ import type { DesignDocument } from "../document/document";
 import type { LayerId, Rect } from "../document/layer";
 import { GroupPivotMark, OriginMark } from "./CanvasMarks";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
+import { SkewMarks } from "./SkewMarks";
 import { unscaled, zoomed, zoomedLengths } from "./screenSpace";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
@@ -12,6 +13,7 @@ import type { DrawnOutline } from "./useDocument";
 declare module "react" {
 	interface CSSProperties {
 		"--handle-size"?: string | undefined;
+		"--upright"?: string | undefined;
 	}
 }
 
@@ -22,6 +24,7 @@ function outlineStyle(outline: DrawnOutline): CSSProperties {
 		transform: unscaled(outline.transform),
 		width: zoomed(outline.width),
 		height: zoomed(outline.height),
+		"--upright": outline.upright,
 		...HANDLE_STYLE,
 	};
 }
@@ -78,13 +81,24 @@ export function boxStyle(box: Rect): CSSProperties {
 	};
 }
 
-function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
+function SoleOutline({
+	doc,
+	id,
+	user,
+}: {
+	doc: DesignDocument;
+	id: LayerId;
+	user: UserState;
+}): ReactNode {
 	return (
-		<LayerOutline className="selection" doc={doc} id={id}>
-			<PaddingBand doc={doc} id={id} />
-			<CornerHandles />
-			<OriginMark doc={doc} id={id} />
-		</LayerOutline>
+		<>
+			<LayerOutline className="selection" doc={doc} id={id}>
+				<PaddingBand doc={doc} id={id} />
+				<CornerHandles />
+				<OriginMark doc={doc} id={id} />
+			</LayerOutline>
+			<SkewMarks doc={doc} id={id} user={user} />
+		</>
 	);
 }
 
@@ -128,7 +142,7 @@ export function SelectionOutline({
 		return null;
 	}
 	return peer === undefined ? (
-		<SoleOutline doc={doc} id={id} />
+		<SoleOutline doc={doc} id={id} user={user} />
 	) : (
 		<GroupOutline doc={doc} ids={ids} user={user} />
 	);

@@ -17,16 +17,14 @@ const FLAT: Curve = { kind: "segment", from: { x: 0, y: 5 }, to: { x: 10, y: 5 }
 const CIRCLE: Extract<Curve, { kind: "arc" }> = {
 	kind: "arc",
 	center: { x: 100, y: 100 },
-	radii: { x: 50, y: 50 },
-	turn: 0,
+	arms: { cos: { x: 50, y: 0 }, sin: { x: 0, y: 50 } },
 	from: 0,
 	to: 360,
 };
 const TURNED: Curve = {
 	kind: "arc",
 	center: { x: 0, y: 0 },
-	radii: { x: 100, y: 50 },
-	turn: 90,
+	arms: { cos: { x: 0, y: 100 }, sin: { x: -50, y: 0 } },
 	from: 0,
 	to: 360,
 };
@@ -45,7 +43,7 @@ function rising(values: readonly number[]): number[] {
 
 function offCircle(point: Point): number {
 	const gap = { x: point.x - CIRCLE.center.x, y: point.y - CIRCLE.center.y };
-	return gap.x ** 2 + gap.y ** 2 - CIRCLE.radii.x ** 2;
+	return gap.x ** 2 + gap.y ** 2 - CIRCLE.arms.cos.x ** 2;
 }
 
 describe("crossingsOf", () => {

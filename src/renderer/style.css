@@ -226,6 +226,7 @@ body {
 }
 
 .selection-handle {
+	transform: var(--upright, none);
 	border-radius: 2px;
 	background: var(--handle-fill);
 }
@@ -250,7 +251,42 @@ body {
 	left: 0;
 }
 
+.skew-mark {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: calc(var(--handle-size) * 2);
+	height: calc(var(--handle-size) * 0.75);
+	margin: calc(var(--handle-size) * -0.375) 0 0 calc(var(--handle-size) * -1);
+	border: 1.5px solid var(--selection);
+	border-radius: var(--handle-size);
+	background: var(--handle-fill);
+	pointer-events: none;
+}
+
+.skew-mark::before {
+	position: absolute;
+	top: 100%;
+	left: calc(50% - 0.5px);
+	width: 1px;
+	height: calc(var(--skew-offset) - var(--handle-size) * 0.375);
+	background: var(--selection);
+	content: "";
+	opacity: 0.5;
+}
+
+#stage[data-zone="skew-n"],
+#stage[data-zone="skew-s"] {
+	cursor: ew-resize;
+}
+
+#stage[data-zone="skew-e"],
+#stage[data-zone="skew-w"] {
+	cursor: ns-resize;
+}
+
 .origin-mark {
+	transform: var(--upright, none);
 	border-radius: 50%;
 	background: radial-gradient(circle, var(--selection) 1.5px, var(--handle-fill) 1.5px);
 }

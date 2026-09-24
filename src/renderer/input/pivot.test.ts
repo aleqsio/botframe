@@ -9,6 +9,8 @@ const FLAT = {
 	width: 40,
 	height: 20,
 	rotation: 0,
+	skewX: 0,
+	skewY: 0,
 	mirrored: false,
 	origin: CENTER_ORIGIN,
 };

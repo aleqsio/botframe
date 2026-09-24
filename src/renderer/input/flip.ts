@@ -5,17 +5,15 @@ import type { Layer, LayerPatch, Origin, Pose } from "../../document/layer";
 import type { LayoutPatch } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import {
-	HALF_TURN,
-	chainPose,
-	composePose,
 	normalizeDegrees,
-	normalizedPose,
 	parentChain,
 	placedAround,
 	poseInside,
+	seenLinear,
 	visualCenterOf,
 } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
+import { HALF_TURN, linearOf, multiplyLinear } from "./linear";
 import { SIZE_ALONG } from "./layoutGeometry";
 import {
 	TRACKS_ALONG,
@@ -38,8 +36,8 @@ interface FlipPlan {
 }
 
 const AXIS_MIRRORS: Readonly<Record<GuideAxis, Pose>> = {
-	x: { rotation: 0, mirrored: true },
-	y: { rotation: HALF_TURN, mirrored: true },
+	x: { rotation: 0, skewX: 0, skewY: 0, mirrored: true },
+	y: { rotation: HALF_TURN, skewX: 0, skewY: 0, mirrored: true },
 };
 const SAME_TURN = 1e-9;
 const ORIGIN_PLACES = 1e9;
@@ -92,12 +90,22 @@ function nearestAxis(target: Pose, rotation: number): GuideAxis {
 	return alongX <= turnGap(bakedTurn(target, "y"), rotation) ? "x" : "y";
 }
 
+function mirroredPose(pose: Pose, axis: GuideAxis): Pose {
+	return {
+		rotation: normalizeDegrees(AXIS_MIRRORS[axis].rotation - pose.rotation),
+		skewX: -pose.skewX + 0,
+		skewY: -pose.skewY + 0,
+		mirrored: !pose.mirrored,
+	};
+}
+
 function screenPose(parents: readonly Pose[], layer: Pose, axes: readonly GuideAxis[]): Pose {
 	const seen = axes.reduce(
-		(pose, axis) => composePose(AXIS_MIRRORS[axis], pose),
-		composePose(chainPose(parents), layer),
+		(linear, axis) => multiplyLinear(linearOf(AXIS_MIRRORS[axis]), linear),
+		seenLinear(parents, layer),
 	);
-	return poseInside(parents, seen);
+	const near = axes.reduce((pose, axis) => mirroredPose(pose, axis), layer);
+	return poseInside(parents, seen, near);
 }
 
 function planOf(scope: FlipScope, layer: Layer, axes: readonly GuideAxis[]): FlipPlan {
@@ -106,7 +114,7 @@ function planOf(scope: FlipScope, layer: Layer, axes: readonly GuideAxis[]): Fli
 		return { pose: target, axis: null };
 	}
 	const axis = nearestAxis(target, layer.rotation);
-	return { pose: { rotation: bakedTurn(target, axis), mirrored: false }, axis };
+	return { pose: { ...target, rotation: bakedTurn(target, axis), mirrored: false }, axis };
 }
 
 function reverseFlow({ doc }: FlipScope, parent: Layer, children: readonly Layer[]): void {
@@ -131,11 +139,13 @@ function childLayout(parent: Layer, child: Layer, axis: GuideAxis): LayoutPatch 
 
 function turnedChild(scope: FlipScope, child: Layer, axis: GuideAxis): LayerPatch {
 	if (child.mirrored || !canBake(scope, child)) {
-		return normalizedPose(composePose(AXIS_MIRRORS[axis], child));
+		return mirroredPose(child, axis);
 	}
 	bakeContent(scope, child, axis);
 	const origin = flippedOrigin(child.origin, axis);
-	return { rotation: normalizeDegrees(-child.rotation), mirrored: false, origin };
+	const rotation = normalizeDegrees(-child.rotation);
+	const skews = { skewX: -child.skewX + 0, skewY: -child.skewY + 0 };
+	return { rotation, ...skews, mirrored: false, origin };
 }
 
 function mirrorChild(scope: FlipScope, parent: Layer, child: Layer, axis: GuideAxis): void {
@@ -200,6 +210,8 @@ export function flipKeeps(scope: FlipScope, layer: Layer, axes: readonly GuideAx
 	return (
 		axis !== null &&
 		turnGap(pose.rotation, layer.rotation) < SAME_TURN &&
+		Math.abs(pose.skewX - layer.skewX) < SAME_TURN &&
+		Math.abs(pose.skewY - layer.skewY) < SAME_TURN &&
 		layer.origin[axis] === CENTER_ORIGIN[axis]
 	);
 }

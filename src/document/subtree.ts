@@ -17,6 +17,8 @@ import type { MediaFill } from "./media";
 export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
+	skewX: number;
+	skewY: number;
 	mirrored: boolean;
 	origin: Origin;
 	lengths: LayerLengths;
@@ -69,6 +71,8 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,
+		skewX: layer.skewX,
+		skewY: layer.skewY,
 		mirrored: layer.mirrored,
 		origin: layer.origin,
 		lengths: layer.lengths,
@@ -82,6 +86,8 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 function copyPatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
+		...(node.skewX === 0 ? {} : { skewX: node.skewX }),
+		...(node.skewY === 0 ? {} : { skewY: node.skewY }),
 		...(node.mirrored ? { mirrored: true } : {}),
 		...(isCenterOrigin(node.origin) ? {} : { origin: node.origin }),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),

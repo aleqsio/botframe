@@ -1,6 +1,7 @@
 import type { Layer, Pose, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { NO_POSE, centerOf, halfSizeOf, poseInside, toParentPoint } from "./layerSpace";
+import { centerOf, halfSizeOf, poseInside, toParentPoint } from "./layerSpace";
+import { NO_POSE, linearOf } from "./linear";
 import type { Modifiers } from "./modifiers";
 import { MIN_LAYER_SIZE } from "./transform";
 
@@ -55,6 +56,6 @@ export function levelRect(chain: readonly Layer[], rect: Rect): DrawnRect {
 		y: center.y - half.y,
 		width: rect.width,
 		height: rect.height,
-		...poseInside(chain, NO_POSE),
+		...poseInside(chain, linearOf(NO_POSE), NO_POSE),
 	};
 }

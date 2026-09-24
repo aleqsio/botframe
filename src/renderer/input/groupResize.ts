@@ -5,9 +5,7 @@ import { SMALLEST_GROUP } from "./groupMove";
 import { CORNERS, zoneAt } from "./handles";
 import type { Corner, Handle, HandleZone } from "./handles";
 import {
-	NO_POSE,
-	chainPose,
-	composePose,
+	seenLinear,
 	fromParentPoint,
 	normalizeDegrees,
 	parentChain,
@@ -16,6 +14,7 @@ import {
 	visualCenterOf,
 } from "./layerSpace";
 import type { Placed, ReadLayer } from "./layerSpace";
+import { NO_POSE, poseOf } from "./linear";
 import type { Modifiers } from "./modifiers";
 import { boundsOf } from "./selectionBounds";
 import { MIN_LAYER_SIZE, resizedRect } from "./transform";
@@ -28,6 +27,7 @@ export interface GroupPart {
 	chain: readonly Layer[];
 	center: Point;
 	turn: number;
+	leans: boolean;
 }
 
 export interface GroupGrip {
@@ -50,7 +50,7 @@ function quarterTurnsOf(turn: number): number {
 
 function isSquare(part: GroupPart): boolean {
 	const turns = quarterTurnsOf(part.turn);
-	return Math.abs(turns - Math.round(turns)) < TURN_GRACE;
+	return Math.abs(turns - Math.round(turns)) < TURN_GRACE && !part.leans;
 }
 
 function isAcross(part: GroupPart): boolean {
@@ -64,8 +64,9 @@ export function partOf(read: ReadLayer, id: LayerId): GroupPart[] {
 	}
 	const chain = parentChain(read, id);
 	const center = fromParentPoint(chain, visualCenterOf(start));
-	const { rotation } = composePose(chainPose(chain), start);
-	return [{ start, chain, center, turn: rotation }];
+	const { rotation, skewX, skewY } = poseOf(seenLinear(chain, start), start);
+	const leans = Math.abs(skewX) >= TURN_GRACE || Math.abs(skewY) >= TURN_GRACE;
+	return [{ start, chain, center, turn: rotation, leans }];
 }
 
 function honors(handle: Handle, parts: readonly GroupPart[]): boolean {
