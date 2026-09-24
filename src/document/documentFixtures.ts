@@ -1,3 +1,5 @@
+import { NO_BINDINGS } from "./bindings";
+import type { Bindings } from "./bindings";
 import type { DesignDocument } from "./document";
 import { NO_GUIDES } from "./guides";
 import type { Guide } from "./guides";
@@ -44,6 +46,7 @@ export interface PixelBox {
 	origin: Origin;
 	media: MediaFill | null;
 	content: LayerContent;
+	bindings: Bindings;
 }
 
 export function pixelBox(rect: Rect): PixelBox {
@@ -54,5 +57,6 @@ export function pixelBox(rect: Rect): PixelBox {
 		origin: CENTER_ORIGIN,
 		media: null,
 		content: NO_CONTENT,
+		bindings: NO_BINDINGS,
 	};
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { pixelBox } from "./documentFixtures";
 import { DEFAULT_LAYOUT } from "./layout";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
+import type { PackedComponent } from "./componentPack";
 import type { LayerNode } from "./subtree";
 import { PLAIN_RECTANGLE } from "./subtree";
 
@@ -188,12 +189,29 @@ describe("parseEnvelope", () => {
 		expect(parseEnvelope(envelopeWith({ layers: [] }))?.sourceIds).toEqual([]);
 	});
 
-	it("carries a component instance and the sources it uses, and drops a source that is broken", () => {
+	it("carries a component copy, its bindings, and the components it uses, and drops a broken one", () => {
 		const instance: LayerNode = {
 			...CHILD,
-			content: { kind: "component", component: "v1", props: { label: "Agree", checked: true } },
+			content: {
+				kind: "component",
+				component: "v1",
+				props: { label: "Agree", checked: true, tone: { var: "t1" } },
+				values: {},
+			},
+			bindings: { fill: "c1" },
 		};
-		const source = { name: "Checkbox", html: "<b>{{label}}</b>", css: "", props: [] };
+		const source: PackedComponent = {
+			name: "Checkbox",
+			body: {
+				kind: "html",
+				address: "a".repeat(64),
+				source: { name: "Checkbox", html: "<b>{{label}}</b>", css: "", props: [] },
+			},
+			variables: [
+				{ id: "t1", name: "label", type: "text", initial: "Agree", options: [], prop: true },
+			],
+			cells: [],
+		};
 		const raw = serializeEnvelope({
 			sourceParent: null,
 			sourceIds: [],
@@ -201,16 +219,20 @@ describe("parseEnvelope", () => {
 			components: { v1: source },
 		});
 		const broken = envelopeWith({
-			layers: [{ content: { kind: "component", component: "v1", props: { label: 4 } } }],
+			layers: [
+				{ content: { kind: "component", component: "v1", props: { label: { nested: 4 } } } },
+			],
 			components: { v1: { name: "Checkbox", html: "{{#open}}", css: "" } },
 		});
 
 		expect(parseEnvelope(raw)?.layers[0]?.content).toEqual(instance.content);
+		expect(parseEnvelope(raw)?.layers[0]?.bindings).toEqual({ fill: "c1" });
 		expect(parseEnvelope(raw)?.components).toEqual({ v1: source });
 		expect(parseEnvelope(broken)?.layers[0]?.content).toEqual({
 			kind: "component",
 			component: "v1",
 			props: {},
+			values: {},
 		});
 		expect(parseEnvelope(broken)?.components).toEqual({});
 	});

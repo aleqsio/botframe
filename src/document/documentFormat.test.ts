@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
 import { DRAWN } from "./documentFixtures";
 import type { LayerFields, LayerId } from "./layer";
+import { nodeOf } from "./path";
 
 const PLAIN: LayerFields = {
 	...DRAWN,
@@ -17,7 +18,7 @@ function loaded(snapshot: Uint8Array): LoroDoc {
 }
 
 function rectangleBag(doc: LoroDoc, id: LayerId): LoroMap {
-	const node = doc.getTree("layers").getNodeByID(id);
+	const node = doc.getTree("layers").getNodeByID(nodeOf(id));
 	if (node === undefined) {
 		throw new Error("layer is missing");
 	}

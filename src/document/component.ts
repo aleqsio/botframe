@@ -1,11 +1,7 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
 import { fillTemplate, parseTemplate } from "./template";
-import type { Template } from "./template";
-
-export type PropValue = string | boolean;
-
-export type PropValues = Readonly<Record<string, PropValue>>;
+import type { Template, TemplateValue } from "./template";
 
 export type PropSpec =
 	| { name: string; kind: "text"; initial: string }
@@ -103,28 +99,11 @@ export function componentOf(id: string, value: unknown): Component | null {
 	return read === null ? null : { ...read.source, id, template: read.template };
 }
 
-export function isPropValue(value: unknown): value is PropValue {
-	return isText(value) || typeof value === "boolean";
-}
-
-function heldValue(spec: PropSpec, held: unknown): PropValue {
-	if (spec.kind === "choice") {
-		return isText(held) && spec.options.includes(held) ? held : spec.initial;
-	}
-	if (spec.kind === "boolean") {
-		return typeof held === "boolean" ? held : spec.initial;
-	}
-	return isText(held) ? held : spec.initial;
-}
-
-export function propValuesOf(component: ComponentSource, held: PropValues): PropValues {
-	return Object.fromEntries(
-		component.props.map((spec) => [spec.name, heldValue(spec, held[spec.name])]),
-	);
-}
-
-export function componentMarkup(component: Component, held: PropValues): string {
+export function componentMarkup(
+	component: Component,
+	values: Readonly<Record<string, TemplateValue>>,
+): string {
 	const css = component.css.replace(STYLE_END, "<\\/style");
-	const html = fillTemplate(component.template, propValuesOf(component, held));
+	const html = fillTemplate(component.template, values);
 	return `<style>${HOST_RESET}\n${css}</style>${html}<slot></slot>`;
 }

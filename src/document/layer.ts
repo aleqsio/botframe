@@ -1,11 +1,12 @@
-import type { TreeID } from "loro-crdt";
-import type { PropValues } from "./component";
+import type { Bindings, BindingsPatch } from "./bindings";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
+import type { LayerId } from "./path";
+import type { Assignments, Literal, VariableValue } from "./variable";
 
-export type LayerId = TreeID;
+export type { LayerId } from "./path";
 
 export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
@@ -46,13 +47,17 @@ export interface Pose {
 	mirrored: boolean;
 }
 
-export type LayerContent =
-	| { kind: "none" }
-	| { kind: "component"; component: string; props: PropValues };
+export interface ComponentLink {
+	kind: "component";
+	component: string;
+	props: Assignments;
+}
 
-export type ComponentContent = Extract<LayerContent, { kind: "component" }>;
+export type ResolvedValues = Readonly<Record<string, Literal>>;
 
-export const NO_CONTENT: LayerContent = { kind: "none" };
+export type LayerContent = { kind: "none" } | (ComponentLink & { values: ResolvedValues });
+
+export const NO_CONTENT: { kind: "none" } = { kind: "none" };
 
 export interface Layer extends Rect, Pose {
 	id: LayerId;
@@ -67,6 +72,7 @@ export interface Layer extends Rect, Pose {
 	layout: LayerLayout;
 	guides: readonly Guide[];
 	content: LayerContent;
+	bindings: Bindings;
 }
 
 export type LayerTraits = Omit<Layer, "id" | "parent">;
@@ -90,6 +96,7 @@ export type LayerPatch = Partial<LayerFields> & {
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 	media?: MediaFill | null;
-	content?: ComponentContent;
-	props?: PropValues;
+	content?: ComponentLink | null;
+	props?: Readonly<Record<string, VariableValue | null>>;
+	bindings?: BindingsPatch;
 };

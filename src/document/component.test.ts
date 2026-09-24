@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	componentMarkup,
-	componentOf,
-	componentSourceOf,
-	propSpecOf,
-	propValuesOf,
-} from "./component";
+import { componentMarkup, componentOf, componentSourceOf, propSpecOf } from "./component";
 import type { Component, ComponentSource } from "./component";
 
 const CHECKBOX: ComponentSource = {
@@ -67,20 +61,9 @@ describe("componentSourceOf", () => {
 	});
 });
 
-describe("propValuesOf", () => {
-	it("keeps each held value of the right kind and gives the initial value for the rest", () => {
-		expect(propValuesOf(CHECKBOX, { label: true, checked: true, size: "xl", extra: "x" })).toEqual({
-			label: "Accept",
-			checked: true,
-			size: "md",
-		});
-		expect(propValuesOf(CHECKBOX, {})).toEqual({ label: "Accept", checked: false, size: "md" });
-	});
-});
-
 describe("componentMarkup", () => {
 	it("writes a reset of the inherited styles, the style, the filled template, and a slot for layers inside", () => {
-		expect(componentMarkup(checkbox(), { checked: true, size: "lg" })).toBe(
+		expect(componentMarkup(checkbox(), { label: "Accept", checked: true, size: "lg" })).toBe(
 			'<style>:host { all: initial; cursor: inherit; }\n.box { gap: 4px; }</style><label class="box lg"><input type="checkbox" checked>Accept</label><slot></slot>',
 		);
 	});

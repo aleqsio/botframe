@@ -5,6 +5,7 @@ import { DRAWN, firstId, pixelBox } from "./documentFixtures";
 import type { Layer, LayerFields, LayerId } from "./layer";
 import { PLAIN_RECTANGLE, componentIdsOf } from "./subtree";
 import type { LayerNode } from "./subtree";
+import { nodeOf } from "./path";
 
 const CHILD: LayerFields = {
 	x: 5,
@@ -105,7 +106,7 @@ describe("readSubtree", () => {
 		peer.import(doc.snapshot());
 		peer
 			.getTree("layers")
-			.getNodeByID(id)
+			.getNodeByID(nodeOf(id))
 			?.data.ensureMergeableMap("geometry")
 			.set("kind", "shader");
 		peer.commit();

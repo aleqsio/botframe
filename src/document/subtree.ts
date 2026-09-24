@@ -1,7 +1,9 @@
+import type { Bindings } from "./bindings";
 import { isCenterOrigin } from "./layer";
 import type {
 	Geometry,
 	Layer,
+	ComponentLink,
 	LayerContent,
 	LayerFields,
 	LayerId,
@@ -27,6 +29,7 @@ export interface LayerNode {
 	guides: readonly Guide[];
 	media: MediaFill | null;
 	content: LayerContent;
+	bindings: Bindings;
 	children: readonly LayerNode[];
 }
 
@@ -64,12 +67,19 @@ function fieldsOf(layer: Layer): LayerFields {
 	};
 }
 
+function linkOf(content: ComponentLink): ComponentLink {
+	return { kind: "component", component: content.component, props: content.props };
+}
+
 export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null {
 	const layer = source.layer(id);
 	if (layer === null) {
 		return null;
 	}
-	const children = source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
+	const copy = layer.content.kind === "component";
+	const children = copy
+		? []
+		: source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,
@@ -82,23 +92,44 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		guides: layer.guides,
 		media: layer.media,
 		content: layer.content,
+		bindings: layer.bindings,
 		children,
 	};
 }
 
-function copyPatch(node: LayerNode): LayerPatch {
+export function readTree(source: LayerReader, id: LayerId): LayerNode | null {
+	const node = readSubtree(source, id);
+	if (node === null) {
+		return null;
+	}
+	const children = source.childIds(id).flatMap((child) => readTree(source, child) ?? []);
+	return { ...node, children };
+}
+
+function posePatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
 		...(node.skewX === 0 ? {} : { skewX: node.skewX }),
 		...(node.skewY === 0 ? {} : { skewY: node.skewY }),
 		...(node.mirrored ? { mirrored: true } : {}),
 		...(isCenterOrigin(node.origin) ? {} : { origin: node.origin }),
+	};
+}
+
+function copyPatch(node: LayerNode): LayerPatch {
+	return {
+		...posePatch(node),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
 		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),
 		...(node.media === null ? {} : { media: node.media }),
-		...(node.content.kind === "none" ? {} : { content: node.content }),
+		...(node.content.kind === "none" ? {} : { content: linkOf(node.content) }),
+		...(Object.keys(node.bindings).length === 0 ? {} : { bindings: node.bindings }),
 	};
+}
+
+export function nodePatch(node: LayerNode): LayerPatch {
+	return { ...node.fields, ...copyPatch(node) };
 }
 
 export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerId | null): LayerId {

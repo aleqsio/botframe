@@ -6,11 +6,12 @@ import { firstId } from "./documentFixtures";
 import type { LayerId } from "./layer";
 import { DEFAULT_LAYOUT } from "./layout";
 import type { LayoutPatch } from "./layout";
+import { nodeOf } from "./path";
 
 function layoutBag(doc: DesignDocument, id: LayerId): LoroMap {
 	const held = new LoroDoc();
 	held.import(doc.snapshot());
-	const node = held.getTree("layers").getNodeByID(id);
+	const node = held.getTree("layers").getNodeByID(nodeOf(id));
 	if (node === undefined) {
 		throw new Error("layer is missing");
 	}
@@ -86,7 +87,11 @@ describe("the layout of a layer", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(55);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").getNodeByID(id)?.data.ensureMergeableMap("layout").set("display", "row");
+		peer
+			.getTree("layers")
+			.getNodeByID(nodeOf(id))
+			?.data.ensureMergeableMap("layout")
+			.set("display", "row");
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
 
@@ -103,7 +108,7 @@ describe("the layout of a layer", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(66);
 		peer.import(doc.snapshot());
-		const bag = peer.getTree("layers").getNodeByID(id)?.data.ensureMergeableMap("layout");
+		const bag = peer.getTree("layers").getNodeByID(nodeOf(id))?.data.ensureMergeableMap("layout");
 		bag?.set("display", "masonry");
 		bag?.set("gap", { column: { value: 6, unit: "px" } });
 		peer.commit();

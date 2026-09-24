@@ -6,6 +6,7 @@ import { DesignDocument } from "./document";
 import { DRAWN } from "./documentFixtures";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { LayerId } from "./layer";
+import { nodeOf } from "./path";
 
 async function pictureId(): Promise<AssetId> {
 	const asset = await assetOf(new TextEncoder().encode("picture"), "image/webp");
@@ -18,7 +19,7 @@ async function pictureId(): Promise<AssetId> {
 function layerData(doc: DesignDocument, id: LayerId): unknown {
 	const loro = new LoroDoc();
 	loro.import(doc.snapshot());
-	return loro.getTree("layers").getNodeByID(id)?.data.get("media");
+	return loro.getTree("layers").getNodeByID(nodeOf(id))?.data.get("media");
 }
 
 describe("the media fill of a layer", () => {
@@ -57,7 +58,10 @@ describe("the media fill of a layer", () => {
 		const id = doc.createLayer(DRAWN);
 		const loro = new LoroDoc();
 		loro.import(doc.snapshot());
-		loro.getTree("layers").getNodeByID(id)?.data.set("media", { asset: "a.png", fit: "cover" });
+		loro
+			.getTree("layers")
+			.getNodeByID(nodeOf(id))
+			?.data.set("media", { asset: "a.png", fit: "cover" });
 		loro.commit();
 
 		expect(DesignDocument.open(loro.export({ mode: "snapshot" })).layer(id)?.media).toBeNull();

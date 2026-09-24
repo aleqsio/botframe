@@ -1,9 +1,11 @@
 import { bagOf, isList, listOf } from "./bag";
 import type { Bag } from "./bag";
-import { componentSourceOf, isPropValue } from "./component";
-import type { ComponentSource } from "./component";
+import { bindingsOf } from "./bindings";
+import { packedOf } from "./componentPack";
+import type { PackedComponent } from "./componentPack";
 import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
 import type { LayerContent, LayerFields, Origin, WritableGeometry } from "./layer";
+import { assignmentsOf } from "./layerLinks";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
@@ -20,7 +22,7 @@ export interface LayerEnvelope {
 	sourceParent: string | null;
 	sourceIds: readonly string[];
 	layers: readonly LayerNode[];
-	components: Readonly<Record<string, ComponentSource>>;
+	components: Readonly<Record<string, PackedComponent>>;
 }
 
 function count(bag: Bag, key: string): number {
@@ -99,18 +101,13 @@ function contentOf(value: unknown): LayerContent {
 	if (bag["kind"] !== "component" || component === "") {
 		return NO_CONTENT;
 	}
-	const props = Object.fromEntries(
-		Object.entries(bagOf(bag["props"])).flatMap(([key, held]) =>
-			isPropValue(held) ? [[key, held] as const] : [],
-		),
-	);
-	return { kind: "component", component, props };
+	return { kind: "component", component, props: assignmentsOf(bag["props"]), values: {} };
 }
 
-function componentsOf(value: unknown): Readonly<Record<string, ComponentSource>> {
+function componentsOf(value: unknown): Readonly<Record<string, PackedComponent>> {
 	return Object.fromEntries(
-		Object.entries(bagOf(value)).flatMap(([id, source]) => {
-			const held = componentSourceOf(source);
+		Object.entries(bagOf(value)).flatMap(([id, packed]) => {
+			const held = packedOf(packed, nodeOf);
 			return held === null ? [] : [[id, held]];
 		}),
 	);
@@ -131,6 +128,7 @@ function nodeOf(value: unknown): LayerNode {
 		guides: guidesOf(bag["guides"]),
 		media: mediaOf(bag["media"]),
 		content: contentOf(bag["content"]),
+		bindings: bindingsOf(bag["bindings"]),
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }
