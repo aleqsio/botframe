@@ -2,14 +2,7 @@ import type { Layer, LayerId, Origin, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import type { GroupPivot } from "../state/userState";
 import { HANDLE_SIZE } from "./handles";
-import {
-	centerOf,
-	fromParentPoint,
-	intoLayer,
-	pivotOf,
-	placedAround,
-	visualCenterOf,
-} from "./layerSpace";
+import { centerOf, fromParentPoint, pivotOf, placedAround, visualCenterOf } from "./layerSpace";
 import type { Placed, ReadLayer } from "./layerSpace";
 import { sameIds } from "./selection";
 import { boundsOf } from "./selectionBounds";
@@ -62,8 +55,7 @@ export interface MovedOrigin {
 	place: Point;
 }
 
-export function movedOrigin(layer: Placed, point: Point): MovedOrigin {
-	const local = intoLayer(layer, point);
+export function movedOrigin(layer: Placed, local: Point): MovedOrigin {
 	const origin = { x: fractionOf(local.x, layer.width), y: fractionOf(local.y, layer.height) };
 	return { origin, place: placedAround({ ...layer, origin }, visualCenterOf(layer)) };
 }

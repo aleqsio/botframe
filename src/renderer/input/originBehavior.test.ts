@@ -6,6 +6,7 @@ import { NO_DRAWN } from "./drawn";
 import { outOfLayer, visualCenterOf } from "./layerSpace";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
+import { NO_MODIFIERS } from "./modifiers";
 import { NO_HITS, SQUARE, dragOver, pointAt } from "./toolFixtures";
 
 function sceneOf(turn: number): { target: PointerTarget; one: LayerId; other: LayerId } {
@@ -68,7 +69,70 @@ describe("the origin of one selected layer", () => {
 	});
 });
 
+const CONTROL = { shift: false, alt: false, control: true };
+
+function originAfter(release: { x: number; y: number }, control = false): number[] {
+	const { target, one } = sceneOf(0);
+	target.user.selection.set([one]);
+	dragOver(behaviorFor("select"), target, {
+		press: { x: 20, y: 10 },
+		release,
+		...(control ? { modifiers: CONTROL } : {}),
+	});
+	const { origin } = layerOf(target, one);
+	return [origin.x, origin.y];
+}
+
+describe("the snap of a dragged origin", () => {
+	it("snaps to a corner, to the middle of an edge, and to the center", () => {
+		expect(originAfter({ x: 3, y: 2 })).toEqual([0, 0]);
+		expect(originAfter({ x: 38, y: 11 })).toEqual([1, 0.5]);
+		expect(originAfter({ x: 21, y: 9 })).toEqual([0.5, 0.5]);
+	});
+
+	it("snaps each axis to an edge or to a center line", () => {
+		expect(originAfter({ x: 30, y: 19 })).toEqual([0.75, 1]);
+		expect(originAfter({ x: 19, y: 60 })).toEqual([0.5, 3]);
+	});
+
+	it("does not snap while the control key is down", () => {
+		expect(originAfter({ x: 3, y: 2 }, true)).toEqual([0.075, 0.1]);
+	});
+
+	it("shows the snap lines in the space of the layer during the drag", () => {
+		const { target, one } = sceneOf(30);
+		target.user.selection.set([one]);
+		const behavior = behaviorFor("select");
+		const camera = target.user.camera.get();
+		const corner = outOfLayer(layerOf(target, one), { x: 1, y: 1 });
+
+		behavior.dragStart?.(
+			target,
+			pointAt(camera, { x: 20, y: 10 }),
+			pointAt(camera, corner),
+			NO_MODIFIERS,
+		);
+
+		expect(target.user.snap.get()?.parent).toBe(one);
+		expect(target.user.snap.get()?.segments.map((segment) => segment.at)).toEqual([0, 0]);
+		behavior.dragEnd?.(target, pointAt(camera, corner), NO_MODIFIERS);
+		expect(target.user.snap.get()).toBeNull();
+	});
+});
+
 describe("the pivot of more than one selected layer", () => {
+	it("snaps to the center of a selected layer", () => {
+		const { target, one, other } = sceneOf(0);
+		target.user.selection.set([one, other]);
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 60, y: 40 },
+			release: { x: 113, y: 68 },
+		});
+
+		expect(target.user.groupPivot.get()?.at).toEqual({ x: 110 / 120, y: 70 / 80 });
+	});
+
 	it("starts at the center of the selection box and moves only in the user state", () => {
 		const { target, one, other } = sceneOf(0);
 		target.user.selection.set([one, other]);

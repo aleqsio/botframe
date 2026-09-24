@@ -1,5 +1,6 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
+import { gripDrag } from "./gripDrag";
 import { zoneAt } from "./handles";
 import type { HandleZone } from "./handles";
 import { COMMIT_MESSAGES } from "./layerCommand";
@@ -61,14 +62,6 @@ function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: 
 }
 
 export function createHandleBehavior(): ToolBehavior {
-	let held: Grip | null = null;
-
-	function apply(target: PointerTarget, canvas: Point, modifiers: Modifiers): void {
-		if (held !== null) {
-			applyGrip(target, held, canvas, modifiers);
-		}
-	}
-
 	return {
 		hover(target, point) {
 			return zoneUnder(target, point.canvas);
@@ -77,24 +70,13 @@ export function createHandleBehavior(): ToolBehavior {
 		tap(target, point) {
 			return zoneUnder(target, point.canvas) !== null;
 		},
-		dragStart(target, origin, point, modifiers) {
-			held = gripFor(target, aimAt(target, origin.canvas));
-			apply(target, point.canvas, modifiers);
-			return held !== null;
-		},
-		drag(target, point, modifiers) {
-			apply(target, point.canvas, modifiers);
-			return false;
-		},
-		dragEnd(target, point, modifiers) {
-			const grip = held;
-			if (grip === null) {
-				return;
-			}
-			apply(target, point.canvas, modifiers);
-			held = null;
-			target.user.snap.set(null);
-			target.doc.commit(COMMIT_MESSAGES[grip.kind]);
-		},
+		...gripDrag({
+			gripAt: (target, canvas) => gripFor(target, aimAt(target, canvas)),
+			apply: applyGrip,
+			finish(target, grip) {
+				target.user.snap.set(null);
+				target.doc.commit(COMMIT_MESSAGES[grip.kind]);
+			},
+		}),
 	};
 }

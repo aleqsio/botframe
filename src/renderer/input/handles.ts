@@ -23,8 +23,6 @@ export interface HandleZone {
 
 export type Zone = HandleZone | { mode: "origin" };
 
-export const ORIGIN_ZONE: Zone = { mode: "origin" };
-
 export interface Axis {
 	x: number;
 	y: number;

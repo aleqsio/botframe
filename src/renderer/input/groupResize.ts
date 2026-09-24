@@ -1,6 +1,7 @@
 import { CENTER_ORIGIN } from "../../document/layer";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { SMALLEST_GROUP } from "./groupMove";
 import { CORNERS, zoneAt } from "./handles";
 import type { Corner, Handle, HandleZone } from "./handles";
 import {
@@ -79,7 +80,7 @@ export function groupZoneAt(
 	point: Point,
 	zoom: number,
 ): BoxZone | null {
-	const box = boundsOf(read, ids);
+	const box = ids.length < SMALLEST_GROUP ? null : boundsOf(read, ids);
 	const zone = box === null ? null : zoneAt(flatBox(box), point, zoom);
 	return box === null || zone === null ? null : { box, zone };
 }

@@ -1,5 +1,5 @@
 import type { Point } from "../state/camera";
-import { SMALLEST_GROUP } from "./groupMove";
+import { gripDrag } from "./gripDrag";
 import { groupGripOf, groupResized, groupZoneAt, partOf } from "./groupResize";
 import type { BoxZone, GroupGrip, GroupPart } from "./groupResize";
 import { groupTurned } from "./groupRotate";
@@ -35,11 +35,13 @@ function rotateHold(target: PointerTarget, canvas: Point, found: BoxZone): Group
 }
 
 function holdAt(target: PointerTarget, canvas: Point): GroupHold | null {
-	const ids = target.user.selection.get();
-	if (ids.length < SMALLEST_GROUP) {
-		return null;
-	}
-	const found = groupZoneAt(drawnReaderOf(target), ids, canvas, target.user.camera.get().zoom);
+	const { user } = target;
+	const found = groupZoneAt(
+		drawnReaderOf(target),
+		user.selection.get(),
+		canvas,
+		user.camera.get().zoom,
+	);
 	if (found === null) {
 		return null;
 	}
@@ -79,8 +81,6 @@ function applyHold(
 }
 
 export function createGroupHandleBehavior(): ToolBehavior {
-	let held: GroupHold | null = null;
-
 	return {
 		hover(target, point) {
 			const hold = holdAt(target, point.canvas);
@@ -92,28 +92,12 @@ export function createGroupHandleBehavior(): ToolBehavior {
 		tap(target, point) {
 			return holdAt(target, point.canvas) !== null;
 		},
-		dragStart(target, origin, point, modifiers) {
-			held = holdAt(target, origin.canvas);
-			if (held === null) {
-				return false;
-			}
-			applyHold(target, held, point.canvas, modifiers);
-			return true;
-		},
-		drag(target, point, modifiers) {
-			if (held !== null) {
-				applyHold(target, held, point.canvas, modifiers);
-			}
-			return false;
-		},
-		dragEnd(target, point, modifiers) {
-			const hold = held;
-			if (hold === null) {
-				return;
-			}
-			applyHold(target, hold, point.canvas, modifiers);
-			held = null;
-			target.doc.commit(COMMIT_MESSAGES[hold.kind]);
-		},
+		...gripDrag({
+			gripAt: holdAt,
+			apply: applyHold,
+			finish(target, hold) {
+				target.doc.commit(COMMIT_MESSAGES[hold.kind]);
+			},
+		}),
 	};
 }
