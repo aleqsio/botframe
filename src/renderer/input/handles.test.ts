@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
 import type { Layer } from "../../document/layer";
-import { CORNER_GRACE, EDGE_GRACE, ROTATE_REACH, zoneAt, zoneKey } from "./handles";
+import { CORNER_GRACE, EDGE_GRACE, ROTATE_REACH, zoneAt } from "./handles";
 
 function layerAt(rotation: number): Layer {
 	return {
@@ -74,12 +74,5 @@ describe("zoneAt", () => {
 		expect(zoneAt(turned, { x: 250, y: 50 }, 1)).toEqual({ mode: "resize", handle: "nw" });
 		expect(zoneAt(turned, { x: 250, y: 150 }, 1)).toEqual({ mode: "resize", handle: "n" });
 		expect(zoneAt(turned, { x: 100, y: 100 }, 1)).toBeNull();
-	});
-});
-
-describe("zoneKey", () => {
-	it("names the zone for the cursor of the stage", () => {
-		expect(zoneKey({ mode: "resize", handle: "nw" })).toBe("resize-nw");
-		expect(zoneKey({ mode: "rotate", handle: "se" })).toBe("rotate-se");
 	});
 });

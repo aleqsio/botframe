@@ -2,7 +2,6 @@ import type { Layer, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { fromParentPoint, halfSizeOf, toLayerPoint } from "./layerSpace";
 import type { Placed } from "./layerSpace";
-import type { SkewZone } from "./skewHandle";
 
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
@@ -15,14 +14,11 @@ type ZoneMode = "resize" | "rotate";
 
 export type Corner = `${Vertical}${Horizontal}`;
 export type Handle = Corner | Vertical | Horizontal;
-export type ZoneKey = `${ZoneMode | SkewZone["mode"]}-${Handle}` | "origin";
 
 export interface HandleZone {
 	mode: ZoneMode;
 	handle: Handle;
 }
-
-export type Zone = HandleZone | SkewZone | { mode: "origin" };
 
 export interface Axis {
 	x: number;
@@ -41,10 +37,6 @@ export const HANDLE_AXIS: Readonly<Record<Handle, Axis>> = {
 	sw: { x: -1, y: 1 },
 	w: { x: -1, y: 0 },
 };
-
-export function zoneKey(zone: Zone): ZoneKey {
-	return zone.mode === "origin" ? zone.mode : `${zone.mode}-${zone.handle}`;
-}
 
 function alongEdge(direction: number, extent: number): number {
 	return ((direction + 1) / 2) * extent;

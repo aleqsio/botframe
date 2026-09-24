@@ -2,7 +2,7 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { LayerLayout, Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
-import type { ZoneKey } from "../input/handles";
+import type { CursorKey } from "../input/cursor";
 import type { RowDrag } from "../input/rowDrop";
 import type { Linear } from "../input/linear";
 import type { SnapField, SnapSegment } from "../input/snap";
@@ -80,7 +80,7 @@ export class UserState {
 	readonly camera = new Slot<Camera>(IDENTITY_CAMERA);
 	readonly selection = new Slot<readonly LayerId[]>(NOTHING_SELECTED);
 	readonly menu = new Slot<LayerMenu | null>(null);
-	readonly zone = new Slot<ZoneKey | null>(null);
+	readonly zone = new Slot<CursorKey | null>(null);
 	readonly highlight = new Slot<LayerId | null>(null);
 	readonly dragging = new Slot<boolean>(false);
 	readonly draw = new Slot<Draw | null>(null);

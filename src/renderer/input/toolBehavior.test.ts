@@ -7,7 +7,7 @@ import type { LayerId } from "../../document/layer";
 import type { SizeMode } from "../../document/layout";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
-import type { Zone } from "./handles";
+import type { CursorKey } from "./cursor";
 import { firstId } from "./toolFixtures";
 import { dragOver, lastDrawn, nestedTarget, pointAt, tapAt, targetOf } from "./toolFixtures";
 
@@ -23,7 +23,7 @@ const CHILD_EAST = { x: 500, y: 300 };
 const PULLED_EAST = { x: 460, y: 300 };
 const DRAW_PRESS = { x: 40, y: 40 };
 const DRAW_RELEASE = { x: 240, y: 180 };
-const SE_ZONE = { mode: "resize", handle: "se" };
+const SE_ZONE = "resize-nwse";
 const DRAW_TOOLS: readonly ToolId[] = ["rectangle", "frame"];
 const SHIFT: Modifiers = { shift: true, alt: false, control: false };
 const ALT: Modifiers = { shift: false, alt: true, control: false };
@@ -34,7 +34,7 @@ function selectedTarget(): PointerTarget {
 	return target;
 }
 
-function zoneUnderTool(tool: ToolId): Zone | null {
+function zoneUnderTool(tool: ToolId): CursorKey | null {
 	const target = selectedTarget();
 	return behaviorFor(tool).hover?.(target, pointAt(target.user.camera.get(), SE_CORNER)) ?? null;
 }
@@ -160,19 +160,10 @@ describe("the resize and turn handles", () => {
 
 		tapAt(behavior, target, CENTER);
 
-		expect(behavior.hover?.(target, pointAt(camera, SE_CORNER))).toEqual({
-			mode: "resize",
-			handle: "se",
-		});
-		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toEqual({
-			mode: "resize",
-			handle: "e",
-		});
-		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toEqual({
-			mode: "rotate",
-			handle: "se",
-		});
-		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toEqual({ mode: "origin" });
+		expect(behavior.hover?.(target, pointAt(camera, SE_CORNER))).toBe("resize-nwse");
+		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toBe("resize-ew");
+		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate");
+		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBe("origin");
 	});
 });
 
@@ -205,15 +196,9 @@ describe("the handles under a draw tool", () => {
 		const behavior = behaviorFor("rectangle");
 		const camera = target.user.camera.get();
 
-		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toEqual({
-			mode: "resize",
-			handle: "e",
-		});
-		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toEqual({
-			mode: "rotate",
-			handle: "se",
-		});
-		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toEqual({ mode: "origin" });
+		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toBe("resize-ew");
+		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate");
+		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBe("origin");
 	});
 
 	it("draws no new layer when the press of a draw tool lands on a handle", () => {
@@ -343,11 +328,8 @@ describe("the handles of a layer inside a frame", () => {
 		const behavior = behaviorFor("select");
 		tapAt(behavior, target, { x: 450, y: 290 });
 
-		expect(behavior.hover?.(target, pointAt(target.user.camera.get(), { x: 500, y: 320 }))).toEqual(
-			{
-				mode: "resize",
-				handle: "se",
-			},
+		expect(behavior.hover?.(target, pointAt(target.user.camera.get(), { x: 500, y: 320 }))).toBe(
+			"resize-nwse",
 		);
 
 		dragOver(behaviorFor("select"), target, {

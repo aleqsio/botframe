@@ -1,4 +1,6 @@
+import type { Layer } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { skewCursorKeyOf } from "./cursor";
 import { gripDrag } from "./gripDrag";
 import { SKEW_MESSAGE } from "./layerCommand";
 import { layerChain } from "./layerSpace";
@@ -11,6 +13,7 @@ import type { PointerTarget, ToolBehavior } from "./tool";
 interface SkewAim {
 	grip: SkewGrip;
 	zone: SkewZone;
+	chain: readonly Layer[];
 }
 
 function aimAt(target: PointerTarget, canvas: Point): SkewAim | null {
@@ -24,7 +27,7 @@ function aimAt(target: PointerTarget, canvas: Point): SkewAim | null {
 		return null;
 	}
 	const from = parentPointOf(target, start.id, canvas);
-	return { grip: { start, edge: zone.handle, from }, zone };
+	return { grip: { start, edge: zone.handle, from }, zone, chain };
 }
 
 function applyGrip(
@@ -41,7 +44,8 @@ function applyGrip(
 export function createSkewBehavior(): ToolBehavior {
 	return {
 		hover(target, point) {
-			return aimAt(target, point.canvas)?.zone ?? null;
+			const aim = aimAt(target, point.canvas);
+			return aim === null ? null : skewCursorKeyOf(aim.zone, aim.chain);
 		},
 		highlight(target, point) {
 			return aimAt(target, point.canvas)?.grip.start.id ?? null;
