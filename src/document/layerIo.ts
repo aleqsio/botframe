@@ -1,5 +1,5 @@
 import type { LoroTreeNode, TreeID } from "loro-crdt";
-import type { LayerPatch, LayerTraits } from "./layer";
+import type { Layer, LayerPatch, LayerTraits } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
 import type { LayerTree } from "./layerTree";
 import type { Basis } from "./length";
@@ -32,4 +32,26 @@ export function writeLayer(
 		writePatch(data, part, basis);
 		return target;
 	});
+}
+
+const CORNER_KEYS = ["cornerRadius", "cornerSmoothing"] as const;
+
+export function unbindCorners(layer: Layer | null, patch: LayerPatch): LayerPatch {
+	const { geometry } = patch;
+	const before = layer?.geometry;
+	if (layer === null || geometry?.kind !== "rectangle" || before?.kind !== "rectangle") {
+		return patch;
+	}
+	const changed = CORNER_KEYS.filter(
+		(key) =>
+			layer.bindings[key] !== undefined &&
+			patch.bindings?.[key] === undefined &&
+			geometry[key] !== before[key],
+	);
+	return changed.length === 0
+		? patch
+		: {
+				...patch,
+				bindings: { ...Object.fromEntries(changed.map((key) => [key, null])), ...patch.bindings },
+			};
 }

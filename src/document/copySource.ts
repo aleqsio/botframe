@@ -87,6 +87,10 @@ function splitLayout(layout: LayoutPatch | undefined): [LayoutPatch, LayoutPatch
 	];
 }
 
+function filled<T extends object>(key: string, value: T): Record<string, T> {
+	return Object.keys(value).length === 0 ? {} : { [key]: value };
+}
+
 export function splitPatch(patch: LayerPatch): SplitPatch {
 	const { layout, bindings, ...rest } = patch;
 	const entries = Object.entries(rest);
@@ -95,13 +99,13 @@ export function splitPatch(patch: LayerPatch): SplitPatch {
 	return {
 		placement: {
 			...Object.fromEntries(entries.filter(([key]) => PLACEMENT_PATCH.has(key))),
-			layout: placementLayout,
-			bindings: Object.fromEntries(bound.filter(([key]) => isPlacementBinding(key))),
+			...filled("layout", placementLayout),
+			...filled("bindings", Object.fromEntries(bound.filter(([key]) => isPlacementBinding(key)))),
 		},
 		shared: {
 			...Object.fromEntries(entries.filter(([key]) => !PLACEMENT_PATCH.has(key))),
-			layout: sharedLayout,
-			bindings: Object.fromEntries(bound.filter(([key]) => !isPlacementBinding(key))),
+			...filled("layout", sharedLayout),
+			...filled("bindings", Object.fromEntries(bound.filter(([key]) => !isPlacementBinding(key)))),
 		},
 	};
 }

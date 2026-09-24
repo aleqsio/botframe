@@ -48,9 +48,7 @@ function DrivenRow({
 				aria-label={`Take ${variable.name} out of the table`}
 				className="guide-button"
 				onClick={() => {
-					for (const each of choice.options) {
-						setCell(doc, owner, { ...cell, option: each }, null);
-					}
+					doc.components.scope(owner).takeOut(choice.id, variable.id);
 					commitVariables(doc);
 				}}
 				type="button"

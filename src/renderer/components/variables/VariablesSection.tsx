@@ -88,6 +88,7 @@ function VariableRow(props: RowProps): ReactElement {
 						const options = optionsOf(text);
 						if (options.length > 0) {
 							editVariable(doc, owner, variable, { options });
+							doc.components.scope(owner).dropOptions(variable.id, options);
 							commitVariables(doc);
 						}
 					}}

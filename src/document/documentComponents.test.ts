@@ -255,7 +255,7 @@ describe("paste into a different document", () => {
 		target.commit("paste");
 
 		expect(target.layer(childOf(target, copy))?.name).toBe("Dot");
-		expect(target.components.scope(component).variable("n")?.initial).toBe(3);
+		expect(target.components.scope(component).variables()[0]?.initial).toBe(3);
 		expect(target.rootIds().map((id) => nodeOf(id))).toHaveLength(2);
 	});
 });

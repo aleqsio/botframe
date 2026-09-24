@@ -16,6 +16,7 @@ import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
+import { copiesOf } from "./path";
 
 export interface LayerNode {
 	fields: LayerFields;
@@ -71,15 +72,17 @@ function linkOf(content: ComponentLink): ComponentLink {
 	return { kind: "component", component: content.component, props: content.props };
 }
 
+export function ownChildIds(source: LayerReader, id: LayerId): readonly LayerId[] {
+	const depth = copiesOf(id).length;
+	return source.childIds(id).filter((child) => copiesOf(child).length === depth);
+}
+
 export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null {
 	const layer = source.layer(id);
 	if (layer === null) {
 		return null;
 	}
-	const copy = layer.content.kind === "component";
-	const children = copy
-		? []
-		: source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
+	const children = ownChildIds(source, id).flatMap((child) => readSubtree(source, child) ?? []);
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,

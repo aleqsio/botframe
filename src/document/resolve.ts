@@ -82,8 +82,14 @@ export function traceVariable(
 	if (declared === null || found === null) {
 		return null;
 	}
-	const { type, options } = declared.variable;
-	return fitsType(type, options, found.value) ? found : null;
+	const { variable, owner } = declared;
+	if (fitsType(variable.type, variable.options, found.value)) {
+		return found;
+	}
+	const { initial } = variable;
+	return isReference(initial) || !fitsType(variable.type, variable.options, initial)
+		? null
+		: { value: initial, origin: { kind: "initial", owner, variable: id } };
 }
 
 export function resolveVariable(

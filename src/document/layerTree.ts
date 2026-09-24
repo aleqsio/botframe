@@ -178,10 +178,10 @@ export class LayerTree {
 			return [[node.data, patch, node.id]];
 		}
 		const { placement, shared } = splitPatch(patch);
-		return [
-			[node.data, placement, node.id],
-			[definition.data, shared, definition.id],
-		];
+		const targets: Target[] = [[node.data, placement, node.id]];
+		return Object.keys(shared).length === 0
+			? targets
+			: [...targets, [definition.data, shared, definition.id]];
 	}
 
 	canMove(id: LayerId, parent: LayerId | null, place: Place): boolean {
@@ -208,6 +208,12 @@ export class LayerTree {
 
 	markDefinition(node: TreeID, component: string): void {
 		this.live(node)?.data.set(DEFINITION, component);
+	}
+
+	holder(parent: LayerId | null, components: Iterable<string>): LayerId | null {
+		const container = this.containerOf(parent);
+		const held = [...components].every((component) => this.canHold(container, component));
+		return held ? parent : null;
 	}
 
 	canHold(container: TreeID | undefined, component: string): boolean {

@@ -147,23 +147,11 @@ export class ComponentStore {
 		this.forget();
 	}
 
-	adoptHtml(id: string, name: string, address: string, source: ComponentSource): void {
+	adoptHtml(id: string, imported: HtmlImport, fill: (scope: Scope) => void): void {
 		this.#keep("adopt components", () => {
-			const sources = this.#doc.getMap(SOURCES);
-			if (sources.get(address) === undefined) {
-				sources.set(address, source);
-			}
-			const map = this.#doc.getMap(COMPONENTS).ensureMergeableMap(id);
-			map.set("name", name);
-			map.set("kind", "html");
-			map.set("source", address);
-			map.ensureMergeableMap(SCOPE);
+			this.#writeHtml(id, imported);
+			fill(this.scope(id));
 		});
-	}
-
-	rename(id: string, name: string): void {
-		this.#doc.getMap(COMPONENTS).ensureMergeableMap(id).set("name", name);
-		this.forget();
 	}
 
 	subscribe(listener: () => void): Unsubscribe {
@@ -179,22 +167,24 @@ export class ComponentStore {
 	}
 
 	#importOne(address: string, source: ComponentSource): void {
-		const sources = this.#doc.getMap(SOURCES);
-		if (sources.get(address) === undefined) {
-			sources.set(address, source);
-		}
 		const held = this.entries().find(
 			(entry) => entry.name === source.name && entry.body.kind === "html",
 		);
 		const id = held?.id ?? newVariableId();
+		this.#writeHtml(id, [address, source]);
+		this.#syncProps(this.scope(id), source.props);
+	}
+
+	#writeHtml(id: string, [address, source]: HtmlImport): void {
+		const sources = this.#doc.getMap(SOURCES);
+		if (sources.get(address) === undefined) {
+			sources.set(address, source);
+		}
 		const map = this.#doc.getMap(COMPONENTS).ensureMergeableMap(id);
 		map.set("name", source.name);
 		map.set("kind", "html");
 		map.set("source", address);
-		const scope = new Scope(map.ensureMergeableMap(SCOPE), () => {
-			this.forget();
-		});
-		this.#syncProps(scope, source.props);
+		map.ensureMergeableMap(SCOPE);
 	}
 
 	#syncProps(scope: Scope, specs: readonly PropSpec[]): void {

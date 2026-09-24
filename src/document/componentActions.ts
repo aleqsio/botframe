@@ -6,8 +6,8 @@ import { writePatch } from "./layerData";
 import { NO_BASIS } from "./length";
 import { nodeOf } from "./path";
 import type { LayerId } from "./path";
-import type { Cell } from "./scope";
-import { nodePatch } from "./subtree";
+import type { Cell, Scope } from "./scope";
+import { nodePatch, ownChildIds } from "./subtree";
 import type { LayerNode } from "./subtree";
 import { DOCUMENT_SCOPE, isReference, newVariableId } from "./variable";
 import type { Assignments, Variable, VariableValue } from "./variable";
@@ -98,12 +98,7 @@ function placeDefinition(doc: DesignDocument, component: string, root: LayerNode
 	return rootId;
 }
 
-function fillScope(
-	doc: DesignDocument,
-	component: string,
-	packed: Omit<PackedComponent, "name" | "body">,
-): void {
-	const scope = doc.components.scope(component);
+function fillScope(scope: Scope, packed: Omit<PackedComponent, "name" | "body">): void {
 	for (const variable of packed.variables) {
 		scope.put(variable);
 	}
@@ -116,16 +111,20 @@ export function adoptComponents(
 	doc: DesignDocument,
 	packed: Readonly<Record<string, PackedComponent>>,
 ): void {
-	for (const [id, pack] of Object.entries(packed)) {
-		if (doc.components.entry(id) !== null) {
-			continue;
+	const fresh = Object.entries(packed).filter(([id]) => doc.components.entry(id) === null);
+	for (const [id, pack] of fresh) {
+		const { body } = pack;
+		if (body.kind === "html") {
+			doc.components.adoptHtml(id, [body.address, body.source], (scope) => {
+				fillScope(scope, pack);
+			});
 		}
-		if (pack.body.kind === "html") {
-			doc.components.adoptHtml(id, pack.name, pack.body.address, pack.body.source);
-		} else {
+	}
+	for (const [id, pack] of fresh) {
+		if (pack.body.kind === "layers") {
 			doc.components.addLayers(id, pack.name, placeDefinition(doc, id, pack.body.root));
+			fillScope(doc.components.scope(id), pack);
 		}
-		fillScope(doc, id, pack);
 	}
 }
 
@@ -169,7 +168,7 @@ export function disconnect(doc: DesignDocument, id: LayerId): string | null {
 	const { remap, variables, cells } = remapScope(doc, entry.id);
 	const root = placeDefinition(doc, component, remapNode(definition, remap));
 	doc.components.addLayers(component, `${entry.name} copy`, root);
-	fillScope(doc, component, { variables, cells });
+	fillScope(doc.components.scope(component), { variables, cells });
 	const props = remapAssignments(content.props, remap, {});
 	doc.update(id, { content: { kind: "component", component, props } });
 	return component;
@@ -191,7 +190,7 @@ function detachedNode(doc: DesignDocument, id: LayerId): LayerNode | null {
 		node.content.kind === "none"
 			? node.content
 			: { ...node.content, props: remapAssignments(node.content.props, keep, values) };
-	const children = doc.childIds(id).flatMap((child) => detachedNode(doc, child) ?? []);
+	const children = ownChildIds(doc, id).flatMap((child) => detachedNode(doc, child) ?? []);
 	return { ...remapNode({ ...node, content, children: [] }, keep), children };
 }
 

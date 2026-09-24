@@ -3,6 +3,7 @@ import { parseEnvelope, serializeEnvelope } from "../document/envelope";
 import type { LayerEnvelope } from "../document/envelope";
 import type { LayerId } from "../document/layer";
 import { adoptComponents } from "../document/componentActions";
+import { componentIdsOf } from "../document/subtree";
 import type { LayerNode } from "../document/subtree";
 import { bridge } from "./bridge";
 import { markupOf, packedFor } from "./clipboardContent";
@@ -56,7 +57,10 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 		return;
 	}
 	adoptComponents(doc, envelope.components);
-	const parent = pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds);
+	const parent = doc.tree.holder(
+		pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds),
+		componentIdsOf(envelope.layers),
+	);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
 	user.selection.set(ids);

@@ -59,7 +59,7 @@ export function placeComponent({ doc, stage, user }: Placement, entry: Component
 		return;
 	}
 	const read = doc.layer.bind(doc);
-	const parent = pasteParent(read, user.selection.get(), []);
+	const parent = doc.tree.holder(pasteParent(read, user.selection.get(), []), [entry.id]);
 	const center = toParentPoint(layerChain(read, parent), viewportCenter(user.camera.get(), box));
 	const { width, height } = shape.fields;
 	const place = { x: center.x - width / 2, y: center.y - height / 2 };

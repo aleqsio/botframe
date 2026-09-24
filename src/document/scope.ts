@@ -103,10 +103,6 @@ export class Scope {
 		return this.#view;
 	}
 
-	variable(id: string): Variable | null {
-		return this.variables().find((variable) => variable.id === id) ?? null;
-	}
-
 	put(variable: Variable): void {
 		this.#variableMap().set(variable.id, stored(variable));
 		this.forget();
@@ -132,6 +128,24 @@ export class Scope {
 			this.#tableMap().delete(cellKey(cell));
 		} else {
 			this.#tableMap().set(cellKey(cell), isReference(value) ? { var: value.var } : value);
+		}
+		this.forget();
+	}
+
+	takeOut(choice: string, variable: string): void {
+		for (const [cell] of this.cells()) {
+			if (cell.choice === choice && cell.variable === variable) {
+				this.#tableMap().delete(cellKey(cell));
+			}
+		}
+		this.forget();
+	}
+
+	dropOptions(choice: string, options: readonly string[]): void {
+		for (const [cell] of this.cells()) {
+			if (cell.choice === choice && !options.includes(cell.option)) {
+				this.#tableMap().delete(cellKey(cell));
+			}
 		}
 		this.forget();
 	}

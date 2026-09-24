@@ -4,7 +4,7 @@ import { AssetStore } from "./assets";
 import { ComponentStore } from "./components";
 import { DocumentHistory, KEPT_ORIGIN } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
-import { readLayer, writeLayer } from "./layerIo";
+import { readLayer, unbindCorners, writeLayer } from "./layerIo";
 import { LayerTree, touchedNodes } from "./layerTree";
 import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
 import type { Basis, LayerLengths, Size } from "./length";
@@ -207,7 +207,7 @@ export class DesignDocument {
 		if (node === null) {
 			return;
 		}
-		const allowed = this.#allowedPatch(node.parent()?.id, patch);
+		const allowed = this.#allowedPatch(node.parent()?.id, unbindCorners(this.layer(id), patch));
 		const basis = this.#basisOf(this.#tree.parentOf(id));
 		for (const target of writeLayer(this.#tree, node, allowed, basis)) {
 			this.#refreshNode(target);
