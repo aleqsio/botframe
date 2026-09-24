@@ -1,17 +1,71 @@
-# Custom components
+# Components
 
-This file is the plan for custom components. A component is a piece of HTML and CSS from a coding project. The user puts it on the canvas as a layer and changes its props in the inspector. STACK.md gives the rule: a component is markup that the model does not read.
+This file tells how components work. Issue #103 gives the full model. Read it before you change the model.
+
+A component has one of two bodies:
+
+- **HTML.** A piece of HTML and CSS from a coding project. The model does not read the markup (STACK.md).
+- **Layers.** A group of layers that the user makes from a frame. The layers are real layers in the document.
+
+Each component has variables. A prop is a variable that a copy can set. The two bodies use one system of variables, so there are not two systems.
 
 ## Rules
 
-1. **A component is self-contained.** It is one template, one stylesheet, and one list of props. An agent copies only the components that a design uses, with only their CSS.
-2. **Each state is a prop.** A component has no state, no effect, and no script. A checked box is `checked: true`. A hover state is a prop too, because the editor does not send pointer events into a component.
+1. **A component is self-contained.** An HTML component is one template, one stylesheet, and one list of props. An agent copies only the components that a design uses, with only their CSS.
+2. **Each state is a prop.** A component has no state, no effect, and no script. A checked box is `checked: true`.
 3. **The file holds the source.** The file opens with no coding project and no network, and shows the same pixels.
-4. **A source never changes.** A source has a content address. A new version gets a new address. An instance keeps the version that it has until a person updates it.
+4. **A source never changes.** An HTML source has a content address. A new version gets a new address. A second import of a name points the component at the new address, and each copy shows the new version.
+5. **There is no main copy.** Each copy of a component shows the same layers. An edit inside one copy changes each copy. A copy keeps only its place, its size, and its props.
 
-## Version 1
+## Variables
 
-Version 1 is in the pull request that adds this section.
+- A variable has an id, a name, a type, and a first value. The types are color, length, number, text, boolean, and choice. A choice has a list of options.
+- A variable belongs to a scope. The scopes are the document and each component. A layer has no variables.
+- A value is a literal or a reference to a different variable: `{ var: id }`.
+- A variable of a component is a **prop** when the Prop switch is on. The inspector shows each prop of a copy in "Props · this copy".
+- A choice has a **table**. The table gives a value for each option and each variable that the choice drives. When a copy sets the choice to `alarm`, each driven variable takes its `alarm` value.
+- A field of a layer can **bind** to a variable. The bound keys are fill, x, y, width, height, rotation, corner radius, corner smoothing, and clip. A literal value in the field removes the binding.
+- A binding holds the id of the variable, not the name. A rename changes no binding.
+
+### Resolution
+
+The model resolves a variable from the innermost copy out, as a context:
+
+1. A copy that sets the variable gives the value. A reference in that value resolves from the next copy out.
+2. At a copy of the component that declares the variable, the table of its driving choice gives the value. Then the first value.
+3. A document variable uses the document tables and the first value.
+
+A component variable is visible only inside its component. The resolver stops at a depth of 32 and at a value of the wrong type. The inspector shows where each value comes from, for example `#ff3b30 · from Choice 1: alarm · Frame 1`. A click on the source selects that copy.
+
+A place key (x, y, width, height, rotation) of a copy resolves from the copy above it, because the copy sets its own place.
+
+## Layer components
+
+### Actions
+
+| Action | Result |
+| --- | --- |
+| Make component | The frame becomes the first copy. Its children move into a hidden definition. |
+| Duplicate | A new copy of the same component. |
+| Disconnect | The copy gets a new component with its own definition and variables. |
+| Duplicate as new | Duplicate, then Disconnect. |
+| Make frame | The copy becomes a frame with real children. Bindings to component variables become literals. |
+
+When the last copy goes away, the component list does not show the component. Undo gives the copy back.
+
+### Document model
+
+- `components` is a Loro map from an id to `{ name, kind, source | root, scope }`. The kind is `html` or `layers`.
+- A layer body is a root node in the layer tree with the data key `definition`. The canvas does not show it.
+- A copy is a layer with `component` and `props`. The copy has no children in the tree. Its children are the children of the definition root.
+- The id of a layer inside a copy is a path: `copy~copy~node`. Two copies of one component give two ids for one node.
+- A copy reads its place keys from its own node, and each other key from the definition root. A write goes to the same place.
+- A move into or out of a copy is refused, so each id stays the same. A copy of a component inside its own definition is refused.
+- A scope is a mergeable map with `variables` and `tables`. A table cell key is `[choice, option, variable]` as JSON.
+- Sources and imports commit with an origin that the undo manager skips.
+- Copy puts each used component into the clipboard envelope, with its body, its variables, and its tables. Paste into a different document adds them.
+
+## HTML components
 
 ### Format
 
@@ -53,14 +107,11 @@ An import skips a component that has no HTML file, a section that is not closed,
 
 ### Document model
 
-- `components` is a Loro map from the SHA-256 address of a source to the source: `{ name, html, css, props }`.
-- `catalog` is a Loro map from a name to the address of its newest version. A second import of a changed component moves the name to the new address. The instances keep the old address.
-- Undo does not remove a source or a catalog entry. Their commits have an origin that the undo manager skips. An undo on one peer must not remove a source that an instance of a different peer uses. An edit that is open when a source arrives commits first, as a normal step.
+- `sources` is a Loro map from the SHA-256 address of a source to the source: `{ name, html, css, props }`.
+- An import makes a component of kind `html` for each name, or points the existing component at the new address. Each prop of the source becomes a component variable with the Prop switch on. The inspector does not let the user edit these variables.
 - Paste checks that the address of each source is its hash before the document adopts it.
-- A layer has `content`: `{ kind: "none" }` or `{ kind: "component", component, props }`. The layer data holds `component` as one key and `props` as a map with one key for each prop. Two peers who change different props merge with no conflict.
-- A layer stores only the props that a person set. The read gives the first value for each other prop, and for a value of the wrong kind.
-- Copy puts the sources of the used components into the clipboard envelope. Paste into a different document adds them.
-- There is no general asset store. The sources are small text, and the CRDT sends them to each peer. Build the asset store when images come, and move the sources into it with the same addresses.
+- A copy stores only the props that a person set. The resolver gives the value of each other prop.
+- The sources are small text, and the CRDT sends them to each peer. They do not go into the asset store.
 
 ### Canvas and export
 
@@ -75,13 +126,18 @@ An import skips a component that has no HTML file, a section that is not closed,
 
 - The file bar has a Components button next to Layers. The two cards share one place.
 - The Components card has "Import folder" and the list of names. A click on a name puts an instance at the center of the view, in the selected frame.
-- The inspector shows a Props section for an instance.
+- The Components card shows each component and its number of copies.
+- The inspector shows these sections:
+  - For a frame: "Make component".
+  - For a copy: the actions, "Variables · all copies", and "Props · this copy".
+  - For each layer: "Variables in fields". Each row binds one field.
+  - For the page: "Document variables".
 
 ## Next steps
 
 Each step is one pull request.
 
-1. **Update an instance.** When the catalog has a newer version of a name, the inspector shows "Update". The update sets the new address and keeps each prop that the new version still has.
+1. **A binding control on each field.** Today one section binds each field. Put the variable button in the field.
 2. **Slots.** A template writes `{{> body}}` where it takes layers. The slot becomes `<slot name="body">`. A child layer of the instance gets `slot="body"`. The layout system already places a flow child, and the instance already hugs. The unnamed `<slot>` that version 1 writes takes a child with no slot, so no child is lost.
 3. **Subcomponents and tokens.** A template writes `{{> Icon}}` to use an other component. The source lists the components and the token sheet that it uses. Copy and paste carry that list. One parsed stylesheet for each address goes into each shadow root with `adoptedStyleSheets`.
 4. **React components.** A Vite plugin turns each component into the same format, so the editor never runs project code. It renders each text prop as its `{{name}}` tag. It renders the component once for each set of boolean and choice values, and joins the results into sections. It stops the build when a component uses state, an effect, a ref, or a context, or has too many sets to render.

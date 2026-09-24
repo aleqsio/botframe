@@ -14,11 +14,15 @@ Cost: the DOM sets a limit on the number of layers. If that limit is too low, re
 
 **The file is the product. Sync is an addition.** A document is a file. The user owns the file and opens it offline. The application must work with no network and no account. A sync service can come later, but the file stays the primary copy.
 
-**The document model resolves each style.** The model sets the value of each property on each element. The browser does not cascade or inherit a value. This rule keeps the document easy to serialize, to compare, and for an agent to change. The one exception is the inside of a component.
+**The document model resolves each style.** The model sets the value of each property on each element. The browser does not cascade or inherit a value. This rule keeps the document easy to serialize, to compare, and for an agent to change. A variable is not an exception: the model resolves each bound field to a literal before the browser gets it. The one exception is the inside of an HTML component.
 
-**A component is markup that the model does not read.** A component is an HTML template, a stylesheet, and a list of props. The document holds the source of the component and the props of each instance. The browser draws the component in a shadow root of the instance layer. A component has no state of its own: each state is a prop.
+**A copy of a layer component is virtual.** The layers of a component are in the tree one time, under a hidden definition root. Each copy shows them with a path id: `copy~node`. The model does not make a second set of nodes for each copy.
+Result: an edit inside one copy changes each copy with one write, and two peers merge as for any layer.
+Cost: a layer id is not always a tree id. A move into or out of a copy is refused.
+
+**An HTML component is markup that the model does not read.** An HTML component is a template, a stylesheet, and a list of props. The document holds the source of the component and the props of each copy. The browser draws the component in a shadow root of the copy layer. A component has no state of its own: each state is a prop.
 Result: a user takes a component from a coding project, and the export gives the same markup. An agent reads and writes the props, and copies the source of the components that it needs.
-Cost: the model does not know the elements inside a component. The size of an instance that hugs its markup comes from the browser.
+Cost: the model does not know the elements inside an HTML component. The size of a copy that hugs its markup comes from the browser.
 
 ## Architecture
 
