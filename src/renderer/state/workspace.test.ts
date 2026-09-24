@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DRAWN } from "../../document/documentFixtures";
-import { Tab, Workspace, tabName } from "./workspace";
+import { Tab, tabName } from "./tab";
+import { Workspace } from "./workspace";
 
 const POSTER = { token: "poster", name: "Poster" };
 

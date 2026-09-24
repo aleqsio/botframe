@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { closeTab } from "../file";
 import { useSlot } from "../state/useSlot";
-import { Tab, tabName } from "../state/workspace";
+import { Tab, tabName } from "../state/tab";
 import type { Workspace } from "../state/workspace";
 import { Icon } from "./Icon";
 

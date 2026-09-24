@@ -4,7 +4,8 @@ import { App } from "./App";
 import { watchClipboard } from "./clipboard";
 import { connectEditMenu } from "./editMenu";
 import { connectFileMenu } from "./file";
-import { Tab, Workspace } from "./state/workspace";
+import { Tab } from "./state/tab";
+import { Workspace } from "./state/workspace";
 
 const container = document.querySelector("#root");
 

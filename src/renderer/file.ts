@@ -3,7 +3,7 @@ import { FILE_COMMANDS } from "../shared/file";
 import type { FileCommand } from "../shared/file";
 import { bridge } from "./bridge";
 import type { Bridge } from "./bridge";
-import { Tab, tabName } from "./state/workspace";
+import { Tab, tabName } from "./state/tab";
 import type { Workspace } from "./state/workspace";
 
 const NOT_A_FILE = "The file is not a botframe document.";
