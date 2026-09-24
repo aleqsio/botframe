@@ -8,7 +8,7 @@ const DELTA = { x: 80, y: -40 };
 const FRAME: Drag = { from: { x: 300, y: 60 }, to: { x: 600, y: 240 } };
 const INSIDE: Drag = { from: { x: 340, y: 100 }, to: { x: 440, y: 160 } };
 const CHILD_IN_ROW = { x: 350, y: 90 };
-const FILL_CHILD_IN_ROW = { x: 450, y: 90 };
+const FILL_CHILD_IN_ROW = { x: 420, y: 90 };
 const OUT_OF_THE_ROW_BY = { x: 450, y: 510 };
 const ROW_WIDTH = "300px";
 
