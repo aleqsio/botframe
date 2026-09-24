@@ -1,8 +1,9 @@
 import { CENTER_ORIGIN } from "../../document/layer";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
+import { SMALLEST_GROUP } from "./groupMove";
 import { CORNERS, zoneAt } from "./handles";
-import type { Corner, Handle, Zone } from "./handles";
+import type { Corner, Handle, HandleZone } from "./handles";
 import {
 	chainTurn,
 	fromParentPoint,
@@ -54,7 +55,7 @@ function isAcross(part: GroupPart): boolean {
 	return Math.round(quarterTurnsOf(part.turn)) % 2 === 1;
 }
 
-function partOf(read: ReadLayer, id: LayerId): GroupPart[] {
+export function partOf(read: ReadLayer, id: LayerId): GroupPart[] {
 	const start = read(id);
 	if (start === null) {
 		return [];
@@ -68,26 +69,32 @@ function honors(handle: Handle, parts: readonly GroupPart[]): boolean {
 	return isCorner(handle) || parts.every((part) => isSquare(part));
 }
 
-export function groupGripOf(
+export interface BoxZone {
+	box: Rect;
+	zone: HandleZone;
+}
+
+export function groupZoneAt(
 	read: ReadLayer,
 	ids: readonly LayerId[],
 	point: Point,
 	zoom: number,
+): BoxZone | null {
+	const box = ids.length < SMALLEST_GROUP ? null : boundsOf(read, ids);
+	const zone = box === null ? null : zoneAt(flatBox(box), point, zoom);
+	return box === null || zone === null ? null : { box, zone };
+}
+
+export function groupGripOf(
+	read: ReadLayer,
+	ids: readonly LayerId[],
+	{ box, zone }: BoxZone,
 ): GroupGrip | null {
-	const box = boundsOf(read, ids);
-	if (box === null) {
-		return null;
-	}
-	const zone = zoneAt(flatBox(box), point, zoom);
-	if (zone === null || zone.mode === "rotate") {
+	if (zone.mode === "rotate") {
 		return null;
 	}
 	const parts = ids.flatMap((id) => partOf(read, id));
 	return honors(zone.handle, parts) ? { box, handle: zone.handle, parts } : null;
-}
-
-export function groupZoneOf(grip: GroupGrip | null): Zone | null {
-	return grip === null ? null : { mode: "resize", handle: grip.handle };
 }
 
 function ratio(next: number, start: number): number {

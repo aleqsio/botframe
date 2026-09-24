@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { Geometry, Rect } from "../document/layer";
+import type { Geometry, Origin, Rect } from "../document/layer";
 import { SIDES } from "../document/layout";
 import type {
 	Alignment,
@@ -120,12 +120,16 @@ export function spaceTransform(layer: Rect & Turned): string {
 	return layer.rotation === 0 ? placeText(layer) : `${placeText(layer)} ${turnAbout(layer)}`;
 }
 
+export function originPlace(origin: Origin): { left: string; top: string } {
+	return { left: `${origin.x * PERCENT}%`, top: `${origin.y * PERCENT}%` };
+}
+
 function originStyle(layer: Turned): CSSProperties {
 	if (layer.rotation === 0) {
 		return {};
 	}
-	const { x, y } = layer.origin;
-	return { transformOrigin: `${x * PERCENT}% ${y * PERCENT}%` };
+	const { left, top } = originPlace(layer.origin);
+	return { transformOrigin: `${left} ${top}` };
 }
 
 export function outOfFlow(parentDisplay: DisplayMode | null, position: PositionMode): boolean {

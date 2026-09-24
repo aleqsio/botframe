@@ -14,12 +14,14 @@ type ZoneMode = "resize" | "rotate";
 
 export type Corner = `${Vertical}${Horizontal}`;
 export type Handle = Corner | Vertical | Horizontal;
-export type ZoneKey = `${ZoneMode}-${Handle}`;
+export type ZoneKey = `${ZoneMode}-${Handle}` | "origin";
 
-export interface Zone {
+export interface HandleZone {
 	mode: ZoneMode;
 	handle: Handle;
 }
+
+export type Zone = HandleZone | { mode: "origin" };
 
 export interface Axis {
 	x: number;
@@ -40,7 +42,7 @@ export const HANDLE_AXIS: Readonly<Record<Handle, Axis>> = {
 };
 
 export function zoneKey(zone: Zone): ZoneKey {
-	return `${zone.mode}-${zone.handle}`;
+	return zone.mode === "origin" ? zone.mode : `${zone.mode}-${zone.handle}`;
 }
 
 function alongEdge(direction: number, extent: number): number {
@@ -79,7 +81,7 @@ function isOutside(local: Point, half: Point): boolean {
 	return Math.abs(local.x) > half.x || Math.abs(local.y) > half.y;
 }
 
-export function zoneAt(layer: Placed, point: Point, zoom: number): Zone | null {
+export function zoneAt(layer: Placed, point: Point, zoom: number): HandleZone | null {
 	const local = toLayerPoint(layer, point);
 	const half = halfSizeOf(layer);
 	const reach = cornerReach(local, half);

@@ -27,7 +27,7 @@ export interface DrawnReader {
 	grid: (id: LayerId) => DrawnGrid;
 }
 
-const NO_INSET: Inset = { top: 0, right: 0, bottom: 0, left: 0 };
+export const NO_INSET: Inset = { top: 0, right: 0, bottom: 0, left: 0 };
 const NO_GRID: DrawnGrid = { columns: [], rows: [], columnGap: 0, rowGap: 0 };
 
 export const NO_DRAWN: DrawnReader = {

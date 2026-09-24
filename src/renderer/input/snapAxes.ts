@@ -6,7 +6,7 @@ import { HANDLE_AXIS } from "./handles";
 import type { Handle } from "./handles";
 import type { Snap } from "./snap";
 
-const BOTH_AXES: readonly GuideAxis[] = ["x", "y"];
+export const BOTH_AXES: readonly GuideAxis[] = ["x", "y"];
 export const NO_AXES: readonly GuideAxis[] = [];
 const CROSS_AXIS: Readonly<Record<"row" | "column", GuideAxis>> = { row: "y", column: "x" };
 

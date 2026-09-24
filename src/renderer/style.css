@@ -155,9 +155,13 @@ body {
 }
 
 .selection,
-.selection-box {
+.selection-box,
+.selection-peer {
 	--handle: calc(var(--handle-size) / var(--zoom));
+}
 
+.selection,
+.selection-box {
 	outline: calc(2px / var(--zoom)) solid var(--selection);
 }
 
@@ -217,12 +221,16 @@ body {
 	min-width: calc(8px / var(--zoom));
 }
 
-.selection-handle {
+.selection-handle,
+.origin-mark {
 	position: absolute;
 	width: var(--handle);
 	height: var(--handle);
 	margin: calc(var(--handle) / -2);
 	border: calc(1.5px / var(--zoom)) solid var(--selection);
+}
+
+.selection-handle {
 	border-radius: calc(2px / var(--zoom));
 	background: var(--handle-fill);
 }
@@ -247,6 +255,15 @@ body {
 	left: 0;
 }
 
+.origin-mark {
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		var(--selection) calc(1.5px / var(--zoom)),
+		var(--handle-fill) calc(1.5px / var(--zoom))
+	);
+}
+
 #stage[data-zone="resize-nw"],
 #stage[data-zone="resize-se"] {
 	cursor: nwse-resize;
@@ -265,6 +282,10 @@ body {
 #stage[data-zone="resize-e"],
 #stage[data-zone="resize-w"] {
 	cursor: ew-resize;
+}
+
+#stage[data-zone="origin"] {
+	cursor: move;
 }
 
 #stage[data-zone^="rotate-"] {

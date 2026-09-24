@@ -1,13 +1,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId, Rect } from "../document/layer";
+import { GroupPivotMark, OriginMark, SnapLines } from "./CanvasMarks";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
-import type { SnapSegment } from "./input/snap";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
-import { useDrawnOutline, useDrawnSpace, useSelectionBox } from "./useDocument";
+import { useDrawnOutline, useSelectionBox } from "./useDocument";
 import type { DrawnOutline } from "./useDocument";
 
 declare module "react" {
@@ -82,11 +82,20 @@ function SoleOutline({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 		<LayerOutline className="selection" doc={doc} id={id}>
 			<PaddingBand doc={doc} id={id} />
 			<CornerHandles />
+			<OriginMark doc={doc} id={id} />
 		</LayerOutline>
 	);
 }
 
-function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId[] }): ReactNode {
+function GroupOutline({
+	doc,
+	ids,
+	user,
+}: {
+	doc: DesignDocument;
+	ids: readonly LayerId[];
+	user: UserState;
+}): ReactNode {
 	const box = useSelectionBox(doc, ids);
 
 	return (
@@ -97,6 +106,7 @@ function GroupOutline({ doc, ids }: { doc: DesignDocument; ids: readonly LayerId
 			{box === null ? null : (
 				<div className="selection-box" style={{ ...boxStyle(box), ...HANDLE_STYLE }}>
 					<CornerHandles />
+					<GroupPivotMark box={box} ids={ids} pivot={user.groupPivot} />
 				</div>
 			)}
 		</>
@@ -113,7 +123,7 @@ function SelectionOutline({ doc, user }: { doc: DesignDocument; user: UserState 
 	return peer === undefined ? (
 		<SoleOutline doc={doc} id={id} />
 	) : (
-		<GroupOutline doc={doc} ids={ids} />
+		<GroupOutline doc={doc} ids={ids} user={user} />
 	);
 }
 
@@ -149,32 +159,6 @@ function Highlight({ doc, user }: { doc: DesignDocument; user: UserState }): Rea
 	const id = useSlot(user.highlight);
 
 	return id === null ? null : <HighlightOutline doc={doc} id={id} user={user} />;
-}
-
-function snapLineStyle(segment: SnapSegment): CSSProperties {
-	const along = `${segment.to - segment.from}px`;
-	if (segment.axis === "x") {
-		return { transform: `translate3d(${segment.at}px, ${segment.from}px, 0)`, height: along };
-	}
-	return { transform: `translate3d(${segment.from}px, ${segment.at}px, 0)`, width: along };
-}
-
-function SnapLines({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
-	const snap = useSlot(user.snap);
-	const space = useDrawnSpace(doc, snap?.parent ?? null);
-
-	return snap === null ? null : (
-		<div className="snap-space" style={{ transform: space }}>
-			{snap.segments.map((segment) => (
-				<span
-					className="snap-line"
-					data-axis={segment.axis}
-					key={segment.axis}
-					style={snapLineStyle(segment)}
-				/>
-			))}
-		</div>
-	);
 }
 
 export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {

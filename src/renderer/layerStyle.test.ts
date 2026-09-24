@@ -13,7 +13,7 @@ import type {
 	Spacing,
 	SpacingUnit,
 } from "../document/layout";
-import { layerStyle, outOfFlow, spaceTransform, turnedPad } from "./layerStyle";
+import { layerStyle, originPlace, outOfFlow, spaceTransform, turnedPad } from "./layerStyle";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
 const ROW: DisplayMode = "row";
@@ -366,5 +366,11 @@ describe("the parent of a layer", () => {
 	it("reads the display of the parent and nothing else", () => {
 		expect(styleIn({ width: "fill" }, ROW).flex).toBe("1 1 0%");
 		expect(styleIn({ width: "fill" }, null).width).toBe("100%");
+	});
+});
+
+describe("originPlace", () => {
+	it("places the origin as a percent of the layer box", () => {
+		expect(originPlace({ x: 0.25, y: 1 })).toEqual({ left: "25%", top: "100%" });
 	});
 });

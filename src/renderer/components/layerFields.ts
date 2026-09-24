@@ -10,6 +10,7 @@ import {
 } from "../../document/length";
 import type { Basis, BoxKey, Length, Unit } from "../../document/length";
 import { COMMIT_MESSAGES } from "../input/layerCommand";
+import { ORIGIN_MESSAGE } from "../input/pivot";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP, PERCENT_STEP } from "../input/step";
 import type { StepRule } from "../input/step";
 import { MIN_LAYER_SIZE } from "../input/transform";
@@ -25,7 +26,6 @@ const DEGREES = "deg";
 const NO_UNIT = "";
 const PERCENT_UNIT = "%";
 const CORNER_MESSAGE = "set corners";
-const ORIGIN_MESSAGE = "set origin";
 
 type CornerKey = "cornerRadius" | "cornerSmoothing";
 
