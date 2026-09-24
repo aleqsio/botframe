@@ -31,9 +31,13 @@ export function isCenterOrigin(origin: Origin): boolean {
 	return origin.x === CENTER_ORIGIN.x && origin.y === CENTER_ORIGIN.y;
 }
 
-export interface Layer extends Rect {
-	id: LayerId;
+export interface Pose {
 	rotation: number;
+	mirrored: boolean;
+}
+
+export interface Layer extends Rect, Pose {
+	id: LayerId;
 	origin: Origin;
 	fill: string;
 	geometry: Geometry;
@@ -51,6 +55,7 @@ export type WritableGeometry = Exclude<Geometry, { kind: "unsupported" }>;
 
 export interface LayerFields extends Rect {
 	rotation?: number;
+	mirrored?: boolean;
 	fill: string;
 	name: string;
 	clip: boolean;

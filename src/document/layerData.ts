@@ -97,6 +97,7 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		layout: readLayout(data),
 		guides: guidesOf(data.get(GUIDES)),
 		rotation: readNumber(data, "rotation", 0),
+		mirrored: readBoolean(data, "mirrored", false),
 		origin: readOrigin(data),
 		fill: readString(data, "fill", BLACK),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),

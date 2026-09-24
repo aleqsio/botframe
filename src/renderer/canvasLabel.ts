@@ -15,7 +15,7 @@ function readsUpsideDown(turn: number): boolean {
 }
 
 export function canvasLabelStyle(layer: Placed): CSSProperties {
-	const corner = outOfLayer(layer, { x: 0, y: 0 });
+	const corner = outOfLayer(layer, { x: layer.mirrored ? layer.width : 0, y: 0 });
 	const turn = normalizeDegrees(layer.rotation);
 	const flipped = readsUpsideDown(turn);
 	return {

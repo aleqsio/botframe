@@ -1,11 +1,11 @@
 import type { DesignDocument } from "../../document/document";
-import type { Layer, LayerId, LayerPatch } from "../../document/layer";
+import type { Layer, LayerId, LayerPatch, Pose } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
-import { anchorOf, chainTurn, normalizeDegrees } from "./layerSpace";
+import { anchorOf, chainPose, composePose, poseInside } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
 import { carryLayer } from "./moveCarry";
@@ -25,8 +25,8 @@ function anchorAt(target: PointerTarget, layer: Layer, canvas: Point): Point {
 	return anchorOf(drawn, parentPointOf(target, layer.id, canvas));
 }
 
-function turnOf(target: PointerTarget, layer: Layer): number {
-	return layer.rotation + chainTurn(parentChainOf(target, layer.id));
+function poseOf(target: PointerTarget, layer: Layer): Pose {
+	return composePose(chainPose(parentChainOf(target, layer.id)), layer);
 }
 
 function fixedFill(target: PointerTarget, id: LayerId): LayerPatch {
@@ -48,15 +48,15 @@ function landedPatch(
 	target: PointerTarget,
 	move: LayerMove,
 	parent: LayerId | null,
-	rotation: number,
+	pose: Pose,
 ): LayerPatch {
 	const display = parent === null ? null : target.doc.layer(parent)?.layout.display;
 	if (display !== undefined && display !== null && display !== "block") {
-		return { ...BACK_TO_FLOW, rotation, layout: { ...BACK_TO_FLOW.layout, cell: AUTO_CELL } };
+		return { ...BACK_TO_FLOW, ...pose, layout: { ...BACK_TO_FLOW.layout, cell: AUTO_CELL } };
 	}
 	const loose = fixedFill(target, move.id);
 	const layout = { ...loose.layout, position: move.start.position, cell: AUTO_CELL };
-	return { ...loose, rotation, layout };
+	return { ...loose, ...pose, layout };
 }
 
 function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
@@ -64,8 +64,8 @@ function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): La
 	if (parent === move.parent || !target.doc.move(move.id, parent)) {
 		return move;
 	}
-	const rotation = normalizeDegrees(move.turn - chainTurn(parentChainOf(target, move.id)));
-	target.doc.update(move.id, landedPatch(target, move, parent, rotation));
+	const pose = poseInside(parentChainOf(target, move.id), move.pose);
+	target.doc.update(move.id, landedPatch(target, move, parent, pose));
 	const next = { ...move, parent, field: snapFieldAround(target, move.id) };
 	target.user.move.set(next);
 	return next;
@@ -82,13 +82,14 @@ export function beginMove(target: PointerTarget, layer: Layer, canvas: Point): v
 			width: layer.width,
 			height: layer.height,
 			rotation: layer.rotation,
+			mirrored: layer.mirrored,
 			position: layer.layout.position,
 			sizing: { width: layer.layout.width, height: layer.layout.height },
 			cell: layer.layout.cell,
 			index: target.doc.siblingIds(layer.parent).indexOf(layer.id),
 		},
 		anchor: anchorAt(target, layer, canvas),
-		turn: turnOf(target, layer),
+		pose: poseOf(target, layer),
 		field: snapFieldAround(target, layer.id),
 	});
 }
@@ -126,7 +127,8 @@ export function cancelMove(doc: DesignDocument, user: UserState): void {
 	user.snap.set(null);
 	user.lift.set(null);
 	doc.move(move.id, move.from, move.start.index);
-	const { x, y, width, height, rotation, position, cell, sizing } = move.start;
-	doc.update(move.id, { x, y, width, height, rotation, layout: { position, cell, ...sizing } });
+	const { x, y, width, height, rotation, mirrored, position, cell, sizing } = move.start;
+	const layout = { position, cell, ...sizing };
+	doc.update(move.id, { x, y, width, height, rotation, mirrored, layout });
 	doc.commit(CANCEL_COMMIT);
 }

@@ -2,9 +2,10 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Size } from "../../document/length";
 import { isFrame } from "../components/layerEntry";
 import {
-	chainTurn,
+	chainPose,
+	composePose,
+	poseInside,
 	fromParentPoint,
-	normalizeDegrees,
 	placedAround,
 	toParentPoint,
 	visualCenterOf,
@@ -35,7 +36,7 @@ export function dropParentOf(
 	return null;
 }
 
-export type Placement = Pick<Layer, "x" | "y" | "rotation">;
+export type Placement = Pick<Layer, "x" | "y" | "rotation" | "mirrored">;
 
 export function heldPlacement(
 	layer: Layer,
@@ -44,6 +45,6 @@ export function heldPlacement(
 	size: Size,
 ): Placement {
 	const center = toParentPoint(to, fromParentPoint(from, visualCenterOf(layer)));
-	const rotation = normalizeDegrees(layer.rotation + chainTurn(from) - chainTurn(to));
-	return { ...placedAround({ ...size, rotation, origin: layer.origin }, center), rotation };
+	const pose = poseInside(to, composePose(chainPose(from), layer));
+	return { ...placedAround({ ...size, ...pose, origin: layer.origin }, center), ...pose };
 }

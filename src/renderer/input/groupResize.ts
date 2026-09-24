@@ -5,7 +5,9 @@ import { SMALLEST_GROUP } from "./groupMove";
 import { CORNERS, zoneAt } from "./handles";
 import type { Corner, Handle, HandleZone } from "./handles";
 import {
-	chainTurn,
+	NO_POSE,
+	chainPose,
+	composePose,
 	fromParentPoint,
 	normalizeDegrees,
 	parentChain,
@@ -35,7 +37,7 @@ export interface GroupGrip {
 }
 
 function flatBox(box: Rect): Placed {
-	return { ...box, rotation: 0, origin: CENTER_ORIGIN };
+	return { ...box, ...NO_POSE, origin: CENTER_ORIGIN };
 }
 
 function isCorner(handle: Handle): handle is Corner {
@@ -62,7 +64,8 @@ export function partOf(read: ReadLayer, id: LayerId): GroupPart[] {
 	}
 	const chain = parentChain(read, id);
 	const center = fromParentPoint(chain, visualCenterOf(start));
-	return [{ start, chain, center, turn: chainTurn(chain) + start.rotation }];
+	const { rotation } = composePose(chainPose(chain), start);
+	return [{ start, chain, center, turn: rotation }];
 }
 
 function honors(handle: Handle, parts: readonly GroupPart[]): boolean {

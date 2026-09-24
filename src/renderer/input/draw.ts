@@ -1,14 +1,12 @@
-import type { Layer, Rect } from "../../document/layer";
+import type { Layer, Pose, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { centerOf, chainTurn, halfSizeOf, normalizeDegrees, toParentPoint } from "./layerSpace";
+import { NO_POSE, centerOf, halfSizeOf, poseInside, toParentPoint } from "./layerSpace";
 import type { Modifiers } from "./modifiers";
 import { MIN_LAYER_SIZE } from "./transform";
 
 export const DEFAULT_DRAW_SIZE = 100;
 
-export interface DrawnRect extends Rect {
-	rotation?: number;
-}
+export type DrawnRect = Rect & Partial<Pose>;
 
 interface Span {
 	start: number;
@@ -57,6 +55,6 @@ export function levelRect(chain: readonly Layer[], rect: Rect): DrawnRect {
 		y: center.y - half.y,
 		width: rect.width,
 		height: rect.height,
-		rotation: normalizeDegrees(-chainTurn(chain)),
+		...poseInside(chain, NO_POSE),
 	};
 }

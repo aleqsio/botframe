@@ -7,7 +7,7 @@ import type { Modifiers } from "./modifiers";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { NO_DRAWN } from "./drawn";
-import { anchorOnScreen, pointAt, turnOnScreen } from "./toolFixtures";
+import { anchorOnScreen, pointAt, poseOnScreen } from "./toolFixtures";
 
 const FRAME: LayerFields = {
 	x: 0,
@@ -32,6 +32,7 @@ const NO_SNAP: Modifiers = { shift: false, alt: false, control: true };
 const RUNS = 40;
 const STEPS = 4;
 const FULL_TURN = 360;
+const HALF = 0.5;
 const SEED = 0x9e37_79b9;
 const WRITTEN_DIGITS = 1;
 
@@ -60,6 +61,7 @@ function turnedBoard(doc: DesignDocument, random: () => number, at: Point): Laye
 	const board = doc.createLayer({ ...FRAME, ...at });
 	doc.update(board, {
 		rotation: between(random, 0, FULL_TURN),
+		mirrored: random() < HALF,
 		origin: { x: between(random, -0.5, 1.5), y: between(random, -0.5, 1.5) },
 	});
 	return board;
@@ -74,6 +76,7 @@ function sceneOf(random: () => number): Scene {
 	const shape = doc.createLayer({ ...SHAPE, x: 80, y: 60 }, boards[0] ?? null);
 	doc.update(shape, {
 		rotation: between(random, 0, FULL_TURN),
+		mirrored: random() < HALF,
 		origin: { x: between(random, 0, 1), y: between(random, 0, 1) },
 	});
 	doc.commit("scene");
@@ -108,7 +111,7 @@ function dragThrough(scene: Scene, hits: readonly (readonly LayerId[])[]): Held 
 	const camera = target.user.camera.get();
 	const anchor = { x: random(), y: random() };
 	const grab = anchorOnScreen(scene.target, scene.shape, anchor);
-	const turn = turnOnScreen(scene.target, scene.shape);
+	const pose = poseOnScreen(scene.target, scene.shape);
 	const press = pointAt(camera, stagePointOf(scene, grab));
 	let scene2 = { ...target, layerIdsAt: (): readonly LayerId[] => hits[0] ?? [] };
 	behavior.dragStart?.(scene2, press, press, NO_SNAP);
@@ -118,7 +121,9 @@ function dragThrough(scene: Scene, hits: readonly (readonly LayerId[])[]): Held 
 		scene2 = { ...target, layerIdsAt: () => under };
 		behavior.drag?.(scene2, pointAt(camera, stagePointOf(scene, at)), NO_SNAP);
 		expectClose(anchorOnScreen(scene.target, scene.shape, anchor), at);
-		expect(turnOnScreen(scene.target, scene.shape)).toBeCloseTo(turn, WRITTEN_DIGITS);
+		const held = poseOnScreen(scene.target, scene.shape);
+		expect(held.rotation).toBeCloseTo(pose.rotation, WRITTEN_DIGITS);
+		expect(held.mirrored).toBe(pose.mirrored);
 		if (index === hits.length - 1) {
 			behavior.dragEnd?.(scene2, pointAt(camera, stagePointOf(scene, at)), NO_SNAP);
 		}

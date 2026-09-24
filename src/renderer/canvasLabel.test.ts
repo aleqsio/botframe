@@ -15,6 +15,7 @@ function frame(rotation: number): Layer {
 		...BOX,
 		...pixelBox(BOX),
 		rotation,
+		mirrored: false,
 		fill: "#ffffff",
 		geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 		name: "iPhone 16",
@@ -30,6 +31,13 @@ describe("canvasLabelStyle", () => {
 			rotate: "0deg",
 			transform: ABOVE_THE_EDGE,
 			maxWidth: WIDTH_ON_SCREEN,
+		});
+	});
+
+	it("keeps the label at the top left corner on the screen when the frame is mirrored", () => {
+		expect(canvasLabelStyle({ ...frame(0), mirrored: true })).toMatchObject({
+			translate: "40px 60px",
+			rotate: "0deg",
 		});
 	});
 

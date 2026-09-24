@@ -30,6 +30,7 @@ function layerWith(geometry: Geometry): Layer {
 		...BOX,
 		...pixelBox(BOX),
 		rotation: 0,
+		mirrored: false,
 		fill: "#123456",
 		geometry,
 		name: "",
@@ -91,6 +92,17 @@ describe("layerStyle geometry", () => {
 			"translate3d(10px, 20px, 0) translate(7.5px, 40px) rotate(30deg) translate(-7.5px, -40px)",
 		);
 		expect(spaceTransform({ ...turned, rotation: 0 })).toBe("translate3d(10px, 20px, 0)");
+	});
+
+	it("mirrors a layer after its turn, about the same origin", () => {
+		const flat = layerWith({ kind: "ellipse" });
+		expect(layerStyle({ ...flat, mirrored: true }, null)).toMatchObject({
+			transform: "translate3d(10px, 20px, 0) rotate(0deg) scaleX(-1)",
+			transformOrigin: "50% 50%",
+		});
+		expect(spaceTransform({ ...flat, rotation: 30, mirrored: true, origin: { x: 0, y: 0 } })).toBe(
+			"translate3d(10px, 20px, 0) translate(0px, 0px) rotate(30deg) scaleX(-1) translate(0px, 0px)",
+		);
 	});
 
 	it("draws a rectangle with its corner radius and leaves the corner shape unset when smoothing is zero", () => {

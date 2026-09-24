@@ -1,4 +1,4 @@
-import type { Layer, LayerId, Rect } from "../../document/layer";
+import type { Layer, LayerId, Pose, Rect } from "../../document/layer";
 import type { LayerLayout, Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
@@ -18,7 +18,7 @@ export interface Draw {
 	origin: Point;
 }
 
-interface MoveStart extends Pick<Layer, "x" | "y" | "width" | "height" | "rotation"> {
+interface MoveStart extends Pick<Layer, "x" | "y" | "width" | "height" | "rotation" | "mirrored"> {
 	position: PositionMode;
 	sizing: Pick<LayerLayout, "width" | "height">;
 	cell: Placement;
@@ -31,7 +31,7 @@ export interface LayerMove {
 	parent: LayerId | null;
 	start: MoveStart;
 	anchor: Point;
-	turn: number;
+	pose: Pose;
 	field: SnapField;
 }
 

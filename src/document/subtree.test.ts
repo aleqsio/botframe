@@ -49,7 +49,7 @@ function threeLevels(doc: DesignDocument): { root: LayerId; child: LayerId } {
 	const root = doc.createLayer(DRAWN);
 	const child = doc.createLayer(CHILD, root);
 	doc.createLayer(GRANDCHILD, child);
-	doc.update(child, { rotation: 45 });
+	doc.update(child, { rotation: 45, mirrored: true });
 	doc.commit("create layers");
 	return { root, child };
 }
@@ -62,16 +62,19 @@ describe("readSubtree", () => {
 		expect(doc.readSubtree(root)).toEqual({
 			fields: DRAWN,
 			rotation: 0,
+			mirrored: false,
 			...pixelBox(DRAWN),
 			children: [
 				{
 					fields: CHILD,
 					rotation: 45,
+					mirrored: true,
 					...pixelBox(CHILD),
 					children: [
 						{
 							fields: GRANDCHILD,
 							rotation: 0,
+							mirrored: false,
 							...pixelBox(GRANDCHILD),
 							children: [],
 						},
@@ -148,14 +151,15 @@ describe("createSubtree", () => {
 		expect(firstChildOf(doc, copy).origin).toEqual({ x: 0.5, y: 0.5 });
 	});
 
-	it("keeps the angle of each layer that it creates", () => {
+	it("keeps the angle and the mirror of each layer that it creates", () => {
 		const doc = DesignDocument.create();
 		const { root } = threeLevels(doc);
 		const node = subtreeOf(doc, root);
 
 		const copy = doc.createSubtree(node, null);
 
-		expect(firstChildOf(doc, copy).rotation).toBe(45);
+		expect(firstChildOf(doc, copy)).toMatchObject({ rotation: 45, mirrored: true });
+		expect(doc.layer(copy)?.mirrored).toBe(false);
 	});
 
 	it("leaves the commit to the caller, so two subtrees make one change", () => {

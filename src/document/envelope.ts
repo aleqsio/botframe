@@ -95,6 +95,7 @@ function nodeOf(value: unknown): LayerNode {
 	return {
 		fields,
 		rotation: count(bag, "rotation"),
+		mirrored: flag(bag, "mirrored"),
 		origin: originOf(bag["origin"]),
 		lengths: lengthsOf(bag["lengths"], fields),
 		layout: layoutOf(bag["layout"]),

@@ -27,6 +27,7 @@ function nodeOf(
 	return {
 		fields: merged,
 		rotation: 0,
+		mirrored: false,
 		...pixelBox(merged),
 		layout,
 		children,
@@ -52,7 +53,10 @@ describe("layerMarkup", () => {
 		const markup = layerMarkup(node);
 
 		for (const [key, value] of Object.entries(
-			layerStyle({ ...node.fields, rotation: 0, origin: node.origin, layout: node.layout }, null),
+			layerStyle(
+				{ ...node.fields, rotation: 0, mirrored: false, origin: node.origin, layout: node.layout },
+				null,
+			),
 		)) {
 			expect(markup).toContain(String(value));
 			expect(key.length).toBeGreaterThan(0);
@@ -86,6 +90,7 @@ describe("layerMarkup", () => {
 		const node: LayerNode = {
 			fields: FIELDS,
 			rotation: 30,
+			mirrored: false,
 			...pixelBox(FIELDS),
 			layout: DEFAULT_LAYOUT,
 			children: [],

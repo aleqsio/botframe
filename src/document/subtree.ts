@@ -16,6 +16,7 @@ import type { LayerLengths } from "./length";
 export interface LayerNode {
 	fields: LayerFields;
 	rotation: number;
+	mirrored: boolean;
 	origin: Origin;
 	lengths: LayerLengths;
 	layout: LayerLayout;
@@ -66,6 +67,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,
+		mirrored: layer.mirrored,
 		origin: layer.origin,
 		lengths: layer.lengths,
 		layout: layer.layout,
@@ -77,6 +79,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 function copyPatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
+		...(node.mirrored ? { mirrored: true } : {}),
 		...(isCenterOrigin(node.origin) ? {} : { origin: node.origin }),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
 		layout: node.layout,

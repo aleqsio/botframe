@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import { PLAIN_RECTANGLE } from "../../document/subtree";
 import { applyCommand, commandFor } from "./layerCommand";
 import type { KeyStroke } from "./layerCommand";
 import { ANGLE_STEP, FACTOR_STEP, LENGTH_STEP } from "./step";
@@ -133,5 +134,22 @@ describe("applyCommand", () => {
 
 		applyCommand(doc, layerOf(doc), { kind: "rotate", degrees: 30 });
 		expect(doc.layer(firstId(doc))).toMatchObject({ rotation: 15 });
+	});
+
+	it("turns a layer the same way on the screen inside a mirrored parent", () => {
+		const doc = DesignDocument.create();
+		const parent = firstId(doc);
+		doc.update(parent, { mirrored: true });
+		const box = { x: 10, y: 10, width: 20, height: 20 };
+		const fields = { ...box, fill: "#000000", name: "", clip: false, geometry: PLAIN_RECTANGLE };
+		const child = doc.createLayer(fields, parent);
+		const layer = doc.layer(child);
+		if (layer === null) {
+			throw new Error("layer is missing");
+		}
+
+		applyCommand(doc, layer, { kind: "rotate", degrees: 15 });
+
+		expect(doc.layer(child)).toMatchObject({ rotation: 345 });
 	});
 });
