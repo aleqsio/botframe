@@ -310,7 +310,9 @@ export const LAYOUT_ACTIONS: readonly LayoutAction[] = [
 	...SPREADS.map((row) => spreadAction(row)),
 	...CENTERS.map((row) => aimAction(row, alignSelection)),
 	actionOf(FIT, canFit, (doc, user) => fitToChildren(doc, user, "size to fit"), FIT_NEEDS),
-	...FLIPS.map((row) => aimAction(row, flipSelection)),
+	...FLIPS.map((row) =>
+		actionOf(row, hasSelection, (doc, user) => flipSelection(doc, user, row.spec), SELECTION_NEEDS),
+	),
 	...TURNS.map((row) => turnAction(row)),
 	actionOf(
 		SWAP,
