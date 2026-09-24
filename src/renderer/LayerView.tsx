@@ -6,6 +6,7 @@ import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
 import { layerStyle } from "./layerStyle";
+import { SCREEN_BOX, zoomed } from "./screenSpace";
 import type { Slot } from "./state/slot";
 import type { Lifted } from "./state/userState";
 import { useLift, NOT_LIFTED } from "./state/useLift";
@@ -19,7 +20,21 @@ function liftedStyle(style: CSSProperties, lift: string): CSSProperties {
 }
 
 function guideStyle(guide: Guide): CSSProperties {
-	return guide.axis === "x" ? { left: `${guide.at}px` } : { top: `${guide.at}px` };
+	return guide.axis === "x" ? { left: zoomed(guide.at) } : { top: zoomed(guide.at) };
+}
+
+function GuideLines({ guides }: { guides: readonly Guide[] }): ReactElement | null {
+	if (guides.length === 0) {
+		return null;
+	}
+
+	return (
+		<div className="guide-space" style={SCREEN_BOX}>
+			{Array.from(guides.entries(), ([index, guide]) => (
+				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />
+			))}
+		</div>
+	);
 }
 
 export function LayerView({
@@ -62,9 +77,7 @@ export function LayerView({
 					selection={selection}
 				/>
 			))}
-			{Array.from(layer.guides.entries(), ([index, guide]) => (
-				<span className="guide-line" data-axis={guide.axis} key={index} style={guideStyle(guide)} />
-			))}
+			<GuideLines guides={layer.guides} />
 		</div>
 	);
 }

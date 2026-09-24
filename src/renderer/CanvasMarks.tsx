@@ -4,6 +4,7 @@ import type { LayerId, Rect } from "../document/layer";
 import { groupPivotOf } from "./input/pivot";
 import type { SnapSegment } from "./input/snap";
 import { originPlace } from "./layerStyle";
+import { unscaled, zoomed } from "./screenSpace";
 import { useSlot } from "./state/useSlot";
 import type { Slot } from "./state/slot";
 import type { GroupPivot, UserState } from "./state/userState";
@@ -33,17 +34,19 @@ export function GroupPivotMark({
 	return (
 		<span
 			className="origin-mark"
-			style={{ left: `${point.x - box.x}px`, top: `${point.y - box.y}px` }}
+			style={{ left: zoomed(point.x - box.x), top: zoomed(point.y - box.y) }}
 		/>
 	);
 }
 
 function snapLineStyle(segment: SnapSegment): CSSProperties {
-	const along = `${segment.to - segment.from}px`;
+	const along = zoomed(segment.to - segment.from);
+	const at = zoomed(segment.at);
+	const from = zoomed(segment.from);
 	if (segment.axis === "x") {
-		return { transform: `translate3d(${segment.at}px, ${segment.from}px, 0)`, height: along };
+		return { transform: `translate3d(${at}, ${from}, 0)`, height: along };
 	}
-	return { transform: `translate3d(${segment.from}px, ${segment.at}px, 0)`, width: along };
+	return { transform: `translate3d(${from}, ${at}, 0)`, width: along };
 }
 
 export function SnapLines({ doc, user }: { doc: DesignDocument; user: UserState }): ReactNode {
@@ -51,7 +54,7 @@ export function SnapLines({ doc, user }: { doc: DesignDocument; user: UserState 
 	const space = useDrawnSpace(doc, snap?.parent ?? null);
 
 	return snap === null ? null : (
-		<div className="snap-space" style={{ transform: space }}>
+		<div className="snap-space" style={{ transform: unscaled(space) }}>
 			{snap.segments.map((segment) => (
 				<span
 					className="snap-line"

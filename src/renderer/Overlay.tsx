@@ -4,6 +4,7 @@ import type { LayerId, Rect } from "../document/layer";
 import { GroupPivotMark, OriginMark, SnapLines } from "./CanvasMarks";
 import { droppedInto } from "./input/dropHighlight";
 import { CORNERS, HANDLE_SIZE } from "./input/handles";
+import { unscaled, zoomed, zoomedLengths } from "./screenSpace";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
@@ -20,9 +21,9 @@ const HANDLE_STYLE: CSSProperties = { "--handle-size": `${HANDLE_SIZE}px` };
 
 function outlineStyle(outline: DrawnOutline): CSSProperties {
 	return {
-		transform: outline.transform,
-		width: `${outline.width}px`,
-		height: `${outline.height}px`,
+		transform: unscaled(outline.transform),
+		width: zoomed(outline.width),
+		height: zoomed(outline.height),
 		...HANDLE_STYLE,
 	};
 }
@@ -66,14 +67,16 @@ function PaddingBand({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNo
 		return null;
 	}
 
-	return <span className="selection-padding" style={{ borderWidth: outline.padding }} />;
+	return (
+		<span className="selection-padding" style={{ borderWidth: zoomedLengths(outline.padding) }} />
+	);
 }
 
 function boxStyle(box: Rect): CSSProperties {
 	return {
-		transform: `translate3d(${box.x}px, ${box.y}px, 0)`,
-		width: `${box.width}px`,
-		height: `${box.height}px`,
+		transform: `translate3d(${zoomed(box.x)}, ${zoomed(box.y)}, 0)`,
+		width: zoomed(box.width),
+		height: zoomed(box.height),
 	};
 }
 
