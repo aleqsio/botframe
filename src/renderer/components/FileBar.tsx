@@ -1,23 +1,23 @@
 import type { ReactElement } from "react";
-import type { DesignDocument } from "../../document/document";
 import { useSlot } from "../state/useSlot";
-import type { UserState } from "../state/userState";
+import { tabName } from "../state/workspace";
+import type { Tab, Workspace } from "../state/workspace";
 import { FileMenu } from "./FileMenu";
 import { Icon } from "./Icon";
 
-export function FileBar({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
-	const open = useSlot(user.layersOpen);
-	const name = useSlot(user.fileName);
+export function FileBar({ tab, workspace }: { tab: Tab; workspace: Workspace }): ReactElement {
+	const open = useSlot(tab.user.layersOpen);
+	const name = tabName(useSlot(tab.file));
 
 	return (
 		<div id="file-bar">
-			<FileMenu doc={doc} user={user} />
+			<FileMenu workspace={workspace} />
 			<strong className="file-name">{name}</strong>
 			<button
 				aria-pressed={open}
 				className="pill-button"
 				onClick={() => {
-					user.layersOpen.set(!open);
+					tab.user.layersOpen.set(!open);
 				}}
 				type="button"
 			>

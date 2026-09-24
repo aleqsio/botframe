@@ -32,7 +32,7 @@ async function pickFileItem(window: Page, label: string): Promise<void> {
 	await window.getByRole("menu", { name: "File" }).getByRole("menuitem", { name: label }).click();
 }
 
-test("Save writes a .botframe file and shows its name in the file pill", async () => {
+test("Save As writes a .botframe file and names the tab after it", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const path = await savedPath();
 	await answerDialogs(app, path);
@@ -41,6 +41,7 @@ test("Save writes a .botframe file and shows its name in the file pill", async (
 	await expect(layers).toHaveCount(2);
 	await pickFileItem(window, "Save As…");
 
+	await expect(window.getByRole("tab", { selected: true })).toHaveText("Poster");
 	await expect(window.locator("#file-bar .file-name")).toHaveText("Poster");
 	const bytes = await readFile(`${path}.botframe`);
 	expect(bytes.subarray(0, 8).toString()).toBe("botframe");
@@ -48,39 +49,38 @@ test("Save writes a .botframe file and shows its name in the file pill", async (
 	await app.close();
 });
 
-test("Open shows the file in place of an unchanged Untitled window", async () => {
-	const { app, window } = await openStage();
-	const path = await writtenFile();
-	await answerDialogs(app, path);
-
-	await pickFileItem(window, "Open…");
-
-	await expect(window.locator("#file-bar .file-name")).toHaveText("Poster");
-	await expect(window.locator(".layer")).toHaveCount(1);
-	expect(app.windows()).toHaveLength(1);
-
-	await app.close();
-});
-
-test("Open puts the file in a new window when the current document has changes, once", async () => {
+test("Open shows the file in a new tab, and a second Open of it selects that tab", async () => {
 	const { app, layers, origin, window } = await openStage();
 	const path = await writtenFile();
 	await answerDialogs(app, path);
 	await drawWith(window, origin, "r", FRAME);
 	await expect(layers).toHaveCount(2);
 
-	const opened = app.waitForEvent("window");
 	await pickFileItem(window, "Open…");
-	const next = await opened;
 
-	await expect(next.locator("#file-bar .file-name")).toHaveText("Poster");
-	await expect(next.locator(".layer")).toHaveCount(1);
-	await expect(window.locator("#file-bar .file-name")).toHaveText("Untitled");
+	await expect(window.getByRole("tab")).toHaveText(["Untitled", "Poster"]);
+	await expect(window.getByRole("tab", { selected: true })).toHaveText("Poster");
+	await expect(layers).toHaveCount(1);
+
+	await window.getByRole("tab", { name: "Untitled" }).click();
 	await expect(layers).toHaveCount(2);
 
 	await pickFileItem(window, "Open…");
-	await expect.poll(() => next.evaluate(() => document.hasFocus())).toBe(true);
-	expect(app.windows()).toHaveLength(2);
+	await expect(window.getByRole("tab", { selected: true })).toHaveText("Poster");
+	await expect(window.getByRole("tab")).toHaveCount(2);
+	expect(app.windows()).toHaveLength(1);
+
+	await app.close();
+});
+
+test("New Tab and Close Tab in the File menu add a tab and take it away", async () => {
+	const { app, window } = await openStage();
+
+	await pickFileItem(window, "New Tab");
+	await expect(window.getByRole("tab")).toHaveCount(2);
+
+	await pickFileItem(window, "Close Tab");
+	await expect(window.getByRole("tab")).toHaveCount(1);
 
 	await app.close();
 });

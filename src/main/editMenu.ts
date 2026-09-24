@@ -3,6 +3,7 @@ import type { BrowserWindow, MenuItemConstructorOptions } from "electron";
 import { EDIT_COMMAND } from "../shared/editMenu";
 import type { EditMenuItem } from "../shared/editMenu";
 import { FILE_COMMANDS } from "../shared/file";
+import type { FileCommand } from "../shared/file";
 
 function isEditMenuItem(value: unknown): value is EditMenuItem {
 	if (typeof value !== "object" || value === null) {
@@ -79,14 +80,26 @@ function appMenus(): MenuItemConstructorOptions[] {
 	];
 }
 
-function fileMenu(window: BrowserWindow): MenuItemConstructorOptions {
-	const commands = FILE_COMMANDS.map((command): MenuItemConstructorOptions => ({
+function windowMenu(): MenuItemConstructorOptions {
+	if (process.platform === "darwin") {
+		return { role: "windowMenu" };
+	}
+	return { label: "Window", submenu: [{ role: "minimize" }, { role: "togglefullscreen" }] };
+}
+
+function fileItem(command: FileCommand, window: BrowserWindow): MenuItemConstructorOptions[] {
+	const item: MenuItemConstructorOptions = {
 		label: command.label,
 		accelerator: command.accelerator,
 		click: () => {
 			sendCommand(window, command.id);
 		},
-	}));
+	};
+	return command.separatorBefore === true ? [{ type: "separator" }, item] : [item];
+}
+
+function fileMenu(window: BrowserWindow): MenuItemConstructorOptions {
+	const commands = FILE_COMMANDS.flatMap((command) => fileItem(command, window));
 	const quit: MenuItemConstructorOptions[] =
 		process.platform === "darwin" ? [] : [{ type: "separator" }, { role: "quit" }];
 	return { label: "File", submenu: [...commands, ...quit] };
@@ -99,7 +112,7 @@ export function setEditMenu(value: unknown, window: BrowserWindow): void {
 			...appMenus(),
 			fileMenu(window),
 			{ label: "Edit", submenu: edit },
-			{ role: "windowMenu" },
+			windowMenu(),
 		]),
 	);
 }

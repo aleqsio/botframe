@@ -246,6 +246,10 @@ export class DesignDocument {
 		return this.#doc.subscribeLocalUpdates(listener);
 	}
 
+	version(): string {
+		return JSON.stringify(this.#doc.oplogFrontiers());
+	}
+
 	changeCount(): number {
 		return this.#doc.exportJsonUpdates().changes.length;
 	}

@@ -5,7 +5,7 @@ import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
 import { connectFiles } from "./files";
 
-function createWindow(): BrowserWindow {
+function createWindow(): void {
 	const window = new BrowserWindow({
 		width: 1200,
 		height: 800,
@@ -29,10 +29,9 @@ function createWindow(): BrowserWindow {
 	const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
 	if (devServerUrl === undefined) {
 		void window.loadFile(join(import.meta.dirname, "../renderer/index.html"));
-		return window;
+		return;
 	}
 	void window.loadURL(devServerUrl);
-	return window;
 }
 
 ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
@@ -44,7 +43,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 
 app.on("ready", () => {
 	connectClipboard();
-	connectFiles(createWindow);
+	connectFiles();
 	createWindow();
 });
 
