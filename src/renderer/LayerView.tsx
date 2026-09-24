@@ -4,8 +4,11 @@ import type { LayerId } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
+import { useAssetUrl } from "./assetUrl";
 import { GuideLines } from "./GuideLines";
+import { LayerVideo } from "./LayerVideo";
 import { layerStyle } from "./layerStyle";
+import { paintedStyle } from "./mediaStyle";
 import type { Slot } from "./state/slot";
 import type { Lifted } from "./state/userState";
 import { useLift, NOT_LIFTED } from "./state/useLift";
@@ -35,6 +38,8 @@ export function LayerView({
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
 	const lifted = useLift(lift, id);
+	const fit = layer?.media?.fit ?? null;
+	const media = useAssetUrl(doc.assets, layer?.media?.asset ?? null);
 
 	if (layer === null) {
 		return null;
@@ -46,8 +51,9 @@ export function LayerView({
 			data-dragging={lifted === NOT_LIFTED ? undefined : ""}
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
-			style={liftedStyle(layerStyle(layer, parentDisplay), lifted)}
+			style={liftedStyle(paintedStyle(layerStyle(layer, parentDisplay), fit, media), lifted)}
 		>
+			<LayerVideo fit={fit} media={media} />
 			{childIds.map((childId) => (
 				<LayerView
 					doc={doc}

@@ -1,5 +1,6 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, LoroTree, LoroTreeNode, TreeDiffItem } from "loro-crdt";
+import { AssetStore } from "./assets";
 import { DocumentHistory } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
@@ -7,8 +8,10 @@ import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
 import type { Basis, LayerLengths, Size } from "./length";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
+import { notify, subscribeTo } from "./listeners";
+import type { Unsubscribe } from "./listeners";
 
-export type Unsubscribe = () => void;
+export type { Unsubscribe } from "./listeners";
 
 const LAYERS = "layers";
 const NO_IDS: readonly LayerId[] = [];
@@ -40,26 +43,14 @@ function childIdsOf(node: LoroTreeNode): readonly LayerId[] {
 	return node.children()?.map((child) => child.id) ?? NO_IDS;
 }
 
-function subscribeTo(listeners: Set<() => void>, listener: () => void): Unsubscribe {
-	listeners.add(listener);
-	return () => {
-		listeners.delete(listener);
-	};
-}
-
 function sizeOf(layer: Layer): Size {
 	return { width: layer.width, height: layer.height };
-}
-
-function notify(listeners: Iterable<() => void>): void {
-	for (const listener of listeners) {
-		listener();
-	}
 }
 
 export class DesignDocument {
 	readonly #doc: LoroDoc;
 	readonly #history: DocumentHistory;
+	readonly assets: AssetStore;
 	readonly #layers = new Map<LayerId, Layer>();
 	readonly #listeners = new Map<LayerId, Set<() => void>>();
 	readonly #nodeSubscriptions = new Map<LayerId, Unsubscribe>();
@@ -74,6 +65,7 @@ export class DesignDocument {
 	constructor(doc: LoroDoc) {
 		this.#doc = doc;
 		this.#history = new DocumentHistory(doc);
+		this.assets = new AssetStore(doc);
 		this.#doc.subscribe((event) => {
 			const items = treeItems(event);
 			if (items.length === 0) {

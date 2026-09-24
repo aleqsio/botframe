@@ -2,6 +2,7 @@ import type { TreeID } from "loro-crdt";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
+import type { MediaFill } from "./media";
 
 export type LayerId = TreeID;
 
@@ -40,6 +41,7 @@ export interface Layer extends Rect, Pose {
 	id: LayerId;
 	origin: Origin;
 	fill: string;
+	media: MediaFill | null;
 	geometry: Geometry;
 	name: string;
 	clip: boolean;
@@ -67,4 +69,5 @@ export type LayerPatch = Partial<LayerFields> & {
 	lengths?: Partial<LayerLengths>;
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
+	media?: MediaFill | null;
 };

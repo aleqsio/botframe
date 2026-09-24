@@ -16,12 +16,15 @@ import {
 	roundNumber,
 } from "./length";
 import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
+import { mediaOf } from "./media";
+import type { MediaFill } from "./media";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
 const LAYOUT = "layout";
 const GUIDES = "guides";
+const MEDIA = "media";
 const ORIGIN_KEYS: Readonly<Record<keyof Origin, string>> = { x: "originX", y: "originY" };
 const ORIGIN_AXES: readonly (keyof Origin)[] = ["x", "y"];
 const UNIT_SUFFIX = "Unit";
@@ -100,6 +103,7 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		mirrored: readBoolean(data, "mirrored", false),
 		origin: readOrigin(data),
 		fill: readString(data, "fill", BLACK),
+		media: mediaOf(data.get(MEDIA)),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
 		clip: readBoolean(data, "clip", false),
@@ -174,6 +178,14 @@ function writeOrigin(data: LoroMap, origin: Partial<Origin>): void {
 	}
 }
 
+function writeMedia(data: LoroMap, media: MediaFill | null): void {
+	if (media === null) {
+		data.delete(MEDIA);
+		return;
+	}
+	data.set(MEDIA, { asset: media.asset, fit: media.fit });
+}
+
 function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	for (const [key, value] of Object.entries(patch)) {
 		writeLayoutKey(map, key, value);
@@ -181,7 +193,7 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 }
 
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, guides, layout, lengths, origin, x, y, width, height, ...plain } = patch;
+	const { geometry, guides, layout, lengths, media, origin, x, y, width, height, ...plain } = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -198,5 +210,8 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	}
 	if (origin !== undefined) {
 		writeOrigin(data, origin);
+	}
+	if (media !== undefined) {
+		writeMedia(data, media);
 	}
 }

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { LayerId } from "../../document/layer";
+import { isAssetId } from "../../document/assets";
+import type { AssetId } from "../../document/assets";
 import { isFullyTransparent, layerIdsUnder, visibleLayerIds } from "./hitTest";
-import type { HitElement } from "./hitTest";
+import type { HitElement, Paint } from "./hitTest";
 
 const TOP = "3@1" as LayerId;
 const MIDDLE = "2@1" as LayerId;
@@ -11,8 +13,20 @@ function element(layerId: string | null): HitElement {
 	return { getAttribute: (name) => (name === "data-layer-id" ? layerId : null) };
 }
 
-function fills(table: Readonly<Record<string, string>>): (id: LayerId) => string | null {
-	return (id) => table[id] ?? null;
+function assetId(text: string): AssetId {
+	if (!isAssetId(text)) {
+		throw new Error("the text is not a content address");
+	}
+	return text;
+}
+
+const PICTURE = assetId("a".repeat(64));
+
+function fills(table: Readonly<Record<string, string>>): (id: LayerId) => Paint | null {
+	return (id) => {
+		const fill = table[id];
+		return fill === undefined ? null : { fill, media: null };
+	};
 }
 
 describe("layerIdsUnder", () => {
@@ -39,6 +53,15 @@ describe("visibleLayerIds", () => {
 		);
 
 		expect(ids).toEqual([MIDDLE, BOTTOM]);
+	});
+
+	it("keeps a layer with a transparent fill and a media fill", () => {
+		const ids = visibleLayerIds([TOP], () => ({
+			fill: "transparent",
+			media: { asset: PICTURE, fit: "cover" },
+		}));
+
+		expect(ids).toEqual([TOP]);
 	});
 
 	it("skips a layer that the document does not hold", () => {
