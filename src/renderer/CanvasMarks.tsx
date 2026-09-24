@@ -6,8 +6,7 @@ import type { SnapSegment } from "./input/snap";
 import { originPlace } from "./layerStyle";
 import { unscaled, zoomed } from "./screenSpace";
 import { useSlot } from "./state/useSlot";
-import type { Slot } from "./state/slot";
-import type { GroupPivot, UserState } from "./state/userState";
+import type { UserState } from "./state/userState";
 import { useDrawnSpace, useLayer } from "./useDocument";
 
 export function OriginMark({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNode {
@@ -23,13 +22,13 @@ export function OriginMark({ doc, id }: { doc: DesignDocument; id: LayerId }): R
 export function GroupPivotMark({
 	box,
 	ids,
-	pivot,
+	user,
 }: {
 	box: Rect;
 	ids: readonly LayerId[];
-	pivot: Slot<GroupPivot | null>;
+	user: UserState;
 }): ReactNode {
-	const point = groupPivotOf(useSlot(pivot), ids, box);
+	const point = groupPivotOf(useSlot(user.groupPivot), ids, box);
 
 	return (
 		<span
