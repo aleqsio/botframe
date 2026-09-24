@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import { FILE_COMMANDS } from "../../shared/file";
 import { acceleratorText } from "../acceleratorText";
-import { bridge } from "../bridge";
 import { runFileCommand } from "../file";
 import type { UserState } from "../state/userState";
 
@@ -11,8 +10,6 @@ const MENU_LABEL = "File";
 const MENU_GAP = 6;
 
 export function FileMenu({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
-	const shellReady = bridge() !== null;
-
 	return (
 		<Menu.Root modal={false}>
 			<Menu.Trigger className="pill-button">{MENU_LABEL}</Menu.Trigger>
@@ -22,7 +19,6 @@ export function FileMenu({ doc, user }: { doc: DesignDocument; user: UserState }
 						{FILE_COMMANDS.map((command) => (
 							<Menu.Item
 								className="layer-menu-item"
-								disabled={!shellReady}
 								key={command.id}
 								onClick={() => {
 									runFileCommand(command, doc, user);
