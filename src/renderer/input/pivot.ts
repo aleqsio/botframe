@@ -29,21 +29,20 @@ function fractionOf(offset: number, extent: number): number {
 	return Math.min(Math.max(fraction, -ORIGIN_LIMIT), ORIGIN_LIMIT);
 }
 
+export function pivotIn(ids: readonly LayerId[], box: Rect, point: Point): GroupPivot {
+	return {
+		ids,
+		at: { x: fractionOf(point.x - box.x, box.width), y: fractionOf(point.y - box.y, box.height) },
+	};
+}
+
 export function pinnedPivot(
 	read: ReadLayer,
 	ids: readonly LayerId[],
 	point: Point,
 ): GroupPivot | null {
 	const box = boundsOf(read, ids);
-	return box === null
-		? null
-		: {
-				ids,
-				at: {
-					x: fractionOf(point.x - box.x, box.width),
-					y: fractionOf(point.y - box.y, box.height),
-				},
-			};
+	return box === null ? null : pivotIn(ids, box, point);
 }
 
 export function nearPivot(pivot: Point, point: Point, zoom: number): boolean {

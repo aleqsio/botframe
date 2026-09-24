@@ -74,7 +74,6 @@ export function createHandleBehavior(): ToolBehavior {
 			gripAt: (target, canvas) => gripFor(target, aimAt(target, canvas)),
 			apply: applyGrip,
 			finish(target, grip) {
-				target.user.snap.set(null);
 				target.doc.commit(COMMIT_MESSAGES[grip.kind]);
 			},
 		}),

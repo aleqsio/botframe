@@ -1,16 +1,10 @@
-import type { Layer, LayerId, Rect } from "../../document/layer";
+import type { Layer, LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { gripDrag } from "./gripDrag";
 import type { Modifiers } from "./modifiers";
-import {
-	ORIGIN_MESSAGE,
-	groupPivotOf,
-	layerPivot,
-	movedOrigin,
-	nearPivot,
-	pinnedPivot,
-} from "./pivot";
-import { snappedInBox, snappedInLayer } from "./pivotSnap";
+import { ORIGIN_MESSAGE, groupPivotOf, layerPivot, movedOrigin, nearPivot, pivotIn } from "./pivot";
+import { pivotGroupOf, snappedInBox, snappedInLayer } from "./pivotSnap";
+import type { PivotGroup } from "./pivotSnap";
 import { boundsOf } from "./selectionBounds";
 import {
 	drawnReaderOf,
@@ -24,9 +18,7 @@ import { resizePatch } from "./transform";
 
 const ORIGIN_ZONE = { mode: "origin" } as const;
 
-type PivotGrip =
-	| { kind: "layer"; start: Layer }
-	| { kind: "group"; ids: readonly LayerId[]; box: Rect };
+type PivotGrip = { kind: "layer"; start: Layer } | ({ kind: "group" } & PivotGroup);
 
 function layerGrip(target: PointerTarget, id: LayerId, canvas: Point): PivotGrip | null {
 	const start = drawnReaderOf(target)(id);
@@ -45,7 +37,7 @@ function groupGrip(
 	const box = boundsOf(drawnReaderOf(target), ids);
 	return box !== null &&
 		nearPivot(groupPivotOf(user.groupPivot.get(), ids, box), canvas, user.camera.get().zoom)
-		? { kind: "group", ids, box }
+		? { kind: "group", ...pivotGroupOf(target, ids, box) }
 		: null;
 }
 
@@ -85,7 +77,7 @@ function applyGrip(
 		return;
 	}
 	const point = snappedInBox(target, grip, canvas, modifiers);
-	target.user.groupPivot.set(pinnedPivot(drawnReaderOf(target), grip.ids, point));
+	target.user.groupPivot.set(pivotIn(grip.ids, grip.box, point));
 }
 
 export function createOriginBehavior(): ToolBehavior {
@@ -97,7 +89,6 @@ export function createOriginBehavior(): ToolBehavior {
 			gripAt,
 			apply: applyGrip,
 			finish(target, grip) {
-				target.user.snap.set(null);
 				if (grip.kind === "layer") {
 					target.doc.commit(ORIGIN_MESSAGE);
 				}

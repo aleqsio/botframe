@@ -35,6 +35,7 @@ export function gripDrag<Grip>(
 			}
 			spec.apply(target, grip, point.canvas, modifiers);
 			held = null;
+			target.user.snap.set(null);
 			spec.finish(target, grip);
 		},
 	};
