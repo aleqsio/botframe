@@ -7,8 +7,7 @@ import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { NameField } from "./NameField";
-import { FieldPanels, LayerPanels } from "./variables/ComponentPanels";
-import { DocumentPanels } from "./variables/VariablesSection";
+import { DocumentPanels, FieldPanels, LayerPanels } from "./variables/ComponentPanels";
 
 function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 	const count = useLayerCount(doc);

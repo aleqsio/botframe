@@ -1,4 +1,6 @@
 import type { ReactElement } from "react";
+import type { DesignDocument } from "../../../document/document";
+import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
 import { isFrame } from "../layerEntry";
 import { BindingsSection } from "./BindingsSection";
@@ -47,4 +49,8 @@ export function FieldPanels({ doc, layer, user }: PanelProps): ReactElement {
 			}}
 		/>
 	);
+}
+
+export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
+	return <VariablesSection doc={doc} owner={DOCUMENT_SCOPE} title="Document variables" />;
 }

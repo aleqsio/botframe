@@ -176,7 +176,3 @@ export function VariablesSection({
 		</div>
 	);
 }
-
-export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
-	return <VariablesSection doc={doc} owner={DOCUMENT_SCOPE} title="Document variables" />;
-}
