@@ -10,6 +10,7 @@ import { GuideList } from "./layout/GuideList";
 import { ChipSection } from "./layout/ChipSection";
 import { LayerChip } from "./layout/LayerChip";
 import { LayoutPanel } from "./layout/LayoutPanel";
+import { MirrorToggle } from "./layout/MirrorToggle";
 import { TurnToggle } from "./layout/TurnToggle";
 
 const TURN_GROUP = "Rotation";
@@ -23,12 +24,13 @@ function ChipGroup({
 	group: FieldGroup;
 	layer: Layer;
 }): ReactElement {
+	const turns = group.name === TURN_GROUP;
 	return (
-		<ChipSection name={group.name}>
+		<ChipSection after={turns ? <MirrorToggle doc={doc} layer={layer} /> : null} name={group.name}>
 			{group.fields.map((field) => (
 				<LayerChip doc={doc} field={field} key={field.label} layer={layer} />
 			))}
-			{group.name === TURN_GROUP ? <TurnToggle doc={doc} layer={layer} /> : null}
+			{turns ? <TurnToggle doc={doc} layer={layer} /> : null}
 		</ChipSection>
 	);
 }

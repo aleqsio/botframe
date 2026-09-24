@@ -8,6 +8,7 @@ import type { KeyStroke } from "./layerCommand";
 import {
 	alignSelection,
 	canAim,
+	canFlip,
 	canFit,
 	canSpread,
 	fitToChildren,
@@ -61,6 +62,7 @@ const NEEDS_OF_SCOPE: Readonly<Record<AimSpec["scope"], string>> = {
 const SPREAD_NEEDS = "Select three or more layers that can move";
 const FIT_NEEDS = "Select one frame that has children and no auto layout";
 const SELECTION_NEEDS = "Select a layer";
+const FLIP_NEEDS = "Select a layer that looks different when it is mirrored";
 
 function shiftStroke(key: string): (stroke: KeyStroke) => boolean {
 	if (key === "") {
@@ -311,7 +313,12 @@ export const LAYOUT_ACTIONS: readonly LayoutAction[] = [
 	...CENTERS.map((row) => aimAction(row, alignSelection)),
 	actionOf(FIT, canFit, (doc, user) => fitToChildren(doc, user, "size to fit"), FIT_NEEDS),
 	...FLIPS.map((row) =>
-		actionOf(row, hasSelection, (doc, user) => flipSelection(doc, user, row.spec), SELECTION_NEEDS),
+		actionOf(
+			row,
+			(doc, layers) => canFlip(doc, layers, row.spec),
+			(doc, user) => flipSelection(doc, user, row.spec),
+			FLIP_NEEDS,
+		),
 	),
 	...TURNS.map((row) => turnAction(row)),
 	actionOf(

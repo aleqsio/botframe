@@ -1,18 +1,16 @@
 import type { DesignDocument } from "../../document/document";
 import type { GuideAxis } from "../../document/guides";
-import type { Layer, Pose, Rect } from "../../document/layer";
+import type { Layer, Rect } from "../../document/layer";
 import { swappedBox } from "../components/layerFields";
 import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { DOM_DRAWN, drawnRead } from "./drawn";
+import { childrenOf, flipKeeps, flipLayer } from "./flip";
 import {
 	anchoredPlace,
-	chainPose,
-	composePose,
 	outOfLayer,
 	parentChain,
 	placedAround,
-	poseInside,
 	toParentPoint,
 	turnedOnScreen,
 	visualCenterOf,
@@ -30,11 +28,6 @@ import { boundsOf, canvasContentHullOf, canvasHullOf, hullOfRects } from "./sele
 import { freeAxesOf, placedOn } from "./snapAxes";
 
 const BOX_ORIGIN: Point = { x: 0, y: 0 };
-
-const SCREEN_MIRRORS: Readonly<Record<GuideAxis, Pose>> = {
-	x: { rotation: 0, mirrored: true },
-	y: { rotation: 180, mirrored: true },
-};
 
 type AimScope = "selection" | "parent" | "bounds";
 
@@ -130,14 +123,6 @@ export function alignSelection(doc: DesignDocument, user: UserState, spec: AimSp
 	return true;
 }
 
-function flippedPose(parents: readonly Pose[], layer: Pose, axes: readonly GuideAxis[]): Pose {
-	const seen = axes.reduce(
-		(pose, axis) => composePose(SCREEN_MIRRORS[axis], pose),
-		composePose(chainPose(parents), layer),
-	);
-	return poseInside(parents, seen);
-}
-
 function outermostAims(read: ReadLayer, aims: readonly Aim[]): readonly Aim[] {
 	const chosen = new Set(aims.map((aim) => aim.layer.id));
 	return aims.filter((aim) => !parentChain(read, aim.layer.id).some((up) => chosen.has(up.id)));
@@ -146,8 +131,7 @@ function outermostAims(read: ReadLayer, aims: readonly Aim[]): readonly Aim[] {
 export function flipSelection(doc: DesignDocument, user: UserState, spec: AimSpec): boolean {
 	const read = readerOf(doc);
 	for (const aim of outermostAims(read, aimsOf(doc, user, spec.scope))) {
-		const parents = parentChain(read, aim.layer.id);
-		doc.update(aim.layer.id, flippedPose(parents, aim.layer, spec.axes));
+		flipLayer({ doc, read }, aim.layer, spec.axes);
 		const turned = read(aim.layer.id);
 		if (turned !== null) {
 			const box = canvasHullOf(read, turned);
@@ -179,10 +163,6 @@ export function spreadSelection(doc: DesignDocument, user: UserState, spec: Axis
 	}
 	doc.commit(spec.message);
 	return true;
-}
-
-function childrenOf(doc: DesignDocument, parent: Layer): readonly Layer[] {
-	return doc.childIds(parent.id).flatMap((id) => doc.layer(id) ?? []);
 }
 
 export function fitToChildren(doc: DesignDocument, user: UserState, message: string): boolean {
@@ -248,6 +228,14 @@ export function canAim(doc: DesignDocument, layers: readonly Layer[], spec: AimS
 		(layer) =>
 			(shared || parentHullOf(read, layer) !== null) &&
 			freeAxesFor(read, layer).some((axis) => spec.axes.includes(axis)),
+	);
+}
+
+export function canFlip(doc: DesignDocument, layers: readonly Layer[], spec: AimSpec): boolean {
+	const [only, peer] = layers;
+	return (
+		only !== undefined &&
+		(peer !== undefined || !flipKeeps({ doc, read: readerOf(doc) }, only, spec.axes))
 	);
 }
 
