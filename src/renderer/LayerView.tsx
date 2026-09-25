@@ -11,8 +11,8 @@ import { LayerVideo } from "./LayerVideo";
 import { layerStyle } from "./layerStyle";
 import { paintedStyle } from "./mediaStyle";
 import type { Slot } from "./state/slot";
-import type { Lifted } from "./state/userState";
 import { useLift, NOT_LIFTED } from "./state/useLift";
+import type { LiftSlot } from "./state/useLift";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
 
@@ -31,7 +31,7 @@ export function LayerView({
 }: {
 	doc: DesignDocument;
 	id: LayerId;
-	lift: Slot<Lifted | null>;
+	lift: LiftSlot;
 	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {

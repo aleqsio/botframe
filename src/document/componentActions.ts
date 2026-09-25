@@ -6,7 +6,6 @@ import { writePatch } from "./layerData";
 import { NO_BASIS } from "./length";
 import { nodeOf } from "./path";
 import type { LayerId } from "./path";
-import type { Scope } from "./scope";
 import { nodePatch, ownChildIds } from "./subtree";
 import type { LayerNode } from "./subtree";
 import { isLiteral, remapValue } from "./value";
@@ -86,7 +85,10 @@ function placeDefinition(doc: DesignDocument, component: string, root: LayerNode
 	return rootId;
 }
 
-function fillScope(scope: Scope, packed: Omit<PackedComponent, "name" | "body">): void {
+function fillScope(
+	scope: { put: (variable: Variable) => void },
+	packed: Omit<PackedComponent, "name" | "body">,
+): void {
 	for (const variable of packed.variables) {
 		scope.put(variable);
 	}

@@ -2,12 +2,9 @@ import type { DesignDocument } from "../document/document";
 import { parseEnvelope, serializeEnvelope } from "../document/envelope";
 import type { LayerEnvelope } from "../document/envelope";
 import type { LayerId } from "../document/layer";
-import { adoptComponents } from "../document/componentActions";
-import { componentIdsOf } from "../document/subtree";
 import type { LayerNode } from "../document/subtree";
 import { bridge } from "./bridge";
-import { markupOf, packedFor } from "./clipboardContent";
-import { verifiedPacks } from "./componentImport";
+import { adoptedParent, markupOf, packedFor, verifiedEnvelope } from "./clipboardContent";
 import type { Bridge } from "./bridge";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
@@ -56,10 +53,10 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 	if (envelope.layers.length === 0) {
 		return;
 	}
-	adoptComponents(doc, envelope.components);
-	const parent = doc.tree.holder(
+	const parent = adoptedParent(
+		doc,
+		envelope,
 		pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds),
-		componentIdsOf(envelope.layers),
 	);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
@@ -71,10 +68,7 @@ async function readClipboard(shell: Bridge, doc: DesignDocument, user: UserState
 	const raw = await shell.readClipboardLayers();
 	const envelope = raw === null ? null : parseEnvelope(raw);
 	if (envelope !== null) {
-		createLayers(doc, user, {
-			...envelope,
-			components: await verifiedPacks(envelope.components),
-		});
+		createLayers(doc, user, await verifiedEnvelope(envelope));
 	}
 }
 
