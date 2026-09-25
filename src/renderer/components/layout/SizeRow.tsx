@@ -8,6 +8,7 @@ import type { LayoutPatch, SizeMode } from "../../../document/layout";
 import { useDrawnOutline } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
+import { isFrame } from "../layerEntry";
 import { ChipBox } from "./ChipBox";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
@@ -24,15 +25,26 @@ const AXIS_LABEL: Readonly<Record<Axis, string>> = { width: "W", height: "H" };
 const FULL = 100;
 
 const ROOT_FILL_TIP = "A layer at the root has no parent to fill";
+const SHAPE_HUG_TIP = "A shape has no children to hug";
 
-function sizeOptions(root: boolean): readonly SegmentOption<SizeMode>[] {
-	return SIZE_MODES.map((mode) => ({
-		value: mode,
-		label: SIZE_LABEL[mode],
-		icon: <SizeModeIcon mode={mode} />,
-		disabled: mode === "fill" && root,
-		title: mode === "fill" && root ? ROOT_FILL_TIP : undefined,
-	}));
+function sizeTip(mode: SizeMode, layer: Layer): string | undefined {
+	if (mode === "fill" && layer.parent === null) {
+		return ROOT_FILL_TIP;
+	}
+	return mode === "hug" && !isFrame(layer) ? SHAPE_HUG_TIP : undefined;
+}
+
+function sizeOptions(layer: Layer): readonly SegmentOption<SizeMode>[] {
+	return SIZE_MODES.map((mode) => {
+		const tip = sizeTip(mode, layer);
+		return {
+			value: mode,
+			label: SIZE_LABEL[mode],
+			icon: <SizeModeIcon mode={mode} />,
+			disabled: tip !== undefined,
+			title: tip,
+		};
+	});
 }
 
 export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch {
@@ -80,7 +92,7 @@ export function SizeRow({
 					}
 					doc.commit("set size");
 				}}
-				options={sizeOptions(layer.parent === null)}
+				options={sizeOptions(layer)}
 				value={mode}
 			/>
 			<ChipBox
