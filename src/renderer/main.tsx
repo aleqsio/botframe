@@ -1,21 +1,22 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { DesignDocument } from "../document/document";
-import { Canvas } from "./Canvas";
+import { App } from "./App";
 import { watchClipboard } from "./clipboard";
 import { connectEditMenu } from "./editMenu";
-import { UserState } from "./state/userState";
+import { connectFileMenu } from "./file";
+import { Tab } from "./state/tab";
+import { Workspace } from "./state/workspace";
 
 const container = document.querySelector("#root");
 
 if (container !== null) {
-	const doc = DesignDocument.create();
-	const user = new UserState();
-	connectEditMenu(doc, user);
-	watchClipboard(user);
+	const workspace = new Workspace(Tab.untitled());
+	connectEditMenu(workspace);
+	connectFileMenu(workspace);
+	watchClipboard(workspace);
 	createRoot(container).render(
 		<StrictMode>
-			<Canvas doc={doc} user={user} />
+			<App workspace={workspace} />
 		</StrictMode>,
 	);
 }

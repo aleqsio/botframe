@@ -8,6 +8,7 @@ import { layerMarkup } from "./layerMarkup";
 import type { Bridge } from "./bridge";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
+import type { Workspace } from "./state/workspace";
 
 function selectedNodes(doc: DesignDocument, user: UserState): LayerNode[] {
 	return user.selection.get().flatMap((id) => doc.readSubtree(id) ?? []);
@@ -113,13 +114,15 @@ async function refreshPasteReady(shell: Bridge, user: UserState): Promise<void> 
 	user.pasteReady.set(await shell.hasClipboardLayers());
 }
 
-export function watchClipboard(user: UserState): void {
+export function watchClipboard(workspace: Workspace): void {
 	const shell = bridge();
 	if (shell === null) {
 		return;
 	}
-	window.addEventListener("focus", () => {
-		void refreshPasteReady(shell, user);
-	});
-	void refreshPasteReady(shell, user);
+	const refresh = (): void => {
+		void refreshPasteReady(shell, workspace.active.get().user);
+	};
+	window.addEventListener("focus", refresh);
+	workspace.active.subscribe(refresh);
+	refresh();
 }

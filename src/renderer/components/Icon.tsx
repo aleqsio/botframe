@@ -11,6 +11,7 @@ const PATHS = {
 	centerX: "M12 3v18M7 8h10v8H7z",
 	centerY: "M3 12h18M8 7h8v10H8z",
 	check: "m5 12.5 4.5 4.5L19 7.5",
+	close: "M7 7l10 10M17 7 7 17",
 	chevron: "m7 10 5 5 5-5",
 	ellipse: "M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z",
 	fit: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 8h8v8H8z",

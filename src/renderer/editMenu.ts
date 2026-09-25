@@ -6,6 +6,7 @@ import type { EditCommand } from "./input/command";
 import { EDIT_COMMANDS, commandById, runEditCommand } from "./input/editCommand";
 import { LAYOUT_ACTIONS } from "./input/layoutAction";
 import type { UserState } from "./state/userState";
+import type { Workspace } from "./state/workspace";
 
 const COPY_AS = { id: "copyAs", label: "Copy as", accelerator: "" };
 const ARRANGE = { id: "arrange", label: "Arrange", accelerator: "", separatorBefore: true };
@@ -81,21 +82,38 @@ function pushMenu(shell: Bridge, doc: DesignDocument, user: UserState): void {
 	shell.setEditMenu(editMenuItems(doc, user));
 }
 
-export function connectEditMenu(doc: DesignDocument, user: UserState): void {
-	const shell = bridge();
-	if (shell === null) {
-		return;
-	}
+function followTab(shell: Bridge, workspace: Workspace): () => void {
+	const { doc, user } = workspace.active.get();
 	const push = (): void => {
 		pushMenu(shell, doc, user);
 	};
 	push();
-	doc.subscribeHistory(push);
-	user.selection.subscribe(push);
-	user.pasteReady.subscribe(push);
+	const drops = [
+		doc.subscribeHistory(push),
+		user.selection.subscribe(push),
+		user.pasteReady.subscribe(push),
+	];
+	return () => {
+		for (const drop of drops) {
+			drop();
+		}
+	};
+}
+
+export function connectEditMenu(workspace: Workspace): void {
+	const shell = bridge();
+	if (shell === null) {
+		return;
+	}
+	let drop = followTab(shell, workspace);
+	workspace.active.subscribe(() => {
+		drop();
+		drop = followTab(shell, workspace);
+	});
 	shell.onCommand((id) => {
 		const command = commandById(id);
 		if (command !== null) {
+			const { doc, user } = workspace.active.get();
 			runEditCommand(command, doc, user);
 		}
 	});

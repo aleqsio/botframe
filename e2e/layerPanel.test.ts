@@ -6,7 +6,7 @@ import type { Drag, Point } from "./support";
 const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
 const BRANCH = ["Rectangle", "Frame 1", "Rectangle 2"];
-const APART: Drag = { from: { x: 300, y: 40 }, to: { x: 380, y: 120 } };
+const APART: Drag = { from: { x: 300, y: 60 }, to: { x: 380, y: 140 } };
 
 test("the chevron takes the children of a row away and brings them back", async () => {
 	const { app, origin, window } = await openStage();

@@ -3,6 +3,7 @@ import { BrowserWindow, app, ipcMain } from "electron";
 import { SET_EDIT_MENU } from "../shared/editMenu";
 import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
+import { connectFiles } from "./files";
 
 function createWindow(): void {
 	const window = new BrowserWindow({
@@ -42,6 +43,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 
 app.on("ready", () => {
 	connectClipboard();
+	connectFiles();
 	createWindow();
 });
 

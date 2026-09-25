@@ -2,7 +2,7 @@
 	color-scheme: light dark;
 	--edge: 10px;
 	--card-top: 52px;
-	--layers-width: 210px;
+	--layers-width: 260px;
 	--inspector-width: 280px;
 	--stage-background: light-dark(#f2f2f2, #1d1c22);
 	--stage-dots: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.07));
@@ -553,6 +553,7 @@ body {
 }
 
 #file-bar,
+#tab-bar,
 #layers,
 #zoom,
 #inspector {
@@ -564,6 +565,7 @@ body {
 }
 
 #file-bar,
+#tab-bar,
 #zoom {
 	top: var(--edge);
 	display: flex;
@@ -577,8 +579,86 @@ body {
 #file-bar {
 	left: var(--edge);
 	-webkit-app-region: drag;
-	min-width: var(--layers-width);
+	width: var(--layers-width);
 	padding: 0 4px 0 78px;
+}
+
+#tab-bar {
+	left: calc(2 * var(--edge) + var(--layers-width));
+	max-width: calc(100% - var(--layers-width) - var(--inspector-width) - 4 * var(--edge));
+	gap: var(--layout-space-1);
+	padding: 0 var(--layout-space-2);
+	-webkit-app-region: drag;
+}
+
+.tab-list {
+	display: flex;
+	gap: var(--layout-space-1);
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.tab {
+	display: flex;
+	flex: none;
+	align-items: center;
+	height: var(--layout-control);
+	padding-right: var(--layout-space-1);
+	border-radius: var(--layout-radius-pill);
+	-webkit-app-region: no-drag;
+}
+
+.tab:hover {
+	background-color: var(--panel-hover);
+}
+
+.tab[data-selected] {
+	background-color: var(--panel-selected);
+}
+
+.tab-name {
+	max-width: calc(6 * var(--layout-control));
+	height: 100%;
+	overflow: hidden;
+	padding: 0 var(--layout-space-2) 0 var(--layout-space-4);
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: var(--layout-text-field);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.tab-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--layout-inner);
+	height: var(--layout-inner);
+	padding: 0;
+	border: 0;
+	border-radius: var(--layout-radius-field);
+	background: transparent;
+	color: inherit;
+	cursor: default;
+}
+
+.tab-close .icon {
+	width: var(--layout-icon);
+	height: var(--layout-icon);
+}
+
+.tab-close:hover {
+	background-color: var(--panel-hover);
+}
+
+.tab-name:focus-visible,
+.tab-close:focus-visible {
+	outline: var(--layout-space-1) solid var(--panel-focus);
+	outline-offset: calc(-1 * var(--layout-space-1));
 }
 
 #zoom {
@@ -611,6 +691,9 @@ body {
 
 .file-name {
 	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	font-size: 13px;
 	font-weight: 600;
 	white-space: nowrap;
@@ -644,7 +727,8 @@ body {
 	background-color: var(--panel-hover);
 }
 
-.pill-button[aria-pressed="true"] {
+.pill-button[aria-pressed="true"],
+.pill-button[data-popup-open] {
 	background-color: var(--panel-selected);
 }
 

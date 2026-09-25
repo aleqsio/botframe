@@ -2,7 +2,6 @@ import { useRef } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import { Stage } from "./Stage";
-import { FileBar } from "./components/FileBar";
 import { Inspector } from "./components/Inspector";
 import { LayersCard } from "./components/LayerList";
 import { LayerMenu } from "./components/LayerMenu";
@@ -16,7 +15,6 @@ export function Canvas({ doc, user }: { doc: DesignDocument; user: UserState }):
 	return (
 		<>
 			<Stage doc={doc} stage={stage} user={user} />
-			<FileBar layersOpen={user.layersOpen} />
 			<LayersCard doc={doc} user={user} />
 			<ZoomBar camera={user.camera} stage={stage} />
 			<Inspector doc={doc} user={user} />
