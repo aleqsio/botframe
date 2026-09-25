@@ -7,10 +7,11 @@ import { copiesOf, isNodeId, layerPath, nodeOf, segmentsOf } from "./path";
 import type { LayerId } from "./path";
 import { readString } from "./read";
 import type { FieldSource } from "./read";
-import { traceVariable } from "./resolve";
-import type { Found, ResolveSource } from "./resolve";
-import { DOCUMENT_SCOPE, valueOf } from "./variable";
-import type { Variable, VariableValue } from "./variable";
+import type { ResolveSource } from "./resolve";
+import { valueOf } from "./value";
+import type { VariableValue } from "./value";
+import { DOCUMENT_SCOPE } from "./variable";
+import type { Variable } from "./variable";
 
 const LAYERS = "layers";
 const DEFINITION = "definition";
@@ -236,19 +237,12 @@ export class LayerTree {
 		return [DOCUMENT_SCOPE, ...new Set(components)];
 	}
 
-	trace(id: LayerId, variable: string, placement: boolean): Found | null {
-		return traceVariable(this.resolver(), variable, this.contextOf(id, placement));
-	}
-
 	resolver(): ResolveSource {
 		const components = this.#components;
 		return {
 			declared: (id) => components.declared(id),
 			assigned: (copy, id) => (isNodeId(copy) ? this.#assigned(copy, id) : undefined),
 			componentOf: (copy) => (isNodeId(copy) ? this.componentOf(copy) : null),
-			cell: (owner, choice, option, id) =>
-				components.scope(owner).cell({ choice, option, variable: id }),
-			drivingChoice: (owner, id) => components.scope(owner).drivingChoice(id),
 		};
 	}
 

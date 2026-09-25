@@ -4,7 +4,8 @@ import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
 import type { LayerId } from "./path";
-import type { Assignments, Literal, VariableValue } from "./variable";
+import type { Literal, VariableValue } from "./value";
+import type { Assignments } from "./variable";
 
 export type { LayerId } from "./path";
 

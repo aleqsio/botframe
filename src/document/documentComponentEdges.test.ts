@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ComponentSource } from "./component";
-import { adoptComponents, makeComponent, makeFrame } from "./componentActions";
+import { adoptComponents, disconnect, makeComponent, makeFrame } from "./componentActions";
 import { packComponents } from "./componentPack";
 import { DesignDocument } from "./document";
 import { DRAWN } from "./documentFixtures";
@@ -41,8 +41,8 @@ function present<T>(held: T | null): T {
 	return held;
 }
 
-function variable(held: Omit<Variable, "options" | "prop"> & Partial<Variable>): Variable {
-	return { options: [], prop: true, ...held };
+function variable(held: Omit<Variable, "options"> & Partial<Variable>): Variable {
+	return { options: [], ...held };
 }
 
 function componentFrom(doc: DesignDocument): { frame: LayerId; component: string } {
@@ -104,11 +104,11 @@ describe("bindings and values", () => {
 			.scope(DOCUMENT_SCOPE)
 			.put(variable({ id: "r", name: "r", type: "length", initial: 8 }));
 		const dot = doc.createLayer(DOT, null);
-		doc.update(dot, { bindings: { cornerRadius: "r" } });
+		doc.update(dot, { bindings: { cornerRadius: { var: "r" } } });
 		const geometry = { kind: "rectangle", cornerRadius: 8, cornerSmoothing: 0 } as const;
 
 		doc.update(dot, { geometry: { ...geometry, frame: true } });
-		expect(doc.layer(dot)?.bindings).toEqual({ cornerRadius: "r" });
+		expect(doc.layer(dot)?.bindings).toEqual({ cornerRadius: { var: "r" } });
 		doc.update(dot, { geometry: { ...geometry, cornerRadius: 12, frame: true } });
 		expect(doc.layer(dot)?.bindings).toEqual({});
 		expect(doc.layer(dot)?.geometry).toMatchObject({ cornerRadius: 12 });
@@ -125,18 +125,25 @@ describe("bindings and values", () => {
 		expect(doc.layer(frame)?.content).toMatchObject({ values: { n: 3 } });
 	});
 
-	it("takes a variable out of each option of a table, and drops the cells of a removed option", () => {
+	it("keeps a condition working in a disconnected copy, and makes it a value in a frame", () => {
 		const doc = DesignDocument.create();
-		const scope = doc.components.scope(DOCUMENT_SCOPE);
-		scope.put(variable({ id: "c", name: "c", type: "choice", initial: "a", options: ["a", "b"] }));
-		scope.put(variable({ id: "v", name: "v", type: "number", initial: 0 }));
-		scope.setCell({ choice: "c", option: "a", variable: "v" }, 1);
-		scope.setCell({ choice: "c", option: "b", variable: "v" }, 2);
+		const { component, frame } = componentFrom(doc);
+		doc.components
+			.scope(component)
+			.put(variable({ id: "on", name: "on", type: "boolean", initial: false }));
+		const fill = { when: [{ test: "on", is: true, result: "#ff0000" }], else: "#00ff00" };
+		doc.update(only(doc.childIds(frame)), { bindings: { fill } });
+		const other = copyOf(doc, frame, null);
 
-		scope.dropOptions("c", ["a"]);
-		expect(scope.cells().map(([cell]) => cell.option)).toEqual(["a"]);
-		scope.takeOut("c", "v");
-		expect(scope.drivingChoice("v")).toBeNull();
+		const next = present(disconnect(doc, other));
+		const renamed = only(doc.components.scope(next).variables()).id;
+		doc.update(other, { props: { [renamed]: true } });
+		expect(doc.layer(only(doc.childIds(other)))?.fill).toBe("#ff0000");
+
+		makeFrame(doc, other);
+		const dot = only(doc.childIds(other));
+		expect(doc.layer(dot)?.bindings).toEqual({});
+		expect(doc.layer(dot)?.fill).toBe("#ff0000");
 	});
 });
 

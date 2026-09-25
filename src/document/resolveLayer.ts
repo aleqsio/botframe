@@ -3,7 +3,7 @@ import { BINDING_KEYS, isPlacementBinding } from "./bindings";
 import type { BindingKey } from "./bindings";
 import { boundTraits } from "./boundTraits";
 import type { LayerTraits, ResolvedValues } from "./layer";
-import { resolveVariable } from "./resolve";
+import { resolveValue, resolveVariable } from "./resolve";
 import type { ResolveSource } from "./resolve";
 import type { Variable } from "./variable";
 
@@ -32,11 +32,9 @@ function valuesOf(context: Context, component: string): ResolvedValues {
 export function resolveTraits(traits: LayerTraits, context: Context): LayerTraits {
 	let resolved = traits;
 	for (const key of BINDING_KEYS) {
-		const variable = traits.bindings[key];
+		const bound = traits.bindings[key];
 		const value =
-			variable === undefined
-				? null
-				: resolveVariable(context.source, variable, chainFor(context, key));
+			bound === undefined ? null : resolveValue(context.source, bound, chainFor(context, key));
 		resolved = value === null ? resolved : boundTraits(resolved, key, value);
 	}
 	const { content } = resolved;

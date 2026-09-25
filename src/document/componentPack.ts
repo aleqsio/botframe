@@ -3,11 +3,9 @@ import { componentSourceOf } from "./component";
 import type { ComponentSource } from "./component";
 import type { ComponentStore } from "./components";
 import type { LayerId } from "./path";
-import { cellFrom } from "./scope";
-import type { Cell } from "./scope";
 import type { LayerNode } from "./subtree";
-import { valueOf, variableOf } from "./variable";
-import type { Variable, VariableValue } from "./variable";
+import { variableOf } from "./variable";
+import type { Variable } from "./variable";
 
 type PackedBody =
 	| { kind: "html"; address: string; source: ComponentSource }
@@ -17,7 +15,6 @@ export interface PackedComponent {
 	name: string;
 	body: PackedBody;
 	variables: readonly Variable[];
-	cells: readonly (readonly [Cell, VariableValue])[];
 }
 
 export interface PackReader {
@@ -37,15 +34,6 @@ function bodyOf(value: unknown, nodeOf: (value: unknown) => LayerNode): PackedBo
 		: null;
 }
 
-function cellsOf(value: unknown): readonly (readonly [Cell, VariableValue])[] {
-	return listOf(value).flatMap((entry) => {
-		const [cell, held] = listOf(entry);
-		const parsed = cellFrom(cell);
-		const assigned = valueOf(held);
-		return parsed === null || assigned === null ? [] : [[parsed, assigned] as const];
-	});
-}
-
 export function packedOf(
 	value: unknown,
 	nodeOf: (value: unknown) => LayerNode,
@@ -61,7 +49,7 @@ export function packedOf(
 		const variable = typeof id === "string" ? variableOf(id, held) : null;
 		return variable === null ? [] : [variable];
 	});
-	return { name, body, variables, cells: cellsOf(bag["cells"]) };
+	return { name, body, variables };
 }
 
 function packedBody(reader: PackReader, id: string): PackedBody | null {
@@ -101,7 +89,7 @@ export function packComponents(
 		const entry = reader.components.entry(id);
 		if (body !== null && entry !== null) {
 			const scope = reader.components.scope(id);
-			packed[id] = { name: entry.name, body, variables: scope.variables(), cells: scope.cells() };
+			packed[id] = { name: entry.name, body, variables: scope.variables() };
 			const nested = new Set<string>();
 			if (body.kind === "layers") {
 				usedIn(body.root, nested);

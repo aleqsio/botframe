@@ -2,7 +2,7 @@ import type { BindingKey } from "./bindings";
 import type { LayerTraits } from "./layer";
 import { PIXELS } from "./length";
 import type { BoxKey } from "./length";
-import type { Literal } from "./variable";
+import type { Literal } from "./value";
 
 function boxTraits(traits: LayerTraits, key: BoxKey, value: number): LayerTraits {
 	return {

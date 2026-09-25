@@ -198,7 +198,7 @@ describe("parseEnvelope", () => {
 				props: { label: "Agree", checked: true, tone: { var: "t1" } },
 				values: {},
 			},
-			bindings: { fill: "c1" },
+			bindings: { fill: { var: "c1" } },
 		};
 		const source: PackedComponent = {
 			name: "Checkbox",
@@ -207,10 +207,7 @@ describe("parseEnvelope", () => {
 				address: "a".repeat(64),
 				source: { name: "Checkbox", html: "<b>{{label}}</b>", css: "", props: [] },
 			},
-			variables: [
-				{ id: "t1", name: "label", type: "text", initial: "Agree", options: [], prop: true },
-			],
-			cells: [],
+			variables: [{ id: "t1", name: "label", type: "text", initial: "Agree", options: [] }],
 		};
 		const raw = serializeEnvelope({
 			sourceParent: null,
@@ -226,7 +223,7 @@ describe("parseEnvelope", () => {
 		});
 
 		expect(parseEnvelope(raw)?.layers[0]?.content).toEqual(instance.content);
-		expect(parseEnvelope(raw)?.layers[0]?.bindings).toEqual({ fill: "c1" });
+		expect(parseEnvelope(raw)?.layers[0]?.bindings).toEqual({ fill: { var: "c1" } });
 		expect(parseEnvelope(raw)?.components).toEqual({ v1: source });
 		expect(parseEnvelope(broken)?.layers[0]?.content).toEqual({
 			kind: "component",

@@ -9,7 +9,6 @@ import { readString } from "./read";
 import type { FieldSource } from "./read";
 import type { Declared } from "./resolve";
 import { Scope } from "./scope";
-import type { ScopeView } from "./scope";
 import { DOCUMENT_SCOPE, newVariableId } from "./variable";
 import type { Variable } from "./variable";
 
@@ -32,7 +31,7 @@ export interface ComponentsView {
 	entries: readonly ComponentEntry[];
 	entry: (id: string) => ComponentEntry | null;
 	declared: (variable: string) => Declared | null;
-	scope: (owner: string) => ScopeView;
+	variables: (owner: string) => readonly Variable[];
 }
 
 export type HtmlImport = readonly [address: string, source: ComponentSource];
@@ -56,7 +55,6 @@ function variableOfSpec(spec: PropSpec, held: Variable | undefined): Variable {
 		type,
 		initial: spec.initial,
 		options,
-		prop: true,
 	};
 }
 
@@ -90,7 +88,7 @@ export class ComponentStore {
 			entries: this.entries(),
 			entry: (id) => this.entry(id),
 			declared: (variable) => this.declared(variable),
-			scope: (owner) => this.scope(owner).view(),
+			variables: (owner) => this.scope(owner).variables(),
 		};
 		return this.#view;
 	}

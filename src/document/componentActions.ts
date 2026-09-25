@@ -6,11 +6,13 @@ import { writePatch } from "./layerData";
 import { NO_BASIS } from "./length";
 import { nodeOf } from "./path";
 import type { LayerId } from "./path";
-import type { Cell, Scope } from "./scope";
+import type { Scope } from "./scope";
 import { nodePatch, ownChildIds } from "./subtree";
 import type { LayerNode } from "./subtree";
-import { DOCUMENT_SCOPE, isReference, newVariableId } from "./variable";
-import type { Assignments, Variable, VariableValue } from "./variable";
+import { isLiteral, remapValue } from "./value";
+import type { Remap, VariableValue } from "./value";
+import { DOCUMENT_SCOPE, newVariableId } from "./variable";
+import type { Assignments, Variable } from "./variable";
 
 const DEFAULT_NAME = "Component";
 
@@ -42,16 +44,6 @@ export function makeComponent(doc: DesignDocument, id: LayerId): string | null {
 	return component;
 }
 
-type Remap = (variable: string) => string | null;
-
-function remapValue(value: VariableValue, remap: Remap): VariableValue | null {
-	if (!isReference(value)) {
-		return value;
-	}
-	const target = remap(value.var);
-	return target === null ? null : { var: target };
-}
-
 function remapAssignments(
 	props: Assignments,
 	remap: Remap,
@@ -61,11 +53,7 @@ function remapAssignments(
 	for (const [key, value] of Object.entries(props)) {
 		const held = remapValue(value, remap);
 		const literal = values[key];
-		const kept =
-			held ??
-			(typeof literal === "string" || typeof literal === "number" || typeof literal === "boolean"
-				? literal
-				: null);
+		const kept = held ?? (isLiteral(literal) ? literal : null);
 		if (kept !== null) {
 			next[remap(key) ?? key] = kept;
 		}
@@ -75,9 +63,9 @@ function remapAssignments(
 
 function remapNode(node: LayerNode, remap: Remap): LayerNode {
 	const bindings = Object.fromEntries(
-		Object.entries(node.bindings).flatMap(([key, variable]) => {
-			const target = remap(variable);
-			return target === null ? [] : [[key, target]];
+		Object.entries(node.bindings).flatMap(([key, bound]) => {
+			const held = remapValue(bound, remap);
+			return held === null || isLiteral(held) ? [] : [[key, held]];
 		}),
 	);
 	const content =
@@ -101,9 +89,6 @@ function placeDefinition(doc: DesignDocument, component: string, root: LayerNode
 function fillScope(scope: Scope, packed: Omit<PackedComponent, "name" | "body">): void {
 	for (const variable of packed.variables) {
 		scope.put(variable);
-	}
-	for (const [cell, value] of packed.cells) {
-		scope.setCell(cell, value);
 	}
 }
 
@@ -131,29 +116,17 @@ export function adoptComponents(
 function remapScope(
 	doc: DesignDocument,
 	component: string,
-): {
-	remap: Remap;
-	variables: readonly Variable[];
-	cells: readonly (readonly [Cell, VariableValue])[];
-} {
+): { remap: Remap; variables: readonly Variable[] } {
 	const scope = doc.components.scope(component);
 	const ids = new Map(scope.variables().map((variable) => [variable.id, newVariableId()]));
 	const remap: Remap = (variable) =>
 		ids.get(variable) ?? (doc.components.declared(variable)?.owner === component ? null : variable);
 	const variables = scope.variables().map((variable): Variable => {
-		const { name, type, options, prop } = variable;
+		const { name, type, options } = variable;
 		const initial = remapValue(variable.initial, remap) ?? variable.initial;
-		return { id: ids.get(variable.id) ?? variable.id, name, type, initial, options, prop };
+		return { id: ids.get(variable.id) ?? variable.id, name, type, initial, options };
 	});
-	const cells = scope.cells().flatMap(([cell, value]) => {
-		const choice = remap(cell.choice);
-		const target = remap(cell.variable);
-		const held = remapValue(value, remap);
-		return choice === null || target === null || held === null
-			? []
-			: [[{ ...cell, choice, variable: target }, held] as const];
-	});
-	return { remap, variables, cells };
+	return { remap, variables };
 }
 
 export function disconnect(doc: DesignDocument, id: LayerId): string | null {
@@ -165,10 +138,10 @@ export function disconnect(doc: DesignDocument, id: LayerId): string | null {
 		return null;
 	}
 	const component = newVariableId();
-	const { remap, variables, cells } = remapScope(doc, entry.id);
+	const { remap, variables } = remapScope(doc, entry.id);
 	const root = placeDefinition(doc, component, remapNode(definition, remap));
 	doc.components.addLayers(component, `${entry.name} copy`, root);
-	fillScope(doc.components.scope(component), { variables, cells });
+	fillScope(doc.components.scope(component), { variables });
 	const props = remapAssignments(content.props, remap, {});
 	doc.update(id, { content: { kind: "component", component, props } });
 	return component;

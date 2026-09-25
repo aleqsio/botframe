@@ -6,8 +6,9 @@ import { NO_CONTENT } from "./layer";
 import type { ComponentLink, LayerContent, LayerPatch } from "./layer";
 import { readString } from "./read";
 import type { FieldSource } from "./read";
-import { isReference, valueOf } from "./variable";
-import type { Assignments, VariableValue } from "./variable";
+import { storedValue, valueOf } from "./value";
+import type { VariableValue } from "./value";
+import type { Assignments } from "./variable";
 
 const COMPONENT = "component";
 const PROPS = "props";
@@ -49,10 +50,6 @@ export function readBindings(data: FieldSource): Bindings {
 	return bindingsOf(jsonOf(data.get(BINDINGS)));
 }
 
-function stored(value: VariableValue): unknown {
-	return isReference(value) ? { var: value.var } : value;
-}
-
 function writeEntries(map: LoroMap, entries: Readonly<Record<string, unknown>>): void {
 	for (const [key, value] of Object.entries(entries)) {
 		if (value === null) {
@@ -66,7 +63,7 @@ function writeEntries(map: LoroMap, entries: Readonly<Record<string, unknown>>):
 function writeProps(data: LoroMap, props: Readonly<Record<string, VariableValue | null>>): void {
 	const entries: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(props)) {
-		entries[key] = value === null ? null : stored(value);
+		entries[key] = value === null ? null : storedValue(value);
 	}
 	writeEntries(data.ensureMergeableMap(PROPS), entries);
 }
@@ -88,7 +85,11 @@ function writeContent(data: LoroMap, content: ComponentLink | null): void {
 }
 
 function writeBindings(data: LoroMap, bindings: BindingsPatch): void {
-	writeEntries(data.ensureMergeableMap(BINDINGS), bindings);
+	const entries: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(bindings)) {
+		entries[key] = value === null ? null : storedValue(value);
+	}
+	writeEntries(data.ensureMergeableMap(BINDINGS), entries);
 }
 
 export function writeLinks(data: LoroMap, links: Links): void {

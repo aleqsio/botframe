@@ -57,8 +57,8 @@ function secondCopy({ doc, frame }: Scene): LayerId {
 	return copy;
 }
 
-function variable(held: Omit<Variable, "options" | "prop"> & Partial<Variable>): Variable {
-	return { options: [], prop: true, ...held };
+function variable(held: Omit<Variable, "options"> & Partial<Variable>): Variable {
+	return { options: [], ...held };
 }
 
 describe("make component", () => {
@@ -138,7 +138,7 @@ describe("synced copies", () => {
 });
 
 describe("variables in copies", () => {
-	it("resolves a bound field from the prop of each copy and from the table of a choice", () => {
+	it("resolves a field bound to a condition on a prop of each copy", () => {
 		const held = scene();
 		const { component, doc, frame } = held;
 		const other = secondCopy(held);
@@ -152,9 +152,8 @@ describe("variables in copies", () => {
 				options: ["calm", "alarm"],
 			}),
 		);
-		scope.put(variable({ id: "bg", name: "bg", type: "color", initial: "#dddddd", prop: false }));
-		scope.setCell({ choice: "tone", option: "alarm", variable: "bg" }, "#ff0000");
-		doc.update(childOf(doc, frame), { bindings: { fill: "bg" } });
+		const fill = { when: [{ test: "tone", is: "alarm", result: "#ff0000" }], else: "#dddddd" };
+		doc.update(childOf(doc, frame), { bindings: { fill } });
 		doc.update(other, { props: { tone: "alarm" } });
 		doc.commit("bind");
 
@@ -162,7 +161,7 @@ describe("variables in copies", () => {
 		expect(doc.layer(childOf(doc, other))?.fill).toBe("#ff0000");
 	});
 
-	it("switches a document mode inside a copy that assigns it", () => {
+	it("switches a document variable whose default is a condition on a mode", () => {
 		const held = scene();
 		const { doc, frame } = held;
 		const other = secondCopy(held);
@@ -174,22 +173,22 @@ describe("variables in copies", () => {
 				type: "choice",
 				initial: "light",
 				options: ["light", "dark"],
-				prop: false,
 			}),
 		);
 		scope.put(
-			variable({ id: "surface", name: "surface", type: "color", initial: "#ffffff", prop: false }),
+			variable({
+				id: "surface",
+				name: "surface",
+				type: "color",
+				initial: { when: [{ test: "mode", is: "dark", result: "#000000" }], else: "#ffffff" },
+			}),
 		);
-		scope.setCell({ choice: "mode", option: "dark", variable: "surface" }, "#000000");
-		doc.update(childOf(doc, frame), { bindings: { fill: "surface" } });
+		doc.update(childOf(doc, frame), { bindings: { fill: { var: "surface" } } });
 		doc.update(other, { props: { mode: "dark" } });
 		doc.commit("theme");
 
 		expect(doc.layer(childOf(doc, frame))?.fill).toBe("#ffffff");
 		expect(doc.layer(childOf(doc, other))?.fill).toBe("#000000");
-		expect(doc.tree.trace(childOf(doc, other), "surface", false)?.origin).toMatchObject({
-			kind: "table",
-		});
 	});
 
 	it("removes a binding when a literal is written to the field", () => {
@@ -197,7 +196,7 @@ describe("variables in copies", () => {
 		doc.components
 			.scope(DOCUMENT_SCOPE)
 			.put(variable({ id: "c", name: "c", type: "color", initial: "#abcdef" }));
-		doc.update(frame, { bindings: { fill: "c" } });
+		doc.update(frame, { bindings: { fill: { var: "c" } } });
 
 		expect(doc.layer(frame)?.fill).toBe("#abcdef");
 		doc.update(frame, { fill: "#123456" });

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { resolveVariable, traceVariable } from "./resolve";
+import { resolveValue, resolveVariable } from "./resolve";
 import type { Declared, ResolveSource } from "./resolve";
+import type { Condition, VariableValue } from "./value";
 import { DOCUMENT_SCOPE } from "./variable";
-import type { Variable, VariableValue } from "./variable";
+import type { Variable } from "./variable";
 
 type Owned = Variable & { owner: string };
 
 interface World {
 	variables: readonly Owned[];
 	copies: Readonly<Record<string, { component: string; props: Record<string, VariableValue> }>>;
-	cells: Readonly<Record<string, VariableValue>>;
 }
 
 function variable(
@@ -17,7 +17,11 @@ function variable(
 	owner: string,
 	held: Pick<Variable, "type" | "initial"> & { options?: readonly string[] },
 ): Owned {
-	return { id, name: id, options: [], prop: true, owner, ...held };
+	return { id, name: id, options: [], owner, ...held };
+}
+
+function when(test: string, is: string, result: string, otherwise: string): Condition {
+	return { when: [{ test, is, result }], else: otherwise };
 }
 
 function sourceOf(world: World): ResolveSource {
@@ -29,13 +33,6 @@ function sourceOf(world: World): ResolveSource {
 		declared,
 		assigned: (copy, id) => world.copies[copy]?.props[id],
 		componentOf: (copy) => world.copies[copy]?.component ?? null,
-		cell: (owner, choice, option, id) => world.cells[[owner, choice, option, id].join("/")],
-		drivingChoice: (owner, id) => {
-			const key = Object.keys(world.cells).find(
-				(cell) => cell.startsWith(`${owner}/`) && cell.endsWith(`/${id}`),
-			);
-			return key?.split("/")[1] ?? null;
-		},
 	};
 }
 
@@ -44,13 +41,19 @@ const MODE = variable("mode", DOCUMENT_SCOPE, {
 	initial: "light",
 	options: ["light", "dark"],
 });
-const SURFACE = variable("surface", DOCUMENT_SCOPE, { type: "color", initial: "#ffffff" });
+const SURFACE = variable("surface", DOCUMENT_SCOPE, {
+	type: "color",
+	initial: when("mode", "dark", "#111111", "#ffffff"),
+});
 const TONE = variable("tone", "card", {
 	type: "choice",
 	initial: "neutral",
 	options: ["neutral", "danger"],
 });
-const BACKGROUND = variable("bg", "card", { type: "color", initial: "#eeeeee" });
+const BACKGROUND = variable("bg", "card", {
+	type: "color",
+	initial: when("tone", "danger", "#ff0000", "#eeeeee"),
+});
 const VARIANT = variable("variant", "button", {
 	type: "choice",
 	initial: "plain",
@@ -63,31 +66,32 @@ const WORLD: World = {
 		card: { component: "card", props: { tone: "danger" } },
 		plainCard: { component: "card", props: {} },
 		button: { component: "button", props: { variant: { var: "tone" } } },
+		mapped: { component: "button", props: { variant: when("tone", "danger", "danger", "plain") } },
 		screen: { component: "screen", props: { mode: "dark" } },
-	},
-	cells: {
-		"document/mode/dark/surface": "#111111",
-		"card/tone/danger/bg": "#ff0000",
 	},
 };
 
 describe("resolveVariable", () => {
-	it("gives the initial value when no copy assigns the variable", () => {
+	it("gives the default when no copy sets the variable", () => {
 		expect(resolveVariable(sourceOf(WORLD), "surface", [])).toBe("#ffffff");
 		expect(resolveVariable(sourceOf(WORLD), "tone", ["plainCard"])).toBe("neutral");
 	});
 
-	it("takes the value from the table of the option that the copy picked", () => {
+	it("resolves a default that is a condition on a prop of the same copy", () => {
 		expect(resolveVariable(sourceOf(WORLD), "bg", ["card"])).toBe("#ff0000");
 		expect(resolveVariable(sourceOf(WORLD), "bg", ["plainCard"])).toBe("#eeeeee");
 	});
 
-	it("follows a prop that references a variable of the parent component", () => {
-		expect(resolveVariable(sourceOf(WORLD), "variant", ["button", "card"])).toBe("danger");
-		expect(resolveVariable(sourceOf(WORLD), "variant", ["button", "plainCard"])).toBe("neutral");
+	it("follows a prop that uses a variable or a condition of the outer component", () => {
+		const source = sourceOf(WORLD);
+
+		expect(resolveVariable(source, "variant", ["button", "card"])).toBe("danger");
+		expect(resolveVariable(source, "variant", ["button", "plainCard"])).toBe("neutral");
+		expect(resolveVariable(source, "variant", ["mapped", "card"])).toBe("danger");
+		expect(resolveVariable(source, "variant", ["mapped", "plainCard"])).toBe("plain");
 	});
 
-	it("switches a document mode for the layers inside a copy that assigns it", () => {
+	it("switches a document variable for the layers inside a copy that sets its mode", () => {
 		expect(resolveVariable(sourceOf(WORLD), "surface", ["card", "screen"])).toBe("#111111");
 		expect(resolveVariable(sourceOf(WORLD), "surface", ["card"])).toBe("#ffffff");
 	});
@@ -101,41 +105,33 @@ describe("resolveVariable", () => {
 		expect(resolveVariable(sourceOf(world), "tone", ["plainCard", "outer"])).toBe("neutral");
 	});
 
-	it("gives null for a loop of references and for a value of the wrong type", () => {
+	it("gives the default for a value of the wrong type, and null for a loop", () => {
 		const world: World = {
-			...WORLD,
 			variables: [
 				variable("a", DOCUMENT_SCOPE, { type: "number", initial: { var: "b" } }),
 				variable("b", DOCUMENT_SCOPE, { type: "number", initial: { var: "a" } }),
-				variable("c", DOCUMENT_SCOPE, { type: "number", initial: { var: "surface" } }),
-				SURFACE,
+				variable("c", "card", { type: "number", initial: 3 }),
 			],
+			copies: { card: { component: "card", props: { c: "three" } } },
 		};
 
 		expect(resolveVariable(sourceOf(world), "a", [])).toBeNull();
-		expect(resolveVariable(sourceOf(world), "c", [])).toBeNull();
+		expect(resolveVariable(sourceOf(world), "c", ["card"])).toBe(3);
 		expect(resolveVariable(sourceOf(world), "gone", [])).toBeNull();
 	});
+});
 
-	it("tells where a value comes from: a copy, a table cell, or a default", () => {
-		const source = sourceOf(WORLD);
+describe("resolveValue", () => {
+	it("takes the first case that matches, and else when no case matches", () => {
+		const value: Condition = {
+			when: [
+				{ test: "tone", is: "danger", result: { var: "surface" } },
+				{ test: "tone", is: "danger", result: "#000000" },
+			],
+			else: "#00ff00",
+		};
 
-		expect(traceVariable(source, "variant", ["button", "card"])?.origin).toEqual({
-			kind: "assigned",
-			copy: "card",
-			variable: "tone",
-		});
-		expect(traceVariable(source, "bg", ["card"])?.origin).toEqual({
-			kind: "table",
-			owner: "card",
-			choice: "tone",
-			option: "danger",
-			variable: "bg",
-		});
-		expect(traceVariable(source, "surface", [])?.origin).toEqual({
-			kind: "initial",
-			owner: DOCUMENT_SCOPE,
-			variable: "surface",
-		});
+		expect(resolveValue(sourceOf(WORLD), value, ["card", "screen"])).toBe("#111111");
+		expect(resolveValue(sourceOf(WORLD), value, ["plainCard"])).toBe("#00ff00");
 	});
 });

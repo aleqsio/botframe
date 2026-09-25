@@ -1,16 +1,10 @@
 import { bagOf, listOf } from "./bag";
+import { isLiteral, storedValue, valueOf } from "./value";
+import type { Literal, VariableValue } from "./value";
 
 export const VARIABLE_TYPES = ["color", "length", "number", "text", "boolean", "choice"] as const;
 
 export type VariableType = (typeof VARIABLE_TYPES)[number];
-
-export type Literal = string | number | boolean;
-
-export interface Reference {
-	var: string;
-}
-
-export type VariableValue = Literal | Reference;
 
 export interface Variable {
 	id: string;
@@ -18,7 +12,6 @@ export interface Variable {
 	type: VariableType;
 	initial: VariableValue;
 	options: readonly string[];
-	prop: boolean;
 }
 
 export type Assignments = Readonly<Record<string, VariableValue>>;
@@ -27,23 +20,6 @@ export const DOCUMENT_SCOPE = "document";
 
 function isVariableType(value: unknown): value is VariableType {
 	return VARIABLE_TYPES.some((type) => type === value);
-}
-
-export function isReference(value: VariableValue): value is Reference {
-	return typeof value === "object";
-}
-
-function isLiteral(value: unknown): value is Literal {
-	const kind = typeof value;
-	return kind === "string" || kind === "boolean" || (kind === "number" && Number.isFinite(value));
-}
-
-export function valueOf(value: unknown): VariableValue | null {
-	if (isLiteral(value)) {
-		return value;
-	}
-	const held = bagOf(value)["var"];
-	return typeof held === "string" && held !== "" ? { var: held } : null;
 }
 
 const LITERAL_KIND: Readonly<Record<VariableType, "string" | "number" | "boolean">> = {
@@ -85,7 +61,7 @@ function heldInitial(
 	value: unknown,
 ): VariableValue {
 	const held = valueOf(value);
-	if (held !== null && (isReference(held) || fitsType(type, options, held))) {
+	if (held !== null && (!isLiteral(held) || fitsType(type, options, held))) {
 		return held;
 	}
 	return emptyValue(type, options);
@@ -101,8 +77,12 @@ export function variableOf(id: string, value: unknown): Variable | null {
 	if (type === "choice" && options.length === 0) {
 		return null;
 	}
-	const initial = heldInitial(type, options, bag["initial"]);
-	return { id, name, type, initial, options, prop: bag["prop"] === true };
+	return { id, name, type, initial: heldInitial(type, options, bag["initial"]), options };
+}
+
+export function storedVariable(variable: Variable): Record<string, unknown> {
+	const { name, type, initial, options } = variable;
+	return { name, type, initial: storedValue(initial), options: [...options] };
 }
 
 export function newVariableId(): string {
