@@ -26,53 +26,61 @@ async function makeComponent(page: Page, origin: Point): Promise<Locator> {
 	return inspector;
 }
 
-async function addToneTable(inspector: Locator): Promise<void> {
-	const add = inspector.getByLabel("Add a variable", { exact: true });
-	await add.selectOption("choice");
-	await add.selectOption("color");
-	const options = inspector.getByLabel("Choice 1 options", { exact: true });
-	await options.fill("calm, alarm");
-	await options.press("Enter");
-	await inspector
-		.getByLabel("Add a variable to the Choice 1 table", { exact: true })
-		.selectOption({ label: "Color 1" });
-	await inspector.getByRole("combobox", { name: "Values for" }).selectOption("alarm");
-	const cell = inspector.getByLabel("Color 1 for alarm", { exact: true });
-	await cell.fill("#ff3b30");
-	await cell.press("Enter");
+async function addSwitchProp(inspector: Locator): Promise<void> {
+	await inspector.locator(".new-variable").getByRole("button", { name: "Switch" }).click();
+	await expect(inspector.getByLabel("switch 1 name", { exact: true })).toBeVisible();
 }
 
-async function bindDotFill(page: Page, origin: Point): Promise<void> {
+async function fillWhenSwitchIsOn(page: Page, origin: Point): Promise<void> {
 	await page.mouse.dblclick(origin.x + DOT_CENTER.x, origin.y + DOT_CENTER.y);
 	await clickAt(page, origin, DOT_CENTER);
 	await expect(page.locator(".layer[data-selected]")).toHaveAttribute("data-layer-id", /~/u);
-	await inspectorOf(page).getByLabel("Fill variable", { exact: true }).click();
-	await page
-		.getByRole("button", { name: /Color 1/u })
-		.first()
+	await inspectorOf(page)
+		.getByRole("button", { name: "Fill: use a variable or a condition", exact: true })
 		.click();
+	await page.getByRole("button", { name: "Add a condition" }).click();
+	const result = page.getByLabel("Case 1 result", { exact: true });
+	await result.fill("#ff3b30");
+	await result.press("Enter");
+	await page.keyboard.press("Escape");
 }
 
-test("a frame becomes a component whose copies stay in sync, and a prop on one copy drives a table value inside it", async ({
+test("a frame becomes a component whose copies stay in sync, and a prop on one copy drives a condition inside it", async ({
 	page,
 }) => {
 	const { origin } = await openRenderer(page);
 	const inspector = await makeComponent(page, origin);
-	await addToneTable(inspector);
-	await bindDotFill(page, origin);
-	await expect(inspector).toContainText("Color 1");
+	await addSwitchProp(inspector);
+	await fillWhenSwitchIsOn(page, origin);
+	await expect(inspector.locator(".bound-line")).toContainText("when switch 1 is on");
 
 	await clickAt(page, origin, EMPTY);
 	await clickAt(page, origin, FRAME_EDGE);
 	await page.keyboard.press("ControlOrMeta+d");
 	await expect(inspector.locator(".component-heading")).toHaveText("Frame 1 · 2 copies");
-	await inspector.getByRole("combobox", { name: "Choice 1", exact: true }).selectOption("alarm");
+	await inspector.getByRole("checkbox", { name: "switch 1", exact: true }).check();
 
 	const dots = page.locator('.layer[data-layer-id*="~"]');
 	await expect(dots).toHaveCount(2);
 	await expect(page.locator(".layer[data-selected] .layer")).toHaveCSS("background-color", ALARM);
 	await expect(dots.nth(0)).not.toHaveCSS("background-color", ALARM);
-	await expect(inspector).toContainText("from Choice 1: alarm");
+});
+
+test("a field makes a document variable from its value and shows it as a chip", async ({
+	page,
+}) => {
+	const { origin } = await openRenderer(page);
+	await clickAt(page, origin, { x: 540, y: 340 });
+	const inspector = inspectorOf(page);
+	await inspector
+		.getByRole("button", { name: "Fill: use a variable or a condition", exact: true })
+		.click();
+	await page.getByRole("button", { name: "Make a document variable" }).click();
+
+	await expect(inspector.locator(".variable-chip")).toHaveText("fill");
+	await expect(
+		inspector.getByRole("button", { name: "Fill: change the variable", exact: true }),
+	).toBeVisible();
 });
 
 for (const scheme of SCHEMES) {
@@ -80,10 +88,10 @@ for (const scheme of SCHEMES) {
 		await page.emulateMedia({ colorScheme: scheme });
 		const { origin } = await openRenderer(page);
 		const inspector = await makeComponent(page, origin);
-		await addToneTable(inspector);
+		await addSwitchProp(inspector);
 
 		const overflow = await inspector
-			.locator(".variable-row, .choice-table, .component-actions")
+			.locator(".variable-row, .prop-row, .value-control, .component-actions, .new-variable")
 			.evaluateAll((rows) => rows.filter((row) => row.scrollWidth > row.clientWidth).length);
 
 		expect(overflow).toBe(0);

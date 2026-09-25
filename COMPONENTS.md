@@ -7,7 +7,7 @@ A component has one of two bodies:
 - **HTML.** A piece of HTML and CSS from a coding project. The model does not read the markup (STACK.md).
 - **Layers.** A group of layers that the user makes from a frame. The layers are real layers in the document.
 
-Each component has variables. A prop is a variable that a copy can set. The two bodies use one system of variables, so there are not two systems.
+Each component has props. A prop is a variable of the component, and each copy can set it. The two bodies use one system of variables, so there are not two systems.
 
 ## Rules
 
@@ -19,25 +19,40 @@ Each component has variables. A prop is a variable that a copy can set. The two 
 
 ## Variables
 
-- A variable has an id, a name, a type, and a first value. The types are color, length, number, text, boolean, and choice. A choice has a list of options.
-- A variable belongs to a scope. The scopes are the document and each component. A layer has no variables.
-- A value is a literal or a reference to a different variable: `{ var: id }`.
-- A variable of a component is a **prop** when the Prop switch is on. The inspector shows each prop of a copy in "Props · this copy".
-- A choice has a **table**. The table gives a value for each option and each variable that the choice drives. When a copy sets the choice to `alarm`, each driven variable takes its `alarm` value.
-- A field of a layer can **bind** to a variable. The bound keys are fill, x, y, width, height, rotation, corner radius, corner smoothing, and clip. A literal value in the field removes the binding.
-- A binding holds the id of the variable, not the name. A rename changes no binding.
+- A variable has an id, a name, a type, and a default. The types are color, length, number, text, boolean, and choice. A choice has a list of options.
+- A variable belongs to a scope. The scopes are the document and each component. A variable of a component is a **prop**. A document variable is a token. A layer has no variables.
+- Each value is one of three kinds. The same kind of value is used for a layer field, for the default of a variable, and for a prop of a copy:
+
+| Kind | Stored as | Example |
+| --- | --- | --- |
+| Value | a literal | `#ff3b30` |
+| Variable | `{ var: id }` | the `accent` prop |
+| Condition | `{ when: [{ test, is, result }], else }` | when `status` is `failed` → `danger`, else `#1f7a4d` |
+
+- A condition tests one variable for one value in each case. The first case that matches gives its result. The `else` result is used when no case matches. A result is a value or a variable.
+- A field of a layer can **bind** to a variable or a condition. The bound keys are fill, x, y, width, height, rotation, corner radius, corner smoothing, and clip. A plain value in the field removes the binding.
+- A binding holds the id of each variable, not the name. A rename changes no binding.
 
 ### Resolution
 
 The model resolves a variable from the innermost copy out, as a context:
 
-1. A copy that sets the variable gives the value. A reference in that value resolves from the next copy out.
-2. At a copy of the component that declares the variable, the table of its driving choice gives the value. Then the first value.
-3. A document variable uses the document tables and the first value.
+1. A copy that sets the variable gives the value. A variable or a condition in that value resolves from the next copy out.
+2. At a copy of the component that declares the variable, the default gives the value. The default resolves at that copy, so a condition in a default can test a different prop of the same copy.
+3. A document variable resolves its default from the innermost copy. So a copy that sets a document `mode` changes each token that tests `mode` inside it.
 
-A component variable is visible only inside its component. The resolver stops at a depth of 32 and at a value of the wrong type. The inspector shows where each value comes from, for example `#ff3b30 · from Choice 1: alarm · Frame 1`. A click on the source selects that copy.
+A prop is visible only inside its component. The resolver stops at a depth of 32. A value of the wrong type gives the default.
 
 A place key (x, y, width, height, rotation) of a copy resolves from the copy above it, because the copy sets its own place.
+
+### Inspector
+
+- Each field that can bind has a small button at its right end. A blue hexagon means a plain value. A purple hexagon means a variable. A purple branch means a condition.
+- A click on the button opens a menu. The menu has a search for variables of the type of the field: first the props of the components around the layer, then the document variables. It also has "Add a condition", "Make a prop of …" or "Make a document variable", and "Use a plain value".
+- A field with a variable shows a chip and the value now. A field with a condition shows the cases on one line. A click on the branch opens the editor of the cases.
+- A copy shows "Props · this copy". A prop that the copy does not set is dim and shows the default. The reset button removes the value of the copy.
+- "Props · all copies" gives the name, the type, the options, and the default of each prop, and the buttons that add a prop.
+- The page shows "Document variables" in the same form.
 
 ## Layer components
 
@@ -49,7 +64,7 @@ A place key (x, y, width, height, rotation) of a copy resolves from the copy abo
 | Duplicate | A new copy of the same component. |
 | Disconnect | The copy gets a new component with its own definition and variables. |
 | Duplicate as new | Duplicate, then Disconnect. |
-| Make frame | The copy becomes a frame with real children. Bindings to component variables become literals. |
+| Make frame | The copy becomes a frame with real children. A binding that uses a prop becomes its value. |
 
 When the last copy goes away, the component list does not show the component. Undo gives the copy back.
 
@@ -61,9 +76,10 @@ When the last copy goes away, the component list does not show the component. Un
 - The id of a layer inside a copy is a path: `copy~copy~node`. Two copies of one component give two ids for one node.
 - A copy reads its place keys from its own node, and each other key from the definition root. A write goes to the same place.
 - A move into or out of a copy is refused, so each id stays the same. A copy of a component inside its own definition is refused.
-- A scope is a mergeable map with `variables` and `tables`. A table cell key is `[choice, option, variable]` as JSON.
+- A scope is a mergeable map with `variables`. Each variable is a JSON value: `{ name, type, initial, options }`.
+- A copy stores its props in the mergeable map `props`. A layer stores its bindings in the mergeable map `bindings`. Two peers that change different props or different fields merge with no conflict.
 - Sources and imports commit with an origin that the undo manager skips.
-- Copy puts each used component into the clipboard envelope, with its body, its variables, and its tables. Paste into a different document adds them.
+- Copy puts each used component into the clipboard envelope, with its body and its variables. Paste into a different document adds them.
 
 ## HTML components
 
@@ -108,7 +124,7 @@ An import skips a component that has no HTML file, a section that is not closed,
 ### Document model
 
 - `sources` is a Loro map from the SHA-256 address of a source to the source: `{ name, html, css, props }`.
-- An import makes a component of kind `html` for each name, or points the existing component at the new address. Each prop of the source becomes a component variable with the Prop switch on. The inspector does not let the user edit these variables.
+- An import makes a component of kind `html` for each name, or points the existing component at the new address. Each prop of the source becomes a prop of the component. The inspector does not let the user rename or remove these props.
 - Paste checks that the address of each source is its hash before the document adopts it.
 - A copy stores only the props that a person set. The resolver gives the value of each other prop.
 - The sources are small text, and the CRDT sends them to each peer. They do not go into the asset store.
@@ -129,15 +145,15 @@ An import skips a component that has no HTML file, a section that is not closed,
 - The Components card shows each component and its number of copies.
 - The inspector shows these sections:
   - For a frame: "Make component".
-  - For a copy: the actions, "Variables · all copies", and "Props · this copy".
-  - For each layer: "Variables in fields". Each row binds one field.
+  - For a copy: the actions, "Props · this copy", and "Props · all copies".
   - For the page: "Document variables".
+- Each field that can bind has its own button. The Inspector section above tells how it works.
 
 ## Next steps
 
 Each step is one pull request.
 
-1. **A binding control on each field.** Today one section binds each field. Put the variable button in the field.
+1. **More tests in a condition.** A case tests one variable for one value. Add "is not", "and", and ranges of numbers when a design needs them.
 2. **Slots.** A template writes `{{> body}}` where it takes layers. The slot becomes `<slot name="body">`. A child layer of the instance gets `slot="body"`. The layout system already places a flow child, and the instance already hugs. The unnamed `<slot>` that version 1 writes takes a child with no slot, so no child is lost.
 3. **Subcomponents and tokens.** A template writes `{{> Icon}}` to use an other component. The source lists the components and the token sheet that it uses. Copy and paste carry that list. One parsed stylesheet for each address goes into each shadow root with `adoptedStyleSheets`.
 4. **React components.** A Vite plugin turns each component into the same format, so the editor never runs project code. It renders each text prop as its `{{name}}` tag. It renders the component once for each set of boolean and choice values, and joins the results into sections. It stops the build when a component uses state, an effect, a ref, or a context, or has too many sets to render.
