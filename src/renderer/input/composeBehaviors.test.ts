@@ -8,14 +8,14 @@ import { pointAt, targetOf } from "./toolFixtures";
 
 const PRESS = { x: 10, y: 20 };
 const RELEASE = { x: 30, y: 40 };
-const SE_ZONE = { mode: "resize", handle: "se" };
+const SE_ZONE = "resize-nwse";
 const LAYER = "7@7" as LayerId;
 
 function recorder(name: string, claims: boolean, log: string[]): ToolBehavior {
 	return {
 		hover() {
 			log.push(`${name}.hover`);
-			return claims ? { mode: "resize", handle: "se" } : null;
+			return claims ? SE_ZONE : null;
 		},
 		highlight() {
 			log.push(`${name}.highlight`);

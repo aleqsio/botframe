@@ -33,7 +33,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(handles).toHaveCount(4);
 
 	await window.mouse.move(at(origin, SE_CORNER).x, at(origin, SE_CORNER).y);
-	await expect(stage).toHaveAttribute("data-zone", "resize-se");
+	await expect(stage).toHaveAttribute("data-zone", "resize-nwse");
 	await expect(stage).toHaveCSS("cursor", "nwse-resize");
 
 	await dragTo(SE_CORNER, GROWN_SE);
@@ -41,7 +41,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /height: 200px/u);
 
 	await window.mouse.move(at(origin, WEST_SIDE).x, at(origin, WEST_SIDE).y);
-	await expect(stage).toHaveAttribute("data-zone", "resize-w");
+	await expect(stage).toHaveAttribute("data-zone", "resize-ew");
 	await expect(stage).toHaveCSS("cursor", "ew-resize");
 
 	await window.keyboard.down("Shift");
@@ -57,7 +57,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /height: 250px/u);
 
 	await window.mouse.move(at(origin, TURN_FROM).x, at(origin, TURN_FROM).y);
-	await expect(stage).toHaveAttribute("data-zone", "rotate-nw");
+	await expect(stage).toHaveAttribute("data-zone", "rotate");
 
 	await dragTo(TURN_FROM, TURN_TO);
 	await expect(layer).toHaveAttribute(

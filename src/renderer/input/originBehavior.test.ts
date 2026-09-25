@@ -28,7 +28,9 @@ function layerOf(target: PointerTarget, id: LayerId): Layer {
 }
 
 function hoverKey(target: PointerTarget, x: number, y: number): string | undefined {
-	return behaviorFor("select").hover?.(target, pointAt(target.user.camera.get(), { x, y }))?.mode;
+	return (
+		behaviorFor("select").hover?.(target, pointAt(target.user.camera.get(), { x, y })) ?? undefined
+	);
 }
 
 describe("the origin of one selected layer", () => {

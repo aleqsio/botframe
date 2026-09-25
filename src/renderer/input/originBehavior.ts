@@ -16,8 +16,6 @@ import {
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizePatch } from "./transform";
 
-const ORIGIN_ZONE = { mode: "origin" } as const;
-
 type PivotGrip = { kind: "layer"; start: Layer } | ({ kind: "group" } & PivotGroup);
 
 function layerGrip(target: PointerTarget, id: LayerId, canvas: Point): PivotGrip | null {
@@ -83,7 +81,7 @@ function applyGrip(
 export function createOriginBehavior(): ToolBehavior {
 	return {
 		hover(target, point) {
-			return gripAt(target, point.canvas) === null ? null : ORIGIN_ZONE;
+			return gripAt(target, point.canvas) === null ? null : "origin";
 		},
 		...gripDrag({
 			gripAt,

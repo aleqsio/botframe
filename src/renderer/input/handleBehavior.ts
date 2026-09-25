@@ -1,5 +1,7 @@
 import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
+import { cursorKeyOf } from "./cursor";
+import type { CursorKey } from "./cursor";
 import { gripDrag } from "./gripDrag";
 import { zoneAt } from "./handles";
 import type { HandleZone } from "./handles";
@@ -7,7 +9,7 @@ import { COMMIT_MESSAGES } from "./layerCommand";
 import type { Modifiers } from "./modifiers";
 import { resizeGripOf, snappedResize } from "./resizeSnap";
 import type { ResizeGrip } from "./resizeSnap";
-import { parentDisplayOf, parentPointOf, soleLayer } from "./targetSpace";
+import { parentChainOf, parentDisplayOf, parentPointOf, soleLayer } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 import { resizePatch, rotatedDegrees } from "./transform";
 
@@ -30,6 +32,14 @@ function aimAt(target: PointerTarget, canvas: Point): Aim | null {
 
 function zoneUnder(target: PointerTarget, canvas: Point): HandleZone | null {
 	return aimAt(target, canvas)?.zone ?? null;
+}
+
+function cursorUnder(target: PointerTarget, canvas: Point): CursorKey | null {
+	const aim = aimAt(target, canvas);
+	if (aim === null || aim.zone === null) {
+		return null;
+	}
+	return cursorKeyOf(aim.zone, [...parentChainOf(target, aim.layer.id), aim.layer]);
 }
 
 function heldLayerId(target: PointerTarget, point: StagePoint): LayerId | null {
@@ -64,7 +74,7 @@ function applyGrip(target: PointerTarget, grip: Grip, canvas: Point, modifiers: 
 export function createHandleBehavior(): ToolBehavior {
 	return {
 		hover(target, point) {
-			return zoneUnder(target, point.canvas);
+			return cursorUnder(target, point.canvas);
 		},
 		highlight: heldLayerId,
 		tap(target, point) {

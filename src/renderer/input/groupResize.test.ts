@@ -51,13 +51,11 @@ function layerOf(target: PointerTarget, id: LayerId): Layer {
 }
 
 function hoverAt(scene: GroupScene, x: number, y: number): string | null {
-	const zone = behaviorFor("select").hover?.(
+	const cursor = behaviorFor("select").hover?.(
 		scene.target,
 		pointAt(scene.target.user.camera.get(), { x, y }),
 	);
-	return zone === null || zone === undefined || zone.mode === "origin"
-		? null
-		: `${zone.mode}-${zone.handle}`;
+	return cursor === undefined || cursor === "origin" ? null : cursor;
 }
 
 describe("a resize of more than one layer", () => {
@@ -116,7 +114,7 @@ describe("a resize of more than one layer", () => {
 		const { box } = scene;
 
 		expect(hoverAt(scene, box.x + box.width, box.y + box.height / 2)).toBeNull();
-		expect(hoverAt(scene, box.x + box.width, box.y + box.height)).toBe("resize-se");
+		expect(hoverAt(scene, box.x + box.width, box.y + box.height)).toBe("resize-nwse");
 	});
 
 	it("gives no edge handle when a layer has a skew, because a scale on one axis changes the skew", () => {
@@ -130,7 +128,7 @@ describe("a resize of more than one layer", () => {
 	it("gives an edge handle when no layer has a turn", () => {
 		const scene = groupScene(0);
 
-		expect(hoverAt(scene, 120, 50)).toBe("resize-e");
+		expect(hoverAt(scene, 120, 50)).toBe("resize-ew");
 	});
 
 	it("writes one undo step for the whole selection", () => {

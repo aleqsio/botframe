@@ -4,7 +4,6 @@ import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
-import { zoneKey } from "./handles";
 import type { Modifiers } from "./modifiers";
 import { targetOf } from "./pointerTarget";
 import type { PointerTarget, ToolBehavior } from "./tool";
@@ -51,8 +50,7 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 
 	function trackHover(point: StagePoint): void {
 		const { behavior, target } = begin(NO_LAYERS);
-		const zone = behavior.hover?.(target, point) ?? null;
-		user.zone.set(zone === null ? null : zoneKey(zone));
+		user.zone.set(behavior.hover?.(target, point) ?? null);
 		user.highlight.set(behavior.highlight?.(target, point) ?? null);
 	}
 

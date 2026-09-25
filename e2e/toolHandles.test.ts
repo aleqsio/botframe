@@ -25,7 +25,7 @@ test("the rectangle tool takes the resize handles of the selected layer", async 
 	await expect(handles).toHaveCount(4);
 
 	await window.mouse.move(at(origin, SE_CORNER).x, at(origin, SE_CORNER).y);
-	await expect(stage).toHaveAttribute("data-zone", "resize-se");
+	await expect(stage).toHaveAttribute("data-zone", "resize-nwse");
 	await expect(stage).toHaveCSS("cursor", "nwse-resize");
 
 	await window.mouse.down();

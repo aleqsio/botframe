@@ -1,4 +1,5 @@
 import type { Point } from "../state/camera";
+import { cursorKeyOf } from "./cursor";
 import { gripDrag } from "./gripDrag";
 import { groupGripOf, groupResized, groupZoneAt, partOf } from "./groupResize";
 import type { BoxZone, GroupGrip, GroupPart } from "./groupResize";
@@ -84,7 +85,7 @@ export function createGroupHandleBehavior(): ToolBehavior {
 	return {
 		hover(target, point) {
 			const hold = holdAt(target, point.canvas);
-			return hold === null ? null : { mode: hold.kind, handle: hold.handle };
+			return hold === null ? null : cursorKeyOf({ mode: hold.kind, handle: hold.handle }, []);
 		},
 		highlight(target, point) {
 			return holdAt(target, point.canvas)?.parts[0]?.start.id ?? null;
