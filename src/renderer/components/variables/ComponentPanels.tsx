@@ -3,7 +3,6 @@ import type { DesignDocument } from "../../../document/document";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
 import { isFrame } from "../layerEntry";
-import { BindingsSection } from "./BindingsSection";
 import { PropsSection } from "./PropsSection";
 import { CopyActions, FrameSection } from "./ComponentActions";
 import type { PanelProps } from "./ComponentActions";
@@ -24,8 +23,8 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 				</span>
 				{entry?.body.kind === "layers" ? <CopyActions {...props} /> : null}
 			</div>
-			<VariablesSection doc={doc} owner={component} title="Variables · all copies" />
 			<PropsSection doc={doc} layer={props.layer} />
+			<VariablesSection doc={doc} owner={component} title="Props · all copies" />
 		</>
 	);
 }
@@ -37,18 +36,6 @@ export function LayerPanels(props: PanelProps): ReactElement | null {
 		return <CopySection {...props} component={content.component} />;
 	}
 	return isFrame(layer) ? <FrameSection {...props} /> : null;
-}
-
-export function FieldPanels({ doc, layer, user }: PanelProps): ReactElement {
-	return (
-		<BindingsSection
-			doc={doc}
-			layer={layer}
-			onSelect={(id) => {
-				user.selection.set([id]);
-			}}
-		/>
-	);
 }
 
 export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {

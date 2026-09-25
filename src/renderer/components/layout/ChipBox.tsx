@@ -9,6 +9,8 @@ import { UnitMenu } from "./UnitMenu";
 
 export interface ChipBoxProps {
 	children?: ReactNode | undefined;
+	after?: ReactNode | undefined;
+	replace?: ReactNode | undefined;
 	disabled?: boolean | undefined;
 	field: LayerField;
 	value: number;
@@ -52,22 +54,32 @@ function ChipUnit({ disabled, field, onCommit, onPatch }: ChipBoxProps): ReactEl
 	);
 }
 
+function chipClass({ disabled = false, replace }: ChipBoxProps): string {
+	const off = disabled ? " layout-chip-off" : "";
+	return replace === undefined ? `number-chip${off}` : `number-chip bound-chip${off}`;
+}
+
 export function ChipBox(props: ChipBoxProps): ReactElement {
 	const { children, disabled = false, field, value } = props;
 
 	return (
-		<div className={disabled ? "number-chip layout-chip-off" : "number-chip"}>
+		<div className={chipClass(props)}>
 			{children}
-			<DraftInput
-				disabled={disabled}
-				inputMode="numeric"
-				label={`${field.label} value`}
-				onCommit={(text) => {
-					commitText(props, text);
-				}}
-				value={formatNumber(value)}
-			/>
-			<ChipUnit {...props} />
+			{props.replace ?? (
+				<>
+					<DraftInput
+						disabled={disabled}
+						inputMode="numeric"
+						label={`${field.label} value`}
+						onCommit={(text) => {
+							commitText(props, text);
+						}}
+						value={formatNumber(value)}
+					/>
+					<ChipUnit {...props} />
+				</>
+			)}
+			{props.after}
 		</div>
 	);
 }

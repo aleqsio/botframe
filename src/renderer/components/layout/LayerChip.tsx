@@ -2,8 +2,27 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import type { LayerField } from "../layerFields";
+import { BindableChip } from "../variables/BindableChip";
 import { ChipBox } from "./ChipBox";
+import type { ChipBoxProps } from "./ChipBox";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
+
+export function FieldChip({
+	box,
+	doc,
+	layer,
+}: {
+	doc: DesignDocument;
+	layer: Layer;
+	box: ChipBoxProps;
+}): ReactElement {
+	const { bind } = box.field;
+	return bind === undefined ? (
+		<ChipBox {...box} />
+	) : (
+		<BindableChip bind={bind} box={box} doc={doc} layer={layer} />
+	);
+}
 
 export function LayerChip({
 	doc,
@@ -22,9 +41,13 @@ export function LayerChip({
 		doc.update(layer.id, patch);
 	};
 
-	return (
-		<ChipBox field={field} onCommit={onCommit} onPatch={onPatch} value={value}>
-			<ChipGrip {...fieldGrip(field, value, onPatch, onCommit)} />
-		</ChipBox>
-	);
+	const box = {
+		field,
+		onCommit,
+		onPatch,
+		value,
+		children: <ChipGrip {...fieldGrip(field, value, onPatch, onCommit)} />,
+	};
+
+	return <FieldChip box={box} doc={doc} layer={layer} />;
 }

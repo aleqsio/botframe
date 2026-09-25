@@ -7,7 +7,7 @@ import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { NameField } from "./NameField";
-import { DocumentPanels, FieldPanels, LayerPanels } from "./variables/ComponentPanels";
+import { DocumentPanels, LayerPanels } from "./variables/ComponentPanels";
 
 function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 	const count = useLayerCount(doc);
@@ -49,7 +49,6 @@ export function InspectorBody({
 			) : (
 				<MixedProperties doc={doc} layers={layers} />
 			)}
-			{peer === undefined ? <FieldPanels doc={doc} layer={first} user={user} /> : null}
 		</>
 	);
 }

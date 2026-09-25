@@ -1,6 +1,6 @@
 import type { DesignDocument } from "../../../document/document";
-import { DOCUMENT_SCOPE, emptyValue, newVariableId } from "../../../document/variable";
-import type { Variable, VariableType, VariableValue } from "../../../document/variable";
+import { emptyValue, newVariableId } from "../../../document/variable";
+import type { Variable, VariableType } from "../../../document/variable";
 
 const MESSAGE = "set variable";
 const FIRST_OPTIONS = ["one", "two"];
@@ -18,17 +18,27 @@ export function typeName(type: VariableType): string {
 	return TYPE_NAMES[type];
 }
 
+export function makeVariable(
+	doc: DesignDocument,
+	owner: string,
+	held: Omit<Variable, "id">,
+): string {
+	const id = newVariableId();
+	doc.components.scope(owner).put({ id, ...held });
+	return id;
+}
+
 export function addVariable(doc: DesignDocument, owner: string, type: VariableType): void {
-	const scope = doc.components.scope(owner);
 	const options = type === "choice" ? FIRST_OPTIONS : [];
-	const taken = scope.variables().filter((variable) => variable.type === type).length;
-	scope.put({
-		id: newVariableId(),
-		name: `${TYPE_NAMES[type]} ${taken + 1}`,
+	const taken = doc.components
+		.scope(owner)
+		.variables()
+		.filter((variable) => variable.type === type).length;
+	makeVariable(doc, owner, {
+		name: `${TYPE_NAMES[type].toLowerCase()} ${taken + 1}`,
 		type,
 		initial: emptyValue(type, options),
 		options,
-		prop: owner !== DOCUMENT_SCOPE,
 	});
 	doc.commit(MESSAGE);
 }
@@ -40,9 +50,6 @@ export function editVariable(
 	change: Partial<Omit<Variable, "id" | "type">>,
 ): void {
 	doc.components.scope(owner).put({ ...variable, ...change });
-}
-
-export function commitVariables(doc: DesignDocument): void {
 	doc.commit(MESSAGE);
 }
 
@@ -60,13 +67,4 @@ export function optionsOf(text: string): readonly string[] {
 export function removeVariable(doc: DesignDocument, owner: string, id: string): void {
 	doc.components.scope(owner).remove(id);
 	doc.commit(MESSAGE);
-}
-
-export function setCell(
-	doc: DesignDocument,
-	owner: string,
-	cell: { choice: string; option: string; variable: string },
-	value: VariableValue | null,
-): void {
-	doc.components.scope(owner).setCell(cell, value);
 }

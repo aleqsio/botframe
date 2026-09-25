@@ -1,5 +1,5 @@
 import { Popover } from "@base-ui-components/react/popover";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { ColorPicker } from "./ColorPicker";
 import { DraftInput } from "./PropertyField";
 import { BLACK, formatColor, parseColor } from "./color";
@@ -13,6 +13,8 @@ export interface ColorFieldProps {
 	value: string;
 	onChange: (text: string) => void;
 	onCommit: () => void;
+	after?: ReactNode | undefined;
+	replace?: ReactNode | undefined;
 }
 
 function cssColor(text: string): string {
@@ -57,25 +59,30 @@ export function ColorField(props: ColorFieldProps): ReactElement {
 	return (
 		<div className="property-field color-field">
 			<span className="property-label">{label}</span>
-			<Popover.Root>
-				<Popover.Trigger aria-label={`${label} picker`} className="color-swatch">
-					<span className="color-swatch-fill" style={{ background: value }} />
-				</Popover.Trigger>
-				<ColorPopup {...props} />
-			</Popover.Root>
-			<DraftInput
-				inputMode="text"
-				label={label}
-				onCommit={(text) => {
-					const color = colorOf(text);
-					if (color === null) {
-						return;
-					}
-					onChange(formatColor(color));
-					onCommit();
-				}}
-				value={value}
-			/>
+			{props.replace ?? (
+				<>
+					<Popover.Root>
+						<Popover.Trigger aria-label={`${label} picker`} className="color-swatch">
+							<span className="color-swatch-fill" style={{ background: value }} />
+						</Popover.Trigger>
+						<ColorPopup {...props} />
+					</Popover.Root>
+					<DraftInput
+						inputMode="text"
+						label={label}
+						onCommit={(text) => {
+							const color = colorOf(text);
+							if (color === null) {
+								return;
+							}
+							onChange(formatColor(color));
+							onCommit();
+						}}
+						value={value}
+					/>
+				</>
+			)}
+			{props.after}
 		</div>
 	);
 }

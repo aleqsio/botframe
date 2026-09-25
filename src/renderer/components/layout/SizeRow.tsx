@@ -9,7 +9,7 @@ import { useDrawnOutline } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { isFrame } from "../layerEntry";
-import { ChipBox } from "./ChipBox";
+import { FieldChip } from "./LayerChip";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
@@ -95,12 +95,16 @@ export function SizeRow({
 				options={sizeOptions(layer)}
 				value={mode}
 			/>
-			<ChipBox
-				disabled={!fixed}
-				field={fixed ? field : resolvedField(field, full ? "%" : PIXELS)}
-				onCommit={commit}
-				onPatch={write}
-				value={fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis])}
+			<FieldChip
+				box={{
+					disabled: !fixed,
+					field: fixed ? field : resolvedField(field, full ? "%" : PIXELS),
+					onCommit: commit,
+					onPatch: write,
+					value: fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis]),
+				}}
+				doc={doc}
+				layer={layer}
 			/>
 		</div>
 	);

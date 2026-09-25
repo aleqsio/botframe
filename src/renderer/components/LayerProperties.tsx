@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
-import { ColorField } from "./ColorField";
 import { FrameFooter } from "./FrameFooter";
 import { isFrame } from "./layerEntry";
 import { MediaField } from "./MediaField";
@@ -13,6 +12,7 @@ import { LayerChip } from "./layout/LayerChip";
 import { LayoutPanel } from "./layout/LayoutPanel";
 import { MirrorToggle } from "./layout/MirrorToggle";
 import { TurnToggle } from "./layout/TurnToggle";
+import { ClipField, FillField } from "./variables/LayerValueFields";
 
 const TURN_GROUP = "Rotation";
 
@@ -51,22 +51,6 @@ function SkewRows({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactE
 	);
 }
 
-function ClipSwitch({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
-	return (
-		<label className="property-switch">
-			<input
-				checked={layer.clip}
-				onChange={(event) => {
-					doc.update(layer.id, { clip: event.target.checked });
-					doc.commit("set clip");
-				}}
-				type="checkbox"
-			/>
-			Clip content
-		</label>
-	);
-}
-
 export function LayerProperties({
 	doc,
 	layer,
@@ -80,18 +64,9 @@ export function LayerProperties({
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
-			<ColorField
-				label="Fill"
-				onChange={(text) => {
-					doc.update(layer.id, { fill: text });
-				}}
-				onCommit={() => {
-					doc.commit("set fill");
-				}}
-				value={layer.fill}
-			/>
+			<FillField doc={doc} layer={layer} />
 			<MediaField doc={doc} layer={layer} />
-			<ClipSwitch doc={doc} layer={layer} />
+			<ClipField doc={doc} layer={layer} />
 			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
 			{isFrame(layer) ? <FrameFooter doc={doc} layer={layer} /> : null}
 		</>

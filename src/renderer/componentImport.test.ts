@@ -48,7 +48,7 @@ describe("importFolder", () => {
 });
 
 function pack(held: string, source: ComponentSource): PackedComponent {
-	return { name: "Tag", body: { kind: "html", address: held, source }, variables: [], cells: [] };
+	return { name: "Tag", body: { kind: "html", address: held, source }, variables: [] };
 }
 
 describe("verifiedPacks", () => {

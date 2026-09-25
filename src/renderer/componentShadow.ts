@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { DesignDocument } from "../document/document";
 import { htmlMarkupOf } from "../document/htmlMarkup";
 import type { LayerContent } from "../document/layer";
-import { isReference } from "../document/variable";
+import { isLiteral } from "../document/value";
 
 const EDITOR_STYLE = "<style>:host > :not(slot) { pointer-events: none; }</style>";
 const EMPTY_SHADOW = "<slot></slot>";
@@ -27,7 +27,7 @@ export function initialSize(
 			.scope(component)
 			.variables()
 			.flatMap((variable) =>
-				isReference(variable.initial) ? [] : [[variable.id, variable.initial] as const],
+				isLiteral(variable.initial) ? [[variable.id, variable.initial] as const] : [],
 			),
 	);
 	const content = { kind: "component", component, props: {}, values } as const;

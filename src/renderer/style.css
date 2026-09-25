@@ -690,10 +690,6 @@ body {
 	line-height: 1.4;
 }
 
-.prop-choice {
-	appearance: none;
-}
-
 #inspector {
 	right: var(--edge);
 	width: var(--inspector-width);
