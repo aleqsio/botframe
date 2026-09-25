@@ -1,31 +1,62 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import { DOCUMENT_SCOPE } from "../../../document/variable";
+import { DOCUMENT_SCOPE, VARIABLE_TYPES } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
+import { Icon } from "../Icon";
 import { isFrame } from "../layerEntry";
-import { PropsSection } from "./PropsSection";
-import { CopyActions, FrameSection } from "./ComponentActions";
+import { FrameSection, copyActions } from "./ComponentActions";
 import type { PanelProps } from "./ComponentActions";
-import { VariablesSection } from "./VariablesSection";
+import { IconMenu } from "./IconMenu";
+import type { MenuAction } from "./IconMenu";
+import { CopyPropRow, DefaultRow } from "./PropRows";
+import { addVariable, typeName } from "./scopeEdit";
+
+function addActions(doc: DesignDocument, owner: string): readonly MenuAction[] {
+	return VARIABLE_TYPES.map((type) => ({
+		label: typeName(type),
+		run: () => {
+			addVariable(doc, owner, type);
+		},
+	}));
+}
 
 function CopySection(props: PanelProps & { component: string }): ReactElement {
-	const { component, doc } = props;
-	const row = useComponentRows(doc).find((held) => held.id === component);
-	const entry = useComponentsView(doc).entry(component);
-	const copies = row?.copies ?? 0;
+	const { component, doc, layer } = props;
+	const view = useComponentsView(doc);
+	const entry = view.entry(component);
+	const copies = useComponentRows(doc).find((held) => held.id === component)?.copies ?? 0;
+	const locked = entry?.body.kind !== "layers";
+	const owners = doc.tree.ownersAt(layer.id, true);
 
 	return (
-		<>
-			<div className="field-group layout-section">
+		<section aria-label="Component" className="field-group layout-section">
+			<header className="layout-head">
 				<span className="group-label">Component</span>
-				<span className="component-heading">
-					{entry?.name ?? "Missing component"} · {copies} {copies === 1 ? "copy" : "copies"}
-				</span>
-				{entry?.body.kind === "layers" ? <CopyActions {...props} /> : null}
+				{locked ? null : (
+					<IconMenu actions={addActions(doc, component)} icon="plus" label="Add a prop" />
+				)}
+				{locked ? null : (
+					<IconMenu actions={copyActions(props)} icon="more" label="Component actions" />
+				)}
+			</header>
+			<div className="component-title">
+				<Icon name="component" />
+				<span className="component-name">{entry?.name ?? "Missing component"}</span>
+				<span className="component-count">{copies === 1 ? "1 copy" : `${copies} copies`}</span>
 			</div>
-			<PropsSection doc={doc} layer={props.layer} />
-			<VariablesSection doc={doc} owner={component} title="Props · all copies" />
-		</>
+			{view.variables(component).map((variable) => (
+				<CopyPropRow
+					doc={doc}
+					key={variable.id}
+					layer={layer}
+					locked={locked}
+					owner={component}
+					owners={owners}
+					variable={variable}
+					view={view}
+				/>
+			))}
+		</section>
 	);
 }
 
@@ -39,5 +70,23 @@ export function LayerPanels(props: PanelProps): ReactElement | null {
 }
 
 export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
-	return <VariablesSection doc={doc} owner={DOCUMENT_SCOPE} title="Document variables" />;
+	const view = useComponentsView(doc);
+	return (
+		<section aria-label="Document variables" className="field-group layout-section">
+			<header className="layout-head">
+				<span className="group-label">Document variables</span>
+				<IconMenu actions={addActions(doc, DOCUMENT_SCOPE)} icon="plus" label="Add a variable" />
+			</header>
+			{view.variables(DOCUMENT_SCOPE).map((variable) => (
+				<DefaultRow
+					doc={doc}
+					key={variable.id}
+					locked={false}
+					owner={DOCUMENT_SCOPE}
+					variable={variable}
+					view={view}
+				/>
+			))}
+		</section>
+	);
 }

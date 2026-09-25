@@ -1,9 +1,7 @@
 import type { ReactElement } from "react";
-import type { DesignDocument } from "../../../document/document";
-import { DOCUMENT_SCOPE, VARIABLE_TYPES } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { DraftInput } from "../PropertyField";
-import { addVariable, optionsOf, typeName } from "./scopeEdit";
+import { optionsOf } from "./scopeEdit";
 
 export function RemoveButton({
 	label,
@@ -16,30 +14,6 @@ export function RemoveButton({
 		<button aria-label={label} className="guide-button" onClick={onPress} type="button">
 			<Icon name="minus" />
 		</button>
-	);
-}
-
-export function NewVariable({ doc, owner }: { doc: DesignDocument; owner: string }): ReactElement {
-	return (
-		<div className="new-variable">
-			<span className="property-label">
-				{owner === DOCUMENT_SCOPE ? "New variable" : "New prop"}
-			</span>
-			<div className="new-variable-types">
-				{VARIABLE_TYPES.map((type) => (
-					<button
-						className="pill-button"
-						key={type}
-						onClick={() => {
-							addVariable(doc, owner, type);
-						}}
-						type="button"
-					>
-						{typeName(type)}
-					</button>
-				))}
-			</div>
-		</div>
 	);
 }
 

@@ -4,6 +4,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { PASTE_OFFSET, shiftLayer } from "../../paste";
 import type { UserState } from "../../state/userState";
+import type { MenuAction } from "./IconMenu";
 
 export interface PanelProps {
 	doc: DesignDocument;
@@ -31,35 +32,22 @@ function duplicateAsNew({ doc, layer, user }: PanelProps): void {
 	doc.commit("duplicate as a new component");
 }
 
-export function CopyActions(props: PanelProps): ReactElement {
+export function copyActions(props: PanelProps): readonly MenuAction[] {
 	const { doc, layer } = props;
-	const run = (message: string, act: () => unknown): void => {
+	const run = (message: string, act: () => unknown) => (): void => {
 		act();
 		doc.commit(message);
 	};
-
-	return (
-		<div className="component-actions">
-			<Action
-				label="Make frame"
-				onPress={() => {
-					run("make frame", () => makeFrame(doc, layer.id));
-				}}
-			/>
-			<Action
-				label="Disconnect"
-				onPress={() => {
-					run("disconnect", () => disconnect(doc, layer.id));
-				}}
-			/>
-			<Action
-				label="Duplicate as new"
-				onPress={() => {
-					duplicateAsNew(props);
-				}}
-			/>
-		</div>
-	);
+	return [
+		{ label: "Make frame", run: run("make frame", () => makeFrame(doc, layer.id)) },
+		{ label: "Disconnect", run: run("disconnect", () => disconnect(doc, layer.id)) },
+		{
+			label: "Duplicate as new",
+			run: () => {
+				duplicateAsNew(props);
+			},
+		},
+	];
 }
 
 export function FrameSection({ doc, layer, user }: PanelProps): ReactElement {

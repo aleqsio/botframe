@@ -22,13 +22,15 @@ async function makeComponent(page: Page, origin: Point): Promise<Locator> {
 	await clickAt(page, origin, FRAME_EDGE);
 	const inspector = inspectorOf(page);
 	await inspector.getByRole("button", { name: "Make component" }).click();
-	await expect(inspector.locator(".component-heading")).toHaveText("Frame 1 · 1 copy");
+	await expect(inspector.locator(".component-name")).toHaveText("Frame 1");
+	await expect(inspector.locator(".component-count")).toHaveText("1 copy");
 	return inspector;
 }
 
 async function addSwitchProp(inspector: Locator): Promise<void> {
-	await inspector.locator(".new-variable").getByRole("button", { name: "Switch" }).click();
-	await expect(inspector.getByLabel("switch 1 name", { exact: true })).toBeVisible();
+	await inspector.getByRole("button", { name: "Add a prop", exact: true }).click();
+	await inspector.page().getByRole("menuitem", { name: "Switch" }).click();
+	await expect(inspector.locator(".prop-name")).toHaveText(["switch 1"]);
 }
 
 async function fillWhenSwitchIsOn(page: Page, origin: Point): Promise<void> {
@@ -57,7 +59,7 @@ test("a frame becomes a component whose copies stay in sync, and a prop on one c
 	await clickAt(page, origin, EMPTY);
 	await clickAt(page, origin, FRAME_EDGE);
 	await page.keyboard.press("ControlOrMeta+d");
-	await expect(inspector.locator(".component-heading")).toHaveText("Frame 1 · 2 copies");
+	await expect(inspector.locator(".component-count")).toHaveText("2 copies");
 	await inspector.getByRole("checkbox", { name: "switch 1", exact: true }).check();
 
 	const dots = page.locator('.layer[data-layer-id*="~"]');
@@ -91,7 +93,7 @@ for (const scheme of SCHEMES) {
 		await addSwitchProp(inspector);
 
 		const overflow = await inspector
-			.locator(".variable-row, .prop-row, .value-control, .component-actions, .new-variable")
+			.locator(".component-title, .prop-row, .value-control")
 			.evaluateAll((rows) => rows.filter((row) => row.scrollWidth > row.clientWidth).length);
 
 		expect(overflow).toBe(0);

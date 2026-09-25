@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 const PATHS = {
 	component:
 		"M12 3.5 15 6.5 12 9.5 9 6.5zM12 14.5 15 17.5 12 20.5 9 17.5zM6.5 9 9.5 12 6.5 15 3.5 12zM17.5 9 20.5 12 17.5 15 14.5 12z",
+	sliders: "M4 7h9M17 7h3M15 5v4M4 17h3M11 17h9M9 15v4",
 	branch: "M7 4v16M7 12h5a5 5 0 0 0 5-5V4",
 	hexagon: "M12 3.5 19.5 7.75v8.5L12 20.5l-7.5-4.25v-8.5z",
 	alignBottom: "M4 20h16M6 6h4v10H6zM14 10h4v6h-4z",

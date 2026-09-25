@@ -50,9 +50,10 @@ A place key (x, y, width, height, rotation) of a copy resolves from the copy abo
 - Each field that can bind has a small button at its right end. A blue hexagon means a plain value. A purple hexagon means a variable. A purple branch means a condition.
 - A click on the button opens a menu. The menu has a search for variables of the type of the field: first the props of the components around the layer, then the document variables. It also has "Add a condition", "Make a prop of …" or "Make a document variable", and "Use a plain value".
 - A field with a variable shows a chip and the value now. A field with a condition shows the cases on one line. A click on the branch opens the editor of the cases.
-- A copy shows "Props · this copy". A prop that the copy does not set is dim and shows the default. The reset button removes the value of the copy.
-- "Props · all copies" gives the name, the type, the options, and the default of each prop, and the buttons that add a prop.
-- The page shows "Document variables" in the same form.
+- A copy shows one "Component" section. Its header has "+" (add a prop of a type) and "⋯" (Make frame, Disconnect, Duplicate as new). Below the header are the name of the component and its number of copies.
+- Each prop is one row: the name, the value in this copy, and a settings button. A prop that the copy does not set is dim and shows the default.
+- The settings popover gives the name, the type, the options of a choice, the default, "Use the default in this copy", and Remove.
+- The page shows "Document variables" with the same rows. The value in a row is the default.
 
 ## Layer components
 
@@ -145,7 +146,7 @@ An import skips a component that has no HTML file, a section that is not closed,
 - The Components card shows each component and its number of copies.
 - The inspector shows these sections:
   - For a frame: "Make component".
-  - For a copy: the actions, "Props · this copy", and "Props · all copies".
+  - For a copy: "Component", with its props.
   - For the page: "Document variables".
 - Each field that can bind has its own button. The Inspector section above tells how it works.
 
