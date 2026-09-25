@@ -1,6 +1,6 @@
 import type { ComponentsView } from "../../../document/components";
 import { isCondition, isLiteral, isReference } from "../../../document/value";
-import type { Condition, Literal, VariableValue } from "../../../document/value";
+import type { Case, Condition, Literal, VariableValue } from "../../../document/value";
 import { DOCUMENT_SCOPE, emptyValue } from "../../../document/variable";
 import type { Variable, VariableType } from "../../../document/variable";
 
@@ -11,6 +11,7 @@ export type ValueKind = "value" | "variable" | "condition";
 export interface Reach {
 	view: ComponentsView;
 	owners: readonly string[];
+	skip?: string | undefined;
 }
 
 export interface Group {
@@ -39,6 +40,7 @@ export function groupsOf(reach: Reach, type: VariableType | null): readonly Grou
 	return innerFirst(owners).flatMap((owner) => {
 		const variables = view
 			.variables(owner)
+			.filter((variable) => variable.id !== reach.skip)
 			.filter((variable) => type === null || variable.type === type);
 		return variables.length === 0 ? [] : [{ owner, label: ownerLabel(view, owner), variables }];
 	});
@@ -59,20 +61,31 @@ export function isColor(value: Literal): value is string {
 	return typeof value === "string" && CSS.supports("color", value);
 }
 
+export function firstValue(variable: Variable | null): Literal {
+	if (variable === null) {
+		return "";
+	}
+	return variable.type === "boolean" ? true : emptyValue(variable.type, variable.options);
+}
+
 function firstTest(reach: Reach): Variable | null {
 	const tests = groupsOf(reach, null).flatMap((group) => group.variables);
-	return (
-		tests.find((variable) => variable.type === "choice" || variable.type === "boolean") ?? null
-	);
+	const switching = tests.find((held) => held.type === "choice" || held.type === "boolean");
+	return switching ?? tests[0] ?? null;
+}
+
+export function newCase(reach: Reach, current: Literal): Case | null {
+	const test = firstTest(reach);
+	return test === null ? null : { test: test.id, is: firstValue(test), result: current };
 }
 
 export function starterCondition(reach: Reach, current: Literal): Condition {
-	const test = firstTest(reach);
-	if (test === null) {
-		return { when: [], else: current };
-	}
-	const is = test.type === "boolean" ? true : emptyValue(test.type, test.options);
-	return { when: [{ test: test.id, is, result: current }], else: current };
+	const held = newCase(reach, current);
+	return { when: held === null ? [] : [held], else: current };
+}
+
+export function slotsOf(count: number): readonly string[] {
+	return Array.from({ length: count }, (_, at) => `case ${at + 1}`);
 }
 
 export function referenced(value: VariableValue): string | null {

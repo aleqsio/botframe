@@ -1,13 +1,12 @@
 import type { ReactElement } from "react";
 import type { ComponentsView } from "../../../document/components";
 import type { DesignDocument } from "../../../document/document";
-import { isLiteral } from "../../../document/value";
-import { DOCUMENT_SCOPE, emptyValue } from "../../../document/variable";
+import { DOCUMENT_SCOPE } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
 import { DraftInput } from "../PropertyField";
 import { useComponentsView } from "../../useDocument";
 import { NewVariable, OptionChips, RemoveButton } from "./VariableParts";
-import { editVariable, removeVariable, typeName } from "./scopeEdit";
+import { defaultNow, editVariable, removeVariable, typeName } from "./scopeEdit";
 import { ValueControl } from "./ValueControl";
 
 interface RowProps {
@@ -66,12 +65,16 @@ function VariableRow(props: RowProps): ReactElement {
 				<span className="property-label">Default</span>
 				<ValueControl
 					target={{
-						reach: { view, owners: owner === DOCUMENT_SCOPE ? [owner] : [DOCUMENT_SCOPE, owner] },
+						reach: {
+							view,
+							owners: owner === DOCUMENT_SCOPE ? [owner] : [DOCUMENT_SCOPE, owner],
+							skip: variable.id,
+						},
 						label: `${variable.name} default`,
 						type,
 						options,
 						value: initial,
-						current: isLiteral(initial) ? initial : emptyValue(type, options),
+						current: defaultNow(doc, variable),
 						make: null,
 						onChange: (next) => {
 							editVariable(doc, owner, variable, { initial: next });

@@ -1,35 +1,18 @@
 import type { ReactElement } from "react";
 import { isLiteral } from "../../../document/value";
-import type { Case, Condition, Literal, Result } from "../../../document/value";
-import { emptyValue } from "../../../document/variable";
+import type { Case, Condition, Result } from "../../../document/value";
 import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { LiteralInput, SelectBox } from "./LiteralInput";
-import { groupsOf, nameOf } from "./reach";
+import { firstValue, groupsOf, nameOf, newCase, slotsOf } from "./reach";
+import { RemoveButton } from "./VariableParts";
 import type { Reach } from "./reach";
 import type { EditTarget } from "./target";
 
 const A_VALUE = "";
 
-function keysOf(cases: readonly Case[]): readonly string[] {
-	const seen = new Map<string, number>();
-	return cases.map((held) => {
-		const text = JSON.stringify(held);
-		const count = seen.get(text) ?? 0;
-		seen.set(text, count + 1);
-		return `${text}#${count}`;
-	});
-}
-
 function testOf(reach: Reach, id: string): Variable | null {
 	return reach.view.declared(id)?.variable ?? null;
-}
-
-function firstValue(variable: Variable | null): Literal {
-	if (variable === null) {
-		return "";
-	}
-	return variable.type === "boolean" ? true : emptyValue(variable.type, variable.options);
 }
 
 function VariableSelect({
@@ -100,14 +83,6 @@ function ResultControl({
 	);
 }
 
-function RemoveButton({ label, onPress }: { label: string; onPress: () => void }): ReactElement {
-	return (
-		<button aria-label={label} className="guide-button" onClick={onPress} type="button">
-			<Icon name="minus" />
-		</button>
-	);
-}
-
 function CaseRow({
 	condition,
 	index,
@@ -170,12 +145,8 @@ function CaseRow({
 }
 
 function added(target: EditTarget, condition: Condition): Condition {
-	const [first] = groupsOf(target.reach, null).flatMap((group) => group.variables);
-	if (first === undefined) {
-		return condition;
-	}
-	const fresh: Case = { test: first.id, is: firstValue(first), result: target.current };
-	return { ...condition, when: [...condition.when, fresh] };
+	const fresh = newCase(target.reach, target.current);
+	return fresh === null ? condition : { ...condition, when: [...condition.when, fresh] };
 }
 
 export function ConditionEditor({
@@ -185,12 +156,12 @@ export function ConditionEditor({
 	condition: Condition;
 	target: EditTarget;
 }): ReactElement {
-	const keys = keysOf(condition.when);
+	const slots = slotsOf(condition.when.length);
 	return (
 		<div className="condition-editor">
 			<span className="condition-title">{target.label} · condition</span>
-			{condition.when.map((held, index) => (
-				<CaseRow condition={condition} index={index} key={keys[index]} target={target} />
+			{slots.map((slot, index) => (
+				<CaseRow condition={condition} index={index} key={slot} target={target} />
 			))}
 			<div className="case-row">
 				<span className="case-word">else</span>

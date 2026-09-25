@@ -52,8 +52,8 @@ export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch 
 	return { [axis]: next, ...(hugsBlock ? { display: "row" } : {}) };
 }
 
-function resolvedField(field: LayerField, unit: Unit): LayerField {
-	return { ...field, unit, choice: null };
+function resolvedField(field: LayerField, unit: Unit, bound: boolean): LayerField {
+	return { ...field, unit, choice: null, bind: bound ? field.bind : undefined };
 }
 
 export function SizeRow({
@@ -98,7 +98,9 @@ export function SizeRow({
 			<FieldChip
 				box={{
 					disabled: !fixed,
-					field: fixed ? field : resolvedField(field, full ? "%" : PIXELS),
+					field: fixed
+						? field
+						: resolvedField(field, full ? "%" : PIXELS, layer.bindings[axis] !== undefined),
 					onCommit: commit,
 					onPatch: write,
 					value: fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis]),

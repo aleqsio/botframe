@@ -1,4 +1,7 @@
 import type { DesignDocument } from "../../../document/document";
+import { resolveValue } from "../../../document/resolve";
+import { isLiteral } from "../../../document/value";
+import type { Literal } from "../../../document/value";
 import { emptyValue, newVariableId } from "../../../document/variable";
 import type { Variable, VariableType } from "../../../document/variable";
 
@@ -18,13 +21,29 @@ export function typeName(type: VariableType): string {
 	return TYPE_NAMES[type];
 }
 
+function freeName(doc: DesignDocument, owner: string, base: string): string {
+	const taken = new Set(
+		doc.components
+			.scope(owner)
+			.variables()
+			.map((variable) => variable.name),
+	);
+	let count = 1;
+	let name = base;
+	while (taken.has(name)) {
+		count += 1;
+		name = `${base} ${count}`;
+	}
+	return name;
+}
+
 export function makeVariable(
 	doc: DesignDocument,
 	owner: string,
 	held: Omit<Variable, "id">,
 ): string {
 	const id = newVariableId();
-	doc.components.scope(owner).put({ id, ...held });
+	doc.components.scope(owner).put({ ...held, id, name: freeName(doc, owner, held.name) });
 	return id;
 }
 
@@ -67,4 +86,12 @@ export function optionsOf(text: string): readonly string[] {
 export function removeVariable(doc: DesignDocument, owner: string, id: string): void {
 	doc.components.scope(owner).remove(id);
 	doc.commit(MESSAGE);
+}
+
+export function defaultNow(doc: DesignDocument, variable: Variable): Literal {
+	const { initial, options, type } = variable;
+	if (isLiteral(initial)) {
+		return initial;
+	}
+	return resolveValue(doc.tree.resolver(), initial, []) ?? emptyValue(type, options);
 }

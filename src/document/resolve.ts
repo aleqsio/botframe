@@ -18,6 +18,8 @@ interface Walk {
 	source: ResolveSource;
 	chain: readonly string[];
 	depth: number;
+	known: Map<string, Literal | null>;
+	active: Set<string>;
 }
 
 const MAX_DEPTH = 32;
@@ -55,6 +57,22 @@ function initialAt(walk: Walk, declared: Declared, at: number): Literal | null {
 }
 
 function variableFrom(walk: Walk, id: string, from: number): Literal | null {
+	const key = `${id}@${from}`;
+	const known = walk.known.get(key);
+	if (known !== undefined) {
+		return known;
+	}
+	if (walk.active.has(key)) {
+		return null;
+	}
+	walk.active.add(key);
+	const value = lookup(walk, id, from);
+	walk.active.delete(key);
+	walk.known.set(key, value);
+	return value;
+}
+
+function lookup(walk: Walk, id: string, from: number): Literal | null {
 	const declared = walk.depth > MAX_DEPTH ? null : walk.source.declared(id);
 	if (declared === null) {
 		return null;
@@ -72,12 +90,16 @@ function variableFrom(walk: Walk, id: string, from: number): Literal | null {
 	return initialAt(walk, declared, walk.chain.length);
 }
 
+function startWalk(source: ResolveSource, chain: readonly string[]): Walk {
+	return { source, chain, depth: 0, known: new Map(), active: new Set() };
+}
+
 export function resolveVariable(
 	source: ResolveSource,
 	id: string,
 	chain: readonly string[],
 ): Literal | null {
-	return variableFrom({ source, chain, depth: 0 }, id, 0);
+	return variableFrom(startWalk(source, chain), id, 0);
 }
 
 export function resolveValue(
@@ -85,5 +107,5 @@ export function resolveValue(
 	value: VariableValue,
 	chain: readonly string[],
 ): Literal | null {
-	return valueAt({ source, chain, depth: 0 }, value, 0);
+	return valueAt(startWalk(source, chain), value, 0);
 }

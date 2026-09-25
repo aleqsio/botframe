@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import type { ComponentsView } from "../../../document/components";
 import { isLiteral } from "../../../document/value";
 import type { Bound, Literal, Result } from "../../../document/value";
-import { isColor, literalText, nameOf } from "./reach";
+import { isColor, literalText, nameOf, slotsOf } from "./reach";
 
 function Swatch({ value }: { value: Literal }): ReactElement | null {
 	return isColor(value) ? (
@@ -49,8 +49,8 @@ export function BoundSummary({
 		<span className="bound-summary bound-condition" title="Condition">
 			<Swatch value={now} />
 			<span className="bound-line">
-				{bound.when.map((held) => (
-					<span key={JSON.stringify(held)}>
+				{bound.when.map((held, index) => (
+					<span key={slotsOf(bound.when.length)[index]}>
 						<span className="bound-keyword">when</span> <Chip id={held.test} view={view} /> is{" "}
 						{literalText(held.is)} → <ResultText result={held.result} view={view} />,{" "}
 					</span>

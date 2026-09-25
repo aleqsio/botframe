@@ -135,3 +135,20 @@ describe("resolveValue", () => {
 		expect(resolveValue(sourceOf(WORLD), value, ["plainCard"])).toBe("#00ff00");
 	});
 });
+
+describe("loops in conditions", () => {
+	it("stops at once when a condition tests the variable that it gives", () => {
+		const self: Condition = {
+			when: Array.from({ length: 8 }, () => ({ test: "on", is: true, result: false })),
+			else: true,
+		};
+		const world: World = {
+			variables: [variable("on", DOCUMENT_SCOPE, { type: "boolean", initial: self })],
+			copies: {},
+		};
+		const started = performance.now();
+
+		expect(resolveVariable(sourceOf(world), "on", [])).toBe(true);
+		expect(performance.now() - started).toBeLessThan(100);
+	});
+});

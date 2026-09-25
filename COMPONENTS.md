@@ -39,9 +39,9 @@ The model resolves a variable from the innermost copy out, as a context:
 
 1. A copy that sets the variable gives the value. A variable or a condition in that value resolves from the next copy out.
 2. At a copy of the component that declares the variable, the default gives the value. The default resolves at that copy, so a condition in a default can test a different prop of the same copy.
-3. A document variable resolves its default from the innermost copy. So a copy that sets a document `mode` changes each token that tests `mode` inside it.
+3. A document variable resolves its default from the innermost copy. The model lets a copy set a document variable, for example `mode`, and each token that tests `mode` inside that copy changes. The inspector does not show this control yet: a copy shows only the props of its own component.
 
-A prop is visible only inside its component. The resolver stops at a depth of 32. A value of the wrong type gives the default.
+A prop is visible only inside its component. The resolver finds a loop, for example a condition that tests its own variable, and gives no value for the loop. It also stops at a depth of 32. A value of the wrong type gives the default.
 
 A place key (x, y, width, height, rotation) of a copy resolves from the copy above it, because the copy sets its own place.
 
