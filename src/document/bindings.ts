@@ -10,6 +10,9 @@ export const BINDING_TYPES = {
 	width: "length",
 	height: "length",
 	rotation: "number",
+	skewX: "number",
+	skewY: "number",
+	mirrored: "boolean",
 	cornerRadius: "length",
 	cornerSmoothing: "number",
 	clip: "boolean",
@@ -28,6 +31,9 @@ export const BINDING_KEYS: readonly BindingKey[] = [
 	"width",
 	"height",
 	"rotation",
+	"skewX",
+	"skewY",
+	"mirrored",
 	"cornerRadius",
 	"cornerSmoothing",
 	"clip",
@@ -35,13 +41,7 @@ export const BINDING_KEYS: readonly BindingKey[] = [
 
 export const NO_BINDINGS: Bindings = {};
 
-const PLACEMENT_BINDINGS: ReadonlySet<BindingKey> = new Set([
-	"x",
-	"y",
-	"width",
-	"height",
-	"rotation",
-]);
+const PLACEMENT_BINDINGS: ReadonlySet<BindingKey> = new Set(["x", "y"]);
 
 export function isPlacementBinding(key: string): boolean {
 	return BINDING_KEYS.some((held) => held === key && PLACEMENT_BINDINGS.has(held));

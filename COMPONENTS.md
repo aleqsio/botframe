@@ -15,7 +15,7 @@ Each component has props. A prop is a variable of the component, and each copy c
 2. **Each state is a prop.** A component has no state, no effect, and no script. A checked box is `checked: true`.
 3. **The file holds the source.** The file opens with no coding project and no network, and shows the same pixels.
 4. **A source never changes.** An HTML source has a content address. A new version gets a new address. A second import of a name points the component at the new address, and each copy shows the new version.
-5. **There is no main copy.** Each copy of a component shows the same layers. An edit inside one copy changes each copy. A copy keeps only its place, its size, and its props.
+5. **There is no main copy.** Each copy of a component shows the same layers. An edit inside one copy changes each copy. A copy keeps only its position, its place in the parent layout, and its props. The size, the rotation, the skew, the mirror, and the origin come from the component, so a resize of one copy resizes each copy. A prop can drive the size or the transform of each copy.
 
 ## Variables
 
@@ -30,7 +30,7 @@ Each component has props. A prop is a variable of the component, and each copy c
 | Condition | `{ when: [{ test, is, result }], else }` | when `status` is `failed` → `danger`, else `#1f7a4d` |
 
 - A condition tests one variable for one value in each case. The first case that matches gives its result. The `else` result is used when no case matches. A result is a value or a variable.
-- A field of a layer can **bind** to a variable or a condition. The bound keys are fill, x, y, width, height, rotation, corner radius, corner smoothing, and clip. A plain value in the field removes the binding.
+- A field of a layer can **bind** to a variable or a condition. The bound keys are fill, x, y, width, height, rotation, skew x, skew y, mirrored, corner radius, corner smoothing, and clip. A plain value in the field removes the binding.
 - A binding holds the id of each variable, not the name. A rename changes no binding.
 
 ### Resolution
@@ -43,7 +43,7 @@ The model resolves a variable from the innermost copy out, as a context:
 
 A prop is visible only inside its component. The resolver finds a loop, for example a condition that tests its own variable, and gives no value for the loop. It also stops at a depth of 32. A value of the wrong type gives the default.
 
-A place key (x, y, width, height, rotation) of a copy resolves from the copy above it, because the copy sets its own place.
+A place key (x, y) of a copy resolves from the copy above it, because the copy sets its own position. Each other key of a copy resolves inside the copy, so it can use a prop of the copy.
 
 ### Inspector
 
@@ -75,7 +75,7 @@ When the last copy goes away, the component list does not show the component. Un
 - A layer body is a root node in the layer tree with the data key `definition`. The canvas does not show it.
 - A copy is a layer with `component` and `props`. The copy has no children in the tree. Its children are the children of the definition root.
 - The id of a layer inside a copy is a path: `copy~copy~node`. Two copies of one component give two ids for one node.
-- A copy reads its place keys from its own node, and each other key from the definition root. A write goes to the same place.
+- A copy reads its place keys (x, y, their units, the name, the props, and the layout position, margin, and cell) from its own node, and each other key from the definition root. A write goes to the same place.
 - A move into or out of a copy is refused, so each id stays the same. A copy of a component inside its own definition is refused.
 - A scope is a mergeable map with `variables`. Each variable is a JSON value: `{ name, type, initial, options }`.
 - A copy stores its props in the mergeable map `props`. A layer stores its bindings in the mergeable map `bindings`. Two peers that change different props or different fields merge with no conflict.

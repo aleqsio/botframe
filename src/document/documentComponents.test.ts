@@ -96,6 +96,23 @@ describe("synced copies", () => {
 		expect(doc.tree.copyCount(held.component)).toBe(2);
 	});
 
+	it("shares the size and the transform of each copy, and keeps the place of each copy", () => {
+		const held = scene();
+		const { doc, frame } = held;
+		const other = secondCopy(held);
+		doc.update(frame, { y: 90, width: 150, rotation: 30, skewX: 10, mirrored: true });
+		doc.commit("transform");
+
+		expect(doc.layer(other)).toMatchObject({
+			x: 400,
+			y: DRAWN.y,
+			width: 150,
+			rotation: 30,
+			skewX: 10,
+			mirrored: true,
+		});
+	});
+
 	it("refuses to move a layer into or out of a copy, and moves it inside a copy with the same id", () => {
 		const held = scene();
 		const { doc, frame } = held;
@@ -159,6 +176,21 @@ describe("variables in copies", () => {
 
 		expect(doc.layer(childOf(doc, frame))?.fill).toBe("#dddddd");
 		expect(doc.layer(childOf(doc, other))?.fill).toBe("#ff0000");
+	});
+
+	it("drives the size of each copy from a prop of that copy", () => {
+		const held = scene();
+		const { component, doc, frame } = held;
+		const other = secondCopy(held);
+		doc.components
+			.scope(component)
+			.put(variable({ id: "size", name: "size", type: "length", initial: 80 }));
+		doc.update(frame, { bindings: { width: { var: "size" } } });
+		doc.update(other, { props: { size: 200 } });
+		doc.commit("bind");
+
+		expect(doc.layer(frame)?.width).toBe(80);
+		expect(doc.layer(other)?.width).toBe(200);
 	});
 
 	it("switches a document variable whose default is a condition on a mode", () => {
