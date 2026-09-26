@@ -29,6 +29,8 @@ export interface RowProps {
 	owner: string;
 	variable: Variable;
 	locked: boolean;
+	fresh: boolean;
+	onSettled: () => void;
 }
 
 function NameEditor({
@@ -42,7 +44,7 @@ function NameEditor({
 			className="prop-name-editor"
 			onBlur={onDone}
 			ref={(held) => {
-				held?.querySelector("input")?.focus();
+				held?.querySelector("input")?.select();
 			}}
 		>
 			<DraftInput
@@ -60,14 +62,15 @@ function NameEditor({
 }
 
 export function NameCell(props: RowProps & { dimmed: boolean }): ReactElement {
-	const { dimmed, locked, variable } = props;
+	const { dimmed, fresh, locked, onSettled, variable } = props;
 	const [editing, setEditing] = useState(false);
-	if (editing) {
+	if (editing || fresh) {
 		return (
 			<NameEditor
 				{...props}
 				onDone={() => {
 					setEditing(false);
+					onSettled();
 				}}
 			/>
 		);

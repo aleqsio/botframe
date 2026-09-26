@@ -47,19 +47,20 @@ export function makeVariable(
 	return id;
 }
 
-export function addVariable(doc: DesignDocument, owner: string, type: VariableType): void {
+export function addVariable(doc: DesignDocument, owner: string, type: VariableType): string {
 	const options = type === "choice" ? FIRST_OPTIONS : [];
 	const taken = doc.components
 		.scope(owner)
 		.variables()
 		.filter((variable) => variable.type === type).length;
-	makeVariable(doc, owner, {
+	const id = makeVariable(doc, owner, {
 		name: `${TYPE_NAMES[type].toLowerCase()} ${taken + 1}`,
 		type,
 		initial: emptyValue(type, options),
 		options,
 	});
 	doc.commit(MESSAGE);
+	return id;
 }
 
 export function editVariable(

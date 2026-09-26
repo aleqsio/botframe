@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
@@ -17,6 +18,7 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 	const copies = useComponentRows(doc).find((held) => held.id === component)?.copies ?? 0;
 	const locked = entry?.body.kind !== "layers";
 	const owners = doc.tree.ownersAt(layer.id, true);
+	const [fresh, setFresh] = useState<string | null>(null);
 
 	return (
 		<section aria-label="Component" className="field-group layout-section">
@@ -32,15 +34,25 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 			<div className="props-head">
 				<span className="property-label">Props</span>
 				{locked ? null : (
-					<AddMenu doc={doc} label="Add prop" note="A prop each copy can set" owner={component} />
+					<AddMenu
+						doc={doc}
+						label="Add prop"
+						note="A prop each copy can set"
+						onAdded={setFresh}
+						owner={component}
+					/>
 				)}
 			</div>
 			{view.variables(component).map((variable) => (
 				<CopyPropRow
 					doc={doc}
+					fresh={fresh === variable.id}
 					key={variable.id}
 					layer={layer}
 					locked={locked}
+					onSettled={() => {
+						setFresh(null);
+					}}
 					owner={component}
 					owners={owners}
 					variable={variable}
@@ -62,6 +74,7 @@ export function LayerPanels(props: PanelProps): ReactElement | null {
 
 export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
 	const view = useComponentsView(doc);
+	const [fresh, setFresh] = useState<string | null>(null);
 	return (
 		<section aria-label="Document variables" className="field-group layout-section">
 			<header className="layout-head">
@@ -70,14 +83,19 @@ export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
 					doc={doc}
 					label="Add variable"
 					note="A token each layer can use"
+					onAdded={setFresh}
 					owner={DOCUMENT_SCOPE}
 				/>
 			</header>
 			{view.variables(DOCUMENT_SCOPE).map((variable) => (
 				<DefaultRow
 					doc={doc}
+					fresh={fresh === variable.id}
 					key={variable.id}
 					locked={false}
+					onSettled={() => {
+						setFresh(null);
+					}}
 					owner={DOCUMENT_SCOPE}
 					variable={variable}
 					view={view}

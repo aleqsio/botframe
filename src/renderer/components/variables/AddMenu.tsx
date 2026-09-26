@@ -1,4 +1,5 @@
 import { Menu } from "@base-ui-components/react/menu";
+import { useRef } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { VariableType } from "../../../document/variable";
@@ -25,13 +26,16 @@ export function AddMenu({
 	doc,
 	label,
 	note,
+	onAdded,
 	owner,
 }: {
 	doc: DesignDocument;
 	owner: string;
 	label: string;
 	note: string;
+	onAdded: (id: string) => void;
 }): ReactElement {
+	const added = useRef(false);
 	return (
 		<Menu.Root modal={false}>
 			<Menu.Trigger className="add-button">
@@ -41,7 +45,15 @@ export function AddMenu({
 			</Menu.Trigger>
 			<Menu.Portal>
 				<Menu.Positioner align="end" side="bottom">
-					<Menu.Popup aria-label={label} className="layer-menu add-menu">
+					<Menu.Popup
+						aria-label={label}
+						className="layer-menu add-menu"
+						finalFocus={() => {
+							const back = !added.current;
+							added.current = false;
+							return back;
+						}}
+					>
 						<span className="add-menu-note">{note}</span>
 						{TYPES.map(({ hint, icon, type }) => (
 							<Menu.Item
@@ -49,7 +61,8 @@ export function AddMenu({
 								key={type}
 								label={typeName(type)}
 								onClick={() => {
-									addVariable(doc, owner, type);
+									added.current = true;
+									onAdded(addVariable(doc, owner, type));
 								}}
 							>
 								<span className="add-menu-glyph">

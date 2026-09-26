@@ -30,6 +30,7 @@ async function makeComponent(page: Page, origin: Point): Promise<Locator> {
 async function addSwitchProp(inspector: Locator): Promise<void> {
 	await inspector.getByRole("button", { name: "Add prop", exact: true }).click();
 	await inspector.page().getByRole("menuitem", { name: "Switch" }).click();
+	await inspector.page().keyboard.press("Enter");
 	await expect(inspector.locator(".prop-name-text")).toHaveText(["switch 1"]);
 }
 
@@ -115,6 +116,7 @@ test("a choice prop edits its options in its dropdown", async ({ page }) => {
 	const inspector = await makeComponent(page, origin);
 	await inspector.getByRole("button", { name: "Add prop", exact: true }).click();
 	await page.getByRole("menuitem", { name: "Choice" }).click();
+	await page.keyboard.press("Enter");
 	const choice = inspector.getByRole("button", { name: "choice 1", exact: true });
 	await expect(choice).toHaveText("one");
 
@@ -131,6 +133,25 @@ test("a choice prop edits its options in its dropdown", async ({ page }) => {
 	const field = await inspector.locator(".prop-row .value-control").boundingBox();
 	const popup = await page.locator(".choice-popup").boundingBox();
 	expect([popup?.x, popup?.width]).toStrictEqual([field?.x, field?.width]);
+});
+
+test("a new prop opens its name editor, and a color prop uses the color picker", async ({
+	page,
+}) => {
+	const { origin } = await openRenderer(page);
+	const inspector = await makeComponent(page, origin);
+	await inspector.getByRole("button", { name: "Add prop", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Color" }).click();
+	await expect(inspector.getByLabel("color 1 name", { exact: true })).toBeFocused();
+	await page.keyboard.type("tint");
+	await page.keyboard.press("Enter");
+	await expect(inspector.locator(".prop-name-text")).toHaveText(["tint"]);
+
+	await inspector.getByRole("button", { name: "tint picker", exact: true }).click();
+	await page.getByRole("button", { name: "#ff3b30", exact: true }).click();
+	await page.keyboard.press("Escape");
+
+	await expect(inspector.getByLabel("tint", { exact: true })).toHaveValue("#ff3b30");
 });
 
 for (const scheme of SCHEMES) {
