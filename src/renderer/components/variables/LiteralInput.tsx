@@ -1,9 +1,10 @@
+import { useRef, useState } from "react";
 import type { ReactElement, ReactNode, RefObject } from "react";
 import type { Literal } from "../../../document/value";
 import type { VariableType } from "../../../document/variable";
+import { ColorInput } from "../ColorField";
 import { DraftInput } from "../PropertyField";
 import { ChoiceDropdown } from "./ChoiceDropdown";
-import { isColor } from "./reach";
 
 export interface LiteralInputProps {
 	label: string;
@@ -65,25 +66,42 @@ function Select({
 	);
 }
 
+function ColorLiteral({ label, onChange, value }: LiteralInputProps): ReactElement {
+	const [draft, setDraft] = useState<string | null>(null);
+	const latest = useRef<string | null>(null);
+	return (
+		<ColorInput
+			label={label}
+			onChange={(text) => {
+				latest.current = text;
+				setDraft(text);
+			}}
+			onCommit={() => {
+				if (latest.current !== null) {
+					onChange(latest.current);
+				}
+				latest.current = null;
+				setDraft(null);
+			}}
+			value={draft ?? String(value)}
+		/>
+	);
+}
+
 function TextInput({ label, onChange, type, value }: LiteralInputProps): ReactElement {
 	const numeric = type === "length" || type === "number";
 	return (
-		<>
-			{isColor(value) && type === "color" ? (
-				<span aria-hidden="true" className="value-swatch" style={{ background: value }} />
-			) : null}
-			<DraftInput
-				inputMode={numeric ? "numeric" : "text"}
-				label={label}
-				onCommit={(text) => {
-					const next = numeric ? numberOf(text) : text;
-					if (next !== null && (type !== "color" || CSS.supports("color", text))) {
-						onChange(next);
-					}
-				}}
-				value={String(value)}
-			/>
-		</>
+		<DraftInput
+			inputMode={numeric ? "numeric" : "text"}
+			label={label}
+			onCommit={(text) => {
+				const next = numeric ? numberOf(text) : text;
+				if (next !== null) {
+					onChange(next);
+				}
+			}}
+			value={String(value)}
+		/>
 	);
 }
 
@@ -118,5 +136,5 @@ export function LiteralInput(props: LiteralInputProps): ReactElement {
 	if (type === "choice") {
 		return <Select label={label} onChange={onChange} options={options} value={String(value)} />;
 	}
-	return <TextInput {...props} />;
+	return type === "color" ? <ColorLiteral {...props} /> : <TextInput {...props} />;
 }
