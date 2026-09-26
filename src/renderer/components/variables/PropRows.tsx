@@ -6,7 +6,7 @@ import { emptyValue } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
 import { defaultTarget } from "./defaultTarget";
 import { ValueControl } from "./ValueControl";
-import { NameCell, Options, RowEnd, heldActions } from "./VariableParts";
+import { NameCell, RowEnd, heldActions, optionsWriter } from "./VariableParts";
 import type { RowProps } from "./VariableParts";
 
 const MESSAGE = "set prop";
@@ -33,40 +33,35 @@ export function CopyPropRow(
 	};
 
 	return (
-		<>
-			<div className="prop-row">
-				<NameCell {...props} dimmed={held === undefined} />
-				<ValueControl
-					dimmed={held === undefined}
-					target={{
-						reach: { view, owners },
-						label: variable.name,
-						type: variable.type,
-						options: variable.options,
-						value: held ?? current,
-						current,
-						make: null,
-						onChange: write,
-						extra: held === undefined ? [] : heldActions(props, held, write),
-					}}
-				/>
-				<RowEnd {...props} />
-			</div>
-			<Options {...props} />
-		</>
+		<div className="prop-row">
+			<NameCell {...props} dimmed={held === undefined} />
+			<ValueControl
+				dimmed={held === undefined}
+				target={{
+					reach: { view, owners },
+					label: variable.name,
+					type: variable.type,
+					options: variable.options,
+					value: held ?? current,
+					current,
+					make: null,
+					onChange: write,
+					extra: held === undefined ? [] : heldActions(props, held, write),
+					onOptions: optionsWriter(props),
+				}}
+			/>
+			<RowEnd {...props} />
+		</div>
 	);
 }
 
 export function DefaultRow(props: RowProps): ReactElement {
 	const { doc, owner, variable, view } = props;
 	return (
-		<>
-			<div className="prop-row">
-				<NameCell {...props} dimmed={false} />
-				<ValueControl target={defaultTarget(doc, view, owner, variable)} />
-				<RowEnd {...props} />
-			</div>
-			<Options {...props} />
-		</>
+		<div className="prop-row">
+			<NameCell {...props} dimmed={false} />
+			<ValueControl target={defaultTarget(doc, view, owner, variable)} />
+			<RowEnd {...props} />
+		</div>
 	);
 }

@@ -26,5 +26,11 @@ export function defaultTarget(
 		onChange: (next) => {
 			editVariable(doc, owner, variable, { initial: next });
 		},
+		onOptions:
+			variable.type === "choice"
+				? (options) => {
+						editVariable(doc, owner, variable, { options });
+					}
+				: undefined,
 	};
 }

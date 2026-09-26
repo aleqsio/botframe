@@ -19,6 +19,7 @@ export function ValueControl({
 				<LiteralInput
 					label={label}
 					onChange={onChange}
+					onOptions={target.onOptions}
 					options={options}
 					type={type}
 					value={value}

@@ -110,6 +110,26 @@ test("the search makes a document variable from the typed name, and undo and sel
 	await expect(inspector.locator(".variable-chip")).toHaveText("brand");
 });
 
+test("a choice prop edits its options in its dropdown", async ({ page }) => {
+	const { origin } = await openRenderer(page);
+	const inspector = await makeComponent(page, origin);
+	await inspector.getByRole("button", { name: "Add prop", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Choice" }).click();
+	const choice = inspector.getByRole("button", { name: "choice 1", exact: true });
+	await expect(choice).toHaveText("one");
+
+	await choice.click();
+	const added = page.getByLabel("Add an option", { exact: true });
+	await added.fill("three");
+	await added.press("Enter");
+	await page.getByRole("button", { name: "Remove the option one", exact: true }).click();
+	await page.getByRole("button", { name: "three", exact: true }).click();
+
+	await expect(choice).toHaveText("three");
+	await choice.click();
+	await expect(page.locator(".choice-pick")).toHaveText(["two", "three"]);
+});
+
 for (const scheme of SCHEMES) {
 	test(`the component panels fit their text in the ${scheme} scheme`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme: scheme });

@@ -6,7 +6,7 @@ import type { VariableValue } from "../../../document/value";
 import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { DraftInput } from "../PropertyField";
-import { editVariable, optionsOf, removeVariable } from "./scopeEdit";
+import { editVariable, removeVariable } from "./scopeEdit";
 import type { TargetAction } from "./target";
 
 export function RemoveButton({
@@ -20,51 +20,6 @@ export function RemoveButton({
 		<button aria-label={label} className="guide-button" onClick={onPress} type="button">
 			<Icon name="minus" />
 		</button>
-	);
-}
-
-function OptionChips({
-	locked,
-	onChange,
-	options,
-}: {
-	locked: boolean;
-	options: readonly string[];
-	onChange: (options: readonly string[]) => void;
-}): ReactElement {
-	return (
-		<div className="option-chips">
-			{options.map((option) => (
-				<span className="option-chip" key={option}>
-					{option}
-					{locked || options.length === 1 ? null : (
-						<button
-							aria-label={`Remove the option ${option}`}
-							className="option-remove"
-							onClick={() => {
-								onChange(options.filter((held) => held !== option));
-							}}
-							type="button"
-						>
-							×
-						</button>
-					)}
-				</span>
-			))}
-			{locked ? null : (
-				<span className="option-add">
-					<DraftInput
-						inputMode="text"
-						label="Add an option"
-						placeholder="+ option"
-						onCommit={(text) => {
-							onChange([...new Set([...options, ...optionsOf(text)])]);
-						}}
-						value=""
-					/>
-				</span>
-			)}
-		</div>
 	);
 }
 
@@ -150,21 +105,18 @@ export function RowEnd({ doc, locked, owner, variable }: RowProps): ReactElement
 	);
 }
 
-export function Options({ doc, locked, owner, variable }: RowProps): ReactElement | null {
+export function optionsWriter({
+	doc,
+	locked,
+	owner,
+	variable,
+}: RowProps): ((options: readonly string[]) => void) | undefined {
 	if (variable.type !== "choice" || locked) {
-		return null;
+		return undefined;
 	}
-	return (
-		<div className="prop-options">
-			<OptionChips
-				locked={false}
-				onChange={(options) => {
-					editVariable(doc, owner, variable, { options });
-				}}
-				options={variable.options}
-			/>
-		</div>
-	);
+	return (options) => {
+		editVariable(doc, owner, variable, { options });
+	};
 }
 
 export function heldActions(

@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from "react";
 import type { Literal } from "../../../document/value";
 import type { VariableType } from "../../../document/variable";
 import { DraftInput } from "../PropertyField";
+import { ChoiceDropdown } from "./ChoiceDropdown";
 import { isColor } from "./reach";
 
 export interface LiteralInputProps {
@@ -10,6 +11,7 @@ export interface LiteralInputProps {
 	options: readonly string[];
 	value: Literal;
 	onChange: (value: Literal) => void;
+	onOptions?: ((options: readonly string[]) => void) | undefined;
 }
 
 function numberOf(text: string): number | null {
@@ -96,6 +98,17 @@ export function LiteralInput(props: LiteralInputProps): ReactElement {
 					onChange(event.target.checked);
 				}}
 				type="checkbox"
+			/>
+		);
+	}
+	if (type === "choice" && props.onOptions !== undefined) {
+		return (
+			<ChoiceDropdown
+				label={label}
+				onChange={onChange}
+				onOptions={props.onOptions}
+				options={options}
+				value={String(value)}
 			/>
 		);
 	}

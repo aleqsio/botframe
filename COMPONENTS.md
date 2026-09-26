@@ -51,7 +51,7 @@ A place key (x, y, width, height, rotation) of a copy resolves from the copy abo
 - A click on the button opens a menu. The menu has a search for variables of the type of the field: first the props of the components around the layer, then the document variables. It also has "Add a condition", "Make a prop of …" or "Make a document variable", and "Use a plain value". A typed name goes into the make action. Enter picks the first match, or makes the variable when nothing matches.
 - A field with a variable shows a chip and the value now. A field with a condition shows the cases on one line. A click on the branch opens the editor of the cases.
 - A copy shows one "Component" section. The component row gives the name, the number of copies, and "⋯" (Make frame, Disconnect, Duplicate as new). Below it, "Props" has an "Add prop" menu. The menu gives each type with an icon and a hint.
-- Each prop is one row: the name with a rename button, the value in this copy, and Delete. The rename button turns the name into an input in place. A prop that the copy does not set is dim and shows the default. A choice shows its options as chips under the row.
+- Each prop is one row: the name with a rename button, the value in this copy, and Delete. The rename button turns the name into an input in place. A prop that the copy does not set is dim and shows the default. The dropdown of a choice shows its options. Pick an option, remove an option, or type a new option at the bottom.
 - When a copy sets a prop, the menu of its value also gives "Use the default" and "Make this the default for all copies".
 - The page shows "Document variables" with the same rows and an "Add variable" menu. The value in a row is the default.
 
