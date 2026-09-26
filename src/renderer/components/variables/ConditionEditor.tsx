@@ -5,6 +5,7 @@ import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { LiteralInput, SelectBox } from "./LiteralInput";
 import { firstValue, groupsOf, nameOf, newCase, slotsOf } from "./reach";
+import { ExtraActions } from "./ValueMenu";
 import { RemoveButton } from "./VariableParts";
 import type { Reach } from "./reach";
 import type { EditTarget } from "./target";
@@ -196,6 +197,7 @@ export function ConditionEditor({
 				>
 					Use a plain value
 				</button>
+				<ExtraActions target={target} />
 			</div>
 		</div>
 	);

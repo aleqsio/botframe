@@ -3,7 +3,11 @@ import type { ReactElement } from "react";
 const PATHS = {
 	component:
 		"M12 3.5 15 6.5 12 9.5 9 6.5zM12 14.5 15 17.5 12 20.5 9 17.5zM6.5 9 9.5 12 6.5 15 3.5 12zM17.5 9 20.5 12 17.5 15 14.5 12z",
-	sliders: "M4 7h9M17 7h3M15 5v4M4 17h3M11 17h9M9 15v4",
+	pencil: "M5 19l1-4L16 5l3 3L9 18zM14 7l3 3",
+	list: "M9 7h10M9 12h10M9 17h10M5 7h.5M5 12h.5M5 17h.5",
+	toggle: "M8 8h8a4 4 0 0 1 0 8H8a4 4 0 0 1 0-8zM16 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z",
+	hash: "M10 4 8 20M16 4l-2 16M5 9h15M4 15h15",
+	ruler: "M4 16 16 4l4 4L8 20zM8 12l2 2M11 9l2 2M14 6l2 2",
 	branch: "M7 4v16M7 12h5a5 5 0 0 0 5-5V4",
 	hexagon: "M12 3.5 19.5 7.75v8.5L12 20.5l-7.5-4.25v-8.5z",
 	alignBottom: "M4 20h16M6 6h4v10H6zM14 10h4v6h-4z",

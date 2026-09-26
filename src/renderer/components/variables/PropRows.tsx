@@ -1,24 +1,15 @@
 import type { ReactElement } from "react";
-import type { ComponentsView } from "../../../document/components";
-import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import { isLiteral } from "../../../document/value";
 import type { Literal, VariableValue } from "../../../document/value";
 import { emptyValue } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
 import { defaultTarget } from "./defaultTarget";
-import { PropSettings } from "./PropSettings";
 import { ValueControl } from "./ValueControl";
+import { NameCell, Options, RowEnd, heldActions } from "./VariableParts";
+import type { RowProps } from "./VariableParts";
 
 const MESSAGE = "set prop";
-
-interface RowProps {
-	doc: DesignDocument;
-	view: ComponentsView;
-	owner: string;
-	variable: Variable;
-	locked: boolean;
-}
 
 function currentOf(layer: Layer, variable: Variable): Literal {
 	const resolved =
@@ -42,45 +33,40 @@ export function CopyPropRow(
 	};
 
 	return (
-		<div className="prop-row">
-			<span className="prop-name" data-dimmed={held === undefined ? "" : undefined}>
-				{variable.name}
-			</span>
-			<ValueControl
-				dimmed={held === undefined}
-				target={{
-					reach: { view, owners },
-					label: variable.name,
-					type: variable.type,
-					options: variable.options,
-					value: held ?? current,
-					current,
-					make: null,
-					onChange: write,
-				}}
-			/>
-			<PropSettings
-				{...props}
-				onReset={
-					held === undefined
-						? null
-						: () => {
-								write(null);
-							}
-				}
-				withDefault
-			/>
-		</div>
+		<>
+			<div className="prop-row">
+				<NameCell {...props} dimmed={held === undefined} />
+				<ValueControl
+					dimmed={held === undefined}
+					target={{
+						reach: { view, owners },
+						label: variable.name,
+						type: variable.type,
+						options: variable.options,
+						value: held ?? current,
+						current,
+						make: null,
+						onChange: write,
+						extra: held === undefined ? [] : heldActions(props, held, write),
+					}}
+				/>
+				<RowEnd {...props} />
+			</div>
+			<Options {...props} />
+		</>
 	);
 }
 
 export function DefaultRow(props: RowProps): ReactElement {
 	const { doc, owner, variable, view } = props;
 	return (
-		<div className="prop-row">
-			<span className="prop-name">{variable.name}</span>
-			<ValueControl target={defaultTarget(doc, view, owner, variable)} />
-			<PropSettings {...props} onReset={null} withDefault={false} />
-		</div>
+		<>
+			<div className="prop-row">
+				<NameCell {...props} dimmed={false} />
+				<ValueControl target={defaultTarget(doc, view, owner, variable)} />
+				<RowEnd {...props} />
+			</div>
+			<Options {...props} />
+		</>
 	);
 }

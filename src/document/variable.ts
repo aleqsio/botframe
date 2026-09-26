@@ -2,7 +2,7 @@ import { bagOf, listOf } from "./bag";
 import { isLiteral, storedValue, valueOf } from "./value";
 import type { Literal, VariableValue } from "./value";
 
-export const VARIABLE_TYPES = ["color", "length", "number", "text", "boolean", "choice"] as const;
+const VARIABLE_TYPES = ["color", "length", "number", "text", "boolean", "choice"] as const;
 
 export type VariableType = (typeof VARIABLE_TYPES)[number];
 

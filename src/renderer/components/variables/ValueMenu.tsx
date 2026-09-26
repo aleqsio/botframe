@@ -76,7 +76,20 @@ function Actions({ query, target }: { query: string; target: EditTarget }): Reac
 					Use a plain value
 				</button>
 			)}
+			<ExtraActions target={target} />
 		</div>
+	);
+}
+
+export function ExtraActions({ target }: { target: EditTarget }): ReactElement {
+	return (
+		<>
+			{(target.extra ?? []).map((action) => (
+				<button className="value-action" key={action.label} onClick={action.run} type="button">
+					{action.label}
+				</button>
+			))}
+		</>
 	);
 }
 

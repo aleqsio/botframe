@@ -28,9 +28,9 @@ async function makeComponent(page: Page, origin: Point): Promise<Locator> {
 }
 
 async function addSwitchProp(inspector: Locator): Promise<void> {
-	await inspector.getByRole("button", { name: "Add a prop", exact: true }).click();
+	await inspector.getByRole("button", { name: "Add prop", exact: true }).click();
 	await inspector.page().getByRole("menuitem", { name: "Switch" }).click();
-	await expect(inspector.locator(".prop-name")).toHaveText(["switch 1"]);
+	await expect(inspector.locator(".prop-name-text")).toHaveText(["switch 1"]);
 }
 
 async function fillWhenSwitchIsOn(page: Page, origin: Point): Promise<void> {

@@ -1,24 +1,14 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import { DOCUMENT_SCOPE, VARIABLE_TYPES } from "../../../document/variable";
+import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
 import { Icon } from "../Icon";
 import { isFrame } from "../layerEntry";
 import { FrameSection, copyActions } from "./ComponentActions";
 import type { PanelProps } from "./ComponentActions";
+import { AddMenu } from "./AddMenu";
 import { IconMenu } from "./IconMenu";
-import type { MenuAction } from "./IconMenu";
 import { CopyPropRow, DefaultRow } from "./PropRows";
-import { addVariable, typeName } from "./scopeEdit";
-
-function addActions(doc: DesignDocument, owner: string): readonly MenuAction[] {
-	return VARIABLE_TYPES.map((type) => ({
-		label: typeName(type),
-		run: () => {
-			addVariable(doc, owner, type);
-		},
-	}));
-}
 
 function CopySection(props: PanelProps & { component: string }): ReactElement {
 	const { component, doc, layer } = props;
@@ -30,19 +20,20 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 
 	return (
 		<section aria-label="Component" className="field-group layout-section">
-			<header className="layout-head">
-				<span className="group-label">Component</span>
-				{locked ? null : (
-					<IconMenu actions={addActions(doc, component)} icon="plus" label="Add a prop" />
-				)}
-				{locked ? null : (
-					<IconMenu actions={copyActions(props)} icon="more" label="Component actions" />
-				)}
-			</header>
+			<span className="group-label">Component</span>
 			<div className="component-title">
 				<Icon name="component" />
 				<span className="component-name">{entry?.name ?? "Missing component"}</span>
 				<span className="component-count">{copies === 1 ? "1 copy" : `${copies} copies`}</span>
+				{locked ? null : (
+					<IconMenu actions={copyActions(props)} icon="more" label="Component actions" />
+				)}
+			</div>
+			<div className="props-head">
+				<span className="property-label">Props</span>
+				{locked ? null : (
+					<AddMenu doc={doc} label="Add prop" note="A prop each copy can set" owner={component} />
+				)}
 			</div>
 			{view.variables(component).map((variable) => (
 				<CopyPropRow
@@ -75,7 +66,12 @@ export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
 		<section aria-label="Document variables" className="field-group layout-section">
 			<header className="layout-head">
 				<span className="group-label">Document variables</span>
-				<IconMenu actions={addActions(doc, DOCUMENT_SCOPE)} icon="plus" label="Add a variable" />
+				<AddMenu
+					doc={doc}
+					label="Add variable"
+					note="A token each layer can use"
+					owner={DOCUMENT_SCOPE}
+				/>
 			</header>
 			{view.variables(DOCUMENT_SCOPE).map((variable) => (
 				<DefaultRow

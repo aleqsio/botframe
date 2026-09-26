@@ -8,6 +8,11 @@ export interface MakeAction {
 	run: (name: string) => string;
 }
 
+export interface TargetAction {
+	label: string;
+	run: () => void;
+}
+
 export interface EditTarget {
 	reach: Reach;
 	label: string;
@@ -17,4 +22,5 @@ export interface EditTarget {
 	current: Literal;
 	make: MakeAction | null;
 	onChange: (value: VariableValue) => void;
+	extra?: readonly TargetAction[] | undefined;
 }
