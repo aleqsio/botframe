@@ -5,7 +5,7 @@ import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { groupsOf, isColor, literalText, referenced, starterCondition } from "./reach";
 import type { Group } from "./reach";
-import type { EditTarget } from "./target";
+import type { EditTarget, MakeAction } from "./target";
 
 function matching(groups: readonly Group[], query: string): readonly Group[] {
 	const text = query.trim().toLowerCase();
@@ -32,7 +32,14 @@ function DefaultText({ variable }: { variable: Variable }): ReactElement {
 	);
 }
 
-function Actions({ target }: { target: EditTarget }): ReactElement {
+function made(make: MakeAction, query: string): { label: string; name: string } {
+	const typed = query.trim();
+	return typed === ""
+		? { label: make.label, name: make.name }
+		: { label: `${make.label} “${typed}”`, name: typed };
+}
+
+function Actions({ query, target }: { query: string; target: EditTarget }): ReactElement {
 	const { current, make, onChange, reach, value } = target;
 	return (
 		<div className="value-actions">
@@ -50,12 +57,12 @@ function Actions({ target }: { target: EditTarget }): ReactElement {
 				<button
 					className="value-action"
 					onClick={() => {
-						onChange({ var: make.run() });
+						onChange({ var: make.run(made(make, query).name) });
 					}}
 					type="button"
 				>
 					<Icon name="plus" />
-					{make.label}
+					{made(make, query).label}
 				</button>
 			)}
 			{isLiteral(value) ? null : (
@@ -71,6 +78,16 @@ function Actions({ target }: { target: EditTarget }): ReactElement {
 			)}
 		</div>
 	);
+}
+
+function pickTyped(target: EditTarget, groups: readonly Group[], query: string): void {
+	const [first] = groups.flatMap((group) => group.variables);
+	const { make } = target;
+	if (first !== undefined) {
+		target.onChange({ var: first.id });
+	} else if (make !== null) {
+		target.onChange({ var: make.run(made(make, query).name) });
+	}
 }
 
 export function ValueMenu({
@@ -91,6 +108,12 @@ export function ValueMenu({
 				className="property-input value-search"
 				onChange={(event) => {
 					setQuery(event.target.value);
+				}}
+				onKeyDown={(event) => {
+					if (event.key === "Enter") {
+						pickTyped(target, groups, query);
+						onPicked();
+					}
 				}}
 				placeholder={`Search ${target.type} variables`}
 				value={query}
@@ -118,7 +141,7 @@ export function ValueMenu({
 				))}
 				{groups.length === 0 ? <p className="component-note">No variable here.</p> : null}
 			</div>
-			<Actions target={target} />
+			<Actions query={query} target={target} />
 		</div>
 	);
 }

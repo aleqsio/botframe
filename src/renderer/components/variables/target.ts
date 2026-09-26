@@ -4,7 +4,8 @@ import type { Reach } from "./reach";
 
 export interface MakeAction {
 	label: string;
-	run: () => string;
+	name: string;
+	run: (name: string) => string;
 }
 
 export interface EditTarget {

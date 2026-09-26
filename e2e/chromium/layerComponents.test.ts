@@ -85,6 +85,31 @@ test("a field makes a document variable from its value and shows it as a chip", 
 	).toBeVisible();
 });
 
+test("the search makes a document variable from the typed name, and undo and select all stay in the field", async ({
+	page,
+}) => {
+	const { layers, origin } = await openRenderer(page);
+	await clickAt(page, origin, { x: 540, y: 340 });
+	const inspector = inspectorOf(page);
+	await inspector
+		.getByRole("button", { name: "Fill: use a variable or a condition", exact: true })
+		.click();
+	const search = page.getByLabel("Search variables", { exact: true });
+	await search.pressSequentially("brand");
+	await search.press("ControlOrMeta+a");
+	await search.pressSequentially("accent");
+	await expect(search).toHaveValue("accent");
+	await search.press("ControlOrMeta+z");
+	await expect(search).toHaveValue("brand");
+	await expect(layers).toHaveCount(1);
+	await expect(page.getByRole("button", { name: "Make a document variable “" })).toBeVisible();
+
+	await search.fill("brand");
+	await search.press("Enter");
+
+	await expect(inspector.locator(".variable-chip")).toHaveText("brand");
+});
+
 for (const scheme of SCHEMES) {
 	test(`the component panels fit their text in the ${scheme} scheme`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme: scheme });

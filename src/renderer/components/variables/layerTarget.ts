@@ -34,8 +34,8 @@ function makeAction(
 			owner === DOCUMENT_SCOPE
 				? "Make a document variable"
 				: `Make a prop of ${ownerLabel(reach.view, owner)}`,
-		run: () =>
-			makeVariable(doc, owner, { name: label.toLowerCase(), type, initial: current, options: [] }),
+		name: label.toLowerCase(),
+		run: (name) => makeVariable(doc, owner, { name, type, initial: current, options: [] }),
 	};
 }
 

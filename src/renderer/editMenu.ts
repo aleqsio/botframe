@@ -5,6 +5,7 @@ import type { Bridge } from "./bridge";
 import type { EditCommand } from "./input/command";
 import { EDIT_COMMANDS, commandById, runEditCommand } from "./input/editCommand";
 import { LAYOUT_ACTIONS } from "./input/layoutAction";
+import { isTextField, runTextEdit, textEditFor } from "./input/textField";
 import type { UserState } from "./state/userState";
 import type { Workspace } from "./state/workspace";
 
@@ -111,6 +112,11 @@ export function connectEditMenu(workspace: Workspace): void {
 		drop = followTab(shell, workspace);
 	});
 	shell.onCommand((id) => {
+		const edit = textEditFor(id, isTextField(document.activeElement));
+		if (edit !== null) {
+			runTextEdit(edit);
+			return;
+		}
 		const command = commandById(id);
 		if (command !== null) {
 			const { doc, user } = workspace.active.get();
