@@ -15,6 +15,8 @@ export function defaultTarget(
 		reach: {
 			view,
 			owners: owner === DOCUMENT_SCOPE ? [owner] : [DOCUMENT_SCOPE, owner],
+			source: doc.tree.resolver(),
+			chain: [],
 			skip: variable.id,
 		},
 		label: `${variable.name} default`,

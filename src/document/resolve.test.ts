@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveValue, resolveVariable } from "./resolve";
+import { heldValue, resolveValue, resolveVariable } from "./resolve";
 import type { Declared, ResolveSource } from "./resolve";
 import type { Condition, VariableValue } from "./value";
 import { DOCUMENT_SCOPE } from "./variable";
@@ -133,6 +133,18 @@ describe("resolveValue", () => {
 
 		expect(resolveValue(sourceOf(WORLD), value, ["card", "screen"])).toBe("#111111");
 		expect(resolveValue(sourceOf(WORLD), value, ["plainCard"])).toBe("#00ff00");
+	});
+});
+
+describe("heldValue", () => {
+	it("gives the nearest value that a copy sets, else the default", () => {
+		const source = sourceOf(WORLD);
+
+		expect(heldValue(source, "variant", ["button", "card"])).toEqual({ var: "tone" });
+		expect(heldValue(source, "mode", ["card", "screen"])).toBe("dark");
+		expect(heldValue(source, "tone", ["plainCard"])).toBe("neutral");
+		expect(heldValue(source, "surface", [])).toEqual(SURFACE.initial);
+		expect(heldValue(source, "gone", [])).toBeNull();
 	});
 });
 

@@ -1,4 +1,6 @@
 import type { ComponentsView } from "../../../document/components";
+import { heldValue, resolveVariable } from "../../../document/resolve";
+import type { ResolveSource } from "../../../document/resolve";
 import { isCondition, isLiteral, isReference } from "../../../document/value";
 import type { Case, Condition, Literal, VariableValue } from "../../../document/value";
 import { DOCUMENT_SCOPE, emptyValue } from "../../../document/variable";
@@ -11,7 +13,19 @@ export type ValueKind = "value" | "variable" | "condition";
 export interface Reach {
 	view: ComponentsView;
 	owners: readonly string[];
+	source: ResolveSource;
+	chain: readonly string[];
 	skip?: string | undefined;
+}
+
+export interface Nearest {
+	value: Literal | null;
+	held: VariableValue | null;
+}
+
+export function nearestOf(reach: Reach, id: string): Nearest {
+	const { chain, source } = reach;
+	return { value: resolveVariable(source, id, chain), held: heldValue(source, id, chain) };
 }
 
 export interface Group {

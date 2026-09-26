@@ -50,7 +50,13 @@ function patchOf(spec: FieldSpec, next: EditTarget["value"]): LayerPatch | null 
 export function useLayerTarget(doc: DesignDocument, layer: Layer, spec: FieldSpec): EditTarget {
 	const { key, label } = spec;
 	const view = useComponentsView(doc);
-	const reach = { view, owners: doc.tree.ownersAt(layer.id, isPlacementBinding(key)) };
+	const placement = isPlacementBinding(key);
+	const reach = {
+		view,
+		owners: doc.tree.ownersAt(layer.id, placement),
+		source: doc.tree.resolver(),
+		chain: doc.tree.contextOf(layer.id, placement),
+	};
 	const type = BINDING_TYPES[key];
 	const current = currentOf(layer, key);
 	return {

@@ -72,22 +72,37 @@ function variableFrom(walk: Walk, id: string, from: number): Literal | null {
 	return value;
 }
 
+interface Nearest {
+	held: VariableValue;
+	at: number;
+	assigned: boolean;
+}
+
+function nearest(source: ResolveSource, declared: Declared, chain: readonly string[]): Nearest {
+	const { owner, variable } = declared;
+	for (const [at, copy] of chain.entries()) {
+		const held = source.assigned(copy, variable.id);
+		if (held !== undefined) {
+			return { held, at, assigned: true };
+		}
+		if (owner !== DOCUMENT_SCOPE && source.componentOf(copy) === owner) {
+			return { held: variable.initial, at, assigned: false };
+		}
+	}
+	return { held: variable.initial, at: chain.length, assigned: false };
+}
+
 function lookup(walk: Walk, id: string, from: number): Literal | null {
 	const declared = walk.depth > MAX_DEPTH ? null : walk.source.declared(id);
 	if (declared === null) {
 		return null;
 	}
-	for (let at = from; at < walk.chain.length; at += 1) {
-		const copy = walk.chain[at] ?? "";
-		const held = walk.source.assigned(copy, id);
-		if (held !== undefined) {
-			return fitted(declared, valueAt(walk, held, at + 1)) ?? initialAt(walk, declared, at);
-		}
-		if (declared.owner !== DOCUMENT_SCOPE && walk.source.componentOf(copy) === declared.owner) {
-			return initialAt(walk, declared, at);
-		}
+	const found = nearest(walk.source, declared, walk.chain.slice(from));
+	const at = from + found.at;
+	if (!found.assigned) {
+		return initialAt(walk, declared, at);
 	}
-	return initialAt(walk, declared, walk.chain.length);
+	return fitted(declared, valueAt(walk, found.held, at + 1)) ?? initialAt(walk, declared, at);
 }
 
 function startWalk(source: ResolveSource, chain: readonly string[]): Walk {
@@ -108,4 +123,13 @@ export function resolveValue(
 	chain: readonly string[],
 ): Literal | null {
 	return valueAt(startWalk(source, chain), value, 0);
+}
+
+export function heldValue(
+	source: ResolveSource,
+	id: string,
+	chain: readonly string[],
+): VariableValue | null {
+	const declared = source.declared(id);
+	return declared === null ? null : nearest(source, declared, chain).held;
 }

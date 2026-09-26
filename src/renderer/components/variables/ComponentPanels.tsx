@@ -17,7 +17,12 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 	const entry = view.entry(component);
 	const copies = useComponentRows(doc).find((held) => held.id === component)?.copies ?? 0;
 	const locked = entry?.body.kind !== "layers";
-	const owners = doc.tree.ownersAt(layer.id, true);
+	const reach = {
+		view,
+		owners: doc.tree.ownersAt(layer.id, true),
+		source: doc.tree.resolver(),
+		chain: doc.tree.contextOf(layer.id, true),
+	};
 	const [fresh, setFresh] = useState<string | null>(null);
 
 	return (
@@ -54,7 +59,7 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 						setFresh(null);
 					}}
 					owner={component}
-					owners={owners}
+					reach={reach}
 					variable={variable}
 					view={view}
 				/>

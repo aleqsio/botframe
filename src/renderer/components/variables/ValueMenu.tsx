@@ -1,10 +1,20 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
-import { isLiteral } from "../../../document/value";
+import type { ComponentsView } from "../../../document/components";
+import { isCondition, isLiteral } from "../../../document/value";
+import type { VariableValue } from "../../../document/value";
 import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
-import { groupsOf, isColor, literalText, referenced, starterCondition } from "./reach";
-import type { Group } from "./reach";
+import {
+	groupsOf,
+	isColor,
+	literalText,
+	nameOf,
+	nearestOf,
+	referenced,
+	starterCondition,
+} from "./reach";
+import type { Group, Reach } from "./reach";
 import type { EditTarget, MakeAction } from "./target";
 
 function matching(groups: readonly Group[], query: string): readonly Group[] {
@@ -17,17 +27,32 @@ function matching(groups: readonly Group[], query: string): readonly Group[] {
 	});
 }
 
-function DefaultText({ variable }: { variable: Variable }): ReactElement {
-	const { initial } = variable;
-	if (!isLiteral(initial)) {
-		return <span className="value-option-default">…</span>;
+function SourceMark({
+	held,
+	view,
+}: {
+	held: VariableValue | null;
+	view: ComponentsView;
+}): ReactElement | null {
+	if (held === null || isLiteral(held)) {
+		return null;
 	}
+	return isCondition(held) ? (
+		<Icon name="branch" />
+	) : (
+		<span className="variable-chip">{nameOf(view, held.var)}</span>
+	);
+}
+
+function NearestText({ reach, variable }: { reach: Reach; variable: Variable }): ReactElement {
+	const { held, value } = nearestOf(reach, variable.id);
 	return (
 		<span className="value-option-default">
-			{isColor(initial) ? (
-				<span aria-hidden="true" className="value-swatch" style={{ background: initial }} />
+			<SourceMark held={held} view={reach.view} />
+			{value !== null && isColor(value) ? (
+				<span aria-hidden="true" className="value-swatch" style={{ background: value }} />
 			) : null}
-			{literalText(initial)}
+			{value === null ? "…" : literalText(value)}
 		</span>
 	);
 }
@@ -147,7 +172,7 @@ export function ValueMenu({
 								type="button"
 							>
 								<span className="value-option-name">{variable.name}</span>
-								<DefaultText variable={variable} />
+								<NearestText reach={target.reach} variable={variable} />
 							</button>
 						))}
 					</div>

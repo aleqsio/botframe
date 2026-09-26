@@ -4,6 +4,7 @@ import { isLiteral } from "../../../document/value";
 import type { Literal, VariableValue } from "../../../document/value";
 import { emptyValue } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
+import type { Reach } from "./reach";
 import { defaultTarget } from "./defaultTarget";
 import { ValueControl } from "./ValueControl";
 import { NameCell, RowEnd, heldActions, optionsWriter } from "./VariableParts";
@@ -21,10 +22,8 @@ function currentOf(layer: Layer, variable: Variable): Literal {
 	return isLiteral(initial) ? initial : emptyValue(type, options);
 }
 
-export function CopyPropRow(
-	props: RowProps & { layer: Layer; owners: readonly string[] },
-): ReactElement {
-	const { doc, layer, owners, variable, view } = props;
+export function CopyPropRow(props: RowProps & { layer: Layer; reach: Reach }): ReactElement {
+	const { doc, layer, reach, variable } = props;
 	const held = layer.content.kind === "component" ? layer.content.props[variable.id] : undefined;
 	const current = currentOf(layer, variable);
 	const write = (value: VariableValue | null): void => {
@@ -38,7 +37,7 @@ export function CopyPropRow(
 			<ValueControl
 				dimmed={held === undefined}
 				target={{
-					reach: { view, owners },
+					reach,
 					label: variable.name,
 					type: variable.type,
 					options: variable.options,
