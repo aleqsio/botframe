@@ -1,6 +1,6 @@
 import { Popover } from "@base-ui-components/react/popover";
 import { useState } from "react";
-import type { ReactElement } from "react";
+import type { ReactElement, RefObject } from "react";
 import { Icon } from "../Icon";
 import { DraftInput } from "../PropertyField";
 import { optionsOf } from "./scopeEdit";
@@ -13,6 +13,7 @@ export interface ChoiceDropdownProps {
 	value: string;
 	onChange: (value: string) => void;
 	onOptions: (options: readonly string[]) => void;
+	anchor: RefObject<Element | null>;
 }
 
 function OptionRow({
@@ -34,7 +35,7 @@ function OptionRow({
 				type="button"
 			>
 				<span className="choice-check">{option === value ? <Icon name="check" /> : null}</span>
-				{option}
+				<span className="choice-value">{option}</span>
 			</button>
 			{options.length === 1 ? null : (
 				<button
@@ -53,7 +54,7 @@ function OptionRow({
 }
 
 export function ChoiceDropdown(props: ChoiceDropdownProps): ReactElement {
-	const { label, onChange, onOptions, options, value } = props;
+	const { anchor, label, onChange, onOptions, options, value } = props;
 	const [open, setOpen] = useState(false);
 
 	return (
@@ -63,7 +64,7 @@ export function ChoiceDropdown(props: ChoiceDropdownProps): ReactElement {
 				<Icon name="chevron" />
 			</Popover.Trigger>
 			<Popover.Portal>
-				<Popover.Positioner align="end" side="bottom" sideOffset={POPUP_GAP}>
+				<Popover.Positioner align="start" anchor={anchor} side="bottom" sideOffset={POPUP_GAP}>
 					<Popover.Popup className="color-popup choice-popup">
 						{options.map((option) => (
 							<OptionRow

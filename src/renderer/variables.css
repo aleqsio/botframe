@@ -662,9 +662,8 @@
 }
 
 .choice-popup {
-	width: max-content;
-	min-width: var(--anchor-width);
-	max-width: calc(var(--inspector-width) - 4 * var(--layout-space-6));
+	box-sizing: border-box;
+	width: var(--anchor-width);
 	gap: var(--layout-space-1);
 	padding: var(--layout-space-2);
 }

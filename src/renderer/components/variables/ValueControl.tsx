@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { ReactElement } from "react";
 import { isLiteral } from "../../../document/value";
 import { BindButton } from "./BindButton";
@@ -13,10 +14,12 @@ export function ValueControl({
 	target: EditTarget;
 }): ReactElement {
 	const { current, label, onChange, options, reach, type, value } = target;
+	const box = useRef<HTMLDivElement>(null);
 	return (
-		<div className="value-control" data-dimmed={dimmed ? "" : undefined}>
+		<div className="value-control" data-dimmed={dimmed ? "" : undefined} ref={box}>
 			{isLiteral(value) ? (
 				<LiteralInput
+					anchor={box}
 					label={label}
 					onChange={onChange}
 					onOptions={target.onOptions}

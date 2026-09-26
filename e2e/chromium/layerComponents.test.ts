@@ -128,6 +128,9 @@ test("a choice prop edits its options in its dropdown", async ({ page }) => {
 	await expect(choice).toHaveText("three");
 	await choice.click();
 	await expect(page.locator(".choice-pick")).toHaveText(["two", "three"]);
+	const field = await inspector.locator(".prop-row .value-control").boundingBox();
+	const popup = await page.locator(".choice-popup").boundingBox();
+	expect([popup?.x, popup?.width]).toStrictEqual([field?.x, field?.width]);
 });
 
 for (const scheme of SCHEMES) {

@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode, RefObject } from "react";
 import type { Literal } from "../../../document/value";
 import type { VariableType } from "../../../document/variable";
 import { DraftInput } from "../PropertyField";
@@ -12,6 +12,7 @@ export interface LiteralInputProps {
 	value: Literal;
 	onChange: (value: Literal) => void;
 	onOptions?: ((options: readonly string[]) => void) | undefined;
+	anchor?: RefObject<Element | null> | undefined;
 }
 
 function numberOf(text: string): number | null {
@@ -101,9 +102,11 @@ export function LiteralInput(props: LiteralInputProps): ReactElement {
 			/>
 		);
 	}
-	if (type === "choice" && props.onOptions !== undefined) {
+	const { anchor } = props;
+	if (type === "choice" && props.onOptions !== undefined && anchor !== undefined) {
 		return (
 			<ChoiceDropdown
+				anchor={anchor}
 				label={label}
 				onChange={onChange}
 				onOptions={props.onOptions}
