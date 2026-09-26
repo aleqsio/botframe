@@ -203,6 +203,10 @@
 	overflow-y: auto;
 }
 
+.value-popup:has(> .condition-editor) {
+	width: calc(var(--inspector-width) + 10 * var(--layout-space-6));
+}
+
 .value-menu,
 .condition-editor {
 	display: flex;
@@ -322,7 +326,7 @@
 
 .case-row {
 	display: grid;
-	grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.3fr) var(
+	grid-template-columns: auto minmax(0, 0.8fr) auto minmax(0, 1fr) auto minmax(0, 1fr) var(
 			--layout-inner
 		);
 	align-items: center;
@@ -356,7 +360,21 @@
 	min-width: 0;
 }
 
+.color-value {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: var(--layout-space-2);
+	min-width: 0;
+}
+
+.color-value > .property-input {
+	flex: 1;
+	min-width: 0;
+}
+
 .case-result > .property-input,
+.case-result > .color-value,
 .case-result > .variable-chip {
 	flex: 1;
 	min-width: 0;

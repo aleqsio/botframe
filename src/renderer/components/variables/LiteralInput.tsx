@@ -70,21 +70,23 @@ function ColorLiteral({ label, onChange, value }: LiteralInputProps): ReactEleme
 	const [draft, setDraft] = useState<string | null>(null);
 	const latest = useRef<string | null>(null);
 	return (
-		<ColorInput
-			label={label}
-			onChange={(text) => {
-				latest.current = text;
-				setDraft(text);
-			}}
-			onCommit={() => {
-				if (latest.current !== null) {
-					onChange(latest.current);
-				}
-				latest.current = null;
-				setDraft(null);
-			}}
-			value={draft ?? String(value)}
-		/>
+		<span className="color-value">
+			<ColorInput
+				label={label}
+				onChange={(text) => {
+					latest.current = text;
+					setDraft(text);
+				}}
+				onCommit={() => {
+					if (latest.current !== null) {
+						onChange(latest.current);
+					}
+					latest.current = null;
+					setDraft(null);
+				}}
+				value={draft ?? String(value)}
+			/>
+		</span>
 	);
 }
 
