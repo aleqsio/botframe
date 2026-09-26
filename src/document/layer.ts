@@ -7,13 +7,14 @@ import type { InstanceState } from "./instanceState";
 import type { LayerId } from "./path";
 import type { Literal, VariableValue } from "./value";
 import type { Assignments } from "./variable";
+import type { Vertex } from "./vertices";
 
 export type { LayerId } from "./path";
 
 export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
 	| { kind: "ellipse" }
-	| { kind: "path"; d: string }
+	| { kind: "path"; vertices: readonly Vertex[] }
 	| { kind: "unsupported" };
 
 export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;

@@ -8,6 +8,7 @@ import { commandById, commandForStroke, runEditCommand } from "./editCommand";
 import type { KeyStroke } from "./layerCommand";
 import { LAYOUT_ACTIONS, actionTip } from "./layoutAction";
 import type { LayoutAction } from "./layoutAction";
+import { verticesOf } from "../../document/vertices";
 
 const SQUARE: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: "#d9d9d9",
@@ -361,7 +362,16 @@ describe("flip", () => {
 		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
 		const child = only(place(held, [{ x: 20, y: 30, width: 40, height: 20 }], parent));
 		held.doc.update(parent, { layout: { display: "row" } });
-		held.doc.update(child, { geometry: { kind: "path", d: "M0 0 L40 0 L0 20 Z" } });
+		held.doc.update(child, {
+			geometry: {
+				kind: "path",
+				vertices: verticesOf([
+					{ x: 0, y: 0 },
+					{ x: 1, y: 0 },
+					{ x: 0, y: 1 },
+				]),
+			},
+		});
 		held.doc.commit("set display");
 		held.user.selection.set([child]);
 
@@ -387,7 +397,16 @@ describe("flip", () => {
 		const parent = only(place(held, [{ x: 0, y: 0, width: 200, height: 200 }]));
 		const child = only(place(held, [{ x: 20, y: 20, width: 40, height: 20 }], parent));
 		held.doc.update(parent, { rotation: 90 });
-		held.doc.update(child, { geometry: { kind: "path", d: "M0 0 L40 0 L0 20 Z" } });
+		held.doc.update(child, {
+			geometry: {
+				kind: "path",
+				vertices: verticesOf([
+					{ x: 0, y: 0 },
+					{ x: 1, y: 0 },
+					{ x: 0, y: 1 },
+				]),
+			},
+		});
 		held.doc.commit("turn");
 		held.user.selection.set([child]);
 

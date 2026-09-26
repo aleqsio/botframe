@@ -35,6 +35,7 @@ export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeySt
 	if (stroke.key === CANCEL_KEY) {
 		user.snap.set(null);
 		user.marquee.set(null);
+		user.pathEdit.set(null);
 		cancelMove(doc, user);
 		cancelGroupMove(doc, user);
 		cancelDraw(doc, user);

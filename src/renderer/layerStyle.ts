@@ -17,6 +17,7 @@ import type {
 import { PERCENT, roundNumber } from "../document/length";
 import type { Axis } from "../document/length";
 import { pivotOf, turnedBounds } from "./input/layerSpace";
+import { shapeText } from "./pathShape";
 import type { Turned } from "./input/layerSpace";
 
 declare module "react" {
@@ -89,7 +90,7 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 			return { borderRadius: "50%" };
 		}
 		case "path": {
-			return { clipPath: `path("${geometry.d}")` };
+			return { clipPath: shapeText(geometry.vertices) };
 		}
 		case "unsupported": {
 			break;

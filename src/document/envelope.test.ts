@@ -6,6 +6,7 @@ import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { PackedComponent } from "./componentPack";
 import type { LayerNode } from "./subtree";
 import { PLAIN_RECTANGLE } from "./subtree";
+import { verticesOf } from "./vertices";
 
 const CHILD: LayerNode = {
 	fields: {
@@ -16,7 +17,14 @@ const CHILD: LayerNode = {
 		fill: "#ff0000",
 		name: "Child",
 		clip: true,
-		geometry: { kind: "path", d: "M0 0 L1 1 Z" },
+		geometry: {
+			kind: "path",
+			vertices: verticesOf([
+				{ x: 0, y: 0 },
+				{ x: 1, y: 1 },
+				{ x: 0, y: 1 },
+			]),
+		},
 	},
 	rotation: 15,
 	skewX: 0,

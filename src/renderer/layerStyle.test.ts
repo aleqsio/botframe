@@ -14,6 +14,7 @@ import type {
 	SpacingUnit,
 } from "../document/layout";
 import { layerStyle, originPlace, outOfFlow, spaceTransform, turnedPad } from "./layerStyle";
+import { verticesOf } from "../document/vertices";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
 const ROW: DisplayMode = "row";
@@ -165,9 +166,14 @@ describe("layerStyle geometry", () => {
 		});
 	});
 
-	it("clips a path geometry with clipPath", () => {
-		expect(layerStyle(layerWith({ kind: "path", d: "M0 0 L10 10 Z" }), null)).toMatchObject({
-			clipPath: 'path("M0 0 L10 10 Z")',
+	it("clips a path geometry with a shape that scales with the box", () => {
+		const triangle = verticesOf([
+			{ x: 0, y: 0 },
+			{ x: 1, y: 0 },
+			{ x: 0, y: 1 },
+		]);
+		expect(layerStyle(layerWith({ kind: "path", vertices: triangle }), null)).toMatchObject({
+			clipPath: "shape(from 0% 0%, line to 100% 0%, line to 0% 100%, line to 0% 0%, close)",
 		});
 	});
 

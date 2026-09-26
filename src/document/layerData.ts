@@ -18,6 +18,7 @@ import {
 } from "./length";
 import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
 import { mediaOf } from "./media";
+import { verticesOf } from "./vertices";
 import type { MediaFill } from "./media";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import type { FieldSource } from "./read";
@@ -48,7 +49,7 @@ const GEOMETRY_READERS: Readonly<
 		frame: readBoolean(fields, "frame", false),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
-	path: (fields) => ({ kind: "path", d: readString(fields, "d", "") }),
+	path: (fields) => ({ kind: "path", vertices: verticesOf(fields?.get("vertices")) }),
 };
 
 function unitKey(key: BoxKey): string {

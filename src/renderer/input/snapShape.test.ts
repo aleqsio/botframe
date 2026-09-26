@@ -85,7 +85,7 @@ describe("the points of snapShapeOf", () => {
 	});
 
 	it("gives the box of a path and of a shape it does not know", () => {
-		expect(pointsOf(layerWith({ kind: "path", d: "M0 0" }))).toHaveLength(5);
+		expect(pointsOf(layerWith({ kind: "path", vertices: [] }))).toHaveLength(5);
 		expect(pointsOf(layerWith({ kind: "unsupported" }))).toHaveLength(5);
 	});
 
@@ -153,7 +153,7 @@ describe("the curves of snapShapeOf", () => {
 	});
 
 	it("gives the four box edges of a path and of a shape it does not know", () => {
-		expect(curvesOf(layerWith({ kind: "path", d: "M0 0" }))).toHaveLength(4);
+		expect(curvesOf(layerWith({ kind: "path", vertices: [] }))).toHaveLength(4);
 		expect(curvesOf(layerWith({ kind: "unsupported" }))).toHaveLength(4);
 	});
 

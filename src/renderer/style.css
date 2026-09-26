@@ -144,6 +144,7 @@ body {
 .selection,
 .selection-box,
 .selection-peer,
+.path-edit,
 .marquee,
 .highlight,
 .drop-outline {
@@ -273,6 +274,41 @@ body {
 	background: var(--selection);
 	content: "";
 	opacity: 0.5;
+}
+
+.path-lines {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	fill: none;
+	stroke: var(--selection);
+	stroke-width: 1px;
+}
+
+.path-lines path {
+	stroke-width: 1.5px;
+}
+
+.path-lines * {
+	vector-effect: non-scaling-stroke;
+}
+
+.path-vertex,
+.path-handle {
+	position: absolute;
+	width: var(--handle-size);
+	height: var(--handle-size);
+	margin: calc(var(--handle-size) / -2);
+	border: 1.5px solid var(--selection);
+	border-radius: 50%;
+	transform: var(--upright, none);
+	background: var(--handle-fill);
+}
+
+.path-handle {
+	background: var(--selection);
 }
 
 .origin-mark {

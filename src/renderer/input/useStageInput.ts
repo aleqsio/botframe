@@ -40,6 +40,7 @@ export interface StageInputHandlers {
 	onDragMove: (point: StagePoint, modifiers: Modifiers) => void;
 	onDragEnd: (point: StagePoint, modifiers: Modifiers) => void;
 	onTap: (layerIds: readonly LayerId[], point: StagePoint, modifiers: Modifiers) => void;
+	onDoubleTap: (layerIds: readonly LayerId[], point: StagePoint, modifiers: Modifiers) => void;
 	onHover: (point: StagePoint) => void;
 	onLeave: () => void;
 	onContextMenu: (client: Point, layerIds: readonly LayerId[]) => void;
@@ -140,6 +141,10 @@ function emit(session: StageSession, gesture: Gesture | null): void {
 		}
 		case "tap": {
 			handlers.onTap(input.layerIds, stagePointOf(input, camera, gesture.point), input.press);
+			break;
+		}
+		case "doubleTap": {
+			handlers.onDoubleTap(input.layerIds, stagePointOf(input, camera, gesture.point), input.press);
 			break;
 		}
 		case "pinch": {

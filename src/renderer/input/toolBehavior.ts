@@ -6,11 +6,12 @@ import { HANDLES } from "./handleBehaviors";
 import type { BehaviorFactory } from "./handleBehaviors";
 import { createMarqueeBehavior } from "./marqueeBehavior";
 import { createPanBehavior } from "./panBehavior";
+import { createPathBehavior } from "./pathBehavior";
 import { createPickBehavior } from "./pickBehavior";
 import type { ToolBehavior } from "./tool";
 
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
-	select: [...HANDLES, createPickBehavior, createMarqueeBehavior],
+	select: [createPathBehavior, ...HANDLES, createPickBehavior, createMarqueeBehavior],
 	frame: [...HANDLES, createDrawBehavior(FRAME_DEFAULTS)],
 	rectangle: [...HANDLES, createDrawBehavior(RECTANGLE_DEFAULTS)],
 	ellipse: [...HANDLES, createDrawBehavior(ELLIPSE_DEFAULTS)],
@@ -19,6 +20,13 @@ const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
 	hand: [createPanBehavior],
 };
 
-export function behaviorFor(tool: ToolId): ToolBehavior {
-	return composeBehaviors(TOOL_BEHAVIORS[tool].map((create) => create()));
+const PATH_EDIT: readonly BehaviorFactory[] = [
+	createPathBehavior,
+	createPickBehavior,
+	createMarqueeBehavior,
+];
+
+export function behaviorFor(tool: ToolId, editingPath = false): ToolBehavior {
+	const factories = editingPath && tool === "select" ? PATH_EDIT : TOOL_BEHAVIORS[tool];
+	return composeBehaviors(factories.map((create) => create()));
 }
