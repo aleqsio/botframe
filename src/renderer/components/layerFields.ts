@@ -52,7 +52,7 @@ export interface UnitChoice {
 }
 
 export interface NumberBinding {
-	key: BoxKey | CornerKey | "rotation";
+	key: BoxKey | CornerKey | "rotation" | "skewX" | "skewY";
 	plain: (value: number) => LayerPatch;
 }
 
@@ -167,6 +167,7 @@ function skewField(label: string, key: "skewX" | "skewY"): LayerField {
 		message: SKEW_MESSAGE,
 		read: (layer) => layer[key],
 		patch: (value) => ({ [key]: value }),
+		bind: { key, plain: (value) => ({ [key]: value }) },
 	};
 }
 

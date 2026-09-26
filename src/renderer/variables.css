@@ -760,3 +760,21 @@
 	border-radius: var(--layout-radius-field);
 	background-color: var(--panel-hover);
 }
+
+.mirror-row {
+	display: flex;
+	align-items: center;
+	gap: var(--layout-space-3);
+}
+
+.mirror-row > .layout-flag,
+.mirror-row > .bound-summary {
+	flex: 1;
+	min-width: 0;
+}
+
+.mirror-row > .bound-summary {
+	padding: var(--layout-space-2) var(--layout-space-4);
+	border-radius: var(--layout-radius-field);
+	background-color: var(--variable-tint);
+}

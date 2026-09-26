@@ -37,6 +37,10 @@ const APPLY: Readonly<Record<BindingKey, Apply>> = {
 	width: numeric((traits, value) => boxTraits(traits, "width", value)),
 	height: numeric((traits, value) => boxTraits(traits, "height", value)),
 	rotation: numeric((traits, value) => ({ ...traits, rotation: value })),
+	skewX: numeric((traits, value) => ({ ...traits, skewX: value })),
+	skewY: numeric((traits, value) => ({ ...traits, skewY: value })),
+	mirrored: (traits, value) =>
+		typeof value === "boolean" ? { ...traits, mirrored: value } : traits,
 	cornerRadius: numeric((traits, value) => cornerTraits(traits, "cornerRadius", value)),
 	cornerSmoothing: numeric((traits, value) => cornerTraits(traits, "cornerSmoothing", value)),
 };
