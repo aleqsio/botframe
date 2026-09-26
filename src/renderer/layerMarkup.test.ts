@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { pixelBox } from "../document/documentFixtures";
 import { DEFAULT_LAYOUT } from "../document/layout";
 import type { LayerLayout } from "../document/layout";
+import { PLAIN_INSTANCE } from "../document/layer";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -120,7 +121,13 @@ describe("layerMarkup of a component instance", () => {
 	it("writes the markup of an HTML copy into a declarative shadow root before the children", () => {
 		const node = {
 			...nodeOf({}, [nodeOf({ x: 1 })]),
-			content: { kind: "component" as const, component: "v1", props: {}, values: {} },
+			content: {
+				kind: "component" as const,
+				component: "v1",
+				props: {},
+				values: {},
+				instance: PLAIN_INSTANCE,
+			},
 		};
 
 		const markup = layerMarkup(node, (content) =>

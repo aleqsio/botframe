@@ -15,6 +15,8 @@ const PLACEMENT_KEYS: ReadonlySet<string> = new Set([
 	"name",
 	"component",
 	"props",
+	"sync",
+	"overrides",
 ]);
 
 const PLACEMENT_LAYOUT: ReadonlySet<string> = new Set(["position", "margin", "cell"]);
@@ -55,6 +57,16 @@ export function copySource(copy: LoroMap, definition: LoroMap): FieldSource {
 			return PLACEMENT_KEYS.has(key) ? copy.get(key) : definition.get(key);
 		},
 	};
+}
+
+export function isPlacementKey(key: string): boolean {
+	const [head = "", sub] = key.split(".");
+	if (sub === undefined) {
+		return PLACEMENT_KEYS.has(head);
+	}
+	return head === "layout"
+		? PLACEMENT_LAYOUT.has(sub)
+		: head === "bindings" && isPlacementBinding(sub);
 }
 
 export interface SplitPatch {

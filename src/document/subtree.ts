@@ -69,7 +69,8 @@ function fieldsOf(layer: Layer): LayerFields {
 }
 
 function linkOf(content: ComponentLink): ComponentLink {
-	return { kind: "component", component: content.component, props: content.props };
+	const { component, instance, props } = content;
+	return { kind: "component", component, props, instance };
 }
 
 export function ownChildIds(source: LayerReader, id: LayerId): readonly LayerId[] {

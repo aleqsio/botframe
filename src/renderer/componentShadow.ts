@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { DesignDocument } from "../document/document";
 import { htmlMarkupOf } from "../document/htmlMarkup";
+import { PLAIN_INSTANCE } from "../document/layer";
 import type { LayerContent } from "../document/layer";
 import { isLiteral } from "../document/value";
 
@@ -30,7 +31,13 @@ export function initialSize(
 				isLiteral(variable.initial) ? [[variable.id, variable.initial] as const] : [],
 			),
 	);
-	const content = { kind: "component", component, props: {}, values } as const;
+	const content = {
+		kind: "component",
+		component,
+		props: {},
+		values,
+		instance: PLAIN_INSTANCE,
+	} as const;
 	return markupSize(htmlMarkupOf(doc.components, content) ?? "");
 }
 

@@ -39,7 +39,7 @@ const DEFAULT_LAYOUT_TEXT: ReadonlyMap<string, string> = new Map(
 );
 
 const GEOMETRY_READERS: Readonly<
-	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
+	Record<Exclude<Geometry["kind"], "unsupported">, (fields: FieldSource | null) => Geometry>
 > = {
 	rectangle: (fields) => ({
 		kind: "rectangle",
@@ -112,6 +112,7 @@ export function readLayerData(data: FieldSource, basis: Basis): LayerTraits {
 		clip: readBoolean(data, "clip", false),
 		content: readContent(data),
 		bindings: readBindings(data),
+		changed: [],
 	};
 }
 

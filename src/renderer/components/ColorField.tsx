@@ -16,6 +16,7 @@ export interface ColorInputProps {
 }
 
 export interface ColorFieldProps extends ColorInputProps {
+	changed?: boolean | undefined;
 	after?: ReactNode | undefined;
 	replace?: ReactNode | undefined;
 }
@@ -83,9 +84,9 @@ export function ColorInput(props: ColorInputProps): ReactElement {
 	);
 }
 
-export function ColorField({ after, replace, ...input }: ColorFieldProps): ReactElement {
+export function ColorField({ after, changed, replace, ...input }: ColorFieldProps): ReactElement {
 	return (
-		<div className="property-field color-field">
+		<div className="property-field color-field" data-changed={changed === true ? "" : undefined}>
 			<span className="property-label">{input.label}</span>
 			{replace ?? <ColorInput {...input} />}
 			{after}

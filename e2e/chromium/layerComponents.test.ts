@@ -23,7 +23,7 @@ async function makeComponent(page: Page, origin: Point): Promise<Locator> {
 	const inspector = inspectorOf(page);
 	await inspector.getByRole("button", { name: "Make component" }).click();
 	await expect(inspector.locator(".component-name")).toHaveText("Frame 1");
-	await expect(inspector.locator(".component-count")).toHaveText("1 copy");
+	await expect(inspector.locator(".component-count")).toHaveText("1 instance");
 	return inspector;
 }
 
@@ -60,7 +60,7 @@ test("a frame becomes a component whose copies stay in sync, and a prop on one c
 	await clickAt(page, origin, EMPTY);
 	await clickAt(page, origin, FRAME_EDGE);
 	await page.keyboard.press("ControlOrMeta+d");
-	await expect(inspector.locator(".component-count")).toHaveText("2 copies");
+	await expect(inspector.locator(".component-count")).toHaveText("2 instances");
 	await inspector.getByRole("checkbox", { name: "switch 1", exact: true }).check();
 
 	const dots = page.locator('.layer[data-layer-id*="~"]');
@@ -154,6 +154,32 @@ test("a new prop opens its name editor, and a color prop uses the color picker",
 	await expect(inspector.getByLabel("tint", { exact: true })).toHaveValue("#ff3b30");
 });
 
+test("an instance that does not sync keeps its own fill until Apply sends it to each instance", async ({
+	page,
+}) => {
+	const { origin } = await openRenderer(page);
+	const inspector = await makeComponent(page, origin);
+	await page.keyboard.press("ControlOrMeta+d");
+	await expect(inspector.locator(".component-count")).toHaveText("2 instances");
+	await inspector.getByRole("button", { name: "Sync to all instances" }).click();
+	await page.getByRole("menuitemradio", { name: "Don’t sync" }).click();
+	const fill = inspector.getByLabel("Fill", { exact: true });
+	await fill.fill("#ff3b30");
+	await fill.press("Enter");
+
+	const frames = page.locator(".layer:not([data-layer-id*='~']):has(> .layer[data-layer-id*='~'])");
+	await expect(frames).toHaveCount(2);
+	await expect(page.locator(".layer[data-selected]")).toHaveCSS("background-color", ALARM);
+	await expect(frames.nth(0)).not.toHaveCSS("background-color", ALARM);
+	await expect(inspector.locator(".color-field")).toHaveAttribute("data-changed", "");
+
+	await inspector.getByRole("button", { name: "Apply to all instances" }).click();
+	await page.getByRole("menuitem", { name: "Style only" }).click();
+
+	await expect(frames.nth(0)).toHaveCSS("background-color", ALARM);
+	await expect(inspector.locator(".color-field")).not.toHaveAttribute("data-changed");
+});
+
 for (const scheme of SCHEMES) {
 	test(`the component panels fit their text in the ${scheme} scheme`, async ({ page }) => {
 		await page.emulateMedia({ colorScheme: scheme });
@@ -162,7 +188,7 @@ for (const scheme of SCHEMES) {
 		await addSwitchProp(inspector);
 
 		const overflow = await inspector
-			.locator(".component-title, .prop-row, .value-control")
+			.locator(".instance-head, .component-title, .prop-row, .value-control")
 			.evaluateAll((rows) => rows.filter((row) => row.scrollWidth > row.clientWidth).length);
 
 		expect(overflow).toBe(0);

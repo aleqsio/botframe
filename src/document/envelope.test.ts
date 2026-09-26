@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { pixelBox } from "./documentFixtures";
+import { nodeBox } from "./documentFixtures";
+import { PLAIN_INSTANCE } from "./layer";
 import { DEFAULT_LAYOUT } from "./layout";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import type { PackedComponent } from "./componentPack";
@@ -21,7 +22,7 @@ const CHILD: LayerNode = {
 	skewX: 0,
 	skewY: 0,
 	mirrored: true,
-	...pixelBox({ x: 1, y: 2, width: 3, height: 4 }),
+	...nodeBox({ x: 1, y: 2, width: 3, height: 4 }),
 	children: [],
 };
 
@@ -40,7 +41,7 @@ const ROOT: LayerNode = {
 	skewX: 0,
 	skewY: 0,
 	mirrored: false,
-	...pixelBox({ x: 10, y: 20, width: 30, height: 40 }),
+	...nodeBox({ x: 10, y: 20, width: 30, height: 40 }),
 	children: [CHILD],
 };
 
@@ -151,7 +152,7 @@ describe("parseEnvelope", () => {
 			skewX: 0,
 			skewY: 0,
 			mirrored: false,
-			...pixelBox({ x: 0, y: 0, width: 0, height: 0 }),
+			...nodeBox({ x: 0, y: 0, width: 0, height: 0 }),
 			children: [],
 		});
 	});
@@ -197,6 +198,7 @@ describe("parseEnvelope", () => {
 				component: "v1",
 				props: { label: "Agree", checked: true, tone: { var: "t1" } },
 				values: {},
+				instance: PLAIN_INSTANCE,
 			},
 			bindings: { fill: { var: "c1" } },
 		};
@@ -230,6 +232,7 @@ describe("parseEnvelope", () => {
 			component: "v1",
 			props: {},
 			values: {},
+			instance: PLAIN_INSTANCE,
 		});
 		expect(parseEnvelope(broken)?.components).toEqual({});
 	});

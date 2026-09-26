@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
+import { changedMark, isChanged } from "../changedField";
 import { ColorField } from "../ColorField";
 import { BindButton } from "./BindButton";
 import { BoundSummary } from "./BoundSummary";
@@ -22,6 +23,7 @@ export function FillField({ doc, layer }: FieldProps): ReactElement {
 	return (
 		<ColorField
 			after={<BindButton target={target} />}
+			changed={isChanged(layer, "fill")}
 			replace={
 				bound === undefined ? undefined : (
 					<BoundSummary bound={bound} now={layer.fill} view={target.reach.view} />
@@ -48,7 +50,7 @@ export function ClipField({ doc, layer }: FieldProps): ReactElement {
 	const bound = layer.bindings.clip;
 
 	return (
-		<div className="property-switch-row">
+		<div className="property-switch-row" data-changed={changedMark(isChanged(layer, "clip"))}>
 			{bound === undefined ? (
 				<label className="property-switch">
 					<input

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NO_CONTENT } from "../../document/layer";
+import { NO_CONTENT, PLAIN_INSTANCE } from "../../document/layer";
 import type { LayerId } from "../../document/layer";
 import { isAssetId } from "../../document/assets";
 import type { AssetId } from "../../document/assets";
@@ -70,7 +70,13 @@ describe("visibleLayerIds", () => {
 		const instance: Paint = {
 			fill: "#00000000",
 			media: null,
-			content: { kind: "component", component: "abc", props: {}, values: {} },
+			content: {
+				kind: "component",
+				component: "abc",
+				props: {},
+				values: {},
+				instance: PLAIN_INSTANCE,
+			},
 		};
 
 		expect(visibleLayerIds([TOP, BOTTOM], (id) => (id === TOP ? instance : null))).toEqual([TOP]);

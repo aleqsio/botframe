@@ -4,8 +4,15 @@ export interface FieldSource {
 	get: (key: string) => unknown;
 }
 
-function asMap(value: unknown): LoroMap | null {
-	return value instanceof LoroMap ? value : null;
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asSource(value: unknown): FieldSource | null {
+	if (value instanceof LoroMap) {
+		return value;
+	}
+	return isRecord(value) ? { get: (key) => value[key] } : null;
 }
 
 export function readNumber(data: FieldSource | null, key: string, fallback: number): number {
@@ -25,11 +32,11 @@ export function readString(data: FieldSource | null, key: string, fallback: stri
 
 export function readVariant<T>(
 	bag: unknown,
-	readers: Readonly<Record<string, (fields: LoroMap | null) => T>>,
+	readers: Readonly<Record<string, (fields: FieldSource | null) => T>>,
 	fallback: T,
 ): T {
-	const map = asMap(bag);
-	const kind = readString(map, "kind", "");
+	const source = asSource(bag);
+	const kind = readString(source, "kind", "");
 	const read = readers[kind];
-	return read === undefined ? fallback : read(asMap(map?.get(kind)));
+	return read === undefined ? fallback : read(asSource(source?.get(kind)));
 }

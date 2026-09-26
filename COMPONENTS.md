@@ -15,7 +15,8 @@ Each component has props. A prop is a variable of the component, and each copy c
 2. **Each state is a prop.** A component has no state, no effect, and no script. A checked box is `checked: true`.
 3. **The file holds the source.** The file opens with no coding project and no network, and shows the same pixels.
 4. **A source never changes.** An HTML source has a content address. A new version gets a new address. A second import of a name points the component at the new address, and each copy shows the new version.
-5. **There is no main copy.** Each copy of a component shows the same layers. An edit inside one copy changes each copy. A copy keeps only its position, its place in the parent layout, and its props. The size, the rotation, the skew, the mirror, and the origin come from the component, so a resize of one copy resizes each copy. A prop can drive the size or the transform of each copy.
+5. **There is no main copy.** Each copy of a component shows the same layers. The user interface calls a copy an "instance". By default, an edit inside one copy changes each copy. A copy keeps its position, its place in the parent layout, and its props. The size, the rotation, the skew, the mirror, and the origin come from the component, so a resize of one copy resizes each copy. A prop can drive the size or the transform of each copy.
+6. **A copy can keep its own values.** Each copy has a sync mode. "Keep all in sync" sends each edit to the component. "Keep style in sync" keeps the geometry (size, position, rotation, skew, mirror, origin, and the sizing and place in the layout) on the copy, and sends the style (fill, corners, content, and all other keys) to the component. "Don't sync" keeps each edit on the copy. A kept value wins over the value of the component.
 
 ## Variables
 
@@ -50,9 +51,10 @@ A place key (x, y) of a copy resolves from the copy above it, because the copy s
 - Each field that can bind has a small button at its right end. A blue hexagon means a plain value. A purple hexagon means a variable. A purple branch means a condition.
 - A click on the button opens a menu. The menu has a search for variables of the type of the field: first the props of the components around the layer, then the document variables. Each variable shows its value at this layer: the value that the nearest copy sets, else the default. When that value comes from a variable, a chip shows the name of that variable. When it comes from a condition, the branch icon shows. The menu also has "Add a condition", "Make a prop of …" or "Make a document variable", and "Use a plain value". A typed name goes into the make action. Enter picks the first match, or makes the variable when nothing matches.
 - A field with a variable shows a chip and the value now. A field with a condition shows the cases on one line. A click on the branch opens the editor of the cases.
-- A copy shows one "Component" section. The component row gives the name, the number of copies, and "⋯" (Make frame, Disconnect, Duplicate as new). Below it, "Props" has an "Add prop" menu. The menu gives each type with an icon and a hint.
+- A copy shows one "Instance" section. Its head has two menus. The padlock menu, "Sync to all instances", gives the three sync modes. The Apply menu shows the number of kept values of the copy, and gives "Everything", "Geometry only", "Style only", and "Reset this instance". Apply writes the kept values to the component, so each copy shows them, and removes them from the copy. Reset removes them. A field with a kept value has a light yellow fill.
+- The component row gives the name, the number of instances, and "⋯" (Make frame, Disconnect, Duplicate as new). Below it, "Props" has an "Add prop" menu. The menu gives each type with an icon and a hint.
 - Each prop is one row: the name with a rename button, the value in this copy, and Delete. The rename button turns the name into an input in place. A new prop starts with its name in the input, and the input has the focus. A prop that the copy does not set is dim and shows the default. The dropdown of a choice shows its options. Pick an option, remove an option, or type a new option at the bottom.
-- When a copy sets a prop, the menu of its value also gives "Use the default" and "Make this the default for all copies".
+- When a copy sets a prop, the menu of its value also gives "Use the default" and "Make this the default for all instances".
 - The page shows "Document variables" with the same rows and an "Add variable" menu. The value in a row is the default.
 
 ## Layer components
@@ -62,7 +64,7 @@ A place key (x, y) of a copy resolves from the copy above it, because the copy s
 | Action | Result |
 | --- | --- |
 | Make component | The frame becomes the first copy. Its children move into a hidden definition. |
-| Duplicate | A new copy of the same component. |
+| Duplicate | A new copy of the same component, with the same sync mode and the same kept values. |
 | Disconnect | The copy gets a new component with its own definition and variables. |
 | Duplicate as new | Duplicate, then Disconnect. |
 | Make frame | The copy becomes a frame with real children. A binding that uses a prop becomes its value. |
@@ -75,7 +77,10 @@ When the last copy goes away, the component list does not show the component. Un
 - A layer body is a root node in the layer tree with the data key `definition`. The canvas does not show it.
 - A copy is a layer with `component` and `props`. The copy has no children in the tree. Its children are the children of the definition root.
 - The id of a layer inside a copy is a path: `copy~copy~node`. Two copies of one component give two ids for one node.
-- A copy reads its place keys (x, y, their units, the name, the props, and the layout position, margin, and cell) from its own node, and each other key from the definition root. A write goes to the same place.
+- A copy reads its place keys (x, y, their units, the name, the props, the sync mode, and the kept values) from its own node, and each other key from the definition root. A write goes to the same place.
+- The copy on the canvas keeps the values of each layer inside it in the mergeable map `overrides`. The key is the path of the layer after the copy, or `self` for the copy. The value is a map of stored keys to JSON values. A nested key is `layout.width` or `bindings.fill`. A null value means the default of the key.
+- A write to a layer inside a copy applies the patch to a scratch copy of the layer, and finds the stored keys that change. The sync mode of the copy sends each changed key to `overrides` or to the component. A key that goes to the component leaves `overrides`, so the edit shows.
+- The component link of a copy carries the sync mode and the kept values, so a duplicate and a paste keep them.
 - A move into or out of a copy is refused, so each id stays the same. A copy of a component inside its own definition is refused.
 - A scope is a mergeable map with `variables`. Each variable is a JSON value: `{ name, type, initial, options }`.
 - A copy stores its props in the mergeable map `props`. A layer stores its bindings in the mergeable map `bindings`. Two peers that change different props or different fields merge with no conflict.

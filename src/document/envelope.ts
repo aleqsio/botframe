@@ -5,7 +5,7 @@ import { packedOf } from "./componentPack";
 import type { PackedComponent } from "./componentPack";
 import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
 import type { LayerContent, LayerFields, Origin, WritableGeometry } from "./layer";
-import { assignmentsOf } from "./layerLinks";
+import { assignmentsOf, instanceFrom } from "./layerLinks";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
@@ -101,7 +101,13 @@ function contentOf(value: unknown): LayerContent {
 	if (bag["kind"] !== "component" || component === "") {
 		return NO_CONTENT;
 	}
-	return { kind: "component", component, props: assignmentsOf(bag["props"]), values: {} };
+	return {
+		kind: "component",
+		component,
+		props: assignmentsOf(bag["props"]),
+		values: {},
+		instance: instanceFrom(bag["instance"]),
+	};
 }
 
 function componentsOf(value: unknown): Readonly<Record<string, PackedComponent>> {

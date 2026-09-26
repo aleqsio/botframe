@@ -49,7 +49,7 @@ export interface PixelBox {
 	bindings: Bindings;
 }
 
-export function pixelBox(rect: Rect): PixelBox {
+export function nodeBox(rect: Rect): PixelBox {
 	return {
 		lengths: pixelLengths(rect),
 		layout: DEFAULT_LAYOUT,
@@ -59,4 +59,8 @@ export function pixelBox(rect: Rect): PixelBox {
 		content: NO_CONTENT,
 		bindings: NO_BINDINGS,
 	};
+}
+
+export function pixelBox(rect: Rect): PixelBox & { changed: readonly string[] } {
+	return { ...nodeBox(rect), changed: [] };
 }

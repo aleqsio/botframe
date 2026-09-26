@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
+import { isChanged } from "../changedField";
 import type { LayerField } from "../layerFields";
 import { BindableChip } from "../variables/BindableChip";
 import { ChipBox } from "./ChipBox";
@@ -20,7 +21,12 @@ export function FieldChip({
 	return bind === undefined ? (
 		<ChipBox {...box} />
 	) : (
-		<BindableChip bind={bind} box={box} doc={doc} layer={layer} />
+		<BindableChip
+			bind={bind}
+			box={{ ...box, changed: isChanged(layer, bind.key) }}
+			doc={doc}
+			layer={layer}
+		/>
 	);
 }
 

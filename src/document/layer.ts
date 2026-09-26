@@ -3,6 +3,7 @@ import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
+import type { InstanceState } from "./instanceState";
 import type { LayerId } from "./path";
 import type { Literal, VariableValue } from "./value";
 import type { Assignments } from "./variable";
@@ -52,11 +53,16 @@ export interface ComponentLink {
 	kind: "component";
 	component: string;
 	props: Assignments;
+	instance?: InstanceState | undefined;
 }
+
+export const PLAIN_INSTANCE: InstanceState = { sync: "all", overrides: {} };
 
 export type ResolvedValues = Readonly<Record<string, Literal>>;
 
-export type LayerContent = { kind: "none" } | (ComponentLink & { values: ResolvedValues });
+export type LayerContent =
+	| { kind: "none" }
+	| (ComponentLink & { values: ResolvedValues; instance: InstanceState });
 
 export const NO_CONTENT: { kind: "none" } = { kind: "none" };
 
@@ -74,6 +80,7 @@ export interface Layer extends Rect, Pose {
 	guides: readonly Guide[];
 	content: LayerContent;
 	bindings: Bindings;
+	changed: readonly string[];
 }
 
 export type LayerTraits = Omit<Layer, "id" | "parent">;

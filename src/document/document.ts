@@ -141,7 +141,7 @@ export class DesignDocument {
 
 	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
 		const node = this.#tree.tree().createNode(this.#tree.containerOf(parent));
-		writeLayer(this.#tree, node, fields, this.#basisOf(parent));
+		writeLayer(this.#tree, node.id, fields, this.#basisOf(parent));
 		this.#notifyStructure();
 		return this.#tree.pathIn(parent, node.id);
 	}
@@ -209,7 +209,7 @@ export class DesignDocument {
 		}
 		const allowed = this.#allowedPatch(node.parent()?.id, unbindCorners(this.layer(id), patch));
 		const basis = this.#basisOf(this.#tree.parentOf(id));
-		for (const target of writeLayer(this.#tree, node, allowed, basis)) {
+		for (const target of writeLayer(this.#tree, id, allowed, basis)) {
 			this.#refreshNode(target);
 		}
 	}

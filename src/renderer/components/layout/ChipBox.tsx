@@ -12,6 +12,7 @@ export interface ChipBoxProps {
 	after?: ReactNode | undefined;
 	replace?: ReactNode | undefined;
 	disabled?: boolean | undefined;
+	changed?: boolean | undefined;
 	field: LayerField;
 	value: number;
 	onPatch: (patch: LayerPatch) => void;
@@ -63,7 +64,7 @@ export function ChipBox(props: ChipBoxProps): ReactElement {
 	const { children, disabled = false, field, value } = props;
 
 	return (
-		<div className={chipClass(props)}>
+		<div className={chipClass(props)} data-changed={props.changed === true ? "" : undefined}>
 			{children}
 			{props.replace ?? (
 				<>

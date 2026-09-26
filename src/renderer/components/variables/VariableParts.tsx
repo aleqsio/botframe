@@ -135,7 +135,7 @@ export function heldActions(
 			},
 		},
 		{
-			label: "Make this the default for all copies",
+			label: "Make this the default for all instances",
 			run: () => {
 				editVariable(props.doc, props.owner, props.variable, { initial: held });
 			},

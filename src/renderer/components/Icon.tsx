@@ -10,6 +10,14 @@ const PATHS = {
 	ruler: "M4 16 16 4l4 4L8 20zM8 12l2 2M11 9l2 2M14 6l2 2",
 	branch: "M7 4v16M7 12h5a5 5 0 0 0 5-5V4",
 	hexagon: "M12 3.5 19.5 7.75v8.5L12 20.5l-7.5-4.25v-8.5z",
+	lock: "M7 11h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM8.5 11V8a3.5 3.5 0 0 1 7 0v3",
+	lockHalf:
+		"M7 11h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 11v9M9 14l3-3M9 17.5 12 14.5",
+	lockOpen:
+		"M7 11h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM8.5 11V8a3.5 3.5 0 0 1 6.8-1.2",
+	apply: "M12 16V4M7.5 8.5 12 4l4.5 4.5M5 20h14",
+	reset: "M5 12a7 7 0 1 0 2-4.9M5 4v4h4",
+	style: "M5 5h14v14H5zM5 12l7-7M8 19 19 8M14 19l5-5",
 	alignBottom: "M4 20h16M6 6h4v10H6zM14 10h4v6h-4z",
 	alignCenterX: "M12 3v18M7 6h10v4H7zM9 14h6v4H9z",
 	alignCenterY: "M3 12h18M6 7h4v10H6zM14 9h4v6h-4z",

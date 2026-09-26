@@ -2,7 +2,9 @@ import { LoroMap } from "loro-crdt";
 import { bagOf } from "./bag";
 import { bindingsOf } from "./bindings";
 import type { BindingKey, Bindings, BindingsPatch } from "./bindings";
-import { NO_CONTENT } from "./layer";
+import { instanceStateOf, OVERRIDES, SYNC, writeInstance } from "./instanceState";
+import { NO_CONTENT, PLAIN_INSTANCE } from "./layer";
+import type { InstanceState } from "./instanceState";
 import type { ComponentLink, LayerContent, LayerPatch } from "./layer";
 import { readString } from "./read";
 import type { FieldSource } from "./read";
@@ -33,6 +35,11 @@ export function assignmentsOf(value: unknown): Assignments {
 	);
 }
 
+export function instanceFrom(value: unknown): InstanceState {
+	const bag = bagOf(value);
+	return instanceStateOf(bag[SYNC], bag[OVERRIDES]);
+}
+
 export function readContent(data: FieldSource): LayerContent {
 	const component = readString(data, COMPONENT, "");
 	if (component === "") {
@@ -43,6 +50,7 @@ export function readContent(data: FieldSource): LayerContent {
 		component,
 		props: assignmentsOf(jsonOf(data.get(PROPS))),
 		values: {},
+		instance: instanceStateOf(data.get(SYNC), jsonOf(data.get(OVERRIDES))),
 	};
 }
 
@@ -82,6 +90,7 @@ function writeContent(data: LoroMap, content: ComponentLink | null): void {
 		.filter((key) => !Object.hasOwn(content.props, key));
 	writeEntries(held, Object.fromEntries(stale.map((key) => [key, null])));
 	writeProps(data, content.props);
+	writeInstance(data, content.instance ?? PLAIN_INSTANCE);
 }
 
 function writeBindings(data: LoroMap, bindings: BindingsPatch): void {

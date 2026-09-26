@@ -1,7 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
-import { DRAWN, firstId, pixelBox } from "./documentFixtures";
+import { DRAWN, firstId, nodeBox } from "./documentFixtures";
 import type { Layer, LayerFields, LayerId } from "./layer";
 import { PLAIN_RECTANGLE, componentIdsOf } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -66,7 +66,7 @@ describe("readSubtree", () => {
 			skewX: 0,
 			skewY: 0,
 			mirrored: false,
-			...pixelBox(DRAWN),
+			...nodeBox(DRAWN),
 			children: [
 				{
 					fields: CHILD,
@@ -74,7 +74,7 @@ describe("readSubtree", () => {
 					skewX: 12,
 					skewY: 0,
 					mirrored: true,
-					...pixelBox(CHILD),
+					...nodeBox(CHILD),
 					children: [
 						{
 							fields: GRANDCHILD,
@@ -82,7 +82,7 @@ describe("readSubtree", () => {
 							skewX: 0,
 							skewY: 0,
 							mirrored: false,
-							...pixelBox(GRANDCHILD),
+							...nodeBox(GRANDCHILD),
 							children: [],
 						},
 					],

@@ -3,12 +3,11 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
-import { Icon } from "../Icon";
 import { isFrame } from "../layerEntry";
-import { FrameSection, copyActions } from "./ComponentActions";
+import { FrameSection } from "./ComponentActions";
 import type { PanelProps } from "./ComponentActions";
 import { AddMenu } from "./AddMenu";
-import { IconMenu } from "./IconMenu";
+import { InstanceHeader } from "./InstanceHeader";
 import { CopyPropRow, DefaultRow } from "./PropRows";
 
 function CopySection(props: PanelProps & { component: string }): ReactElement {
@@ -26,23 +25,15 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 	const [fresh, setFresh] = useState<string | null>(null);
 
 	return (
-		<section aria-label="Component" className="field-group layout-section">
-			<span className="group-label">Component</span>
-			<div className="component-title">
-				<Icon name="component" />
-				<span className="component-name">{entry?.name ?? "Missing component"}</span>
-				<span className="component-count">{copies === 1 ? "1 copy" : `${copies} copies`}</span>
-				{locked ? null : (
-					<IconMenu actions={copyActions(props)} icon="more" label="Component actions" />
-				)}
-			</div>
+		<section aria-label="Instance" className="field-group layout-section">
+			<InstanceHeader {...props} count={copies} locked={locked} name={entry?.name ?? null} />
 			<div className="props-head">
 				<span className="property-label">Props</span>
 				{locked ? null : (
 					<AddMenu
 						doc={doc}
 						label="Add prop"
-						note="A prop each copy can set"
+						note="A prop each instance can set"
 						onAdded={setFresh}
 						owner={component}
 					/>
