@@ -88,14 +88,19 @@ function firstTest(reach: Reach): Variable | null {
 	return switching ?? tests[0] ?? null;
 }
 
-export function newCase(reach: Reach, current: Literal): Case | null {
+export function newCase(reach: Reach, current: Literal, makeTest: () => string): Case {
 	const test = firstTest(reach);
-	return test === null ? null : { test: test.id, is: firstValue(test), result: current };
+	return test === null
+		? { test: makeTest(), is: true, result: current }
+		: { test: test.id, is: firstValue(test), result: current };
 }
 
-export function starterCondition(reach: Reach, current: Literal): Condition {
-	const held = newCase(reach, current);
-	return { when: held === null ? [] : [held], else: current };
+export function starterCondition(
+	reach: Reach,
+	current: Literal,
+	makeTest: () => string,
+): Condition {
+	return { when: [newCase(reach, current, makeTest)], else: current };
 }
 
 export function slotsOf(count: number): readonly string[] {

@@ -146,8 +146,8 @@ function CaseRow({
 }
 
 function added(target: EditTarget, condition: Condition): Condition {
-	const fresh = newCase(target.reach, target.current);
-	return fresh === null ? condition : { ...condition, when: [...condition.when, fresh] };
+	const fresh = newCase(target.reach, target.current, target.addTest);
+	return { ...condition, when: [...condition.when, fresh] };
 }
 
 export function ConditionEditor({

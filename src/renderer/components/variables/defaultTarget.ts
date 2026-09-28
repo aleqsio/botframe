@@ -2,7 +2,7 @@ import type { ComponentsView } from "../../../document/components";
 import type { DesignDocument } from "../../../document/document";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
-import { defaultNow, editVariable } from "./scopeEdit";
+import { defaultNow, editVariable, testMaker } from "./scopeEdit";
 import type { EditTarget } from "./target";
 
 export function defaultTarget(
@@ -25,6 +25,7 @@ export function defaultTarget(
 		value: variable.initial,
 		current: defaultNow(doc, variable),
 		make: null,
+		addTest: testMaker(doc, owner === DOCUMENT_SCOPE ? [owner] : [DOCUMENT_SCOPE, owner]),
 		onChange: (next) => {
 			editVariable(doc, owner, variable, { initial: next });
 		},

@@ -57,14 +57,27 @@ describe("groupsOf", () => {
 	});
 });
 
+function made(): string {
+	return "made";
+}
+
 describe("starterCondition", () => {
 	it("tests the first choice or switch in reach and keeps the current value in each branch", () => {
-		expect(starterCondition(REACH, "#ffffff")).toEqual({
+		expect(starterCondition(REACH, "#ffffff", made)).toEqual({
 			when: [{ test: "status", is: "passed", result: "#ffffff" }],
 			else: "#ffffff",
 		});
-		expect(starterCondition({ ...REACH, owners: [DOCUMENT_SCOPE] }, 4)).toEqual({
+		expect(starterCondition({ ...REACH, owners: [DOCUMENT_SCOPE] }, 4, made)).toEqual({
 			when: [{ test: "dark", is: true, result: 4 }],
+			else: 4,
+		});
+	});
+
+	it("makes a switch to test when no variable is in reach", () => {
+		const empty = { ...REACH, view: { ...VIEW, variables: () => [] } };
+
+		expect(starterCondition(empty, 4, made)).toEqual({
+			when: [{ test: "made", is: true, result: 4 }],
 			else: 4,
 		});
 	});

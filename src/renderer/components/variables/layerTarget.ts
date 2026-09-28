@@ -7,7 +7,7 @@ import type { Literal } from "../../../document/value";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentsView } from "../../useDocument";
 import { innerFirst, ownerLabel } from "./reach";
-import { makeVariable } from "./scopeEdit";
+import { makeVariable, testMaker } from "./scopeEdit";
 import type { EditTarget, MakeAction } from "./target";
 
 export interface FieldSpec {
@@ -67,6 +67,7 @@ export function useLayerTarget(doc: DesignDocument, layer: Layer, spec: FieldSpe
 		value: layer.bindings[key] ?? current,
 		current,
 		make: makeAction(doc, { reach, label, type, current }),
+		addTest: testMaker(doc, reach.owners),
 		onChange: (next) => {
 			const patch = patchOf(spec, next);
 			if (patch !== null) {

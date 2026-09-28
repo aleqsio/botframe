@@ -21,6 +21,7 @@ export interface EditTarget {
 	value: VariableValue;
 	current: Literal;
 	make: MakeAction | null;
+	addTest: () => string;
 	onChange: (value: VariableValue) => void;
 	extra?: readonly TargetAction[] | undefined;
 	onOptions?: ((options: readonly string[]) => void) | undefined;

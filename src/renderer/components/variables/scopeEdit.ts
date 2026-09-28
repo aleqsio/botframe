@@ -2,7 +2,7 @@ import type { DesignDocument } from "../../../document/document";
 import { resolveValue } from "../../../document/resolve";
 import { isLiteral } from "../../../document/value";
 import type { Literal } from "../../../document/value";
-import { emptyValue, newVariableId } from "../../../document/variable";
+import { DOCUMENT_SCOPE, emptyValue, newVariableId } from "../../../document/variable";
 import type { Variable, VariableType } from "../../../document/variable";
 
 const MESSAGE = "set variable";
@@ -47,20 +47,29 @@ export function makeVariable(
 	return id;
 }
 
-export function addVariable(doc: DesignDocument, owner: string, type: VariableType): string {
+function newVariable(doc: DesignDocument, owner: string, type: VariableType): string {
 	const options = type === "choice" ? FIRST_OPTIONS : [];
 	const taken = doc.components
 		.scope(owner)
 		.variables()
 		.filter((variable) => variable.type === type).length;
-	const id = makeVariable(doc, owner, {
+	return makeVariable(doc, owner, {
 		name: `${TYPE_NAMES[type].toLowerCase()} ${taken + 1}`,
 		type,
 		initial: emptyValue(type, options),
 		options,
 	});
+}
+
+export function addVariable(doc: DesignDocument, owner: string, type: VariableType): string {
+	const id = newVariable(doc, owner, type);
 	doc.commit(MESSAGE);
 	return id;
+}
+
+export function testMaker(doc: DesignDocument, owners: readonly string[]): () => string {
+	const owner = owners.find((held) => held !== DOCUMENT_SCOPE) ?? DOCUMENT_SCOPE;
+	return () => newVariable(doc, owner, "boolean");
 }
 
 export function editVariable(

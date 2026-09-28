@@ -71,7 +71,7 @@ function Actions({ query, target }: { query: string; target: EditTarget }): Reac
 			<button
 				className="value-action"
 				onClick={() => {
-					onChange(starterCondition(reach, current));
+					onChange(starterCondition(reach, current, target.addTest));
 				}}
 				type="button"
 			>

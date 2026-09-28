@@ -6,6 +6,7 @@ import { emptyValue } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
 import type { Reach } from "./reach";
 import { defaultTarget } from "./defaultTarget";
+import { testMaker } from "./scopeEdit";
 import { ValueControl } from "./ValueControl";
 import { NameCell, RowEnd, heldActions, optionsWriter } from "./VariableParts";
 import type { RowProps } from "./VariableParts";
@@ -45,6 +46,7 @@ export function CopyPropRow(props: RowProps & { layer: Layer; reach: Reach }): R
 					value: held ?? current,
 					current,
 					make: null,
+					addTest: testMaker(doc, reach.owners),
 					onChange: write,
 					extra: held === undefined ? [] : heldActions(props, held, write),
 					onOptions: optionsWriter(props),

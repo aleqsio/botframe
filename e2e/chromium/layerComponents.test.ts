@@ -86,6 +86,23 @@ test("a field makes a document variable from its value and shows it as a chip", 
 	).toBeVisible();
 });
 
+test("a condition in a document with no variables makes a switch to test, and each case adds a row", async ({
+	page,
+}) => {
+	const { origin } = await openRenderer(page);
+	await clickAt(page, origin, { x: 540, y: 340 });
+	await inspectorOf(page)
+		.getByRole("button", { name: "Fill: use a variable or a condition", exact: true })
+		.click();
+	await page.getByRole("button", { name: "Add a condition" }).click();
+	const tested = page.getByLabel("Case 1 test", { exact: true });
+	await expect(tested.locator("option:checked")).toHaveText("switch 1");
+
+	await page.getByRole("button", { name: "Add a case" }).click();
+
+	await expect(page.getByLabel("Case 2 test", { exact: true })).toBeVisible();
+});
+
 test("the search makes a document variable from the typed name, and undo and select all stay in the field", async ({
 	page,
 }) => {
