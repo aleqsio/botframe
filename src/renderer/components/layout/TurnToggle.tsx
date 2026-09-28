@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import { outOfFlow } from "../../layerStyle";
 import { useLayer } from "../../useDocument";
@@ -14,6 +15,7 @@ export function TurnToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }
 		<button
 			aria-pressed={turnedBox}
 			className="layout-flag"
+			data-changed={isChanged(layer, "layout.turnedBox") ? "" : undefined}
 			disabled={outOfFlow(parent?.layout.display ?? null, layer.layout.position)}
 			onClick={() => {
 				doc.update(layer.id, { layout: { turnedBox: !turnedBox } });

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
 import type { Axis, Unit } from "../../../document/length";
@@ -83,6 +84,7 @@ export function SizeRow({
 		<div className={`layout-row layout-size layout-size-${axis}`}>
 			<ChipGrip {...fieldGrip(field, field.read(layer), write, commit)} disabled={!fixed} />
 			<Segmented
+				changed={isChanged(layer, `layout.${axis}`)}
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {
 					const layout = hugPatch(layer, axis, next);

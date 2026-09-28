@@ -35,6 +35,7 @@ export function CopyPropRow(props: RowProps & { layer: Layer; reach: Reach }): R
 		<div className="prop-row">
 			<NameCell {...props} dimmed={held === undefined} />
 			<ValueControl
+				changed={held !== undefined}
 				dimmed={held === undefined}
 				target={{
 					reach,

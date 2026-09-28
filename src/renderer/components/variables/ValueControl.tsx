@@ -7,16 +7,23 @@ import { LiteralInput } from "./LiteralInput";
 import type { EditTarget } from "./target";
 
 export function ValueControl({
+	changed = false,
 	dimmed = false,
 	target,
 }: {
+	changed?: boolean;
 	dimmed?: boolean;
 	target: EditTarget;
 }): ReactElement {
 	const { current, label, onChange, options, reach, type, value } = target;
 	const box = useRef<HTMLDivElement>(null);
 	return (
-		<div className="value-control" data-dimmed={dimmed ? "" : undefined} ref={box}>
+		<div
+			className="value-control"
+			data-changed={changed ? "" : undefined}
+			data-dimmed={dimmed ? "" : undefined}
+			ref={box}
+		>
 			{isLiteral(value) ? (
 				<LiteralInput
 					anchor={box}

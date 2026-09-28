@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer, LayerPatch } from "../../../document/layer";
-import { isChanged } from "../changedField";
 import type { LayerField } from "../layerFields";
 import { BindableChip } from "../variables/BindableChip";
 import { ChipBox } from "./ChipBox";
@@ -17,16 +17,13 @@ export function FieldChip({
 	layer: Layer;
 	box: ChipBoxProps;
 }): ReactElement {
-	const { bind } = box.field;
+	const { bind, stored } = box.field;
+	const key = bind?.key ?? stored;
+	const marked = { ...box, changed: key !== undefined && isChanged(layer, key) };
 	return bind === undefined ? (
-		<ChipBox {...box} />
+		<ChipBox {...marked} />
 	) : (
-		<BindableChip
-			bind={bind}
-			box={{ ...box, changed: isChanged(layer, bind.key) }}
-			doc={doc}
-			layer={layer}
-		/>
+		<BindableChip bind={bind} box={marked} doc={doc} layer={layer} />
 	);
 }
 

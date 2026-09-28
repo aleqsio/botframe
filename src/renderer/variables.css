@@ -783,6 +783,23 @@
 	background-color: var(--variable-tint);
 }
 
+.changed-mark {
+	display: contents;
+}
+
+.changed-mark[data-changed]
+	:is(
+		.number-chip,
+		.property-field,
+		.layout-seg,
+		.layout-alignpad,
+		.layout-cells,
+		.layout-tbar,
+		.layout-tchip
+	),
+.layout-flag[data-changed],
+.layout-seg[data-changed],
+.value-control[data-changed],
 .number-chip[data-changed],
 .color-field[data-changed],
 .property-switch-row[data-changed] > .property-switch,

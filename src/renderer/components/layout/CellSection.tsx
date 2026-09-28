@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import type { LayerLayout, Placement } from "../../../document/layout";
 import { CellPicker } from "./CellPicker";
@@ -7,6 +8,7 @@ import { Segmented } from "./Segmented";
 import type { SegmentOption } from "./Segmented";
 import { anchorOf, clampPlacement, placedAt } from "./cellPlacement";
 import { placementText } from "./selfText";
+import { ChangedMark } from "../ChangedMark";
 
 const CELL_MODES: readonly SegmentOption<Placement["mode"]>[] = [
 	{ value: "auto", label: "Auto", title: "The grid puts the layer in the next free cell." },
@@ -24,8 +26,9 @@ export function CellSection({
 }): ReactElement {
 	const cell = clampPlacement(layer.layout.cell, tracks.columns.length, tracks.rows.length);
 
+	const changed = isChanged(layer, "layout.cell");
 	return (
-		<>
+		<ChangedMark changed={changed}>
 			<div className="layout-row">
 				<Segmented
 					label="Cell"
@@ -42,6 +45,6 @@ export function CellSection({
 			</div>
 			<CellPicker cell={cell} doc={doc} layer={layer} tracks={tracks} />
 			<p className="layout-note">{placementText(cell)}</p>
-		</>
+		</ChangedMark>
 	);
 }

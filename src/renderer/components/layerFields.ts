@@ -66,6 +66,7 @@ export interface LayerField {
 	read: (layer: Layer) => number;
 	patch: (value: number) => LayerPatch;
 	bind?: NumberBinding | undefined;
+	stored?: string | undefined;
 }
 
 export interface FieldGroup {
@@ -184,6 +185,7 @@ function originField(label: string, axis: keyof Origin): LayerField {
 		bound: RELATIVE_PLACE_BOUND,
 		step: PERCENT_STEP,
 		message: ORIGIN_MESSAGE,
+		stored: axis === "x" ? "originX" : "originY",
 		read: (layer) => layer.origin[axis] * PERCENT,
 		patch: (value) => ({ origin: { [axis]: value / PERCENT } }),
 	};

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
-import { changedMark, isChanged } from "../changedField";
 import { Icon } from "../Icon";
 import { BindButton } from "../variables/BindButton";
 import { BoundSummary } from "../variables/BoundSummary";
@@ -20,7 +20,7 @@ export function MirrorToggle({ doc, layer }: { doc: DesignDocument; layer: Layer
 	const bound = layer.bindings.mirrored;
 
 	return (
-		<div className="mirror-row" data-changed={changedMark(isChanged(layer, "mirrored"))}>
+		<div className="mirror-row" data-changed={isChanged(layer, "mirrored") ? "" : undefined}>
 			{bound === undefined ? (
 				<button
 					aria-pressed={mirrored}

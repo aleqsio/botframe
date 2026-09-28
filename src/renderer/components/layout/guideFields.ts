@@ -25,6 +25,7 @@ export function guideField(layer: Layer, index: number, guide: Guide): LayerFiel
 		bound: { kind: "clamp", min: -GUIDE_LIMIT, max: GUIDE_LIMIT },
 		step: LENGTH_STEP,
 		message: GUIDE_MESSAGE,
+		stored: "guides",
 		read: (held) => held.guides[index]?.at ?? 0,
 		patch: (value) => ({
 			guides: layer.guides.map((held, at) => (at === index ? { ...held, at: value } : held)),

@@ -13,16 +13,18 @@ export interface SegmentedProps<V extends string> {
 	options: readonly SegmentOption<V>[];
 	value: V;
 	onPick: (value: V) => void;
+	changed?: boolean | undefined;
 }
 
 export function Segmented<V extends string>({
+	changed = false,
 	label,
 	onPick,
 	options,
 	value,
 }: SegmentedProps<V>): ReactElement {
 	return (
-		<fieldset aria-label={label} className="layout-seg">
+		<fieldset aria-label={label} className="layout-seg" data-changed={changed ? "" : undefined}>
 			{options.map((option) => (
 				<button
 					aria-disabled={option.disabled}

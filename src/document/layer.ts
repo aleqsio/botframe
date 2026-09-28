@@ -108,3 +108,12 @@ export type LayerPatch = Partial<LayerFields> & {
 	props?: Readonly<Record<string, VariableValue | null>>;
 	bindings?: BindingsPatch;
 };
+
+const CORNER_KEYS: ReadonlySet<string> = new Set(["cornerRadius", "cornerSmoothing"]);
+
+export function isChanged(layer: Pick<Layer, "changed">, key: string): boolean {
+	const own = CORNER_KEYS.has(key) ? "geometry" : key;
+	return layer.changed.some(
+		(held) => held === own || held === `${key}Unit` || held === `bindings.${key}`,
+	);
+}

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import { DISPLAY_MODES } from "../../../document/layout";
 import type { DisplayMode } from "../../../document/layout";
@@ -38,6 +39,7 @@ function WrapToggle({ doc, layer }: { doc: DesignDocument; layer: Layer }): Reac
 		<button
 			aria-pressed={wrap}
 			className="layout-flag"
+			data-changed={isChanged(layer, "layout.wrap") ? "" : undefined}
 			disabled={!isFlex(display)}
 			onClick={() => {
 				doc.update(layer.id, { layout: { wrap: !wrap } });
@@ -66,6 +68,7 @@ export function DisplaySection({
 			<span className="group-label">Display</span>
 			<div className="layout-row layout-display">
 				<Segmented
+					changed={isChanged(layer, "layout.display")}
 					label="Display"
 					onPick={(next) => {
 						doc.update(layer.id, { layout: { display: next } });

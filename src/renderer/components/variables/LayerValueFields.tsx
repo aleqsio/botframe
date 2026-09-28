@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
-import { changedMark, isChanged } from "../changedField";
 import { ColorField } from "../ColorField";
 import { BindButton } from "./BindButton";
 import { BoundSummary } from "./BoundSummary";
@@ -50,7 +50,7 @@ export function ClipField({ doc, layer }: FieldProps): ReactElement {
 	const bound = layer.bindings.clip;
 
 	return (
-		<div className="property-switch-row" data-changed={changedMark(isChanged(layer, "clip"))}>
+		<div className="property-switch-row" data-changed={isChanged(layer, "clip") ? "" : undefined}>
 			{bound === undefined ? (
 				<label className="property-switch">
 					<input

@@ -172,6 +172,15 @@ test("an instance that does not sync keeps its own fill until Apply sends it to 
 	await expect(page.locator(".layer[data-selected]")).toHaveCSS("background-color", ALARM);
 	await expect(frames.nth(0)).not.toHaveCSS("background-color", ALARM);
 	await expect(inspector.locator(".color-field")).toHaveAttribute("data-changed", "");
+	const padding = inspector.getByLabel("Padding value", { exact: true });
+	await padding.fill("24");
+	await padding.press("Enter");
+	await expect(inspector.locator(".changed-mark[data-changed] .number-chip")).toHaveCount(1);
+	await inspector.getByRole("button", { name: "Row", exact: true }).click();
+	await expect(inspector.getByRole("group", { name: "Display" })).toHaveCSS(
+		"box-shadow",
+		/rgba\(234, 179, 8/u,
+	);
 
 	await inspector.getByRole("button", { name: "Apply to all instances" }).click();
 	await page.getByRole("menuitem", { name: "Style only" }).click();
