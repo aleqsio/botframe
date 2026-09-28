@@ -890,6 +890,21 @@ button.layer-chevron[aria-expanded="false"]::before {
 	transform: rotate(45deg) scale(0.8);
 }
 
+.layer-glyph-code {
+	width: auto;
+	height: auto;
+	border: 0;
+	color: var(--panel-label);
+	font:
+		600 9px/1 ui-monospace,
+		monospace;
+	letter-spacing: -0.5px;
+}
+
+.layer-glyph-code::before {
+	content: "</>";
+}
+
 .layer-glyph-page {
 	border-radius: 2px 5px 2px 2px;
 }

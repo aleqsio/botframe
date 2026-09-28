@@ -434,6 +434,10 @@
 	gap: var(--layout-space-3);
 }
 
+.prop-row[data-locked] {
+	grid-template-columns: calc(6 * var(--layout-space-6)) minmax(0, 1fr);
+}
+
 .prop-name {
 	min-width: 0;
 	overflow: hidden;

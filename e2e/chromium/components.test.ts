@@ -60,7 +60,9 @@ test("a click on an instance selects the layer and does not reach the markup ins
 	await page.mouse.click(center.x, center.y);
 
 	await expect(instance).toHaveAttribute("data-selected", "");
-	await expect(page.getByRole("complementary", { name: "Inspector" })).toContainText("Component");
+	await expect(page.getByRole("complementary", { name: "Inspector" })).toContainText(
+		"Code component",
+	);
 	await expect(instance.locator(".checkbox")).not.toHaveClass(/is-checked/u);
 	const box = await rectOf(instance);
 	await dragCenterBy(page, instance, { x: box.x + 12, y: box.y + 8 }, { x: 120, y: 90 });

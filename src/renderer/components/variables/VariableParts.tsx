@@ -98,10 +98,8 @@ export function NameCell(props: RowProps & { dimmed: boolean }): ReactElement {
 	);
 }
 
-export function RowEnd({ doc, locked, owner, variable }: RowProps): ReactElement {
-	return locked ? (
-		<span />
-	) : (
+export function RowEnd({ doc, locked, owner, variable }: RowProps): ReactElement | null {
+	return locked ? null : (
 		<RemoveButton
 			label={`Delete ${variable.name}`}
 			onPress={() => {

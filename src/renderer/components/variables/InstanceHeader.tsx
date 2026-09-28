@@ -23,7 +23,7 @@ export function InstanceHeader(
 				) : null}
 			</div>
 			<div className="component-title">
-				<Icon name="component" />
+				<Icon name={locked ? "code" : "component"} />
 				<span className="component-name">{name ?? "Missing component"}</span>
 				<span className="component-count">{count === 1 ? "1 instance" : `${count} instances`}</span>
 				{locked ? null : (

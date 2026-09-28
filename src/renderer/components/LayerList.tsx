@@ -9,8 +9,8 @@ import { useSelected } from "../state/useSelected";
 import { usePicked } from "../state/useSlot";
 import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
-import { useChildIds, useLayer, useRootIds } from "../useDocument";
-import { glyphOf, layerEntry } from "./layerEntry";
+import { useChildIds, useComponentsView, useLayer, useRootIds } from "../useDocument";
+import { glyphOf, isCode, layerEntry } from "./layerEntry";
 
 function LayerChevron({
 	collapsed,
@@ -56,6 +56,7 @@ function LayerRow({
 	user,
 }: Omit<BranchProps, "ids"> & { id: LayerId }): ReactElement {
 	const layer = useLayer(doc, id);
+	const code = isCode(layer, useComponentsView(doc));
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(user.selection, id);
 	const collapsed = usePicked(user.collapsed, (ids) => ids.has(id));
@@ -94,7 +95,7 @@ function LayerRow({
 					onPointerUp={rows.onPointerUp}
 					type="button"
 				>
-					<span className={`layer-glyph layer-glyph-${glyphOf(layer)}`} />
+					<span className={`layer-glyph layer-glyph-${glyphOf(layer, code)}`} />
 					{entry.label}
 				</button>
 			</div>

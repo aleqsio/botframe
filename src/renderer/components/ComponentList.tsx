@@ -56,9 +56,12 @@ export function ComponentList(placement: Placement): ReactElement {
 							onClick={() => {
 								placeComponent(placement, row);
 							}}
+							title={row.body.kind === "html" ? "Code component" : "Component"}
 							type="button"
 						>
-							<span className="layer-glyph layer-glyph-component" />
+							<span
+								className={`layer-glyph layer-glyph-${row.body.kind === "html" ? "code" : "component"}`}
+							/>
 							<span className="component-row-name">{row.name}</span>
 							<span className="component-row-count">{row.copies}</span>
 						</button>

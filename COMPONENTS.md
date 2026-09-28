@@ -148,7 +148,8 @@ An import skips a component that has no HTML file, a section that is not closed,
 
 - The file bar has a Components button next to Layers. The two cards share one place.
 - The Components card has "Import folder" and the list of names. A click on a name puts an instance at the center of the view, in the selected frame.
-- The Components card shows each component and its number of copies.
+- The Components card shows each component and its number of instances. An HTML component is a "code component": its glyph is `</>`, and the inspector heading and the layer list show it so. A layer component keeps the diamond glyph.
+- An instance of a code component cannot add, rename, or delete a prop, so its prop rows have no Delete column.
 - The inspector shows these sections:
   - For a frame: "Make component".
   - For a copy: "Component", with its props.

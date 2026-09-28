@@ -33,7 +33,7 @@ export function CopyPropRow(props: RowProps & { layer: Layer; reach: Reach }): R
 	};
 
 	return (
-		<div className="prop-row">
+		<div className="prop-row" data-locked={props.locked ? "" : undefined}>
 			<NameCell {...props} dimmed={held === undefined} />
 			<ValueControl
 				changed={held !== undefined}
@@ -60,7 +60,7 @@ export function CopyPropRow(props: RowProps & { layer: Layer; reach: Reach }): R
 export function DefaultRow(props: RowProps): ReactElement {
 	const { doc, owner, variable, view } = props;
 	return (
-		<div className="prop-row">
+		<div className="prop-row" data-locked={props.locked ? "" : undefined}>
 			<NameCell {...props} dimmed={false} />
 			<ValueControl target={defaultTarget(doc, view, owner, variable)} />
 			<RowEnd {...props} />

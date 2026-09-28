@@ -3,15 +3,15 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
-import { useLayers } from "../useDocument";
+import { useComponentsView, useLayers } from "../useDocument";
 import { InspectorBody } from "./InspectorBody";
-import { groupHeading, inspectorHeading } from "./layerEntry";
+import { groupHeading, inspectorHeading, isCode } from "./layerEntry";
 import type { InspectorHeading } from "./layerEntry";
 
-function headingOf(layers: readonly Layer[]): InspectorHeading {
+function headingOf(layers: readonly Layer[], code: boolean): InspectorHeading {
 	const [first, peer] = layers;
 
-	return peer === undefined ? inspectorHeading(first ?? null) : groupHeading(layers.length);
+	return peer === undefined ? inspectorHeading(first ?? null, code) : groupHeading(layers.length);
 }
 
 function InspectorHeader({ heading }: { heading: InspectorHeading }): ReactElement {
@@ -26,10 +26,11 @@ function InspectorHeader({ heading }: { heading: InspectorHeading }): ReactEleme
 
 export function Inspector({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
 	const layers = useLayers(doc, useSlot(user.selection));
+	const code = isCode(layers[0] ?? null, useComponentsView(doc));
 
 	return (
 		<aside aria-label="Inspector" id="inspector">
-			<InspectorHeader heading={headingOf(layers)} />
+			<InspectorHeader heading={headingOf(layers, code)} />
 			<div className="inspector-body">
 				<InspectorBody doc={doc} layers={layers} user={user} />
 			</div>

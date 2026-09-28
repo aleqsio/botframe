@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
+import { PLAIN_INSTANCE } from "../../document/layer";
 import type { Layer, LayerId } from "../../document/layer";
 import {
 	glyphOf,
 	inspectorHeading,
+	isCode,
 	isFrame,
 	isRootFrame,
 	layerEntry,
@@ -119,23 +121,53 @@ describe("glyphOf", () => {
 	it("draws a frame, an ellipse, and a rectangle with their own glyph", () => {
 		const layer = rectangle("1@1", "#000000");
 
-		expect(glyphOf(frame("2@1"))).toBe("frame");
-		expect(glyphOf({ ...layer, geometry: { kind: "ellipse" } })).toBe("ellipse");
-		expect(glyphOf(layer)).toBe("rectangle");
+		expect(glyphOf(frame("2@1"), false)).toBe("frame");
+		expect(glyphOf({ ...layer, geometry: { kind: "ellipse" } }, false)).toBe("ellipse");
+		expect(glyphOf(layer, false)).toBe("rectangle");
 	});
 
 	it("draws a path, an unsupported layer, and a lost layer with the rectangle glyph", () => {
 		const layer = rectangle("1@1", "#000000");
 
-		expect(glyphOf({ ...layer, geometry: { kind: "path", d: "M0 0" } })).toBe("rectangle");
-		expect(glyphOf({ ...layer, geometry: { kind: "unsupported" } })).toBe("rectangle");
-		expect(glyphOf(null)).toBe("rectangle");
+		expect(glyphOf({ ...layer, geometry: { kind: "path", d: "M0 0" } }, false)).toBe("rectangle");
+		expect(glyphOf({ ...layer, geometry: { kind: "unsupported" } }, false)).toBe("rectangle");
+		expect(glyphOf(null, false)).toBe("rectangle");
+	});
+});
+
+describe("code components", () => {
+	it("draws and names an instance of an HTML component as a code component", () => {
+		const instance = {
+			...frame("3@1"),
+			content: {
+				kind: "component" as const,
+				component: "button",
+				props: {},
+				values: {},
+				instance: PLAIN_INSTANCE,
+			},
+		};
+		const html = { kind: "html" as const, source: "" };
+		const view = {
+			entry: (id: string) => (id === "button" ? { id, name: "Button", body: html } : null),
+		};
+
+		expect(isCode(instance, view)).toBe(true);
+		expect(glyphOf(instance, true)).toBe("code");
+		expect(inspectorHeading(instance, true)).toMatchObject({
+			glyph: "code",
+			kind: "Code component",
+		});
+		expect(inspectorHeading(instance, false)).toMatchObject({
+			glyph: "component",
+			kind: "Component",
+		});
 	});
 });
 
 describe("inspectorHeading", () => {
 	it("heads the page when nothing is selected", () => {
-		expect(inspectorHeading(null)).toEqual({
+		expect(inspectorHeading(null, false)).toEqual({
 			glyph: "page",
 			name: "Page",
 			kind: "Nothing is selected",
@@ -143,13 +175,13 @@ describe("inspectorHeading", () => {
 	});
 
 	it("heads a layer with its name and its kind", () => {
-		expect(inspectorHeading({ ...frame("1@1"), name: "Phone" })).toEqual({
+		expect(inspectorHeading({ ...frame("1@1"), name: "Phone" }, false)).toEqual({
 			glyph: "frame",
 			name: "Phone",
 			kind: "Frame",
 		});
 		expect(
-			inspectorHeading({ ...rectangle("2@1", "#000000"), geometry: { kind: "ellipse" } }),
+			inspectorHeading({ ...rectangle("2@1", "#000000"), geometry: { kind: "ellipse" } }, false),
 		).toEqual({
 			glyph: "ellipse",
 			name: "Ellipse",

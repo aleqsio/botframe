@@ -1,3 +1,4 @@
+import type { ComponentsView } from "../../document/components";
 import type { Geometry, Layer } from "../../document/layer";
 
 const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
@@ -9,8 +10,9 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 
 const FRAME_LABEL = "Frame";
 const COMPONENT_LABEL = "Component";
+const CODE_LABEL = "Code component";
 
-export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component";
+export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component" | "code";
 
 export interface InspectorHeading {
 	glyph: LayerGlyph | "page" | "group";
@@ -36,12 +38,17 @@ export function isRootFrame(layer: Layer | null): boolean {
 	return layer !== null && layer.parent === null && isFrame(layer);
 }
 
-function kindLabel(layer: Layer | null): string {
+export function isCode(layer: Layer | null, view: Pick<ComponentsView, "entry">): boolean {
+	const content = layer?.content;
+	return content?.kind === "component" && view.entry(content.component)?.body.kind === "html";
+}
+
+function kindLabel(layer: Layer | null, code: boolean): string {
 	if (layer === null) {
 		return GEOMETRY_LABELS.unsupported;
 	}
 	if (layer.content.kind === "component") {
-		return COMPONENT_LABEL;
+		return code ? CODE_LABEL : COMPONENT_LABEL;
 	}
 	return isFrame(layer) ? FRAME_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
 }
@@ -50,12 +57,12 @@ export function layerEntry(layer: Layer | null): LayerEntry {
 	if (layer === null) {
 		return { label: GEOMETRY_LABELS.unsupported, swatch: "transparent" };
 	}
-	return { label: layer.name === "" ? kindLabel(layer) : layer.name, swatch: layer.fill };
+	return { label: layer.name === "" ? kindLabel(layer, false) : layer.name, swatch: layer.fill };
 }
 
-export function glyphOf(layer: Layer | null): LayerGlyph {
+export function glyphOf(layer: Layer | null, code: boolean): LayerGlyph {
 	if (layer?.content.kind === "component") {
-		return "component";
+		return code ? "code" : "component";
 	}
 	if (isFrame(layer)) {
 		return "frame";
@@ -63,11 +70,15 @@ export function glyphOf(layer: Layer | null): LayerGlyph {
 	return layer?.geometry.kind === "ellipse" ? "ellipse" : "rectangle";
 }
 
-export function inspectorHeading(layer: Layer | null): InspectorHeading {
+export function inspectorHeading(layer: Layer | null, code: boolean): InspectorHeading {
 	if (layer === null) {
 		return PAGE_HEADING;
 	}
-	return { glyph: glyphOf(layer), name: layerEntry(layer).label, kind: kindLabel(layer) };
+	return {
+		glyph: glyphOf(layer, code),
+		name: layerEntry(layer).label,
+		kind: kindLabel(layer, code),
+	};
 }
 
 export function groupHeading(count: number): InspectorHeading {
@@ -77,7 +88,7 @@ export function groupHeading(count: number): InspectorHeading {
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {
 	let count = 0;
 	for (const layer of layers) {
-		if (kindLabel(layer) === label) {
+		if (kindLabel(layer, false) === label) {
 			count += 1;
 		}
 	}
