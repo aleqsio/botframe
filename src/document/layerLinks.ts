@@ -2,7 +2,14 @@ import { LoroMap } from "loro-crdt";
 import { bagOf } from "./bag";
 import { bindingsOf } from "./bindings";
 import type { BindingKey, Bindings, BindingsPatch } from "./bindings";
-import { instanceStateOf, OVERRIDES, SYNC, writeInstance } from "./instanceState";
+import {
+	OVERRIDES,
+	SYNC,
+	clearInstance,
+	instanceStateOf,
+	stringKeys,
+	writeInstance,
+} from "./instanceState";
 import { NO_CONTENT, PLAIN_INSTANCE } from "./layer";
 import type { InstanceState } from "./instanceState";
 import type { ComponentLink, LayerContent, LayerPatch } from "./layer";
@@ -80,14 +87,12 @@ function writeContent(data: LoroMap, content: ComponentLink | null): void {
 	if (content === null) {
 		data.delete(COMPONENT);
 		data.delete(PROPS);
+		clearInstance(data);
 		return;
 	}
 	data.set(COMPONENT, content.component);
 	const held = data.ensureMergeableMap(PROPS);
-	const stale = held
-		.keys()
-		.filter((key: unknown): key is string => typeof key === "string")
-		.filter((key) => !Object.hasOwn(content.props, key));
+	const stale = stringKeys(held).filter((key) => !Object.hasOwn(content.props, key));
 	writeEntries(held, Object.fromEntries(stale.map((key) => [key, null])));
 	writeProps(data, content.props);
 	writeInstance(data, content.instance ?? PLAIN_INSTANCE);

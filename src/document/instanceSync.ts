@@ -1,6 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroMap } from "loro-crdt";
 import { bagOf } from "./bag";
+import { picked } from "./copySource";
 import type { LayerPatch } from "./layer";
 import { writePatch } from "./layerData";
 import { jsonOf } from "./layerLinks";
@@ -206,13 +207,13 @@ export function isLocal(mode: SyncMode, key: string): boolean {
 }
 
 function without(value: object, drop: ReadonlySet<string>): Readonly<Record<string, unknown>> {
-	return Object.fromEntries(Object.entries(value).filter(([key]) => !drop.has(key)));
+	return picked(value, (key) => !drop.has(key));
 }
 
 function withoutGeometry(patch: LayerPatch): LayerPatch {
 	const { bindings, layout, ...rest } = patch;
 	return {
-		...Object.fromEntries(Object.entries(rest).filter(([key]) => !GEOMETRY_PATCH.has(key))),
+		...without(rest, GEOMETRY_PATCH),
 		...(layout === undefined ? {} : { layout: without(layout, GEOMETRY_LAYOUT) }),
 		...(bindings === undefined ? {} : { bindings: without(bindings, GEOMETRY_FIELDS) }),
 	};
@@ -225,5 +226,5 @@ export function sharedPatch(mode: SyncMode, patch: LayerPatch): LayerPatch {
 	if (mode === "style") {
 		return withoutGeometry(patch);
 	}
-	return Object.fromEntries(Object.entries(patch).filter(([key]) => LINK_PATCH.has(key)));
+	return picked(patch, (key) => LINK_PATCH.has(key));
 }

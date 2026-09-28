@@ -1,12 +1,13 @@
 import type { TreeID } from "loro-crdt";
 import type { PackedComponent } from "./componentPack";
 import type { DesignDocument } from "./document";
+import { NO_CONTENT } from "./layer";
 import type { Layer } from "./layer";
 import { writePatch } from "./layerData";
 import { NO_BASIS } from "./length";
 import { nodeOf } from "./path";
 import type { LayerId } from "./path";
-import { nodePatch, ownChildIds } from "./subtree";
+import { nodePatch, ownChildIds, readTree } from "./subtree";
 import type { LayerNode } from "./subtree";
 import { isLiteral, remapValue } from "./value";
 import type { Remap, VariableValue } from "./value";
@@ -135,17 +136,19 @@ export function disconnect(doc: DesignDocument, id: LayerId): string | null {
 	const layer = doc.layer(id);
 	const content = layer?.content;
 	const entry = content?.kind === "component" ? doc.components.entry(content.component) : null;
-	const definition = entry?.body.kind === "layers" ? doc.readSubtree(entry.body.root) : null;
-	if (content?.kind !== "component" || entry === null || definition === null) {
+	const resolved = entry?.body.kind === "layers" ? readTree(doc, id) : null;
+	if (content?.kind !== "component" || entry === null || resolved === null) {
 		return null;
 	}
+	const definition = { ...resolved, content: NO_CONTENT };
 	const component = newVariableId();
 	const { remap, variables } = remapScope(doc, entry.id);
 	const root = placeDefinition(doc, component, remapNode(definition, remap));
 	doc.components.addLayers(component, `${entry.name} copy`, root);
 	fillScope(doc.components.scope(component), { variables });
 	const props = remapAssignments(content.props, remap, {});
-	doc.update(id, { content: { kind: "component", component, props } });
+	const instance = { sync: content.instance.sync, overrides: {} };
+	doc.update(id, { content: { kind: "component", component, props, instance } });
 	return component;
 }
 
@@ -178,7 +181,8 @@ export function makeFrame(doc: DesignDocument, id: LayerId): boolean {
 		return false;
 	}
 	const children = doc.childIds(id).flatMap((child) => detachedNode(doc, child) ?? []);
-	const { fill, clip, geometry, layout, guides, media } = layer;
+	const { fill, clip, geometry, layout, guides, media, lengths } = layer;
+	const { mirrored, origin, rotation, skewX, skewY } = layer;
 	doc.update(id, { content: null });
 	doc.update(id, {
 		fill,
@@ -186,6 +190,12 @@ export function makeFrame(doc: DesignDocument, id: LayerId): boolean {
 		layout,
 		guides,
 		media,
+		lengths,
+		mirrored,
+		origin,
+		rotation,
+		skewX,
+		skewY,
 		...(geometry.kind === "unsupported" ? {} : { geometry }),
 	});
 	for (const child of children) {

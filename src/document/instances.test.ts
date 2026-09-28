@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeComponent } from "./componentActions";
+import { disconnect, makeComponent, makeFrame } from "./componentActions";
 import { DesignDocument } from "./document";
 import { DRAWN } from "./documentFixtures";
 import { applyInstanceChanges, resetInstance, setInstanceSync } from "./instanceActions";
@@ -144,5 +144,37 @@ describe("apply and reset", () => {
 		expect(doc.layer(copy)?.width).toBe(190);
 		expect(doc.layer(childOf(doc, copy))?.fill).toBe("#00ff00");
 		expect(doc.layer(copy)?.content).toMatchObject({ instance: { sync: "none" } });
+	});
+});
+
+describe("disconnect and make frame", () => {
+	it("gives a disconnected instance a component with its kept values", () => {
+		const { doc, one, two } = scene();
+		setInstanceSync(doc, one, "none");
+		doc.update(one, { width: 190 });
+		doc.update(childOf(doc, one), { fill: "#00ff00" });
+		doc.commit("edit");
+		disconnect(doc, one);
+		doc.commit("disconnect");
+
+		expect(doc.layer(one)).toMatchObject({ width: 190, changed: [] });
+		expect(doc.layer(one)?.content).toMatchObject({ instance: { sync: "none", overrides: {} } });
+		expect(doc.layer(childOf(doc, one))?.fill).toBe("#00ff00");
+		expect(doc.layer(childOf(doc, two))?.fill).toBe(CHILD.fill);
+	});
+
+	it("keeps the size and the transform of an instance that becomes a frame", () => {
+		const { doc, one } = scene();
+		doc.update(one, { width: 190, rotation: 30, skewX: 6 });
+		doc.commit("transform");
+		makeFrame(doc, one);
+		doc.commit("make frame");
+
+		expect(doc.layer(one)).toMatchObject({
+			width: 190,
+			rotation: 30,
+			skewX: 6,
+			content: { kind: "none" },
+		});
 	});
 });

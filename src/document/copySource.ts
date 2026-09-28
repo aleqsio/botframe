@@ -36,7 +36,7 @@ function splitEntries<T extends object>(
 	];
 }
 
-function picked(value: unknown, keep: (key: string) => boolean): Record<string, unknown> {
+export function picked(value: unknown, keep: (key: string) => boolean): Record<string, unknown> {
 	return Object.fromEntries(Object.entries(bagOf(value)).filter(([key]) => keep(key)));
 }
 

@@ -29,20 +29,33 @@ function overridesOf(value: unknown): Overrides {
 	);
 }
 
-export function instanceStateOf(sync: unknown, overrides: unknown): InstanceState {
-	return { sync: isSyncMode(sync) ? sync : "all", overrides: overridesOf(overrides) };
+export function syncOf(value: unknown): SyncMode {
+	return isSyncMode(value) ? value : "all";
 }
 
-function stringKeys(map: LoroMap): readonly string[] {
+export function instanceStateOf(sync: unknown, overrides: unknown): InstanceState {
+	return { sync: syncOf(sync), overrides: overridesOf(overrides) };
+}
+
+export function stringKeys(map: LoroMap): readonly string[] {
 	return map.keys().filter((key: unknown): key is string => typeof key === "string");
 }
 
-export function writeInstance(data: LoroMap, state: InstanceState): void {
-	if (state.sync === "all") {
+export function writeSync(data: LoroMap, mode: SyncMode): void {
+	if (mode === "all") {
 		data.delete(SYNC);
 	} else {
-		data.set(SYNC, state.sync);
+		data.set(SYNC, mode);
 	}
+}
+
+export function clearInstance(data: LoroMap): void {
+	data.delete(SYNC);
+	data.delete(OVERRIDES);
+}
+
+export function writeInstance(data: LoroMap, state: InstanceState): void {
+	writeSync(data, state.sync);
 	const map = data.ensureMergeableMap(OVERRIDES);
 	for (const path of stringKeys(map).filter((key) => !Object.hasOwn(state.overrides, key))) {
 		map.delete(path);

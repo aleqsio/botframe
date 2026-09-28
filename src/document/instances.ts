@@ -1,7 +1,7 @@
 import { LoroMap } from "loro-crdt";
 import type { LoroTreeNode } from "loro-crdt";
 import { isPlacementKey } from "./copySource";
-import { OVERRIDES, SELF, SYNC, isSyncMode } from "./instanceState";
+import { OVERRIDES, SELF, SYNC, syncOf, writeSync } from "./instanceState";
 import type { SyncMode } from "./instanceState";
 import { changesOf, heldEntries, inPart, isLocal, overlaySource, putFlat } from "./instanceSync";
 import type { Changes, SyncPart } from "./instanceSync";
@@ -29,8 +29,7 @@ export function instanceOf(tree: LayerTree, id: LayerId): Instance | null {
 }
 
 function syncModeOf(instance: Instance): SyncMode {
-	const held: unknown = instance.node.data.get(SYNC);
-	return isSyncMode(held) ? held : "all";
+	return syncOf(instance.node.data.get(SYNC));
 }
 
 function overridesOf(instance: Instance): LoroMap | null {
@@ -57,14 +56,15 @@ export function changedKeys(tree: LayerTree, id: LayerId): readonly string[] {
 
 function writeOverride(instance: Instance, mode: SyncMode, changes: Changes): void {
 	const local = [...changes].filter(([key]) => isLocal(mode, key));
+	const shared = [...changes.keys()].filter((key) => !isLocal(mode, key));
 	const held = local.length === 0 ? overrideOf(instance) : overrideOfEnsured(instance);
-	for (const [key, value] of changes) {
-		if (isLocal(mode, key)) {
-			held?.set(key, value);
-		} else {
-			held?.delete(key);
-		}
+	for (const key of shared) {
+		held?.delete(key);
 	}
+	for (const [key, value] of local) {
+		held?.set(key, value);
+	}
+	dropEmpty(instance);
 }
 
 function overrideOfEnsured(instance: Instance): LoroMap {
@@ -120,6 +120,12 @@ function baseFor(tree: LayerTree, instance: Instance, key: string): LoroMap | nu
 	return definition === null || own ? node.data : definition.data;
 }
 
+function dropEmpty(instance: Instance): void {
+	if (heldEntries(overrideOf(instance)).length === 0) {
+		overridesOf(instance)?.delete(instance.key);
+	}
+}
+
 function applyPath(tree: LayerTree, instance: Instance, part: SyncPart | null): void {
 	const held = overrideOf(instance);
 	for (const [flat, value] of heldEntries(held)) {
@@ -132,6 +138,7 @@ function applyPath(tree: LayerTree, instance: Instance, part: SyncPart | null): 
 		}
 		held?.delete(flat);
 	}
+	dropEmpty(instance);
 }
 
 export function applyInstance(tree: LayerTree, root: LayerId, part: SyncPart | null): void {
@@ -146,12 +153,7 @@ export function applyInstance(tree: LayerTree, root: LayerId, part: SyncPart | n
 
 export function setSyncMode(tree: LayerTree, root: LayerId, mode: SyncMode): void {
 	const top = instanceOf(tree, root);
-	if (top === null) {
-		return;
-	}
-	if (mode === "all") {
-		top.node.data.delete(SYNC);
-	} else {
-		top.node.data.set(SYNC, mode);
+	if (top !== null) {
+		writeSync(top.node.data, mode);
 	}
 }
