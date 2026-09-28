@@ -149,7 +149,7 @@ describe("code components", () => {
 		};
 		const html = { kind: "html" as const, source: "" };
 		const view = {
-			entry: (id: string) => (id === "button" ? { id, name: "Button", body: html } : null),
+			entry: (id: string) => ({ id, name: "Button", body: html }),
 		};
 
 		expect(isCode(instance, view)).toBe(true);
