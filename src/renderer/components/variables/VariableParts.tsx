@@ -6,7 +6,7 @@ import type { VariableValue } from "../../../document/value";
 import type { Variable } from "../../../document/variable";
 import { Icon } from "../Icon";
 import { DraftInput } from "../PropertyField";
-import { editVariable, removeVariable } from "./scopeEdit";
+import { editVariable, removeVariable, typeIcon, typeName } from "./scopeEdit";
 import type { TargetAction } from "./target";
 
 export function RemoveButton({
@@ -77,6 +77,9 @@ export function NameCell(props: RowProps & { dimmed: boolean }): ReactElement {
 	}
 	return (
 		<span className="prop-name" data-dimmed={dimmed ? "" : undefined}>
+			<span className="prop-type" title={typeName(variable.type)}>
+				<Icon name={typeIcon(variable.type)} />
+			</span>
 			<span className="prop-name-text">{variable.name}</span>
 			{locked ? null : (
 				<button

@@ -372,6 +372,23 @@
 	min-width: 0;
 }
 
+.value-unit {
+	flex: none;
+	color: var(--panel-label);
+	font-size: var(--layout-text-label);
+}
+
+.prop-type {
+	display: flex;
+	flex: none;
+	color: var(--panel-label);
+}
+
+.prop-type .icon {
+	width: var(--layout-icon-small);
+	height: var(--layout-icon-small);
+}
+
 .color-value > .property-input {
 	flex: 1;
 	min-width: 0;
@@ -412,7 +429,7 @@
 
 .prop-row {
 	display: grid;
-	grid-template-columns: calc(5 * var(--layout-space-6)) minmax(0, 1fr) var(--layout-control);
+	grid-template-columns: calc(6 * var(--layout-space-6)) minmax(0, 1fr) var(--layout-control);
 	align-items: center;
 	gap: var(--layout-space-3);
 }

@@ -92,7 +92,7 @@ function ColorLiteral({ label, onChange, value }: LiteralInputProps): ReactEleme
 
 function TextInput({ label, onChange, type, value }: LiteralInputProps): ReactElement {
 	const numeric = type === "length" || type === "number";
-	return (
+	const input = (
 		<DraftInput
 			inputMode={numeric ? "numeric" : "text"}
 			label={label}
@@ -104,6 +104,16 @@ function TextInput({ label, onChange, type, value }: LiteralInputProps): ReactEl
 			}}
 			value={String(value)}
 		/>
+	);
+	return type === "length" ? (
+		<span className="color-value">
+			{input}
+			<span aria-hidden="true" className="value-unit">
+				px
+			</span>
+		</span>
+	) : (
+		input
 	);
 }
 

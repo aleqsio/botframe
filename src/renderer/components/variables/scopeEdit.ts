@@ -4,6 +4,7 @@ import { isLiteral } from "../../../document/value";
 import type { Literal } from "../../../document/value";
 import { DOCUMENT_SCOPE, emptyValue, newVariableId } from "../../../document/variable";
 import type { Variable, VariableType } from "../../../document/variable";
+import type { IconName } from "../Icon";
 
 const MESSAGE = "set variable";
 const FIRST_OPTIONS = ["one", "two"];
@@ -16,6 +17,19 @@ const TYPE_NAMES: Readonly<Record<VariableType, string>> = {
 	boolean: "Switch",
 	choice: "Choice",
 };
+
+const TYPE_ICONS: Readonly<Record<VariableType, IconName>> = {
+	color: "ellipse",
+	length: "ruler",
+	number: "hash",
+	text: "text",
+	boolean: "toggle",
+	choice: "list",
+};
+
+export function typeIcon(type: VariableType): IconName {
+	return TYPE_ICONS[type];
+}
 
 export function typeName(type: VariableType): string {
 	return TYPE_NAMES[type];

@@ -4,22 +4,20 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { VariableType } from "../../../document/variable";
 import { Icon } from "../Icon";
-import type { IconName } from "../Icon";
-import { addVariable, typeName } from "./scopeEdit";
+import { addVariable, typeIcon, typeName } from "./scopeEdit";
 
 interface TypeChoice {
 	type: VariableType;
-	icon: IconName;
 	hint: string;
 }
 
 const TYPES: readonly TypeChoice[] = [
-	{ type: "choice", icon: "list", hint: "a set of options" },
-	{ type: "boolean", icon: "toggle", hint: "on or off" },
-	{ type: "text", icon: "text", hint: "words" },
-	{ type: "color", icon: "ellipse", hint: "a color" },
-	{ type: "length", icon: "ruler", hint: "a size" },
-	{ type: "number", icon: "hash", hint: "a number" },
+	{ type: "choice", hint: "a set of options" },
+	{ type: "boolean", hint: "on or off" },
+	{ type: "text", hint: "words" },
+	{ type: "color", hint: "a color" },
+	{ type: "length", hint: "a size" },
+	{ type: "number", hint: "a number" },
 ];
 
 export function AddMenu({
@@ -55,7 +53,7 @@ export function AddMenu({
 						}}
 					>
 						<span className="add-menu-note">{note}</span>
-						{TYPES.map(({ hint, icon, type }) => (
+						{TYPES.map(({ hint, type }) => (
 							<Menu.Item
 								className="layer-menu-item add-menu-item"
 								key={type}
@@ -66,7 +64,7 @@ export function AddMenu({
 								}}
 							>
 								<span className="add-menu-glyph">
-									<Icon name={icon} />
+									<Icon name={typeIcon(type)} />
 								</span>
 								<span className="layer-menu-label">{typeName(type)}</span>
 								<span className="add-menu-hint">{hint}</span>
