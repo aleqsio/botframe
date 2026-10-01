@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { LayerContent } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
@@ -42,16 +43,25 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
-function markupOf(node: LayerNode, parentDisplay: DisplayMode | null): string {
+export type FindComponent = (content: LayerContent) => string | null;
+
+function shadowOf(content: LayerContent, find: FindComponent): string {
+	const markup = find(content);
+	return markup === null ? "" : `<template shadowrootmode="open">${markup}</template>`;
+}
+
+function markupOf(node: LayerNode, parentDisplay: DisplayMode | null, find: FindComponent): string {
 	const style = escaped(
 		declarations(layerStyle(styledLayerOf(node), parentDisplay))
 			.toSorted()
 			.join("; "),
 	);
-	const children = node.children.map((child) => markupOf(child, node.layout.display)).join("");
-	return `<div style="${style}">${children}</div>`;
+	const children = node.children
+		.map((child) => markupOf(child, node.layout.display, find))
+		.join("");
+	return `<div style="${style}">${shadowOf(node.content, find)}${children}</div>`;
 }
 
-export function layerMarkup(node: LayerNode): string {
-	return markupOf(node, null);
+export function layerMarkup(node: LayerNode, find: FindComponent): string {
+	return markupOf(node, null, find);
 }

@@ -1,6 +1,7 @@
-import { LoroMap } from "loro-crdt";
+import type { LoroMap } from "loro-crdt";
 import { CENTER_ORIGIN, heldSkew } from "./layer";
 import type { Geometry, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
+import { jsonOf, readBindings, readContent, unboundBy, writeLinks } from "./layerLinks";
 import { guidesOf } from "./guides";
 import type { Guide } from "./guides";
 import { DEFAULT_LAYOUT, layoutOf } from "./layout";
@@ -19,6 +20,7 @@ import type { Basis, BoxKey, LayerLengths, Length, Unit } from "./length";
 import { mediaOf } from "./media";
 import type { MediaFill } from "./media";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
+import type { FieldSource } from "./read";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
@@ -37,7 +39,7 @@ const DEFAULT_LAYOUT_TEXT: ReadonlyMap<string, string> = new Map(
 );
 
 const GEOMETRY_READERS: Readonly<
-	Record<Exclude<Geometry["kind"], "unsupported">, (fields: LoroMap | null) => Geometry>
+	Record<Exclude<Geometry["kind"], "unsupported">, (fields: FieldSource | null) => Geometry>
 > = {
 	rectangle: (fields) => ({
 		kind: "rectangle",
@@ -53,16 +55,16 @@ function unitKey(key: BoxKey): string {
 	return `${key}${UNIT_SUFFIX}`;
 }
 
-function readUnit(data: LoroMap, key: BoxKey): Unit {
+function readUnit(data: FieldSource, key: BoxKey): Unit {
 	const text = readString(data, unitKey(key), PIXELS);
 	return isUnit(text) ? text : PIXELS;
 }
 
-function readLength(data: LoroMap, key: BoxKey): Length {
+function readLength(data: FieldSource, key: BoxKey): Length {
 	return { value: readNumber(data, key, 0), unit: readUnit(data, key) };
 }
 
-function readLengths(data: LoroMap): LayerLengths {
+function readLengths(data: FieldSource): LayerLengths {
 	return {
 		x: readLength(data, "x"),
 		y: readLength(data, "y"),
@@ -80,19 +82,18 @@ function resolveBox(lengths: LayerLengths, basis: Basis): Rect {
 	};
 }
 
-function readOrigin(data: LoroMap): Origin {
+function readOrigin(data: FieldSource): Origin {
 	return {
 		x: readNumber(data, ORIGIN_KEYS.x, CENTER_ORIGIN.x),
 		y: readNumber(data, ORIGIN_KEYS.y, CENTER_ORIGIN.y),
 	};
 }
 
-function readLayout(data: LoroMap): LayerLayout {
-	const held = data.get(LAYOUT);
-	return layoutOf(held instanceof LoroMap ? held.toJSON() : undefined);
+function readLayout(data: FieldSource): LayerLayout {
+	return layoutOf(jsonOf(data.get(LAYOUT)));
 }
 
-export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
+export function readLayerData(data: FieldSource, basis: Basis): LayerTraits {
 	const lengths = readLengths(data);
 	return {
 		...resolveBox(lengths, basis),
@@ -109,6 +110,9 @@ export function readLayerData(data: LoroMap, basis: Basis): LayerTraits {
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
 		clip: readBoolean(data, "clip", false),
+		content: readContent(data),
+		bindings: readBindings(data),
+		changed: [],
 	};
 }
 
@@ -195,7 +199,22 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 }
 
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
-	const { geometry, guides, layout, lengths, media, origin, x, y, width, height, ...plain } = patch;
+	const {
+		bindings,
+		content,
+		geometry,
+		guides,
+		layout,
+		lengths,
+		media,
+		origin,
+		props,
+		x,
+		y,
+		width,
+		height,
+		...plain
+	} = patch;
 	for (const [key, value] of Object.entries(plain)) {
 		data.set(key, value);
 	}
@@ -216,4 +235,5 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	if (media !== undefined) {
 		writeMedia(data, media);
 	}
+	writeLinks(data, { content, props, bindings: { ...unboundBy(patch), ...bindings } });
 }

@@ -6,12 +6,14 @@ export function DraftInput({
 	inputMode,
 	label,
 	onCommit,
+	placeholder,
 	value,
 }: {
 	disabled?: boolean | undefined;
 	inputMode: "numeric" | "text";
 	label: string;
 	onCommit: (text: string) => void;
+	placeholder?: string | undefined;
 	value: string;
 }): ReactElement {
 	const [draft, setDraft] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function DraftInput({
 					event.currentTarget.blur();
 				}
 			}}
+			placeholder={placeholder}
 			value={draft ?? value}
 		/>
 	);

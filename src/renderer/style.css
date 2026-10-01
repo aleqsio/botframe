@@ -541,6 +541,7 @@ body {
 #file-bar,
 #tab-bar,
 #layers,
+#components,
 #zoom,
 #inspector {
 	position: fixed;
@@ -655,6 +656,7 @@ body {
 }
 
 #layers,
+#components,
 #inspector {
 	top: var(--card-top);
 	display: flex;
@@ -664,10 +666,28 @@ body {
 	border-radius: 14px;
 }
 
-#layers {
+#layers,
+#components {
 	left: var(--edge);
 	width: var(--layers-width);
 	padding: 6px;
+}
+
+#components {
+	gap: var(--layout-space-3);
+}
+
+#components .component-import {
+	justify-content: flex-start;
+	padding: 0 var(--layout-space-4);
+	background-color: var(--panel-hover);
+}
+
+.component-note {
+	padding: 0 var(--layout-space-4);
+	color: var(--panel-label);
+	font-size: var(--layout-text-label);
+	line-height: 1.4;
 }
 
 #inspector {
@@ -863,6 +883,26 @@ button.layer-chevron[aria-expanded="false"]::before {
 .layer-glyph-ellipse {
 	border-radius: 50%;
 	background-color: var(--panel-label);
+}
+
+.layer-glyph-component {
+	border-radius: 1px;
+	transform: rotate(45deg) scale(0.8);
+}
+
+.layer-glyph-code {
+	width: auto;
+	height: auto;
+	border: 0;
+	color: var(--panel-label);
+	font:
+		600 9px/1 ui-monospace,
+		monospace;
+	letter-spacing: -0.5px;
+}
+
+.layer-glyph-code::before {
+	content: "</>";
 }
 
 .layer-glyph-page {

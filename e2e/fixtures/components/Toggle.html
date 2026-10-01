@@ -1,0 +1,9 @@
+<span
+	class="toggle {{size}} {{surface}}{{#on}} is-on{{/on}}{{#disabled}} is-disabled{{/disabled}}"
+	role="switch"
+	aria-checked="{{#on}}true{{/on}}{{^on}}false{{/on}}"
+	aria-disabled="{{#disabled}}true{{/disabled}}{{^disabled}}false{{/disabled}}"
+>
+	<span class="track"><span class="thumb"></span></span>
+	{{#label}}<span class="label">{{label}}</span>{{/label}}
+</span>

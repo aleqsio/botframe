@@ -51,6 +51,11 @@ export interface UnitChoice {
 	parse: (text: string) => LayerPatch | null;
 }
 
+export interface NumberBinding {
+	key: BoxKey | CornerKey | "rotation" | "skewX" | "skewY";
+	plain: (value: number) => LayerPatch;
+}
+
 export interface LayerField {
 	label: string;
 	unit: string;
@@ -60,6 +65,8 @@ export interface LayerField {
 	message: string;
 	read: (layer: Layer) => number;
 	patch: (value: number) => LayerPatch;
+	bind?: NumberBinding | undefined;
+	stored?: string | undefined;
 }
 
 export interface FieldGroup {
@@ -120,6 +127,7 @@ export function boxField(label: string, key: BoxKey, layer: Layer, basis: Basis)
 		message: placeKey(key) ? COMMIT_MESSAGES.move : COMMIT_MESSAGES.resize,
 		read: (target) => target.lengths[key].value,
 		patch: (value) => boxPatch(key, { value, unit }),
+		bind: { key, plain: (value) => boxPatch(key, { value, unit: PIXELS }) },
 	};
 }
 
@@ -134,6 +142,7 @@ function cornerField(label: string, key: CornerKey, geometry: RectangleGeometry)
 		message: CORNER_MESSAGE,
 		read: () => geometry[key],
 		patch: (value) => ({ geometry: { ...geometry, [key]: value } }),
+		bind: { key, plain: (value) => ({ geometry: { ...geometry, [key]: value } }) },
 	};
 }
 
@@ -146,6 +155,7 @@ const TURN_FIELD: LayerField = {
 	message: COMMIT_MESSAGES.rotate,
 	read: (layer) => layer.rotation,
 	patch: (value) => ({ rotation: value }),
+	bind: { key: "rotation", plain: (value) => ({ rotation: value }) },
 };
 
 function skewField(label: string, key: "skewX" | "skewY"): LayerField {
@@ -158,6 +168,7 @@ function skewField(label: string, key: "skewX" | "skewY"): LayerField {
 		message: SKEW_MESSAGE,
 		read: (layer) => layer[key],
 		patch: (value) => ({ [key]: value }),
+		bind: { key, plain: (value) => ({ [key]: value }) },
 	};
 }
 
@@ -174,6 +185,7 @@ function originField(label: string, axis: keyof Origin): LayerField {
 		bound: RELATIVE_PLACE_BOUND,
 		step: PERCENT_STEP,
 		message: ORIGIN_MESSAGE,
+		stored: axis === "x" ? "originX" : "originY",
 		read: (layer) => layer.origin[axis] * PERCENT,
 		patch: (value) => ({ origin: { [axis]: value / PERCENT } }),
 	};

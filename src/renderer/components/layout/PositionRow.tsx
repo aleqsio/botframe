@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import type { BoxKey } from "../../../document/length";
 import { POSITION_MODES } from "../../../document/layout";
@@ -42,6 +43,7 @@ export function PositionRow({
 			{blocked ? null : (
 				<div className="layout-row">
 					<Segmented
+						changed={isChanged(layer, "layout.position")}
 						label="Position"
 						onPick={(next) => {
 							doc.update(layer.id, { layout: { position: next } });

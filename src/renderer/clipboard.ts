@@ -4,7 +4,7 @@ import type { LayerEnvelope } from "../document/envelope";
 import type { LayerId } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { bridge } from "./bridge";
-import { layerMarkup } from "./layerMarkup";
+import { adoptedParent, markupOf, packedFor, verifiedEnvelope } from "./clipboardContent";
 import type { Bridge } from "./bridge";
 import { PASTE_OFFSET, pasteParent, shiftLayer } from "./paste";
 import type { UserState } from "./state/userState";
@@ -17,10 +17,6 @@ function selectedNodes(doc: DesignDocument, user: UserState): LayerNode[] {
 function sourceParentOf(doc: DesignDocument, user: UserState): LayerId | null {
 	const [selected] = user.selection.get();
 	return selected === undefined ? null : (doc.layer(selected)?.parent ?? null);
-}
-
-function markupOf(nodes: readonly LayerNode[]): string {
-	return nodes.map((node) => layerMarkup(node)).join("");
 }
 
 async function sendToClipboard(
@@ -57,7 +53,11 @@ function createLayers(doc: DesignDocument, user: UserState, envelope: LayerEnvel
 	if (envelope.layers.length === 0) {
 		return;
 	}
-	const parent = pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds);
+	const parent = adoptedParent(
+		doc,
+		envelope,
+		pasteParent((id) => doc.layer(id), user.selection.get(), envelope.sourceIds),
+	);
 	const offset = parent === envelope.sourceParent ? PASTE_OFFSET : 0;
 	const ids = envelope.layers.map((node) => pastedId(doc, node, parent, offset));
 	user.selection.set(ids);
@@ -68,7 +68,7 @@ async function readClipboard(shell: Bridge, doc: DesignDocument, user: UserState
 	const raw = await shell.readClipboardLayers();
 	const envelope = raw === null ? null : parseEnvelope(raw);
 	if (envelope !== null) {
-		createLayers(doc, user, envelope);
+		createLayers(doc, user, await verifiedEnvelope(envelope));
 	}
 }
 
@@ -81,13 +81,14 @@ export function copySelection(doc: DesignDocument, user: UserState): boolean {
 		sourceParent: sourceParentOf(doc, user),
 		sourceIds: user.selection.get(),
 		layers: nodes,
+		components: packedFor(doc, nodes),
 	};
-	return write(user, markupOf(nodes), serializeEnvelope(envelope));
+	return write(user, markupOf(doc, user.selection.get()), serializeEnvelope(envelope));
 }
 
 export function copyAsHtml(doc: DesignDocument, user: UserState): boolean {
 	const nodes = selectedNodes(doc, user);
-	return nodes.length > 0 && write(user, markupOf(nodes), null);
+	return nodes.length > 0 && write(user, markupOf(doc, user.selection.get()), null);
 }
 
 export function cutSelection(doc: DesignDocument, user: UserState): boolean {

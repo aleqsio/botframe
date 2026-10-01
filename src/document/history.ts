@@ -3,6 +3,8 @@ import type { LoroDoc } from "loro-crdt";
 
 const ONE_STEP_FOR_EACH_COMMIT = 0;
 
+export const KEPT_ORIGIN = "kept";
+
 interface HistoryFlags {
 	canUndo: boolean;
 	canRedo: boolean;
@@ -17,7 +19,10 @@ export class DocumentHistory {
 	#flags: HistoryFlags = { canUndo: false, canRedo: false };
 
 	constructor(doc: LoroDoc) {
-		this.#undo = new UndoManager(doc, { mergeInterval: ONE_STEP_FOR_EACH_COMMIT });
+		this.#undo = new UndoManager(doc, {
+			mergeInterval: ONE_STEP_FOR_EACH_COMMIT,
+			excludeOriginPrefixes: [KEPT_ORIGIN],
+		});
 	}
 
 	flags(): HistoryFlags {

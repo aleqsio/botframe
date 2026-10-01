@@ -1,5 +1,5 @@
 import { Popover } from "@base-ui-components/react/popover";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { ColorPicker } from "./ColorPicker";
 import { DraftInput } from "./PropertyField";
 import { BLACK, formatColor, parseColor } from "./color";
@@ -8,11 +8,17 @@ import type { Rgba } from "./color";
 const POPUP_GAP = 10;
 const PROBE = "#010203";
 
-export interface ColorFieldProps {
+export interface ColorInputProps {
 	label: string;
 	value: string;
 	onChange: (text: string) => void;
 	onCommit: () => void;
+}
+
+export interface ColorFieldProps extends ColorInputProps {
+	changed?: boolean | undefined;
+	after?: ReactNode | undefined;
+	replace?: ReactNode | undefined;
 }
 
 function cssColor(text: string): string {
@@ -33,7 +39,7 @@ function colorOf(text: string): Rgba | null {
 	return parseColor(text) ?? parseColor(cssColor(text));
 }
 
-function ColorPopup({ onChange, onCommit, value }: ColorFieldProps): ReactElement {
+function ColorPopup({ onChange, onCommit, value }: ColorInputProps): ReactElement {
 	return (
 		<Popover.Portal>
 			<Popover.Positioner align="end" side="left" sideOffset={POPUP_GAP}>
@@ -51,12 +57,10 @@ function ColorPopup({ onChange, onCommit, value }: ColorFieldProps): ReactElemen
 	);
 }
 
-export function ColorField(props: ColorFieldProps): ReactElement {
+export function ColorInput(props: ColorInputProps): ReactElement {
 	const { label, onChange, onCommit, value } = props;
-
 	return (
-		<div className="property-field color-field">
-			<span className="property-label">{label}</span>
+		<>
 			<Popover.Root>
 				<Popover.Trigger aria-label={`${label} picker`} className="color-swatch">
 					<span className="color-swatch-fill" style={{ background: value }} />
@@ -76,6 +80,16 @@ export function ColorField(props: ColorFieldProps): ReactElement {
 				}}
 				value={value}
 			/>
+		</>
+	);
+}
+
+export function ColorField({ after, changed, replace, ...input }: ColorFieldProps): ReactElement {
+	return (
+		<div className="property-field color-field" data-changed={changed === true ? "" : undefined}>
+			<span className="property-label">{input.label}</span>
+			{replace ?? <ColorInput {...input} />}
+			{after}
 		</div>
 	);
 }

@@ -2,6 +2,7 @@ import { useRef } from "react";
 import type { ReactElement } from "react";
 import { ACCEPTED_TYPES } from "../../document/assets";
 import type { DesignDocument } from "../../document/document";
+import { isChanged } from "../../document/layer";
 import type { Layer } from "../../document/layer";
 import type { MediaFill, MediaFit } from "../../document/media";
 import { useAssetUrl } from "../assetUrl";
@@ -32,6 +33,7 @@ function FitRow({
 
 	return (
 		<Segmented
+			changed={isChanged(layer, "media")}
 			label="Media fit"
 			onPick={(fit) => {
 				doc.update(layer.id, { media: { ...media, fit } });

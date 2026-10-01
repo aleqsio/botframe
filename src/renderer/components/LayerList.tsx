@@ -6,11 +6,11 @@ import { rowMarkOf } from "../input/rowDrop";
 import { useRowDrag } from "../input/useRowDrag";
 import type { RowHandlers } from "../input/useRowDrag";
 import { useSelected } from "../state/useSelected";
-import { usePicked, useSlot } from "../state/useSlot";
+import { usePicked } from "../state/useSlot";
 import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
-import { useChildIds, useLayer, useRootIds } from "../useDocument";
-import { glyphOf, layerEntry } from "./layerEntry";
+import { useChildIds, useComponentsView, useLayer, useRootIds } from "../useDocument";
+import { glyphOf, isCode, layerEntry } from "./layerEntry";
 
 function LayerChevron({
 	collapsed,
@@ -56,6 +56,7 @@ function LayerRow({
 	user,
 }: Omit<BranchProps, "ids"> & { id: LayerId }): ReactElement {
 	const layer = useLayer(doc, id);
+	const code = isCode(layer, useComponentsView(doc));
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(user.selection, id);
 	const collapsed = usePicked(user.collapsed, (ids) => ids.has(id));
@@ -94,7 +95,7 @@ function LayerRow({
 					onPointerUp={rows.onPointerUp}
 					type="button"
 				>
-					<span className={`layer-glyph layer-glyph-${glyphOf(layer)}`} />
+					<span className={`layer-glyph layer-glyph-${glyphOf(layer, code)}`} />
 					{entry.label}
 				</button>
 			</div>
@@ -105,7 +106,7 @@ function LayerRow({
 	);
 }
 
-function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
+export function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
 	const ids = useRootIds(doc);
 	const panel = useRef<HTMLElement>(null);
 	const rows = useRowDrag(doc, user, panel);
@@ -115,14 +116,4 @@ function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): Rea
 			<LayerBranch doc={doc} ids={ids} rows={rows} user={user} />
 		</aside>
 	);
-}
-
-export function LayersCard({
-	doc,
-	user,
-}: {
-	doc: DesignDocument;
-	user: UserState;
-}): ReactElement | null {
-	return useSlot(user.layersOpen) ? <LayerList doc={doc} user={user} /> : null;
 }

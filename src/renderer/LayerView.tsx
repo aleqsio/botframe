@@ -3,6 +3,7 @@ import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
+import { useShadowWriter } from "./componentShadow";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
 import { useAssetUrl } from "./assetUrl";
 import { GuideLines } from "./GuideLines";
@@ -10,8 +11,8 @@ import { LayerVideo } from "./LayerVideo";
 import { layerStyle } from "./layerStyle";
 import { paintedStyle } from "./mediaStyle";
 import type { Slot } from "./state/slot";
-import type { Lifted } from "./state/userState";
 import { useLift, NOT_LIFTED } from "./state/useLift";
+import type { LiftSlot } from "./state/useLift";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
 
@@ -30,7 +31,7 @@ export function LayerView({
 }: {
 	doc: DesignDocument;
 	id: LayerId;
-	lift: Slot<Lifted | null>;
+	lift: LiftSlot;
 	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
 }): ReactElement | null {
@@ -40,6 +41,7 @@ export function LayerView({
 	const lifted = useLift(lift, id);
 	const fit = layer?.media?.fit ?? null;
 	const media = useAssetUrl(doc.assets, layer?.media?.asset ?? null);
+	const writeShadow = useShadowWriter(doc, layer?.content ?? null);
 
 	if (layer === null) {
 		return null;
@@ -51,6 +53,7 @@ export function LayerView({
 			data-dragging={lifted === NOT_LIFTED ? undefined : ""}
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
+			ref={writeShadow}
 			style={liftedStyle(paintedStyle(layerStyle(layer, parentDisplay), fit, media), lifted)}
 		>
 			<LayerVideo fit={fit} media={media} />

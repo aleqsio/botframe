@@ -7,12 +7,15 @@ import { cancelGroupMove } from "./groupMove";
 import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 import { cancelMove } from "./moveDrag";
 import type { KeyStroke } from "./layerCommand";
+import { isTextField, runTextEdit, textKeyFor } from "./textField";
 import { toolFor } from "./toolKey";
 
 const CANCEL_KEY = "Escape";
 
 function isTyping(target: EventTarget | null): boolean {
-	return target instanceof HTMLInputElement || target instanceof HTMLSelectElement;
+	return (
+		target instanceof HTMLInputElement || target instanceof HTMLSelectElement || isTextField(target)
+	);
 }
 
 function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
@@ -56,6 +59,12 @@ export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeySt
 export function useKeyInput(doc: DesignDocument, user: UserState): void {
 	useEffect(() => {
 		function onKeyDown(event: KeyboardEvent): void {
+			const edit = isTextField(event.target) ? textKeyFor(event) : null;
+			if (edit !== null && !event.defaultPrevented) {
+				event.preventDefault();
+				runTextEdit(edit);
+				return;
+			}
 			if (event.defaultPrevented || isTyping(event.target)) {
 				return;
 			}

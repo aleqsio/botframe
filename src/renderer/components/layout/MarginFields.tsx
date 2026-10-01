@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import { MARGIN_UNITS } from "../../../document/layout";
 import type { DisplayMode, MarginSide, Side } from "../../../document/layout";
@@ -8,6 +9,7 @@ import { SideFields } from "./SideFields";
 import { marginMeasure, marginSideOf } from "./measure";
 import type { Measure, MarginUnit } from "./measure";
 import { PERCENT_TIP } from "./selfText";
+import { ChangedMark } from "../ChangedMark";
 
 const MARGIN_TIP = "Margins do nothing on an absolutely positioned child here.";
 const MARGIN_MIN = -100_000;
@@ -41,19 +43,21 @@ export function MarginFields({
 			className={dim ? "layout-sides layout-dim" : "layout-sides"}
 			title={dim ? MARGIN_TIP : undefined}
 		>
-			<SideFields
-				group="Margin"
-				min={MARGIN_MIN}
-				onChange={(side, next) => {
-					doc.update(layer.id, { layout: { margin: { ...margin, [side]: marginSideOf(next) } } });
-				}}
-				onCommit={() => {
-					doc.commit("set margin");
-				}}
-				tips={MARGIN_TIPS}
-				units={MARGIN_UNITS}
-				values={measuresOf(margin)}
-			/>
+			<ChangedMark changed={isChanged(layer, "layout.margin")}>
+				<SideFields
+					group="Margin"
+					min={MARGIN_MIN}
+					onChange={(side, next) => {
+						doc.update(layer.id, { layout: { margin: { ...margin, [side]: marginSideOf(next) } } });
+					}}
+					onCommit={() => {
+						doc.commit("set margin");
+					}}
+					tips={MARGIN_TIPS}
+					units={MARGIN_UNITS}
+					values={measuresOf(margin)}
+				/>
+			</ChangedMark>
 		</div>
 	);
 }

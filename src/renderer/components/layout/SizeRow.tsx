@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
+import { isChanged } from "../../../document/layer";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { PIXELS } from "../../../document/length";
 import type { Axis, Unit } from "../../../document/length";
@@ -9,7 +10,7 @@ import { useDrawnOutline } from "../../useDocument";
 import { boxField } from "../layerFields";
 import type { LayerField } from "../layerFields";
 import { isFrame } from "../layerEntry";
-import { ChipBox } from "./ChipBox";
+import { FieldChip } from "./LayerChip";
 import { ChipGrip, fieldGrip } from "./ChipGrip";
 import { SizeModeIcon } from "./LayoutIcons";
 import { Segmented } from "./Segmented";
@@ -52,8 +53,8 @@ export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch 
 	return { [axis]: next, ...(hugsBlock ? { display: "row" } : {}) };
 }
 
-function resolvedField(field: LayerField, unit: Unit): LayerField {
-	return { ...field, unit, choice: null };
+function resolvedField(field: LayerField, unit: Unit, bound: boolean): LayerField {
+	return { ...field, unit, choice: null, bind: bound ? field.bind : undefined };
 }
 
 export function SizeRow({
@@ -83,6 +84,7 @@ export function SizeRow({
 		<div className={`layout-row layout-size layout-size-${axis}`}>
 			<ChipGrip {...fieldGrip(field, field.read(layer), write, commit)} disabled={!fixed} />
 			<Segmented
+				changed={isChanged(layer, `layout.${axis}`)}
 				label={`${AXIS_LABEL[axis]} size`}
 				onPick={(next) => {
 					const layout = hugPatch(layer, axis, next);
@@ -95,12 +97,18 @@ export function SizeRow({
 				options={sizeOptions(layer)}
 				value={mode}
 			/>
-			<ChipBox
-				disabled={!fixed}
-				field={fixed ? field : resolvedField(field, full ? "%" : PIXELS)}
-				onCommit={commit}
-				onPatch={write}
-				value={fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis])}
+			<FieldChip
+				box={{
+					disabled: !fixed,
+					field: fixed
+						? field
+						: resolvedField(field, full ? "%" : PIXELS, layer.bindings[axis] !== undefined),
+					onCommit: commit,
+					onPatch: write,
+					value: fixed ? field.read(layer) : full ? FULL : (drawn?.[axis] ?? layer[axis]),
+				}}
+				doc={doc}
+				layer={layer}
 			/>
 		</div>
 	);

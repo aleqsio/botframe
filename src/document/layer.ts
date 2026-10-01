@@ -1,10 +1,14 @@
-import type { TreeID } from "loro-crdt";
+import type { Bindings, BindingsPatch } from "./bindings";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
+import type { InstanceState } from "./instanceState";
+import type { LayerId } from "./path";
+import type { Literal, VariableValue } from "./value";
+import type { Assignments } from "./variable";
 
-export type LayerId = TreeID;
+export type { LayerId } from "./path";
 
 export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
@@ -45,6 +49,23 @@ export interface Pose {
 	mirrored: boolean;
 }
 
+export interface ComponentLink {
+	kind: "component";
+	component: string;
+	props: Assignments;
+	instance?: InstanceState | undefined;
+}
+
+export const PLAIN_INSTANCE: InstanceState = { sync: "all", overrides: {} };
+
+export type ResolvedValues = Readonly<Record<string, Literal>>;
+
+export type LayerContent =
+	| { kind: "none" }
+	| (ComponentLink & { values: ResolvedValues; instance: InstanceState });
+
+export const NO_CONTENT: { kind: "none" } = { kind: "none" };
+
 export interface Layer extends Rect, Pose {
 	id: LayerId;
 	origin: Origin;
@@ -57,6 +78,9 @@ export interface Layer extends Rect, Pose {
 	lengths: LayerLengths;
 	layout: LayerLayout;
 	guides: readonly Guide[];
+	content: LayerContent;
+	bindings: Bindings;
+	changed: readonly string[];
 }
 
 export type LayerTraits = Omit<Layer, "id" | "parent">;
@@ -80,4 +104,16 @@ export type LayerPatch = Partial<LayerFields> & {
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 	media?: MediaFill | null;
+	content?: ComponentLink | null;
+	props?: Readonly<Record<string, VariableValue | null>>;
+	bindings?: BindingsPatch;
 };
+
+const CORNER_KEYS: ReadonlySet<string> = new Set(["cornerRadius", "cornerSmoothing"]);
+
+export function isChanged(layer: Pick<Layer, "changed">, key: string): boolean {
+	const own = CORNER_KEYS.has(key) ? "geometry" : key;
+	return layer.changed.some(
+		(held) => held === own || held === `${key}Unit` || held === `bindings.${key}`,
+	);
+}

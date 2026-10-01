@@ -1,0 +1,19 @@
+.button {
+	padding: 10px 18px;
+	border: 0;
+	border-radius: 10px;
+	font:
+		600 14px system-ui,
+		sans-serif;
+	white-space: nowrap;
+}
+
+.primary {
+	background: #0d99ff;
+	color: #ffffff;
+}
+
+.secondary {
+	background: #e8e8ed;
+	color: #1d1d1f;
+}

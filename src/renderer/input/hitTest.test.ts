@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { NO_CONTENT, PLAIN_INSTANCE } from "../../document/layer";
 import type { LayerId } from "../../document/layer";
 import { isAssetId } from "../../document/assets";
 import type { AssetId } from "../../document/assets";
@@ -25,7 +26,7 @@ const PICTURE = assetId("a".repeat(64));
 function fills(table: Readonly<Record<string, string>>): (id: LayerId) => Paint | null {
 	return (id) => {
 		const fill = table[id];
-		return fill === undefined ? null : { fill, media: null };
+		return fill === undefined ? null : { fill, media: null, content: NO_CONTENT };
 	};
 }
 
@@ -59,9 +60,26 @@ describe("visibleLayerIds", () => {
 		const ids = visibleLayerIds([TOP], () => ({
 			fill: "transparent",
 			media: { asset: PICTURE, fit: "cover" },
+			content: NO_CONTENT,
 		}));
 
 		expect(ids).toEqual([TOP]);
+	});
+
+	it("keeps a component instance with a fully transparent fill, because its markup paints it", () => {
+		const instance: Paint = {
+			fill: "#00000000",
+			media: null,
+			content: {
+				kind: "component",
+				component: "abc",
+				props: {},
+				values: {},
+				instance: PLAIN_INSTANCE,
+			},
+		};
+
+		expect(visibleLayerIds([TOP, BOTTOM], (id) => (id === TOP ? instance : null))).toEqual([TOP]);
 	});
 
 	it("skips a layer that the document does not hold", () => {

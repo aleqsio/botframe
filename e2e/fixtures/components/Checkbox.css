@@ -1,0 +1,37 @@
+.checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border-radius: 8px;
+	background: #ffffff;
+	color: #1d1d1f;
+	font:
+		14px system-ui,
+		sans-serif;
+	white-space: nowrap;
+}
+
+.box {
+	display: inline-grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	border: 1.5px solid #8e8e93;
+	border-radius: 5px;
+	color: #ffffff;
+	font-size: 12px;
+}
+
+.is-checked .box {
+	border-color: #0d99ff;
+	background: #0d99ff;
+}
+
+.sm {
+	font-size: 12px;
+}
+
+.lg {
+	font-size: 18px;
+}

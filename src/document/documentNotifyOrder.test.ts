@@ -2,6 +2,7 @@ import { LoroDoc } from "loro-crdt";
 import { describe, expect, it, vi } from "vitest";
 import { DesignDocument } from "./document";
 import { DRAWN, firstId } from "./documentFixtures";
+import { nodeOf } from "./path";
 
 function recorder(): { calls: string[]; record: (name: string) => () => void } {
 	const calls: string[] = [];
@@ -64,7 +65,7 @@ describe("DesignDocument notify order contract", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").getNodeByID(id)?.data.set("x", 777);
+		peer.getTree("layers").getNodeByID(nodeOf(id))?.data.set("x", 777);
 		peer.commit();
 
 		doc.merge(peer.export({ mode: "update" }));

@@ -1,7 +1,10 @@
+import type { Bindings } from "./bindings";
 import { isCenterOrigin } from "./layer";
 import type {
 	Geometry,
 	Layer,
+	ComponentLink,
+	LayerContent,
 	LayerFields,
 	LayerId,
 	LayerPatch,
@@ -13,6 +16,7 @@ import type { LayerLayout } from "./layout";
 import { hasRelativeLength } from "./length";
 import type { LayerLengths } from "./length";
 import type { MediaFill } from "./media";
+import { copiesOf } from "./path";
 
 export interface LayerNode {
 	fields: LayerFields;
@@ -25,6 +29,8 @@ export interface LayerNode {
 	layout: LayerLayout;
 	guides: readonly Guide[];
 	media: MediaFill | null;
+	content: LayerContent;
+	bindings: Bindings;
 	children: readonly LayerNode[];
 }
 
@@ -62,12 +68,22 @@ function fieldsOf(layer: Layer): LayerFields {
 	};
 }
 
+function linkOf(content: ComponentLink): ComponentLink {
+	const { component, instance, props } = content;
+	return { kind: "component", component, props, instance };
+}
+
+export function ownChildIds(source: LayerReader, id: LayerId): readonly LayerId[] {
+	const depth = copiesOf(id).length;
+	return source.childIds(id).filter((child) => copiesOf(child).length === depth);
+}
+
 export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null {
 	const layer = source.layer(id);
 	if (layer === null) {
 		return null;
 	}
-	const children = source.childIds(id).flatMap((child) => readSubtree(source, child) ?? []);
+	const children = ownChildIds(source, id).flatMap((child) => readSubtree(source, child) ?? []);
 	return {
 		fields: fieldsOf(layer),
 		rotation: layer.rotation,
@@ -79,22 +95,45 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		layout: layer.layout,
 		guides: layer.guides,
 		media: layer.media,
+		content: layer.content,
+		bindings: layer.bindings,
 		children,
 	};
 }
 
-function copyPatch(node: LayerNode): LayerPatch {
+export function readTree(source: LayerReader, id: LayerId): LayerNode | null {
+	const node = readSubtree(source, id);
+	if (node === null) {
+		return null;
+	}
+	const children = source.childIds(id).flatMap((child) => readTree(source, child) ?? []);
+	return { ...node, children };
+}
+
+function posePatch(node: LayerNode): LayerPatch {
 	return {
 		...(node.rotation === 0 ? {} : { rotation: node.rotation }),
 		...(node.skewX === 0 ? {} : { skewX: node.skewX }),
 		...(node.skewY === 0 ? {} : { skewY: node.skewY }),
 		...(node.mirrored ? { mirrored: true } : {}),
 		...(isCenterOrigin(node.origin) ? {} : { origin: node.origin }),
+	};
+}
+
+function copyPatch(node: LayerNode): LayerPatch {
+	return {
+		...posePatch(node),
 		...(hasRelativeLength(node.lengths) ? { lengths: node.lengths } : {}),
 		layout: node.layout,
 		...(node.guides.length === 0 ? {} : { guides: node.guides }),
 		...(node.media === null ? {} : { media: node.media }),
+		...(node.content.kind === "none" ? {} : { content: linkOf(node.content) }),
+		...(Object.keys(node.bindings).length === 0 ? {} : { bindings: node.bindings }),
 	};
+}
+
+export function nodePatch(node: LayerNode): LayerPatch {
+	return { ...node.fields, ...copyPatch(node) };
 }
 
 export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerId | null): LayerId {
@@ -104,4 +143,16 @@ export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerI
 		createSubtree(sink, child, id);
 	}
 	return id;
+}
+
+export function componentIdsOf(nodes: readonly LayerNode[]): ReadonlySet<string> {
+	const ids = new Set<string>();
+	const pending = [...nodes];
+	for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
+		if (node.content.kind === "component") {
+			ids.add(node.content.component);
+		}
+		pending.push(...node.children);
+	}
+	return ids;
 }

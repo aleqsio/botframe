@@ -6,9 +6,10 @@ import { DRAWN, firstId } from "./documentFixtures";
 import { SKEW_LIMIT } from "./layer";
 import type { LayerId } from "./layer";
 import { readString } from "./read";
+import { nodeOf } from "./path";
 
 function geometryBag(doc: LoroDoc, id: LayerId): LoroMap {
-	const node = doc.getTree("layers").getNodeByID(id);
+	const node = doc.getTree("layers").getNodeByID(nodeOf(id));
 	if (node === undefined) {
 		throw new Error("layer is missing");
 	}
@@ -140,7 +141,7 @@ describe("DesignDocument", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		const remoteNode = peer.getTree("layers").getNodeByID(id);
+		const remoteNode = peer.getTree("layers").getNodeByID(nodeOf(id));
 		remoteNode?.data.set("x", 777);
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
@@ -230,7 +231,7 @@ describe("a remote delete or move", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").delete(parent);
+		peer.getTree("layers").delete(nodeOf(parent));
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
 
@@ -253,7 +254,7 @@ describe("a remote delete or move", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").delete(parent);
+		peer.getTree("layers").delete(nodeOf(parent));
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
 
@@ -275,7 +276,7 @@ describe("a remote delete or move", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").move(child, to);
+		peer.getTree("layers").move(nodeOf(child), nodeOf(to));
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
 
@@ -294,7 +295,7 @@ describe("a remote delete or move", () => {
 		const peer = new LoroDoc();
 		peer.setPeerId(99);
 		peer.import(doc.snapshot());
-		peer.getTree("layers").delete(id);
+		peer.getTree("layers").delete(nodeOf(id));
 		peer.commit();
 		doc.merge(peer.export({ mode: "update" }));
 

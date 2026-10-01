@@ -75,6 +75,8 @@ export interface LayerMenu {
 	layerIds: readonly LayerId[];
 }
 
+export type SidePanel = "layers" | "components" | null;
+
 export class UserState {
 	readonly tool = new Slot<ToolId>(DEFAULT_TOOL);
 	readonly camera = new Slot<Camera>(IDENTITY_CAMERA);
@@ -92,7 +94,7 @@ export class UserState {
 	readonly lift = new Slot<Lifted | null>(null);
 	readonly collapsed = new Slot<ReadonlySet<LayerId>>(NOTHING_COLLAPSED);
 	readonly rowDrag = new Slot<RowDrag | null>(null);
-	readonly layersOpen = new Slot<boolean>(true);
+	readonly panel = new Slot<SidePanel>("layers");
 	readonly groupPivot = new Slot<GroupPivot | null>(null);
 }
 
