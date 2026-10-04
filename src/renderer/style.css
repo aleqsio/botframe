@@ -122,6 +122,14 @@ body {
 	color: var(--selection);
 }
 
+.layer-text[contenteditable] {
+	outline: none;
+	cursor: text;
+	user-select: text;
+	-webkit-user-select: text;
+	caret-color: var(--selection);
+}
+
 #stage[data-tool="select"] .layer {
 	cursor: default;
 }

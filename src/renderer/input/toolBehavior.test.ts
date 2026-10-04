@@ -67,7 +67,6 @@ describe("the behavior of each tool", () => {
 		const id = firstId(target.doc);
 		const changes = target.doc.changeCount();
 
-		dragOver(behaviorFor("text"), target, { press: PRESS, release: RELEASE });
 		tapAt(behaviorFor("image"), target, CENTER);
 
 		expect(target.doc.layer(id)).toMatchObject({ x: 420, y: 260 });

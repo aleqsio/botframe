@@ -7,10 +7,12 @@ import { cancelGroupMove } from "./groupMove";
 import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 import { cancelMove } from "./moveDrag";
 import type { KeyStroke } from "./layerCommand";
+import { editSelectedText } from "./textEdit";
 import { isTextField, runTextEdit, textKeyFor } from "./textField";
 import { toolFor } from "./toolKey";
 
 const CANCEL_KEY = "Escape";
+const EDIT_KEY = "Enter";
 
 function isTyping(target: EventTarget | null): boolean {
 	return (
@@ -47,6 +49,9 @@ export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeySt
 	}
 	if (user.dragging.get()) {
 		return false;
+	}
+	if (stroke.key === EDIT_KEY && editSelectedText(doc, user)) {
+		return true;
 	}
 	const tool = toolFor(stroke);
 	if (tool !== null) {

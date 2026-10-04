@@ -19,7 +19,7 @@ function layersOf(doc: DesignDocument): (Layer | null)[] {
 	return doc.layerIds().map((id) => doc.layer(id));
 }
 
-function chainUnder(target: PointerTarget): Layer[] {
+export function chainUnder(target: PointerTarget): Layer[] {
 	const read = (id: LayerId): Layer | null => target.doc.layer(id);
 	return layerChain(read, target.layerIds.find((id) => isFrame(read(id))) ?? null);
 }

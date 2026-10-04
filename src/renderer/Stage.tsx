@@ -42,6 +42,7 @@ export function Stage({
 						lift={user.lift}
 						parentDisplay={null}
 						selection={user.selection}
+						textEdit={user.textEdit}
 					/>
 				))}
 				{ids.map((id) => (

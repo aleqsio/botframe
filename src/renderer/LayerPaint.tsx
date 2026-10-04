@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import type { Layer } from "../document/layer";
 import type { AssetUrl } from "./assetUrl";
-import { LayerText } from "./LayerText";
 import { LayerVideo } from "./LayerVideo";
 import { pathPaintStyle } from "./layerStyle";
 import { paintedStyle } from "./mediaStyle";
@@ -13,9 +12,6 @@ export function LayerPaint({
 	layer: Layer;
 	media: AssetUrl | null;
 }): ReactElement {
-	if (layer.geometry.kind === "text") {
-		return <LayerText geometry={layer.geometry} layer={layer} media={media} />;
-	}
 	const paint = pathPaintStyle(layer);
 
 	if (paint === null) {
