@@ -48,6 +48,8 @@ When `window.botframe` is not there, `src/renderer/bridge.ts` uses the browser:
 
 `.github/workflows/pages.yml` builds the website on each push to `main` and publishes it to GitHub Pages. The workflow tries to turn on Pages. If the first run fails at `configure-pages`, set Settings → Pages → Source to "GitHub Actions", and run the workflow again.
 
+`.github/workflows/preview.yml` builds each pull request from this repository and commits the build to `pr/<number>/` on the `pages-previews` branch. A comment on the pull request gives the link. When the `preview` run ends, `pages.yml` publishes `main` and each folder in `pr/` together. When the pull request closes, its folder goes away. A pull request from a fork gets no preview.
+
 ## Review
 
 - **CodeRabbit** reviews each pull request. It is free for a public repository, and it reads AGENTS.md, REVIEW.md, and STACK.md.
