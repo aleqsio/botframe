@@ -1,7 +1,7 @@
 import type { Layer, Pose, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { centerOf, halfSizeOf, poseInside, toParentPoint } from "./layerSpace";
-import { NO_POSE, linearOf } from "./linear";
+import { NO_POSE, linearOf } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { MIN_LAYER_SIZE } from "./transform";
 

@@ -52,6 +52,7 @@ const GEOMETRY_READERS: Readonly<
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (fields) => ({ kind: "path", vertices: verticesOf(fields?.get("vertices")) }),
+	group: () => ({ kind: "group" }),
 };
 
 function unitKey(key: BoxKey): string {

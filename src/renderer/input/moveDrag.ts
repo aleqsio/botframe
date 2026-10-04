@@ -1,24 +1,32 @@
 import type { DesignDocument } from "../../document/document";
+import { isGroup } from "../../document/layer";
 import type { Layer, LayerId, LayerPatch, Pose } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { LayerMove, UserState } from "../state/userState";
 import { BACK_TO_FLOW } from "../components/layout/resetChildren";
-import { dropParentOf } from "./dropTarget";
+import { dropParentOf, insideSubtree } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import { anchorOf, poseInside, seenLinear } from "./layerSpace";
-import type { Linear } from "./linear";
+import { fixedFill } from "./layoutGeometry";
+import type { Linear } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
 import { carryLayer } from "./moveCarry";
 import { snapFieldAround } from "./snapField";
-import { drawnReaderOf, parentChainOf, parentPointOf } from "./targetSpace";
+import { drawnReaderOf, parentChainOf, parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 const CANCEL_COMMIT = "cancel move";
 const AUTO_CELL = { mode: "auto" } as const;
 
 function parentUnder(target: PointerTarget, move: LayerMove, point: StagePoint): LayerId | null {
-	return dropParentOf(target.layerIdsAt(point), (id) => target.doc.layer(id), move.id);
+	const read = readerOf(target);
+	const under = dropParentOf(target.layerIdsAt(point), read, move.id);
+	const from = move.from;
+	if (from === null || !isGroup(read(from))) {
+		return under;
+	}
+	return under === null || insideSubtree(read, from, under) ? from : under;
 }
 
 function anchorAt(target: PointerTarget, layer: Layer, canvas: Point): Point {
@@ -30,19 +38,10 @@ function seenOf(target: PointerTarget, layer: Layer): Linear {
 	return seenLinear(parentChainOf(target, layer.id), layer);
 }
 
-function fixedFill(target: PointerTarget, id: LayerId): LayerPatch {
+function fixedFillOf(target: PointerTarget, id: LayerId): LayerPatch {
 	const layer = target.doc.layer(id);
 	const drawn = drawnReaderOf(target)(id);
-	if (layer === null || drawn === null) {
-		return {};
-	}
-	const wide = layer.layout.width === "fill";
-	const tall = layer.layout.height === "fill";
-	return {
-		...(wide ? { width: drawn.width } : {}),
-		...(tall ? { height: drawn.height } : {}),
-		layout: { ...(wide ? { width: "fixed" } : {}), ...(tall ? { height: "fixed" } : {}) },
-	};
+	return layer === null || drawn === null ? {} : fixedFill(layer, drawn);
 }
 
 function landedPatch(
@@ -55,7 +54,7 @@ function landedPatch(
 	if (display !== undefined && display !== null && display !== "block") {
 		return { ...BACK_TO_FLOW, ...pose, layout: { ...BACK_TO_FLOW.layout, cell: AUTO_CELL } };
 	}
-	const loose = fixedFill(target, move.id);
+	const loose = fixedFillOf(target, move.id);
 	const layout = { ...loose.layout, position: move.start.position, cell: AUTO_CELL };
 	return { ...loose, ...pose, layout };
 }

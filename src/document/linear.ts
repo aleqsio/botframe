@@ -1,6 +1,10 @@
-import { heldSkew } from "../../document/layer";
-import type { Pose } from "../../document/layer";
-import type { Point } from "../state/camera";
+import { heldSkew } from "./layer";
+import type { Pose } from "./layer";
+
+export interface Point {
+	x: number;
+	y: number;
+}
 
 export interface Linear {
 	a: number;

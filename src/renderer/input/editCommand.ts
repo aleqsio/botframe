@@ -1,6 +1,7 @@
 import type { DesignDocument } from "../../document/document";
 import { copyAsHtml, copySelection, cutSelection, pasteFromClipboard } from "../clipboard";
 import { deleteSelection, duplicateSelection } from "../layerEdit";
+import { canGroup, canUngroup, groupSelection, ungroupSelection } from "../layerGroup";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
 import { heldWithAccelerator, never, onApple, plainStroke } from "./command";
@@ -14,6 +15,7 @@ const CUT_KEY = "x";
 const COPY_KEY = "c";
 const PASTE_KEY = "v";
 const DUPLICATE_KEY = "d";
+const GROUP_KEY = "g";
 const REMOVE_KEYS: ReadonlySet<string> = new Set(["Delete", "Backspace"]);
 
 function undoStroke(stroke: KeyStroke): boolean {
@@ -30,6 +32,16 @@ function redoStroke(stroke: KeyStroke): boolean {
 
 function removeStroke(stroke: KeyStroke): boolean {
 	return !heldWithAccelerator(stroke) && !stroke.altKey && REMOVE_KEYS.has(stroke.key);
+}
+
+function ungroupStroke(stroke: KeyStroke): boolean {
+	return (
+		stroke.shiftKey &&
+		!stroke.metaKey &&
+		!stroke.ctrlKey &&
+		!stroke.altKey &&
+		stroke.key.toLowerCase() === GROUP_KEY
+	);
 }
 
 function hasSelection(_doc: DesignDocument, user: UserState): boolean {
@@ -109,6 +121,24 @@ export const EDIT_COMMANDS: readonly EditCommand[] = [
 		matches: plainStroke(DUPLICATE_KEY),
 		apply: duplicateSelection,
 		enabled: hasSelection,
+	},
+	{
+		id: "group",
+		label: "Group",
+		group: "layer",
+		accelerator: "CmdOrCtrl+G",
+		matches: plainStroke(GROUP_KEY),
+		apply: groupSelection,
+		enabled: canGroup,
+	},
+	{
+		id: "ungroup",
+		label: "Ungroup",
+		group: "layer",
+		accelerator: "Shift+G",
+		matches: ungroupStroke,
+		apply: ungroupSelection,
+		enabled: canUngroup,
 	},
 	{
 		id: "delete",

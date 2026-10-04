@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Pose } from "../../document/layer";
+import type { Pose } from "./layer";
 import { applyLinear, invertLinear, linearOf, multiplyLinear, poseOf } from "./linear";
 
 const POSES: readonly Pose[] = [

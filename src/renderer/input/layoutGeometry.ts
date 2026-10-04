@@ -1,5 +1,6 @@
 import type { GuideAxis } from "../../document/guides";
-import type { Layer, Rect } from "../../document/layer";
+import type { Layer, LayerPatch, Rect } from "../../document/layer";
+import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
 import { turnedBounds } from "./layerSpace";
 
@@ -52,4 +53,14 @@ export function spreadOffsets(boxes: readonly Rect[], axis: GuideAxis): readonly
 export function localBoxOf(layer: Layer): Rect {
 	const turned = turnedBounds(layer);
 	return { ...turned, x: layer.x + turned.x, y: layer.y + turned.y };
+}
+
+export function fixedFill(layer: Layer, drawn: Size): LayerPatch {
+	const wide = layer.layout.width === "fill";
+	const tall = layer.layout.height === "fill";
+	return {
+		...(wide ? { width: drawn.width } : {}),
+		...(tall ? { height: drawn.height } : {}),
+		layout: { ...(wide ? { width: "fixed" } : {}), ...(tall ? { height: "fixed" } : {}) },
+	};
 }

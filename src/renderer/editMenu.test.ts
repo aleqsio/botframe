@@ -37,6 +37,8 @@ describe("the Edit menu", () => {
 			"Copy as",
 			"Paste",
 			"Duplicate",
+			"Group",
+			"Ungroup",
 			"Delete",
 			"Arrange",
 		]);
@@ -55,6 +57,8 @@ describe("the Edit menu", () => {
 			"Copy as": false,
 			Paste: false,
 			Duplicate: false,
+			Group: false,
+			Ungroup: false,
 			Delete: false,
 			Arrange: false,
 		});
@@ -71,6 +75,8 @@ describe("the Edit menu", () => {
 			"Copy as": true,
 			Paste: false,
 			Duplicate: true,
+			Group: true,
+			Ungroup: false,
 			Delete: true,
 		});
 	});
@@ -105,6 +111,8 @@ describe("the context menu", () => {
 			"Copy as",
 			"Paste",
 			"Duplicate",
+			"Group",
+			"Ungroup",
 			"Delete",
 			"Arrange",
 		]);
@@ -121,6 +129,8 @@ describe("the context menu", () => {
 			"Copy as": false,
 			Paste: false,
 			Duplicate: false,
+			Group: false,
+			Ungroup: false,
 			Delete: false,
 			Arrange: false,
 		});
@@ -138,6 +148,8 @@ describe("the context menu", () => {
 			"Copy as": true,
 			Paste: true,
 			Duplicate: true,
+			Group: true,
+			Ungroup: false,
 			Delete: true,
 			Arrange: true,
 		});

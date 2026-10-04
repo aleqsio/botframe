@@ -54,6 +54,7 @@ const SHAPES: Readonly<Record<WritableGeometry["kind"], (bag: Bag) => WritableGe
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (bag) => ({ kind: "path", vertices: verticesOf(bag["vertices"]) }),
+	group: () => ({ kind: "group" }),
 };
 
 function shapeOf(value: unknown): WritableGeometry {

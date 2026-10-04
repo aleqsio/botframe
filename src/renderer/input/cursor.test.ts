@@ -4,7 +4,7 @@ import { cursorAxisOf, cursorKeyOf, skewCursorKeyOf } from "./cursor";
 import type { CursorKey } from "./cursor";
 import { HANDLE_AXIS } from "./handles";
 import type { Handle } from "./handles";
-import { NO_POSE } from "./linear";
+import { NO_POSE } from "../../document/linear";
 import type { PointerTarget } from "./tool";
 import { behaviorFor } from "./toolBehavior";
 import { anchorOnScreen, firstId, nestedTarget, pointAt } from "./toolFixtures";

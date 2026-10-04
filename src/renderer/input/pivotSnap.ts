@@ -2,7 +2,7 @@ import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { NO_INSET } from "./drawn";
 import { fromParentPoint, intoLayer, parentChain, visualCenterOf } from "./layerSpace";
-import { NO_POSE } from "./linear";
+import { NO_POSE } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { snapFieldOf } from "./snap";
 import type { SnapField, SnapSegment } from "./snap";

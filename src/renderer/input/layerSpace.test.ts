@@ -24,7 +24,7 @@ import {
 	uprightLinear,
 	visualCenterOf,
 } from "./layerSpace";
-import { NO_POSE, multiplyLinear, poseOf } from "./linear";
+import { NO_POSE, multiplyLinear, poseOf } from "../../document/linear";
 
 function layerAt(id: LayerId, parent: LayerId | null, rotation: number): Layer {
 	return {

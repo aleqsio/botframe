@@ -14,7 +14,7 @@ import {
 	visualCenterOf,
 } from "./layerSpace";
 import type { Placed, ReadLayer } from "./layerSpace";
-import { NO_POSE, poseOf } from "./linear";
+import { NO_POSE, poseOf } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { boundsOf } from "./selectionBounds";
 import { MIN_LAYER_SIZE, resizedRect } from "./transform";

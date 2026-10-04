@@ -4,11 +4,16 @@ import { AssetStore } from "./assets";
 import { clipTargetsIn } from "./clips";
 import { ComponentStore } from "./components";
 import { DocumentHistory, KEPT_ORIGIN } from "./history";
+import { fitGroups } from "./groupFit";
+import { scaleGroup } from "./groupScale";
+import type { GroupStart } from "./groupScale";
+import { isGroup } from "./layer";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
 import { readLayer, unbindCorners, writeLayer } from "./layerIo";
 import { LayerTree, touchedNodes } from "./layerTree";
-import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
-import type { Basis, LayerLengths, Size } from "./length";
+import { basisIn } from "./basis";
+import { hasRelativeLength, settledLengths } from "./length";
+import type { Basis, LayerLengths } from "./length";
 import { notify, subscribeTo } from "./listeners";
 import { nodeOf } from "./path";
 import type { Unsubscribe } from "./listeners";
@@ -40,10 +45,6 @@ function treeItems(event: LoroEventBatch): TreeDiffItem[] {
 	return event.events.flatMap((entry) => (entry.diff.type === "tree" ? entry.diff.diff : []));
 }
 
-function sizeOf(layer: Layer): Size {
-	return { width: layer.width, height: layer.height };
-}
-
 const NO_CLIP_TARGETS: readonly LayerId[] = [];
 
 export class DesignDocument {
@@ -61,6 +62,11 @@ export class DesignDocument {
 	#clipTargets: ReadonlyMap<TreeID, readonly LayerId[]> | null = null;
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
+	readonly #groupStarts = new Map<LayerId, GroupStart>();
+	readonly #read = (id: LayerId): Layer | null => this.layer(id);
+	readonly #place = (id: LayerId, patch: LayerPatch): void => {
+		this.#write(id, patch);
+	};
 	#ids: readonly LayerId[] | null = null;
 	#roots: readonly LayerId[] | null = null;
 
@@ -132,7 +138,7 @@ export class DesignDocument {
 			return cached;
 		}
 		const parent = this.#tree.parentOf(id);
-		const traits = readLayer(this.#tree, id, this.#basisOf(parent));
+		const traits = readLayer(this.#tree, id, basisIn(this.#read, parent));
 		if (traits === null) {
 			return null;
 		}
@@ -142,12 +148,12 @@ export class DesignDocument {
 	}
 
 	basisOf(id: LayerId): Basis {
-		return this.#basisOf(this.layer(id)?.parent ?? null);
+		return basisIn(this.#read, this.layer(id)?.parent ?? null);
 	}
 
 	createLayer(fields: LayerFields, parent: LayerId | null = null): LayerId {
 		const node = this.#tree.tree().createNode(this.#tree.containerOf(parent));
-		writeLayer(this.#tree, node.id, fields, this.#basisOf(parent));
+		writeLayer(this.#tree, node.id, fields, basisIn(this.#read, parent));
 		this.#notifyStructure();
 		return this.#tree.pathIn(parent, node.id);
 	}
@@ -179,7 +185,8 @@ export class DesignDocument {
 			return false;
 		}
 		const before = this.layer(id);
-		this.#tree.tree().move(node.id, this.#tree.containerOf(parent), index);
+		const at = parent === null && index !== undefined ? this.#tree.rootIndex(id, index) : index;
+		this.#tree.tree().move(node.id, this.#tree.containerOf(parent), at);
 		this.#invalidateNode(node.id);
 		this.#notifyStructure();
 		if (before !== null) {
@@ -209,12 +216,20 @@ export class DesignDocument {
 	}
 
 	update(id: LayerId, patch: LayerPatch): void {
+		const before = this.layer(id);
+		this.#write(id, patch);
+		if (isGroup(before)) {
+			scaleGroup(this, this.#groupStarts, before);
+		}
+	}
+
+	#write(id: LayerId, patch: LayerPatch): void {
 		const node = this.#tree.live(id);
 		if (node === null) {
 			return;
 		}
 		const allowed = this.#allowedPatch(node.parent()?.id, unbindCorners(this.layer(id), patch));
-		const basis = this.#basisOf(this.#tree.parentOf(id));
+		const basis = basisIn(this.#read, this.#tree.parentOf(id));
 		for (const target of writeLayer(this.#tree, id, allowed, basis)) {
 			this.#refreshNode(target);
 		}
@@ -233,6 +248,8 @@ export class DesignDocument {
 	}
 
 	commit(message: string): void {
+		fitGroups(this, this.#place);
+		this.#groupStarts.clear();
 		this.#wantedLengths.clear();
 		this.#doc.commit({ message });
 		this.#refreshHistory();
@@ -296,35 +313,16 @@ export class DesignDocument {
 		if (hasRelativeLength(wanted)) {
 			this.#wantedLengths.set(id, wanted);
 		}
-		const basis = this.#basisOf(this.#tree.parentOf(id));
+		const basis = basisIn(this.#read, this.#tree.parentOf(id));
 		const box = { lengths: before.lengths, pixels: before };
 		this.update(id, { lengths: settledLengths(wanted, box, basis) });
-	}
-
-	#basisOf(parent: LayerId | null): Basis {
-		const container = parent === null ? null : this.layer(parent);
-		if (container === null) {
-			return NO_BASIS;
-		}
-		return { container: sizeOf(container), root: this.#rootSize(container) };
-	}
-
-	#rootSize(container: Layer): Size {
-		let held = container;
-		while (held.parent !== null) {
-			const above = this.layer(held.parent);
-			if (above === null) {
-				break;
-			}
-			held = above;
-		}
-		return sizeOf(held);
 	}
 
 	#applyHistory(step: () => boolean): boolean {
 		const stepped = step();
 		if (stepped) {
 			this.#wantedLengths.clear();
+			this.#groupStarts.clear();
 			this.#forgetLayers();
 			this.#children.clear();
 			this.#notifyStructure();

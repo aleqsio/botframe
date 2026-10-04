@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
 import { HANDLE_SIZE } from "./input/handles";
-import { degreesOf } from "./input/linear";
+import { degreesOf } from "../document/linear";
 import { SKEW_OFFSET, skewMarksOf } from "./input/skewHandle";
 import type { SkewMark } from "./input/skewHandle";
 import { useSlot } from "./state/useSlot";

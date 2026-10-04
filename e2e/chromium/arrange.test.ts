@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 import { drawWith } from "../support";
 import type { Drag } from "../support";
-import { clickAt, openRenderer, typeChip } from "./support";
+import { EMPTY, clickAt, openRenderer, typeChip } from "./support";
 
 const FRAME: Drag = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
 const INSIDE: Drag = { from: { x: 320, y: 80 }, to: { x: 420, y: 140 } };
@@ -24,6 +24,7 @@ test("an align to the frame stops at the padding of the frame", async ({ page })
 	await drawWith(page, origin, "r", INSIDE);
 	await clickAt(page, origin, FRAME_EDGE);
 	await typeChip(page, "Padding", PADDING);
+	await clickAt(page, origin, EMPTY);
 	await clickAt(page, origin, CHILD);
 
 	await arrangeButton(page, "Align left").click();

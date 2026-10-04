@@ -58,6 +58,16 @@ describe("commandForStroke", () => {
 		expect(commandForStroke(stroke("Backspace", { altKey: true }))).toBeNull();
 	});
 
+	it("reads group from Cmd+G and from Ctrl+G", () => {
+		expect(commandForStroke(stroke("g", { metaKey: true }))?.id).toBe("group");
+		expect(commandForStroke(stroke("g", { ctrlKey: true }))?.id).toBe("group");
+	});
+
+	it("reads ungroup from Shift+G and leaves Ctrl+Shift+G to the flip", () => {
+		expect(commandForStroke(stroke("G", { shiftKey: true }))?.id).toBe("ungroup");
+		expect(commandForStroke(stroke("G", { shiftKey: true, ctrlKey: true }))?.id).toBe("flipY");
+	});
+
 	it("reads duplicate from Cmd+D and from Ctrl+D", () => {
 		expect(commandForStroke(stroke("d", { metaKey: true }))?.id).toBe("duplicate");
 		expect(commandForStroke(stroke("d", { ctrlKey: true }))?.id).toBe("duplicate");

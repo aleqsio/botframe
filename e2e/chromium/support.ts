@@ -107,5 +107,6 @@ export async function drawRowOfThree(page: Page, origin: Point): Promise<Locator
 	const children = page.locator("#viewport > .layer").nth(1).locator("> .layer");
 	await expect(children).toHaveCount(3);
 	await makeRow(page, origin, children.nth(2));
+	await clickAt(page, origin, EMPTY);
 	return children;
 }

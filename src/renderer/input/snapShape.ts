@@ -111,6 +111,7 @@ export const SNAP_REPORTERS: Readonly<Record<Geometry["kind"], SnapReporter>> = 
 	rectangle: rectangleShapeOf,
 	ellipse: ellipseShapeOf,
 	path: boxShapeOf,
+	group: boxShapeOf,
 	unsupported: boxShapeOf,
 };
 

@@ -1,26 +1,34 @@
 import { CENTER_ORIGIN } from "../../document/layer";
-import type { Layer, LayerId, Origin, Pose, Rect } from "../../document/layer";
+import type { Layer, LayerId, Pose, Rect } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
 import {
 	HALF_TURN,
 	NO_POSE,
-	applyLinear,
 	invertLinear,
 	linearOf,
 	multiplyLinear,
 	poseOf,
 	radiansOf,
-} from "./linear";
-import type { Linear } from "./linear";
+} from "../../document/linear";
+import type { Linear } from "../../document/linear";
+
+import { anchoredPlace, intoLayer, outOfLayer } from "../../document/space";
+import type { Placed, Turned } from "../../document/space";
+
+export {
+	anchoredPlace,
+	cornersOf,
+	hullOf,
+	intoLayer,
+	outOfLayer,
+	pivotOf,
+	posePoint,
+	turnedBounds,
+} from "../../document/space";
+export type { Corners, Placed, Turned } from "../../document/space";
 
 export type ReadLayer = (id: LayerId) => Layer | null;
-
-export interface Turned extends Size, Pose {
-	origin: Origin;
-}
-
-export type Placed = Turned & Rect;
 
 export function centerOf(layer: Rect): Point {
 	return { x: layer.x + layer.width / 2, y: layer.y + layer.height / 2 };
@@ -30,10 +38,6 @@ export function halfSizeOf(size: Size): Point {
 	return { x: size.width / 2, y: size.height / 2 };
 }
 
-export function pivotOf(layer: Turned): Point {
-	return { x: layer.origin.x * layer.width, y: layer.origin.y * layer.height };
-}
-
 export function rotatePoint(point: Point, degrees: number): Point {
 	const radians = radiansOf(degrees);
 	const cos = Math.cos(radians);
@@ -41,58 +45,8 @@ export function rotatePoint(point: Point, degrees: number): Point {
 	return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos };
 }
 
-export function posePoint(point: Point, pose: Pose): Point {
-	return applyLinear(linearOf(pose), point);
-}
-
-function unposePoint(point: Point, pose: Pose): Point {
-	return applyLinear(invertLinear(linearOf(pose)), point);
-}
-
 export function normalizedPose(pose: Pose): Pose {
 	return { ...pose, rotation: normalizeDegrees(pose.rotation) };
-}
-
-export function intoLayer(layer: Placed, point: Point): Point {
-	const pivot = pivotOf(layer);
-	const turned = unposePoint(
-		{ x: point.x - layer.x - pivot.x, y: point.y - layer.y - pivot.y },
-		layer,
-	);
-	return { x: turned.x + pivot.x, y: turned.y + pivot.y };
-}
-
-export function outOfLayer(layer: Placed, local: Point): Point {
-	const pivot = pivotOf(layer);
-	const turned = posePoint({ x: local.x - pivot.x, y: local.y - pivot.y }, layer);
-	return { x: layer.x + pivot.x + turned.x, y: layer.y + pivot.y + turned.y };
-}
-
-export type Corners = readonly [Point, Point, Point, Point];
-
-export function cornersOf(box: Size): Corners {
-	return [
-		{ x: 0, y: 0 },
-		{ x: box.width, y: 0 },
-		{ x: box.width, y: box.height },
-		{ x: 0, y: box.height },
-	];
-}
-
-export function hullOf(points: readonly [Point, ...Point[]]): Rect {
-	let [low] = points;
-	let high = low;
-	for (const point of points) {
-		low = { x: Math.min(low.x, point.x), y: Math.min(low.y, point.y) };
-		high = { x: Math.max(high.x, point.x), y: Math.max(high.y, point.y) };
-	}
-	return { x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y };
-}
-
-export function turnedBounds(layer: Turned): Rect {
-	const flat = { ...layer, x: 0, y: 0 };
-	const [first, ...rest] = cornersOf(layer);
-	return hullOf([outOfLayer(flat, first), ...rest.map((corner) => outOfLayer(flat, corner))]);
 }
 
 export function toLayerPoint(layer: Placed, point: Point): Point {
@@ -113,15 +67,6 @@ export function anchorOf(layer: Placed, point: Point): Point {
 		x: layer.width === 0 ? 0 : local.x / layer.width,
 		y: layer.height === 0 ? 0 : local.y / layer.height,
 	};
-}
-
-export function anchoredPlace(layer: Turned, anchor: Point, point: Point): Point {
-	const pivot = pivotOf(layer);
-	const turned = posePoint(
-		{ x: anchor.x * layer.width - pivot.x, y: anchor.y * layer.height - pivot.y },
-		layer,
-	);
-	return { x: point.x - pivot.x - turned.x, y: point.y - pivot.y - turned.y };
 }
 
 export function visualCenterOf(layer: Placed): Point {

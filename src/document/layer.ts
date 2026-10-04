@@ -15,7 +15,14 @@ export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
 	| { kind: "ellipse" }
 	| { kind: "path"; vertices: readonly Vertex[] }
+	| { kind: "group" }
 	| { kind: "unsupported" };
+
+export const GROUP_GEOMETRY: WritableGeometry = { kind: "group" };
+
+export function isGroup<T extends Pick<Layer, "geometry">>(layer: T | null): layer is T {
+	return layer?.geometry.kind === "group";
+}
 
 export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;
 
