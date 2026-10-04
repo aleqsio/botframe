@@ -1,0 +1,164 @@
+import type { ReactElement } from "react";
+import type { DesignDocument } from "../../../document/document";
+import type { Layer } from "../../../document/layer";
+import type { TextGeometry, TextStyle } from "../../../document/text";
+import { FACTOR_STEP, LENGTH_STEP } from "../../input/step";
+import { NumberChip } from "../layout/NumberChip";
+import { Segmented } from "../layout/Segmented";
+import { ALIGN_OPTIONS, CASE_OPTIONS, DECORATION_OPTIONS, VERTICAL_OPTIONS } from "./textOptions";
+
+const MESSAGE = "set text style";
+const WEIGHT_STEP = { small: 100, normal: 100, large: 100 };
+const SIZE_BOUND = { kind: "clamp", min: 1, max: 1000 } as const;
+const WEIGHT_BOUND = { kind: "clamp", min: 100, max: 900 } as const;
+const LINE_BOUND = { kind: "clamp", min: 0.1, max: 10 } as const;
+const SPACING_BOUND = { kind: "clamp", min: -100, max: 100 } as const;
+
+interface TextChange {
+	geometry: TextGeometry;
+	write: (change: Partial<TextStyle>) => void;
+	commit: () => void;
+}
+
+function NumberRows({ commit, geometry, write }: TextChange): ReactElement {
+	return (
+		<>
+			<div className="chip-row">
+				<NumberChip
+					bound={SIZE_BOUND}
+					label="Size"
+					name="Font size"
+					onCommit={commit}
+					onValue={(fontSize) => {
+						write({ fontSize });
+					}}
+					step={LENGTH_STEP}
+					unit="px"
+					value={geometry.fontSize}
+				/>
+				<NumberChip
+					bound={WEIGHT_BOUND}
+					label="Weight"
+					name="Font weight"
+					onCommit={commit}
+					onValue={(fontWeight) => {
+						write({ fontWeight });
+					}}
+					step={WEIGHT_STEP}
+					unit=""
+					value={geometry.fontWeight}
+				/>
+			</div>
+			<div className="chip-row">
+				<NumberChip
+					bound={LINE_BOUND}
+					label="Line"
+					name="Line height"
+					onCommit={commit}
+					onValue={(lineHeight) => {
+						write({ lineHeight });
+					}}
+					step={FACTOR_STEP}
+					unit="×"
+					value={geometry.lineHeight}
+				/>
+				<NumberChip
+					bound={SPACING_BOUND}
+					label="Spacing"
+					name="Letter spacing"
+					onCommit={commit}
+					onValue={(letterSpacing) => {
+						write({ letterSpacing });
+					}}
+					step={LENGTH_STEP}
+					unit="px"
+					value={geometry.letterSpacing}
+				/>
+			</div>
+		</>
+	);
+}
+
+function ChoiceRows({ commit, geometry, write }: TextChange): ReactElement {
+	const pick = (change: Partial<TextStyle>): void => {
+		write(change);
+		commit();
+	};
+	return (
+		<>
+			<span className="layout-sub">Align</span>
+			<div className="chip-row">
+				<Segmented
+					label="Horizontal alignment"
+					onPick={(textAlign) => {
+						pick({ textAlign });
+					}}
+					options={ALIGN_OPTIONS}
+					value={geometry.textAlign}
+				/>
+			</div>
+			<div className="chip-row">
+				<Segmented
+					label="Vertical alignment"
+					onPick={(verticalAlign) => {
+						pick({ verticalAlign });
+					}}
+					options={VERTICAL_OPTIONS}
+					value={geometry.verticalAlign}
+				/>
+			</div>
+			<span className="layout-sub">Decoration</span>
+			<div className="chip-row">
+				<Segmented
+					label="Decoration"
+					onPick={(decoration) => {
+						pick({ decoration });
+					}}
+					options={DECORATION_OPTIONS}
+					value={geometry.decoration}
+				/>
+			</div>
+			<span className="layout-sub">Case</span>
+			<div className="chip-row">
+				<Segmented
+					label="Case"
+					onPick={(textCase) => {
+						pick({ textCase });
+					}}
+					options={CASE_OPTIONS}
+					value={geometry.textCase}
+				/>
+			</div>
+		</>
+	);
+}
+
+export function TextSection({
+	doc,
+	geometry,
+	layer,
+}: {
+	doc: DesignDocument;
+	geometry: TextGeometry;
+	layer: Layer;
+}): ReactElement {
+	const change: TextChange = {
+		geometry,
+		write: (style) => {
+			doc.update(layer.id, { geometry: { ...geometry, ...style } });
+		},
+		commit: () => {
+			doc.commit(MESSAGE);
+		},
+	};
+
+	return (
+		<section className="layout-section">
+			<header className="layout-head">
+				<span className="group-label">Text</span>
+			</header>
+			<NumberRows {...change} />
+			<ChoiceRows {...change} />
+		</section>
+	);
+}

@@ -2,6 +2,13 @@ import type { ReactElement } from "react";
 
 const PATHS = {
 	agent: "M12 4c.6 4.2 2.8 6.4 8 8-5.2 1.6-7.4 3.8-8 8-.6-4.2-2.8-6.4-8-8 5.2-1.6 7.4-3.8 8-8z",
+	textLeft: "M4 6h16M4 10h10M4 14h16M4 18h10",
+	textCenter: "M4 6h16M7 10h10M4 14h16M7 18h10",
+	textRight: "M4 6h16M10 10h10M4 14h16M10 18h10",
+	textJustify: "M4 6h16M4 10h16M4 14h16M4 18h16",
+	underline: "M7 4v7a5 5 0 0 0 10 0V4M5 20h14",
+	strike:
+		"M4 12h16M16 7.5c-.5-2-2-3-4-3-2.5 0-4 1.3-4 3.2M8 16.3c.5 2.2 2.2 3.2 4.2 3.2 2.6 0 4.3-1.5 4.3-3.5",
 	component:
 		"M12 3.5 15 6.5 12 9.5 9 6.5zM12 14.5 15 17.5 12 20.5 9 17.5zM6.5 9 9.5 12 6.5 15 3.5 12zM17.5 9 20.5 12 17.5 15 14.5 12z",
 	pencil: "M5 19l1-4L16 5l3 3L9 18zM14 7l3 3",
