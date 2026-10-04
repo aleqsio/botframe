@@ -320,7 +320,8 @@
 	min-width: 0;
 }
 
-.fill-card-button {
+.fill-card-button,
+.fill-card-static {
 	display: flex;
 	flex-direction: column;
 	gap: var(--layout-space-2);
