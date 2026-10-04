@@ -20,7 +20,10 @@ export function ClipField({ doc, layer }: FieldProps): ReactElement {
 	const bound = layer.bindings.clip;
 
 	return (
-		<div className="property-switch-row" data-changed={isChanged(layer, "clip") ? "" : undefined}>
+		<div
+			className="property-switch-row bind-row"
+			data-changed={isChanged(layer, "clip") ? "" : undefined}
+		>
 			{bound === undefined ? (
 				<label className="property-switch">
 					<input

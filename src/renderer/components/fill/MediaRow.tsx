@@ -43,6 +43,7 @@ export function MediaRow({
 					doc.commit(MEDIA_MESSAGE);
 				}}
 			/>
+			<span aria-hidden="true" className="bind-slot" />
 		</div>
 	);
 }

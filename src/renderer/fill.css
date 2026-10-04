@@ -38,7 +38,7 @@
 .fill-row {
 	gap: var(--layout-space-3);
 	height: var(--layout-control);
-	padding: 0 var(--layout-space-1) 0 var(--layout-space-2);
+	padding-block: 0;
 	font-size: var(--layout-text-field);
 }
 
@@ -64,7 +64,18 @@
 
 .fill-name:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);
-	outline-offset: var(--layout-space-1);
+	outline-offset: calc(-1 * var(--layout-space-1));
+}
+
+.bind-slot {
+	flex: none;
+	width: var(--layout-inner);
+}
+
+.fill-row,
+.bind-row {
+	padding-right: var(--layout-space-1);
+	padding-left: var(--layout-space-2);
 }
 
 .fill-alpha {

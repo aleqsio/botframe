@@ -25,7 +25,6 @@ export function PaintRow({ onOpen, ...props }: FillProps & { onOpen: () => void 
 			) : (
 				<BoundSummary bound={bound} now={layer.fill} view={target.reach.view} />
 			)}
-			<BindButton target={target} />
 			<IconButton
 				icon="minus"
 				label="Remove fill"
@@ -34,6 +33,7 @@ export function PaintRow({ onOpen, ...props }: FillProps & { onOpen: () => void 
 					doc.commit(REMOVE_MESSAGE);
 				}}
 			/>
+			<BindButton target={target} />
 		</div>
 	);
 }
