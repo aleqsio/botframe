@@ -28,6 +28,13 @@ A selector is a control that shows a set of options and holds one picked option.
 11. Each distance, size, radius, and type size comes from the scale in `src/renderer/layout.css`. A value that is not on the scale is a `calc()` of scale values, or a 1 px line.
 12. Colors come from the tokens in `src/renderer/style.css`. A new color is a `light-dark()` token.
 
+## Text
+
+13. Show only the text that the user needs to do the next step: a label, a value, a command, or an error. Do not add a note, a hint, or a sub-line that tells how the application works, why a control exists, or what can go wrong.
+14. Do not repeat in text what a control already shows. A heading, a button, or a field label does not need a note below it.
+15. Put an error in the text only when it occurs. Do not warn about an error before it occurs.
+16. An empty list shows no note, or one short line. It does not give instructions.
+
 ## Proof
 
-13. Prove a change to a panel on the application that runs, at the width of the panel, in both color schemes. Measure the text fit with a script. A screenshot is the record.
+17. Prove a change to a panel on the application that runs, at the width of the panel, in both color schemes. Measure the text fit with a script. A screenshot is the record.
