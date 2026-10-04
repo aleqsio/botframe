@@ -128,6 +128,7 @@ export function outlineVertices(geometry: Geometry, size: Size): readonly Vertex
 		case "path": {
 			return geometry.vertices;
 		}
+		case "text":
 		case "group":
 		case "unsupported": {
 			break;

@@ -20,17 +20,24 @@ const MEDIA_TYPES = {
 	"video/webm": "video",
 } as const satisfies Readonly<Record<string, MediaKind>>;
 
-export type MediaType = keyof typeof MEDIA_TYPES;
+type MediaType = keyof typeof MEDIA_TYPES;
+
+const FONT_TYPE = "font/woff2";
+
+export type AssetType = MediaType | typeof FONT_TYPE;
+
+export type AssetKind = MediaKind | "font";
 
 export const ACCEPTED_TYPES = Object.keys(MEDIA_TYPES).join(",");
 
 export interface Asset {
 	readonly id: AssetId;
-	readonly type: MediaType;
+	readonly type: AssetType;
 	readonly bytes: Uint8Array<ArrayBuffer>;
 }
 
 const ASSETS = "assets";
+const FONT_FILES = "fontFiles";
 const ASSET_ID_TEXT = /^[0-9a-f]{64}$/u;
 const HEX = 16;
 const BYTE_DIGITS = 2;
@@ -39,8 +46,12 @@ function isMediaType(type: string): type is MediaType {
 	return Object.hasOwn(MEDIA_TYPES, type);
 }
 
-export function mediaKind(type: MediaType): MediaKind {
-	return MEDIA_TYPES[type];
+function isAssetType(type: string): type is AssetType {
+	return isMediaType(type) || type === FONT_TYPE;
+}
+
+export function assetKind(type: AssetType): AssetKind {
+	return type === FONT_TYPE ? "font" : MEDIA_TYPES[type];
 }
 
 export function isAssetId(text: string): text is AssetId {
@@ -67,6 +78,18 @@ export async function assetOf(bytes: Uint8Array<ArrayBuffer>, type: string): Pro
 	return { id: await contentAddress(bytes), type, bytes };
 }
 
+const WOFF2_SIGNATURE = [0x77, 0x4f, 0x46, 0x32];
+
+function isWoff2(bytes: Uint8Array): boolean {
+	return (
+		bytes.length <= MAX_MEDIA_BYTES && WOFF2_SIGNATURE.every((byte, index) => bytes[index] === byte)
+	);
+}
+
+export async function fontAssetOf(bytes: Uint8Array<ArrayBuffer>): Promise<Asset | null> {
+	return isWoff2(bytes) ? { id: await contentAddress(bytes), type: FONT_TYPE, bytes } : null;
+}
+
 function isBytes(value: unknown): value is Uint8Array<ArrayBuffer> {
 	return value instanceof Uint8Array && value.buffer instanceof ArrayBuffer;
 }
@@ -74,45 +97,53 @@ function isBytes(value: unknown): value is Uint8Array<ArrayBuffer> {
 function storedAsset(id: AssetId, value: unknown): Asset | null {
 	const bag = bagOf(value);
 	const { bytes, type } = bag;
-	if (!isBytes(bytes) || typeof type !== "string" || !isMediaType(type)) {
+	if (!isBytes(bytes) || typeof type !== "string" || !isAssetType(type)) {
 		return null;
 	}
 	return { id, type, bytes };
 }
 
 export class AssetStore {
-	readonly #map: LoroMap;
+	readonly #media: LoroMap;
+	readonly #fonts: LoroMap;
 	readonly #listeners = new Set<() => void>();
 	#ids: readonly AssetId[] | null = null;
 
 	constructor(doc: LoroDoc) {
-		this.#map = doc.getMap(ASSETS);
-		this.#map.subscribe(() => {
+		this.#media = doc.getMap(ASSETS);
+		this.#fonts = doc.getMap(FONT_FILES);
+		const changed = (): void => {
 			this.#ids = null;
 			notify(this.#listeners);
-		});
+		};
+		this.#media.subscribe(changed);
+		this.#fonts.subscribe(changed);
+	}
+
+	#mapOf(type: AssetType): LoroMap {
+		return type === FONT_TYPE ? this.#fonts : this.#media;
 	}
 
 	has(id: AssetId): boolean {
-		return this.#map.keys().includes(id);
+		return this.#media.keys().includes(id) || this.#fonts.keys().includes(id);
 	}
 
 	put(asset: Asset): void {
 		if (!this.has(asset.id)) {
-			this.#map.set(asset.id, { type: asset.type, bytes: asset.bytes });
+			this.#mapOf(asset.type).set(asset.id, { type: asset.type, bytes: asset.bytes });
 		}
 	}
 
 	ids(): readonly AssetId[] {
 		if (this.#ids === null) {
-			const keys: readonly unknown[] = this.#map.keys();
+			const keys: readonly unknown[] = this.#media.keys();
 			this.#ids = keys.filter((key) => typeof key === "string" && isAssetId(key));
 		}
 		return this.#ids;
 	}
 
 	get(id: AssetId): Asset | null {
-		return storedAsset(id, this.#map.get(id));
+		return storedAsset(id, this.#media.get(id) ?? this.#fonts.get(id));
 	}
 
 	subscribe(listener: () => void): Unsubscribe {

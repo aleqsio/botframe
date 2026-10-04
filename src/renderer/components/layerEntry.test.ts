@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { pixelBox } from "../../document/documentFixtures";
 import { PLAIN_INSTANCE } from "../../document/layer";
 import type { Layer, LayerId } from "../../document/layer";
+import { DEFAULT_TEXT_STYLE } from "../../document/text";
 import {
 	glyphOf,
 	inspectorHeading,
@@ -189,5 +190,25 @@ describe("inspectorHeading", () => {
 			name: "Ellipse",
 			kind: "Ellipse",
 		});
+	});
+});
+
+describe("the entry of a text layer", () => {
+	function text(content: string, name = ""): Layer {
+		return {
+			...rectangle("3@1", "#000000"),
+			name,
+			geometry: { kind: "text", content, ...DEFAULT_TEXT_STYLE },
+		};
+	}
+
+	it("takes the first line of its text as the name until the user names it", () => {
+		expect(layerEntry(text("  Hello\nworld")).label).toBe("Hello");
+		expect(layerEntry(text("")).label).toBe("Text");
+		expect(layerEntry(text("Hello", "Title")).label).toBe("Title");
+	});
+
+	it("shows the text glyph", () => {
+		expect(glyphOf(text("Hello"), false)).toBe("text");
 	});
 });

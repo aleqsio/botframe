@@ -19,6 +19,7 @@ import type { Axis } from "../document/length";
 import { pivotOf, turnedBounds } from "./input/layerSpace";
 import { shapeText } from "./pathShape";
 import type { Turned } from "./input/layerSpace";
+import { textBoxStyle } from "./textStyle";
 
 declare module "react" {
 	interface CSSProperties {
@@ -92,6 +93,7 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 		case "path": {
 			break;
 		}
+		case "text":
 		case "group":
 		case "unsupported": {
 			break;
@@ -353,11 +355,21 @@ export function pathPaintStyle(
 	return { background: layer.fill, clipPath: shapeText(layer.geometry.vertices) };
 }
 
+function bodyStyle(layer: StyledLayer): CSSProperties {
+	const { geometry, layout } = layer;
+	if (geometry.kind === "text") {
+		return textBoxStyle(geometry, layout.width);
+	}
+	return {
+		...containerStyle(layout),
+		background: geometry.kind === "path" ? undefined : layer.fill,
+	};
+}
+
 export function layerStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSProperties {
 	return {
 		...selfStyle(layer, parentDisplay),
-		...containerStyle(layer.layout),
-		background: layer.geometry.kind === "path" ? undefined : layer.fill,
+		...bodyStyle(layer),
 		...ownClipStyle(layer),
 		...geometryStyle(layer.geometry),
 	};

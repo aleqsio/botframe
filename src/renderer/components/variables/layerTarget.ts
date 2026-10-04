@@ -1,5 +1,6 @@
 import { BINDING_TYPES, isPlacementBinding } from "../../../document/bindings";
 import type { BindingKey } from "../../../document/bindings";
+import { geometryValue } from "../../../document/boundTraits";
 import { CLIP_OPTIONS, clipChoiceOf } from "../../../document/clips";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
@@ -23,8 +24,11 @@ function currentOf(layer: Layer, key: BindingKey): Literal {
 	if (key === "clip") {
 		return clipChoiceOf(layer);
 	}
-	if (key === "cornerRadius" || key === "cornerSmoothing") {
-		return layer.geometry.kind === "rectangle" ? layer.geometry[key] : 0;
+	if (key === "cornerRadius" || key === "cornerSmoothing" || key === "fontSize") {
+		return geometryValue(layer.geometry, key) ?? 0;
+	}
+	if (key === "content") {
+		return geometryValue(layer.geometry, key) ?? "";
 	}
 	return layer[key];
 }

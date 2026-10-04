@@ -77,6 +77,11 @@ export interface LayerMenu {
 
 export type SidePanel = "layers" | "components";
 
+export interface TextEdit {
+	id: LayerId;
+	message: string;
+}
+
 export class UserState {
 	readonly tool = new Slot<ToolId>(DEFAULT_TOOL);
 	readonly camera = new Slot<Camera>(IDENTITY_CAMERA);
@@ -97,6 +102,7 @@ export class UserState {
 	readonly panel = new Slot<SidePanel>("layers");
 	readonly groupPivot = new Slot<GroupPivot | null>(null);
 	readonly pathEdit = new Slot<LayerId | null>(null);
+	readonly textEdit = new Slot<TextEdit | null>(null);
 
 	constructor() {
 		const endPathEdit = (): void => {

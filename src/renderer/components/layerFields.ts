@@ -52,7 +52,7 @@ export interface UnitChoice {
 }
 
 export interface NumberBinding {
-	key: BoxKey | CornerKey | "rotation" | "skewX" | "skewY";
+	key: BoxKey | CornerKey | "rotation" | "skewX" | "skewY" | "fontSize";
 	plain: (value: number) => LayerPatch;
 }
 

@@ -1,0 +1,79 @@
+import type { Layer, LayerFields, LayerId, Rect } from "../../document/layer";
+import { DEFAULT_TEXT_STYLE } from "../../document/text";
+import type { Point } from "../state/camera";
+import { drawnRect } from "./draw";
+import { chainUnder } from "./drawBehavior";
+import { parentChain, toParentPoint } from "./layerSpace";
+import { NO_MODIFIERS } from "./modifiers";
+import { CREATE_TEXT, startTextEdit } from "./textEdit";
+import type { PointerTarget, ToolBehavior } from "./tool";
+
+const TEXT_FILL = "#000000";
+const LINE_PIXELS = DEFAULT_TEXT_STYLE.fontSize * DEFAULT_TEXT_STYLE.lineHeight;
+
+function textFields(rect: Rect): LayerFields {
+	return {
+		...rect,
+		fill: TEXT_FILL,
+		name: "",
+		clip: false,
+		geometry: { kind: "text", content: "", ...DEFAULT_TEXT_STYLE },
+	};
+}
+
+function placeText(target: PointerTarget, rect: Rect, chain: readonly Layer[]): LayerId {
+	const id = target.doc.createLayer(textFields(rect), chain.at(-1)?.id ?? null);
+	target.user.selection.set([id]);
+	return id;
+}
+
+function beginEdit(target: PointerTarget, id: LayerId): void {
+	target.user.tool.set("select");
+	startTextEdit(target.user, id, CREATE_TEXT);
+}
+
+function lineAt(point: Point): Rect {
+	return { x: point.x, y: point.y, width: 0, height: LINE_PIXELS };
+}
+
+function stretch(target: PointerTarget, point: Point): LayerId | null {
+	const draw = target.user.draw.get();
+	if (draw === null) {
+		return null;
+	}
+	const chain = parentChain((id) => target.doc.layer(id), draw.id);
+	const rect = drawnRect(draw.origin, toParentPoint(chain, point), NO_MODIFIERS);
+	target.doc.update(draw.id, rect);
+	return draw.id;
+}
+
+export function createTextBehavior(): ToolBehavior {
+	return {
+		tap(target, point) {
+			const chain = chainUnder(target);
+			const id = placeText(target, lineAt(toParentPoint(chain, point.canvas)), chain);
+			target.doc.update(id, { layout: { width: "hug", height: "hug" } });
+			beginEdit(target, id);
+			return true;
+		},
+		dragStart(target, start, point) {
+			const chain = chainUnder(target);
+			const origin = toParentPoint(chain, start.canvas);
+			const id = placeText(target, lineAt(origin), chain);
+			target.user.draw.set({ id, origin });
+			stretch(target, point.canvas);
+			return true;
+		},
+		drag(target, point) {
+			stretch(target, point.canvas);
+			return false;
+		},
+		dragEnd(target, point) {
+			const id = stretch(target, point.canvas);
+			target.user.draw.set(null);
+			if (id !== null) {
+				beginEdit(target, id);
+			}
+		},
+	};
+}

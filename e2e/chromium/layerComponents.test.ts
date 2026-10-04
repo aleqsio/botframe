@@ -165,6 +165,7 @@ test("a new prop opens its name editor, and a color prop uses the color picker",
 	await expect(inspector.locator(".prop-name-text")).toHaveText(["tint"]);
 
 	await inspector.getByRole("button", { name: "tint picker", exact: true }).click();
+	await page.getByRole("button", { name: "Swatches", exact: true }).click();
 	await page.getByRole("button", { name: "#ff3b30", exact: true }).click();
 	await page.keyboard.press("Escape");
 

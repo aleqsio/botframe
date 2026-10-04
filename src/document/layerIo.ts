@@ -1,7 +1,10 @@
+import type { BindingKey } from "./bindings";
+import { geometryValue } from "./boundTraits";
 import type { TreeID } from "loro-crdt";
 import type { SyncMode } from "./instanceState";
 import { changedKeys, instanceOf, routeWrite, routingOf, viewOf } from "./instances";
 import { sharedPatch } from "./instanceSync";
+import { GEOMETRY_BINDINGS } from "./layer";
 import type { Layer, LayerPatch, LayerTraits } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
 import type { LayerTree, Target } from "./layerTree";
@@ -58,20 +61,21 @@ export function writeLayer(
 	return [...ids, instance.node.id];
 }
 
-const CORNER_KEYS = ["cornerRadius", "cornerSmoothing"] as const;
-
-export function unbindCorners(layer: Layer | null, patch: LayerPatch): LayerPatch {
+function changedBindings(layer: Layer, patch: LayerPatch): readonly BindingKey[] {
 	const { geometry } = patch;
-	const before = layer?.geometry;
-	if (layer === null || geometry?.kind !== "rectangle" || before?.kind !== "rectangle") {
-		return patch;
+	if (geometry === undefined || geometry.kind !== layer.geometry.kind) {
+		return [];
 	}
-	const changed = CORNER_KEYS.filter(
+	return GEOMETRY_BINDINGS.filter(
 		(key) =>
 			layer.bindings[key] !== undefined &&
 			patch.bindings?.[key] === undefined &&
-			geometry[key] !== before[key],
+			geometryValue(geometry, key) !== geometryValue(layer.geometry, key),
 	);
+}
+
+export function unbindGeometry(layer: Layer | null, patch: LayerPatch): LayerPatch {
+	const changed = layer === null ? [] : changedBindings(layer, patch);
 	return changed.length === 0
 		? patch
 		: {

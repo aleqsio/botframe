@@ -1,6 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, TreeDiffItem, TreeID } from "loro-crdt";
 import { AssetStore } from "./assets";
+import { FontStore } from "./fonts";
 import { clipTargetsIn } from "./clips";
 import { readPath } from "./dataPath";
 import type { DataPath } from "./dataPath";
@@ -12,12 +13,12 @@ import { scaleGroup } from "./groupScale";
 import type { GroupStart } from "./groupScale";
 import { isGroup } from "./layer";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
-import { readLayer, unbindCorners, writeLayer } from "./layerIo";
+import { readLayer, unbindGeometry, writeLayer } from "./layerIo";
 import { LayerTree, touchedNodes } from "./layerTree";
 import { basisIn } from "./basis";
 import { hasRelativeLength, settledLengths } from "./length";
 import type { Basis, LayerLengths } from "./length";
-import { notify, subscribeTo } from "./listeners";
+import { notify, refreshed, subscribeTo } from "./listeners";
 import { nodeOf } from "./path";
 import type { Unsubscribe } from "./listeners";
 import { createSubtree, readSubtree } from "./subtree";
@@ -36,14 +37,6 @@ const SEED_RECTANGLE: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
 
-function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {
-	return cached.length === next.length && cached.every((id, index) => id === next[index]);
-}
-
-function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readonly LayerId[] {
-	return sameIds(cached, next) ? cached : next;
-}
-
 function treeItems(event: LoroEventBatch): TreeDiffItem[] {
 	return event.events.flatMap((entry) => (entry.diff.type === "tree" ? entry.diff.diff : []));
 }
@@ -53,6 +46,7 @@ const NO_CLIP_TARGETS: readonly LayerId[] = [];
 export class DesignDocument {
 	readonly assets: AssetStore;
 	readonly components: ComponentStore;
+	readonly fonts: FontStore;
 	readonly #doc: LoroDoc;
 	readonly #history: DocumentHistory;
 	readonly #tree: LayerTree;
@@ -77,6 +71,7 @@ export class DesignDocument {
 		this.#doc = doc;
 		this.#history = new DocumentHistory(doc);
 		this.assets = new AssetStore(doc);
+		this.fonts = new FontStore(doc, this.assets);
 		this.components = new ComponentStore(doc, (message, write) => {
 			this.commit(message);
 			write();
@@ -231,7 +226,7 @@ export class DesignDocument {
 		if (node === null) {
 			return;
 		}
-		const allowed = this.#allowedPatch(node.parent()?.id, unbindCorners(this.layer(id), patch));
+		const allowed = this.#allowedPatch(node.parent()?.id, unbindGeometry(this.layer(id), patch));
 		const basis = basisIn(this.#read, this.#tree.parentOf(id));
 		for (const target of writeLayer(this.#tree, id, allowed, basis)) {
 			this.#refreshNode(target);
@@ -255,6 +250,7 @@ export class DesignDocument {
 		this.#groupStarts.clear();
 		this.#wantedLengths.clear();
 		this.#doc.commit({ message });
+		this.fonts.writeWaiting();
 		this.#refreshHistory();
 	}
 

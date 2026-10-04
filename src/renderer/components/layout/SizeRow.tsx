@@ -28,11 +28,15 @@ const FULL = 100;
 const ROOT_FILL_TIP = "A layer at the root has no parent to fill";
 const SHAPE_HUG_TIP = "A shape has no children to hug";
 
+function hugs(layer: Layer): boolean {
+	return isFrame(layer) || layer.geometry.kind === "text";
+}
+
 function sizeTip(mode: SizeMode, layer: Layer): string | undefined {
 	if (mode === "fill" && layer.parent === null) {
 		return ROOT_FILL_TIP;
 	}
-	return mode === "hug" && !isFrame(layer) ? SHAPE_HUG_TIP : undefined;
+	return mode === "hug" && !hugs(layer) ? SHAPE_HUG_TIP : undefined;
 }
 
 function sizeOptions(layer: Layer): readonly SegmentOption<SizeMode>[] {
@@ -49,7 +53,8 @@ function sizeOptions(layer: Layer): readonly SegmentOption<SizeMode>[] {
 }
 
 export function hugPatch(layer: Layer, axis: Axis, next: SizeMode): LayoutPatch {
-	const hugsBlock = next === "hug" && layer.layout.display === "block";
+	const hugsBlock =
+		next === "hug" && layer.geometry.kind !== "text" && layer.layout.display === "block";
 	return { [axis]: next, ...(hugsBlock ? { display: "row" } : {}) };
 }
 

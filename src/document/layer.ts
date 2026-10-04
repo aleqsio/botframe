@@ -1,4 +1,4 @@
-import type { Bindings, BindingsPatch } from "./bindings";
+import type { BindingKey, Bindings, BindingsPatch } from "./bindings";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
@@ -8,6 +8,7 @@ import type { LayerId } from "./path";
 import type { Literal, VariableValue } from "./value";
 import type { Assignments } from "./variable";
 import type { Vertex } from "./vertices";
+import type { TextGeometry } from "./text";
 
 export type { LayerId } from "./path";
 
@@ -16,6 +17,7 @@ export type Geometry =
 	| { kind: "ellipse" }
 	| { kind: "path"; vertices: readonly Vertex[] }
 	| { kind: "group" }
+	| TextGeometry
 	| { kind: "unsupported" };
 
 export const GROUP_GEOMETRY: WritableGeometry = { kind: "group" };
@@ -123,10 +125,15 @@ export type LayerPatch = Partial<LayerFields> & {
 	bindings?: BindingsPatch;
 };
 
-const CORNER_KEYS: ReadonlySet<string> = new Set(["cornerRadius", "cornerSmoothing"]);
+export const GEOMETRY_BINDINGS: readonly BindingKey[] = [
+	"cornerRadius",
+	"cornerSmoothing",
+	"fontSize",
+	"content",
+];
 
 export function isChanged(layer: Pick<Layer, "changed">, key: string): boolean {
-	const own = CORNER_KEYS.has(key) ? "geometry" : key;
+	const own = GEOMETRY_BINDINGS.some((held) => held === key) ? "geometry" : key;
 	return layer.changed.some(
 		(held) => held === own || held === `${key}Unit` || held === `bindings.${key}`,
 	);

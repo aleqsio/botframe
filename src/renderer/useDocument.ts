@@ -153,10 +153,27 @@ function outlineOf(text: string): DrawnOutline | null {
 	};
 }
 
+const NO_FONTS: Unsubscribe = () => {};
+
+function subscribeFontLoads(listener: () => void): Unsubscribe {
+	if (!("fonts" in document)) {
+		return NO_FONTS;
+	}
+	document.fonts.addEventListener("loadingdone", listener);
+	return () => {
+		document.fonts.removeEventListener("loadingdone", listener);
+	};
+}
+
 export function subscribeAfterCommit(doc: DesignDocument, listener: () => void): Unsubscribe {
-	return doc.subscribeChanges(() => {
+	const dropChanges = doc.subscribeChanges(() => {
 		queueMicrotask(listener);
 	});
+	const dropFonts = subscribeFontLoads(listener);
+	return () => {
+		dropChanges();
+		dropFonts();
+	};
 }
 
 export function useDrawnOutline(doc: DesignDocument, id: LayerId): DrawnOutline | null {

@@ -6,6 +6,7 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 	ellipse: "Ellipse",
 	path: "Path",
 	group: "Group",
+	text: "Text",
 	unsupported: "Layer",
 };
 
@@ -13,7 +14,14 @@ const FRAME_LABEL = "Frame";
 const COMPONENT_LABEL = "Component";
 const CODE_LABEL = "Code component";
 
-export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component" | "code" | "group";
+export type LayerGlyph =
+	| "frame"
+	| "ellipse"
+	| "rectangle"
+	| "text"
+	| "component"
+	| "code"
+	| "group";
 
 export interface InspectorHeading {
 	glyph: LayerGlyph | "page";
@@ -24,6 +32,7 @@ export interface InspectorHeading {
 const PAGE_HEADING: InspectorHeading = { glyph: "page", name: "Page", kind: "Nothing is selected" };
 
 const GROUP_KIND = "Selection";
+const NAME_LENGTH = 24;
 
 export interface LayerEntry {
 	label: string;
@@ -54,11 +63,23 @@ function kindLabel(layer: Layer | null, code: boolean): string {
 	return isFrame(layer) ? FRAME_LABEL : GEOMETRY_LABELS[layer.geometry.kind];
 }
 
+function textName(layer: Layer): string {
+	const content = layer.geometry.kind === "text" ? layer.geometry.content : "";
+	return content.trim().split("\n")[0]?.slice(0, NAME_LENGTH) ?? "";
+}
+
+function shownName(layer: Layer): string {
+	if (layer.name !== "") {
+		return layer.name;
+	}
+	return textName(layer) || kindLabel(layer, false);
+}
+
 export function layerEntry(layer: Layer | null): LayerEntry {
 	if (layer === null) {
 		return { label: GEOMETRY_LABELS.unsupported, swatch: "transparent" };
 	}
-	return { label: layer.name === "" ? kindLabel(layer, false) : layer.name, swatch: layer.fill };
+	return { label: shownName(layer), swatch: layer.fill };
 }
 
 export function glyphOf(layer: Layer | null, code: boolean): LayerGlyph {
@@ -69,7 +90,7 @@ export function glyphOf(layer: Layer | null, code: boolean): LayerGlyph {
 		return "frame";
 	}
 	const kind = layer?.geometry.kind;
-	return kind === "ellipse" || kind === "group" ? kind : "rectangle";
+	return kind === "ellipse" || kind === "group" || kind === "text" ? kind : "rectangle";
 }
 
 export function inspectorHeading(layer: Layer | null, code: boolean): InspectorHeading {

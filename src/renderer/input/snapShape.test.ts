@@ -102,6 +102,7 @@ describe("the points of snapShapeOf", () => {
 			"group",
 			"path",
 			"rectangle",
+			"text",
 			"unsupported",
 		]);
 	});

@@ -6,11 +6,12 @@ import { canvasLabelStyle } from "./canvasLabel";
 import { useShadowWriter } from "./componentShadow";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
 import { GuideLines } from "./GuideLines";
-import { LayerPaint } from "./LayerPaint";
+import { LayerBody } from "./LayerBody";
 import type { Slot } from "./state/slot";
 import { useLift, NOT_LIFTED } from "./state/useLift";
 import type { LiftSlot } from "./state/useLift";
 import { useSelected } from "./state/useSelected";
+import type { TextEdit } from "./state/userState";
 import { useChildIds, useLayer } from "./useDocument";
 import { useLayerPaint } from "./useLayerPaint";
 
@@ -26,12 +27,14 @@ export function LayerView({
 	lift,
 	parentDisplay,
 	selection,
+	textEdit,
 }: {
 	doc: DesignDocument;
 	id: LayerId;
 	lift: LiftSlot;
 	parentDisplay: DisplayMode | null;
 	selection: Slot<readonly LayerId[]>;
+	textEdit: Slot<TextEdit | null>;
 }): ReactElement | null {
 	const layer = useLayer(doc, id);
 	const childIds = useChildIds(doc, id);
@@ -54,7 +57,7 @@ export function LayerView({
 			ref={writeShadow}
 			style={liftedStyle(paint.style, lifted)}
 		>
-			<LayerPaint layer={layer} media={paint.media} />
+			<LayerBody doc={doc} layer={layer} media={paint.media} slots={{ selection, textEdit }} />
 			{childIds.map((childId) => (
 				<LayerView
 					doc={doc}
@@ -63,6 +66,7 @@ export function LayerView({
 					lift={lift}
 					parentDisplay={layer.layout.display}
 					selection={selection}
+					textEdit={textEdit}
 				/>
 			))}
 			<GuideLines guides={layer.guides} />

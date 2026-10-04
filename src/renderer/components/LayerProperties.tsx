@@ -13,6 +13,7 @@ import { MirrorToggle } from "./layout/MirrorToggle";
 import { TurnToggle } from "./layout/TurnToggle";
 import { ClipField } from "./variables/LayerValueFields";
 import { FillSection } from "./fill/FillSection";
+import { TextSection } from "./text/TextSection";
 
 const TURN_GROUP = "Rotation";
 
@@ -64,6 +65,9 @@ export function LayerProperties({
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
+			{layer.geometry.kind === "text" ? (
+				<TextSection doc={doc} geometry={layer.geometry} layer={layer} />
+			) : null}
 			<FillSection doc={doc} key={layer.id} layer={layer} />
 			<ClipField doc={doc} layer={layer} />
 			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
