@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 import type { ComponentsView } from "../../../document/components";
 import type { DesignDocument } from "../../../document/document";
-import type { LayerId } from "../../../document/layer";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentsView } from "../../useDocument";
 import { MediaCards } from "../fill/MediaCards";
@@ -51,13 +50,7 @@ function VariableGroup({
 	);
 }
 
-export function DocumentSection({
-	doc,
-	selection,
-}: {
-	doc: DesignDocument;
-	selection: readonly LayerId[];
-}): ReactElement {
+export function DocumentSection({ doc }: { doc: DesignDocument }): ReactElement {
 	const view = useComponentsView(doc);
 	const [fresh, setFresh] = useState<string | null>(null);
 	const [editing, setEditing] = useState<string | null>(null);
@@ -87,11 +80,10 @@ export function DocumentSection({
 				onAdded={onAdded}
 				onEdit={setEditing}
 				onSettled={settle}
-				selection={selection}
 				view={view}
 			/>
 			<VariableGroup doc={doc} fresh={fresh} onAdded={onAdded} onSettled={settle} view={view} />
-			<MediaCards doc={doc} selection={selection} />
+			<MediaCards doc={doc} />
 		</section>
 	);
 }

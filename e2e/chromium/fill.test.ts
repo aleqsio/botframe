@@ -86,25 +86,14 @@ test("a drag of the media row under the paint row draws the paint over the media
 	await expect(page.locator("[data-row]").first()).toHaveAttribute("data-row", "paint");
 });
 
-test("a document color card binds the fill of the selected layer", async ({ page }) => {
-	const { layers, origin } = await openRenderer(page);
+test("the document section shows only when no layer is selected", async ({ page }) => {
+	const { origin } = await openRenderer(page);
 	const section = page.getByRole("region", { name: "Document" });
-	await section.getByRole("button", { name: "Add document fill" }).click();
-	await page.getByRole("menuitem", { name: "Color" }).click();
-	await page.keyboard.press("Enter");
-	const hex = page.getByLabel("Hex", { exact: true });
-	await hex.fill("#ff0000");
-	await hex.press("Enter");
-	await page.keyboard.press("Escape");
+	await expect(section).toBeVisible();
 
 	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
-	await page
-		.getByRole("region", { name: "Document" })
-		.getByRole("button", { name: "color", exact: true })
-		.click();
 
-	await expect(layers.first()).toHaveCSS("background-color", "rgb(255, 0, 0)");
-	await expect(page.locator(".fill-row .variable-chip")).toHaveText("color");
+	await expect(section).toHaveCount(0);
 });
 
 test("a document color shows as one card and never as a variable row", async ({ page }) => {

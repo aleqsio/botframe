@@ -3,47 +3,23 @@ import type { ReactElement } from "react";
 import { ACCEPTED_TYPES } from "../../../document/assets";
 import type { AssetId } from "../../../document/assets";
 import type { DesignDocument } from "../../../document/document";
-import type { Layer, LayerId } from "../../../document/layer";
 import { useAssetIds, useAssetUrl } from "../../assetUrl";
 import { Icon } from "../Icon";
-import { addMediaFile, placeAsset } from "../mediaFile";
+import { addMediaFile } from "../mediaFile";
 import { AddMenu } from "../variables/AddMenu";
 import { KIND_LABELS, MediaThumb } from "./MediaThumb";
 import { UrlCard, UrlField, mediaChoices, useUrlLoads } from "./MediaUrl";
 
-interface MediaProps {
-	doc: DesignDocument;
-	selection: readonly LayerId[];
-}
-
-function MediaCard({ doc, id, selection }: MediaProps & { id: AssetId }): ReactElement {
+function MediaCard({ doc, id }: { doc: DesignDocument; id: AssetId }): ReactElement {
 	const kind = useAssetUrl(doc.assets, id)?.kind ?? "image";
-	const label = KIND_LABELS[kind];
 	return (
-		<li className="fill-card">
-			<button
-				aria-label={`Use this ${label.toLowerCase()}`}
-				className="fill-card-button"
-				onClick={() => {
-					const asset = doc.assets.get(id);
-					const layers = selection.flatMap((held): Layer[] => {
-						const layer = doc.layer(held);
-						return layer === null ? [] : [layer];
-					});
-					if (asset !== null && layers.length > 0) {
-						placeAsset(doc, layers, asset);
-					}
-				}}
-				title={label}
-				type="button"
-			>
-				<span className="fill-card-preview">
-					<MediaThumb asset={id} store={doc.assets} />
-					<span className="media-badge">
-						<Icon name={kind} />
-					</span>
+		<li className="fill-card fill-card-static" title={KIND_LABELS[kind]}>
+			<span className="fill-card-preview">
+				<MediaThumb asset={id} store={doc.assets} />
+				<span className="media-badge">
+					<Icon name={kind} />
 				</span>
-			</button>
+			</span>
 		</li>
 	);
 }
@@ -73,7 +49,7 @@ function FileInput({
 	);
 }
 
-export function MediaCards({ doc, selection }: MediaProps): ReactElement {
+export function MediaCards({ doc }: { doc: DesignDocument }): ReactElement {
 	const ids = useAssetIds(doc.assets);
 	const [typing, setTyping] = useState(false);
 	const urls = useUrlLoads(doc);
@@ -106,7 +82,7 @@ export function MediaCards({ doc, selection }: MediaProps): ReactElement {
 			) : (
 				<ul className="fill-cards">
 					{ids.map((id) => (
-						<MediaCard doc={doc} id={id} key={id} selection={selection} />
+						<MediaCard doc={doc} id={id} key={id} />
 					))}
 					{urls.loads.map((load) => (
 						<UrlCard key={load.key} load={load} onDismiss={urls.dismiss} />

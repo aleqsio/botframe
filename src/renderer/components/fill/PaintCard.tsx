@@ -2,16 +2,14 @@ import { useRef } from "react";
 import type { ReactElement } from "react";
 import type { ComponentsView } from "../../../document/components";
 import type { DesignDocument } from "../../../document/document";
-import type { LayerId } from "../../../document/layer";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
-import { bindFill, editablePaint } from "./libraryActions";
+import { editablePaint } from "./libraryActions";
 import type { Swatch } from "./SwatchGrid";
 import { VariableEditor } from "./VariableEditor";
 
 export interface CardProps {
 	doc: DesignDocument;
 	view: ComponentsView;
-	selection: readonly LayerId[];
 	editing: string | null;
 	fresh: string | null;
 	onEdit: (id: string | null) => void;
@@ -24,7 +22,6 @@ export function PaintCard({
 	fresh,
 	onEdit,
 	onSettled,
-	selection,
 	swatch,
 	view,
 }: CardProps & { swatch: Swatch }): ReactElement {
@@ -41,13 +38,7 @@ export function PaintCard({
 			<button
 				aria-label={swatch.label}
 				className="fill-card-button"
-				onClick={() => {
-					if (selection.length === 0) {
-						edit();
-					} else {
-						bindFill(doc, selection, swatch.key);
-					}
-				}}
+				onClick={edit}
 				onContextMenu={(event) => {
 					event.preventDefault();
 					edit();
