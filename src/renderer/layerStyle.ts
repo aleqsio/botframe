@@ -90,7 +90,7 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 			return { borderRadius: "50%" };
 		}
 		case "path": {
-			return { clipPath: shapeText(geometry.vertices) };
+			break;
 		}
 		case "unsupported": {
 			break;
@@ -334,12 +334,30 @@ function containerStyle(layout: LayerLayout): CSSProperties {
 	return { ...displayStyle(layout), ...children, ...paddingStyle(layout.padding) };
 }
 
+function ownClipStyle(layer: StyledLayer): CSSProperties {
+	if (!layer.clip) {
+		return {};
+	}
+	return layer.geometry.kind === "path"
+		? { clipPath: shapeText(layer.geometry.vertices) }
+		: { overflow: "hidden" };
+}
+
+export function pathPaintStyle(
+	layer: Pick<StyledLayer, "fill" | "geometry">,
+): CSSProperties | null {
+	if (layer.geometry.kind !== "path") {
+		return null;
+	}
+	return { background: layer.fill, clipPath: shapeText(layer.geometry.vertices) };
+}
+
 export function layerStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSProperties {
 	return {
 		...selfStyle(layer, parentDisplay),
 		...containerStyle(layer.layout),
-		background: layer.fill,
-		overflow: layer.clip ? "hidden" : undefined,
+		background: layer.geometry.kind === "path" ? undefined : layer.fill,
+		...ownClipStyle(layer),
 		...geometryStyle(layer.geometry),
 	};
 }

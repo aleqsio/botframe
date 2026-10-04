@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type { LayerContent } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
-import { layerStyle } from "./layerStyle";
+import { layerStyle, pathPaintStyle } from "./layerStyle";
 import type { StyledLayer } from "./layerStyle";
 
 const UPPERCASE = /[A-Z]/gu;
@@ -43,6 +43,8 @@ function declarations(style: CSSProperties): string[] {
 	);
 }
 
+const PAINT_BOX: CSSProperties = { position: "absolute", inset: 0 };
+
 export type FindComponent = (content: LayerContent) => string | null;
 
 function shadowOf(content: LayerContent, find: FindComponent): string {
@@ -50,16 +52,21 @@ function shadowOf(content: LayerContent, find: FindComponent): string {
 	return markup === null ? "" : `<template shadowrootmode="open">${markup}</template>`;
 }
 
+function styleText(style: CSSProperties): string {
+	return escaped(declarations(style).toSorted().join("; "));
+}
+
+function paintOf(node: LayerNode): string {
+	const paint = pathPaintStyle(node.fields);
+	return paint === null ? "" : `<div style="${styleText({ ...PAINT_BOX, ...paint })}"></div>`;
+}
+
 function markupOf(node: LayerNode, parentDisplay: DisplayMode | null, find: FindComponent): string {
-	const style = escaped(
-		declarations(layerStyle(styledLayerOf(node), parentDisplay))
-			.toSorted()
-			.join("; "),
-	);
+	const style = styleText(layerStyle(styledLayerOf(node), parentDisplay));
 	const children = node.children
 		.map((child) => markupOf(child, node.layout.display, find))
 		.join("");
-	return `<div style="${style}">${shadowOf(node.content, find)}${children}</div>`;
+	return `<div style="${style}">${paintOf(node)}${shadowOf(node.content, find)}${children}</div>`;
 }
 
 export function layerMarkup(node: LayerNode, find: FindComponent): string {

@@ -117,10 +117,10 @@ function cornerRadius(pixels: number, size: Size): Offset {
 	};
 }
 
-export function editableVertices(geometry: Geometry, size: Size): readonly Vertex[] | null {
+export function outlineVertices(geometry: Geometry, size: Size): readonly Vertex[] | null {
 	switch (geometry.kind) {
 		case "rectangle": {
-			return geometry.frame ? null : roundedVertices(cornerRadius(geometry.cornerRadius, size));
+			return roundedVertices(cornerRadius(geometry.cornerRadius, size));
 		}
 		case "ellipse": {
 			return roundedVertices(HALF);
@@ -133,4 +133,8 @@ export function editableVertices(geometry: Geometry, size: Size): readonly Verte
 		}
 	}
 	return null;
+}
+
+export function editableVertices(geometry: Geometry, size: Size): readonly Vertex[] | null {
+	return geometry.kind === "rectangle" && geometry.frame ? null : outlineVertices(geometry, size);
 }

@@ -1,6 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, TreeDiffItem, TreeID } from "loro-crdt";
 import { AssetStore } from "./assets";
+import { clipTargetsIn } from "./clips";
 import { ComponentStore } from "./components";
 import { DocumentHistory, KEPT_ORIGIN } from "./history";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
@@ -9,6 +10,7 @@ import { LayerTree, touchedNodes } from "./layerTree";
 import { NO_BASIS, hasRelativeLength, settledLengths } from "./length";
 import type { Basis, LayerLengths, Size } from "./length";
 import { notify, subscribeTo } from "./listeners";
+import { nodeOf } from "./path";
 import type { Unsubscribe } from "./listeners";
 import { createSubtree, readSubtree } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -42,6 +44,8 @@ function sizeOf(layer: Layer): Size {
 	return { width: layer.width, height: layer.height };
 }
 
+const NO_CLIP_TARGETS: readonly LayerId[] = [];
+
 export class DesignDocument {
 	readonly assets: AssetStore;
 	readonly components: ComponentStore;
@@ -53,6 +57,8 @@ export class DesignDocument {
 	readonly #structureListeners = new Set<() => void>();
 	readonly #changeListeners = new Set<() => void>();
 	readonly #historyListeners = new Set<() => void>();
+	readonly #clipListeners = new Set<() => void>();
+	#clipTargets: ReadonlyMap<TreeID, readonly LayerId[]> | null = null;
 	readonly #children = new Map<LayerId, readonly LayerId[]>();
 	readonly #wantedLengths = new Map<LayerId, LayerLengths>();
 	#ids: readonly LayerId[] | null = null;
@@ -212,6 +218,18 @@ export class DesignDocument {
 		for (const target of writeLayer(this.#tree, id, allowed, basis)) {
 			this.#refreshNode(target);
 		}
+		if (patch.clipLayer !== undefined) {
+			this.#clipsChanged();
+		}
+	}
+
+	clipTargetsOf(id: LayerId): readonly LayerId[] {
+		this.#clipTargets ??= clipTargetsIn(this);
+		return this.#clipTargets.get(nodeOf(id)) ?? NO_CLIP_TARGETS;
+	}
+
+	subscribeClips(listener: () => void): Unsubscribe {
+		return subscribeTo(this.#clipListeners, listener);
 	}
 
 	commit(message: string): void {
@@ -315,7 +333,13 @@ export class DesignDocument {
 		return stepped;
 	}
 
+	#clipsChanged(): void {
+		this.#clipTargets = null;
+		notify(this.#clipListeners);
+	}
+
 	#forgetLayers(): void {
+		this.#clipsChanged();
 		this.#layers.clear();
 		for (const listeners of this.#listeners.values()) {
 			notify(listeners);
@@ -335,8 +359,12 @@ export class DesignDocument {
 	}
 
 	#receive(event: LoroEventBatch): void {
-		for (const node of touchedNodes(event)) {
+		const touched = touchedNodes(event);
+		for (const node of touched) {
 			this.#refreshNode(node);
+		}
+		if (event.by !== "local" && touched.length > 0) {
+			this.#clipsChanged();
 		}
 		const items = treeItems(event);
 		if (items.length === 0) {
@@ -349,6 +377,7 @@ export class DesignDocument {
 	}
 
 	#notifyStructure(): void {
+		this.#clipsChanged();
 		this.#ids = null;
 		this.#roots = this.#roots === null ? null : refreshed(this.#roots, this.#tree.canvasRoots());
 		for (const [parent, cached] of this.#children) {

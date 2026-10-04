@@ -13,7 +13,14 @@ import type {
 	Spacing,
 	SpacingUnit,
 } from "../document/layout";
-import { layerStyle, originPlace, outOfFlow, spaceTransform, turnedPad } from "./layerStyle";
+import {
+	layerStyle,
+	originPlace,
+	outOfFlow,
+	pathPaintStyle,
+	spaceTransform,
+	turnedPad,
+} from "./layerStyle";
 import { verticesOf } from "../document/vertices";
 
 const BOX = { x: 10, y: 20, width: 30, height: 40 };
@@ -24,6 +31,13 @@ const PLACED: LayoutPatch = {
 	cell: { mode: "place", column: { start: 2, end: 4 }, row: { start: 1, end: 3 } },
 };
 const TURNED = "rotate(30deg)";
+
+const TRIANGLE = verticesOf([
+	{ x: 0, y: 0 },
+	{ x: 1, y: 0 },
+	{ x: 0, y: 1 },
+]);
+const TRIANGLE_SHAPE = "shape(from 0% 0%, line to 100% 0%, line to 0% 100%, line to 0% 0%, close)";
 
 function layerWith(geometry: Geometry): Layer {
 	return {
@@ -166,15 +180,21 @@ describe("layerStyle geometry", () => {
 		});
 	});
 
-	it("clips a path geometry with a shape that scales with the box", () => {
-		const triangle = verticesOf([
-			{ x: 0, y: 0 },
-			{ x: 1, y: 0 },
-			{ x: 0, y: 1 },
-		]);
-		expect(layerStyle(layerWith({ kind: "path", vertices: triangle }), null)).toMatchObject({
-			clipPath: "shape(from 0% 0%, line to 100% 0%, line to 0% 100%, line to 0% 0%, close)",
-		});
+	it("paints a path geometry on an inner shape and leaves the children whole", () => {
+		const path = layerWith({ kind: "path", vertices: TRIANGLE });
+		const style = layerStyle(path, null);
+
+		expect(style.clipPath).toBeUndefined();
+		expect(style.background).toBeUndefined();
+		expect(pathPaintStyle(path)).toEqual({ background: path.fill, clipPath: TRIANGLE_SHAPE });
+		expect(pathPaintStyle(layerWith({ kind: "ellipse" }))).toBeNull();
+	});
+
+	it("clips the children of a path to its own shape when the layer clips", () => {
+		const path = { ...layerWith({ kind: "path", vertices: TRIANGLE }), clip: true };
+
+		expect(layerStyle(path, null)).toMatchObject({ clipPath: TRIANGLE_SHAPE });
+		expect(layerStyle(path, null).overflow).toBeUndefined();
 	});
 
 	it("draws a geometry it does not know without a radius or a clip", () => {

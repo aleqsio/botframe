@@ -93,6 +93,11 @@ body {
 	left: 0;
 	transform-origin: 0 0;
 	will-change: transform;
+	pointer-events: auto;
+}
+
+.layer[data-paint="path"] {
+	pointer-events: none;
 }
 
 .frame-label {
@@ -1535,4 +1540,50 @@ button.layer-chevron[aria-expanded="false"]::before {
 	border-radius: inherit;
 	corner-shape: inherit;
 	pointer-events: none;
+}
+
+.layer-paint {
+	position: absolute;
+	inset: 0;
+	display: block;
+	border-radius: inherit;
+	pointer-events: auto;
+}
+
+.layer-row[data-source] {
+	color: var(--panel-label);
+}
+
+.layer-meta {
+	margin-left: auto;
+	overflow: hidden;
+	color: var(--layout-accent-text);
+	font-size: var(--layout-text-chip);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.clip-layer-trigger {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: var(--layout-space-2);
+	min-width: 0;
+	height: var(--layout-inner);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--panel-text);
+	font: inherit;
+	font-size: var(--layout-text-field);
+}
+
+.clip-layer-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.clip-layer-trigger .unit-chevron {
+	margin-left: auto;
 }

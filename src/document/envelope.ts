@@ -4,7 +4,8 @@ import { bindingsOf } from "./bindings";
 import { packedOf } from "./componentPack";
 import type { PackedComponent } from "./componentPack";
 import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
-import type { LayerContent, LayerFields, Origin, WritableGeometry } from "./layer";
+import type { LayerContent, LayerFields, LayerId, Origin, WritableGeometry } from "./layer";
+import { isLayerId } from "./path";
 import { assignmentsOf, instanceFrom } from "./layerLinks";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
@@ -120,6 +121,10 @@ function componentsOf(value: unknown): Readonly<Record<string, PackedComponent>>
 	);
 }
 
+function layerIdOf(value: unknown): LayerId | null {
+	return typeof value === "string" && isLayerId(value) ? value : null;
+}
+
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
@@ -136,6 +141,8 @@ function nodeOf(value: unknown): LayerNode {
 		media: mediaOf(bag["media"]),
 		content: contentOf(bag["content"]),
 		bindings: bindingsOf(bag["bindings"]),
+		key: layerIdOf(bag["key"]) ?? undefined,
+		clipLayer: layerIdOf(bag["clipLayer"]) ?? undefined,
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

@@ -75,6 +75,7 @@ export interface Layer extends Rect, Pose {
 	geometry: Geometry;
 	name: string;
 	clip: boolean;
+	clipLayer: LayerId | null;
 	parent: LayerId | null;
 	lengths: LayerLengths;
 	layout: LayerLayout;
@@ -105,6 +106,7 @@ export type LayerPatch = Partial<LayerFields> & {
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 	media?: MediaFill | null;
+	clipLayer?: LayerId | null;
 	content?: ComponentLink | null;
 	props?: Readonly<Record<string, VariableValue | null>>;
 	bindings?: BindingsPatch;

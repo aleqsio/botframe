@@ -1,6 +1,7 @@
 import type { LoroMap } from "loro-crdt";
 import { CENTER_ORIGIN, heldSkew } from "./layer";
-import type { Geometry, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
+import type { Geometry, LayerId, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
+import { isLayerId } from "./path";
 import { jsonOf, readBindings, readContent, unboundBy, writeLinks } from "./layerLinks";
 import { guidesOf } from "./guides";
 import type { Guide } from "./guides";
@@ -28,6 +29,7 @@ const GEOMETRY = "geometry";
 const LAYOUT = "layout";
 const GUIDES = "guides";
 const MEDIA = "media";
+const CLIP_LAYER = "clipLayer";
 const ORIGIN_KEYS: Readonly<Record<keyof Origin, string>> = { x: "originX", y: "originY" };
 const ORIGIN_AXES: readonly (keyof Origin)[] = ["x", "y"];
 const UNIT_SUFFIX = "Unit";
@@ -94,6 +96,12 @@ function readLayout(data: FieldSource): LayerLayout {
 	return layoutOf(jsonOf(data.get(LAYOUT)));
 }
 
+function readClip(data: FieldSource): Pick<LayerTraits, "clip" | "clipLayer"> {
+	const source = readString(data, CLIP_LAYER, "");
+	const clipLayer = isLayerId(source) ? source : null;
+	return { clip: clipLayer === null && readBoolean(data, "clip", false), clipLayer };
+}
+
 export function readLayerData(data: FieldSource, basis: Basis): LayerTraits {
 	const lengths = readLengths(data);
 	return {
@@ -110,7 +118,7 @@ export function readLayerData(data: FieldSource, basis: Basis): LayerTraits {
 		media: mediaOf(data.get(MEDIA)),
 		geometry: readVariant<Geometry>(data.get(GEOMETRY), GEOMETRY_READERS, { kind: "unsupported" }),
 		name: readString(data, "name", ""),
-		clip: readBoolean(data, "clip", false),
+		...readClip(data),
 		content: readContent(data),
 		bindings: readBindings(data),
 		changed: [],
@@ -199,9 +207,18 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	}
 }
 
+function writeClipLayer(data: LoroMap, clipLayer: LayerId | null): void {
+	if (clipLayer === null) {
+		data.delete(CLIP_LAYER);
+		return;
+	}
+	data.set(CLIP_LAYER, clipLayer);
+}
+
 export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void {
 	const {
 		bindings,
+		clipLayer,
 		content,
 		geometry,
 		guides,
@@ -235,6 +252,9 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	}
 	if (media !== undefined) {
 		writeMedia(data, media);
+	}
+	if (clipLayer !== undefined) {
+		writeClipLayer(data, clipLayer);
 	}
 	writeLinks(data, { content, props, bindings: { ...unboundBy(patch), ...bindings } });
 }
