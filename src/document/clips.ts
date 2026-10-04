@@ -1,9 +1,42 @@
 import type { TreeID } from "loro-crdt";
 import type { DesignDocument } from "./document";
-import type { Layer, LayerId } from "./layer";
+import type { Layer, LayerId, LayerTraits } from "./layer";
 import { copiesOf, layerPath, nodeOf } from "./path";
+import type { Literal } from "./value";
 
 type ReadLayer = (id: LayerId) => Layer | null;
+type ClipTraits = Pick<LayerTraits, "clip" | "clipLayer">;
+
+export const CLIP_CHOICES = { none: "None", shape: "Own shape", layer: "Layer" } as const;
+
+export const CLIP_OPTIONS: readonly string[] = Object.values(CLIP_CHOICES);
+
+export function clipChoiceOf(traits: ClipTraits): string {
+	if (traits.clipLayer !== null) {
+		return CLIP_CHOICES.layer;
+	}
+	return traits.clip ? CLIP_CHOICES.shape : CLIP_CHOICES.none;
+}
+
+export function chosenClip(traits: ClipTraits, value: Literal): ClipTraits | null {
+	if (typeof value === "boolean") {
+		return { clip: value, clipLayer: null };
+	}
+	switch (value) {
+		case CLIP_CHOICES.none: {
+			return { clip: false, clipLayer: null };
+		}
+		case CLIP_CHOICES.shape: {
+			return { clip: true, clipLayer: null };
+		}
+		case CLIP_CHOICES.layer: {
+			return { clip: false, clipLayer: traits.clipLayer };
+		}
+		default: {
+			return null;
+		}
+	}
+}
 
 function namedSource(read: ReadLayer, target: Layer): Layer | null {
 	const source = target.clipLayer;

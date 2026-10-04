@@ -1,6 +1,7 @@
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, LayerPatch } from "../../document/layer";
-import { clipReaches } from "../../document/clips";
+import { CLIP_CHOICES, clipReaches } from "../../document/clips";
+import type { Literal } from "../../document/value";
 import { copiesOf } from "../../document/path";
 import { outOfFlow } from "../layerStyle";
 import type { SegmentOption } from "./layout/Segmented";
@@ -81,8 +82,25 @@ export function clipLayerTitle(
 
 export function clipOptions(layerTitle: string | undefined): readonly SegmentOption<ClipMode>[] {
 	return [
-		{ value: "none", label: "None" },
-		{ value: "shape", label: "Own shape" },
-		{ value: "layer", label: "Layer", disabled: layerTitle !== undefined, title: layerTitle },
+		{ value: "none", label: CLIP_CHOICES.none },
+		{ value: "shape", label: CLIP_CHOICES.shape },
+		{
+			value: "layer",
+			label: CLIP_CHOICES.layer,
+			disabled: layerTitle !== undefined,
+			title: layerTitle,
+		},
 	];
+}
+
+export function clipLabelOf(layer: Pick<Layer, "clip" | "clipLayer">): string {
+	return CLIP_CHOICES[clipModeOf(layer)];
+}
+
+export function clipModeOfValue(value: Literal): ClipMode | null {
+	if (typeof value === "boolean") {
+		return value ? "shape" : "none";
+	}
+	const modes: readonly ClipMode[] = ["none", "shape", "layer"];
+	return modes.find((mode) => CLIP_CHOICES[mode] === value) ?? null;
 }

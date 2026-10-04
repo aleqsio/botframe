@@ -1,11 +1,13 @@
 import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
-import { clipSourceOf } from "./clips";
+import { CLIP_CHOICES, CLIP_OPTIONS, chosenClip, clipChoiceOf, clipSourceOf } from "./clips";
 import { makeComponent } from "./componentActions";
 import { DesignDocument } from "./document";
 import type { Layer, LayerFields, LayerId } from "./layer";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import { nodeOf } from "./path";
+import { DOCUMENT_SCOPE } from "./variable";
+import type { Variable } from "./variable";
 import type { LayerNode } from "./subtree";
 
 const SHAPE: LayerFields = {
@@ -186,5 +188,42 @@ describe("a clip inside a component", () => {
 
 		expect(clipSourceOf(read, layerOf(doc, copyPhoto))?.id).toBe(copyBlob);
 		expect(doc.clipTargetsOf(copyBlob)).not.toEqual([]);
+	});
+});
+
+function cut(initial: string): Variable {
+	return {
+		id: "cut",
+		name: "cut",
+		type: "choice",
+		initial,
+		options: CLIP_OPTIONS,
+	};
+}
+
+describe("a clip bound to a choice variable", () => {
+	it("follows each of the three options, and keeps the picked layer for Layer", () => {
+		const { doc, photo, blob } = sceneOf();
+		doc.update(photo, { clipLayer: blob });
+		const scope = doc.components.scope(DOCUMENT_SCOPE);
+		scope.put(cut(CLIP_CHOICES.shape));
+		doc.update(photo, { bindings: { clip: { var: "cut" } } });
+		doc.commit("bind");
+		expect(layerOf(doc, photo)).toMatchObject({ clip: true, clipLayer: null });
+
+		scope.put(cut(CLIP_CHOICES.layer));
+		expect(layerOf(doc, photo)).toMatchObject({ clip: false, clipLayer: blob });
+		expect(clipChoiceOf(layerOf(doc, photo))).toBe(CLIP_CHOICES.layer);
+
+		scope.put(cut(CLIP_CHOICES.none));
+		expect(layerOf(doc, photo)).toMatchObject({ clip: false, clipLayer: null });
+	});
+
+	it("still reads a boolean variable as the own-shape clip", () => {
+		expect(chosenClip({ clip: false, clipLayer: "4@1" }, true)).toEqual({
+			clip: true,
+			clipLayer: null,
+		});
+		expect(chosenClip({ clip: true, clipLayer: null }, "Sideways")).toBeNull();
 	});
 });

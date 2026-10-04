@@ -7,8 +7,10 @@ import { ClipLayerPicker } from "../ClipLayerPicker";
 import {
 	CLIP_MESSAGE,
 	clipCandidates,
+	clipLabelOf,
 	clipLayerTitle,
 	clipModeOf,
+	clipModeOfValue,
 	clipOptions,
 	clipPatch,
 	firstClipSource,
@@ -54,14 +56,17 @@ export function FillField({ doc, layer }: FieldProps): ReactElement {
 }
 
 export function ClipField({ doc, layer }: FieldProps): ReactElement {
+	const candidates = clipCandidates(doc, layer);
 	const target = useLayerTarget(doc, layer, {
 		key: "clip",
 		label: "Clip",
-		plain: (value) =>
-			typeof value === "boolean" ? clipPatch(value ? "shape" : "none", null) : null,
+		plain: (value) => {
+			const next = clipModeOfValue(value);
+			const source = layer.clipLayer ?? firstClipSource(doc, layer, candidates);
+			return next === null ? null : clipPatch(next, next === "layer" ? source : null);
+		},
 	});
 	const bound = layer.bindings.clip;
-	const candidates = clipCandidates(doc, layer);
 	const mode = clipModeOf(layer);
 	const title = clipLayerTitle(doc, layer, candidates);
 
@@ -84,11 +89,11 @@ export function ClipField({ doc, layer }: FieldProps): ReactElement {
 				{bound === undefined ? (
 					<Segmented label="Clip" onPick={pick} options={clipOptions(title)} value={mode} />
 				) : (
-					<BoundSummary bound={bound} now={layer.clip} view={target.reach.view} />
+					<BoundSummary bound={bound} now={clipLabelOf(layer)} view={target.reach.view} />
 				)}
 				<BindButton target={target} />
 			</div>
-			{mode === "layer" ? (
+			{mode === "layer" || bound !== undefined ? (
 				<ClipLayerPicker candidates={candidates} doc={doc} layer={layer} />
 			) : null}
 		</section>

@@ -3,8 +3,10 @@ import { DesignDocument } from "../../document/document";
 import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import {
 	clipCandidates,
+	clipLabelOf,
 	clipLayerTitle,
 	clipModeOf,
+	clipModeOfValue,
 	clipPatch,
 	firstClipSource,
 } from "./clipChoice";
@@ -90,5 +92,15 @@ describe("the clip layer choices", () => {
 		expect(ids).not.toContain(blob);
 		expect(ids).not.toContain(placed);
 		expect(clipLayerTitle(doc, layerOf(doc, placed), [])).toMatch(/layout/u);
+	});
+});
+
+describe("the clip value of a variable", () => {
+	it("names each mode, and reads a choice or an old boolean back as a mode", () => {
+		expect(clipLabelOf({ clip: true, clipLayer: null })).toBe("Own shape");
+		expect(clipModeOfValue("Layer")).toBe("layer");
+		expect(clipModeOfValue("None")).toBe("none");
+		expect(clipModeOfValue(true)).toBe("shape");
+		expect(clipModeOfValue("Sideways")).toBeNull();
 	});
 });

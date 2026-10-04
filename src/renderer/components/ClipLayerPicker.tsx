@@ -7,6 +7,7 @@ import { Icon } from "./Icon";
 import { layerEntry } from "./layerEntry";
 
 const MENU_GAP = 6;
+const NO_PICK = "Pick a layer";
 interface PickerProps {
 	doc: DesignDocument;
 	layer: Layer;
@@ -30,7 +31,9 @@ export function ClipLayerPicker({ candidates, doc, layer }: PickerProps): ReactE
 				value={layer.clipLayer}
 			>
 				<Select.Trigger aria-label="Clip layer" className="clip-layer-trigger">
-					<span className="clip-layer-name">{layerEntry(source).label}</span>
+					<span className="clip-layer-name">
+						{source === null ? NO_PICK : layerEntry(source).label}
+					</span>
 					<span aria-hidden="true" className="unit-chevron">
 						<Icon name="chevron" />
 					</span>
