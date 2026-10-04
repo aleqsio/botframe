@@ -5,7 +5,7 @@ import { at, dragOn, drawWith, stageOrigin } from "../support";
 import type { Drag, Point } from "../support";
 
 const SITE = "https://botframe.test";
-const RENDERER = "out/renderer";
+const RENDERER = "out/web";
 const NEAR = 0.05;
 
 interface Scene {

@@ -103,9 +103,6 @@ function followTab(shell: Bridge, workspace: Workspace): () => void {
 
 export function connectEditMenu(workspace: Workspace): void {
 	const shell = bridge();
-	if (shell === null) {
-		return;
-	}
 	let drop = followTab(shell, workspace);
 	workspace.active.subscribe(() => {
 		drop();

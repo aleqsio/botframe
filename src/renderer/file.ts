@@ -56,9 +56,6 @@ export function closeTab(workspace: Workspace, tab: Tab): void {
 
 function runOnShell(command: FileCommand, workspace: Workspace): void {
 	const shell = bridge();
-	if (shell === null) {
-		return;
-	}
 	if (command.id === "open") {
 		void open(shell, workspace);
 		return;
@@ -79,7 +76,7 @@ export function runFileCommand(command: FileCommand, workspace: Workspace): void
 }
 
 export function connectFileMenu(workspace: Workspace): void {
-	bridge()?.onCommand((id) => {
+	bridge().onCommand((id) => {
 		const command = FILE_COMMANDS.find((entry) => entry.id === id);
 		if (command !== undefined) {
 			runFileCommand(command, workspace);
