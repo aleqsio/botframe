@@ -38,7 +38,8 @@ const LAYER_ID = {
 
 const PARENT = {
 	type: ["string", "null"],
-	description: "The id of the parent layer. null puts the layer on the canvas root.",
+	description:
+		"The id of the parent layer: a frame or a group, as in the editor. A plain rectangle, an ellipse, or a path cannot hold layers. null puts the layer on the canvas root.",
 };
 
 const DATA_PATH = {
@@ -55,7 +56,7 @@ const PROPS_GUIDE =
 	"content.props sets the props of a component copy: {propName: value}. Use the prop name or the variable id from list_components. botframe refuses a name that the component does not have.";
 
 const LAYER_SHAPE =
-	"Layer fields: x, y, width, height (pixels), fill (CSS color), name, clip (boolean), geometry ({kind: rectangle, cornerRadius, cornerSmoothing, frame} | {kind: ellipse} | {kind: path, vertices}), rotation, skewX, skewY, mirrored, origin {x, y} (0 to 1), lengths {x|y|width|height: {value, unit: px|rem|%|vw|vh}}, layout (width|height: fixed|hug|fill, position: default|offset|absolute, display: block|row|column|grid, wrap, distribute, align, gap, padding, margin, tracks, cell, turnedBox), guides [{axis, at}], media {asset, fit: cover|contain|stretch|tile} | null, content {kind: component, component, props} | {kind: none}, bindings {field: {var: variableId} | condition | null}, clipLayer (layer id) | null.";
+	"Layer fields: x, y, width, height (pixels), fill (CSS color), name, clip (boolean), geometry ({kind: rectangle, cornerRadius, cornerSmoothing, frame} | {kind: ellipse} | {kind: path, vertices} | {kind: group}; only a frame or a group holds children), rotation, skewX, skewY, mirrored, origin {x, y} (0 to 1), lengths {x|y|width|height: {value, unit: px|rem|%|vw|vh}}, layout (width|height: fixed|hug|fill, position: default|offset|absolute, display: block|row|column|grid, wrap, distribute, align, gap, padding, margin, tracks, cell, turnedBox), guides [{axis, at}], media {asset, fit: cover|contain|stretch|tile} | null, content {kind: component, component, props} | {kind: none}, bindings {field: {var: variableId} | condition | null}, clipLayer (layer id) | null.";
 
 const HTML_GUIDE =
 	"An HTML component is a template, a stylesheet, and props. The html uses {{prop}} for the text of a prop, {{#prop}}...{{/prop}} for a part that shows when the prop is true or not empty, and {{^prop}}...{{/prop}} for a part that shows when it is false or empty. The css applies inside the component only. Each prop is {name, kind: text, initial: string} | {name, kind: boolean, initial: true|false} | {name, kind: choice, initial, options: [string]}. A prop name starts with a letter or _ and has only letters, digits, _ and -.";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "./document";
-import { firstId } from "./documentFixtures";
+import { DRAWN, firstId } from "./documentFixtures";
 
 const SOURCE = { name: "Chip", html: "<b>{{label}}</b>", css: "b { color: red; }", props: [] };
 
@@ -52,7 +52,22 @@ describe("checked data writes", () => {
 		expect(() => {
 			doc.writeData(["layers", id, "media"], { asset: "nope" });
 		}).toThrow(/media/u);
+		expect(() => {
+			doc.writeData(["layers", id, "geometry"], { $map: { kind: "group" } });
+		}).not.toThrow();
 		doc.writeData(["layers", id, "layout"], { display: "row" });
 		expect(doc.readData(["layers", id, "layout"])).toEqual({ display: "row" });
+	});
+
+	it("keeps a layer with children a frame or a group", () => {
+		const doc = DesignDocument.create();
+		const frame = doc.createLayer(DRAWN);
+		doc.createLayer({ ...DRAWN, name: "Child" }, frame);
+		expect(() => {
+			doc.writeData(["layers", frame, "geometry", "rectangle", "frame"], false);
+		}).toThrow(/a layer with children must stay a frame or a group/u);
+		expect(() => {
+			doc.writeData(["layers", frame, "geometry"], { $map: { kind: "ellipse" } });
+		}).toThrow(/must stay a frame or a group/u);
 	});
 });

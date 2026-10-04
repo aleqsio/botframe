@@ -37,6 +37,7 @@ describe("runTool", () => {
 	it("creates, changes, and reads a layer, with one undo step for each call", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		const parent = firstLayer(workspace);
+		await call(workspace, "update_layer", { id: parent, change: { geometry: { frame: true } } });
 		const created = await call(workspace, "create_layers", {
 			parent,
 			layers: [{ name: "Dot", width: 10, height: 10, geometry: { kind: "ellipse" } }],
@@ -168,6 +169,34 @@ describe("runTool", () => {
 			{},
 			{ name: "Card", kind: "frame", children: [{ kind: "rectangle" }] },
 		]);
+	});
+
+	it("puts layers only in a frame or a group, as the editor does", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const rectangle = firstLayer(workspace);
+		await expect(
+			call(workspace, "create_layers", { parent: rectangle, layers: [{ name: "Child" }] }),
+		).rejects.toThrow(
+			`Only a frame or a group can hold layers, as in the editor. ${rectangle} is a rectangle.`,
+		);
+		await expect(
+			call(workspace, "create_layers", {
+				parent: null,
+				layers: [{ name: "Dot", geometry: { kind: "ellipse" }, children: [{ name: "Child" }] }],
+			}),
+		).rejects.toThrow('Give "Dot" geometry {kind: rectangle, frame: true} or {kind: group}.');
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [{ name: "Box", children: [{ name: "Child" }] }],
+		});
+		const [, box] = workspace.active.get().doc.rootIds();
+		const [child] = workspace.active.get().doc.childIds(box ?? rectangle);
+		await expect(call(workspace, "move_layer", { id: child, parent: rectangle })).rejects.toThrow(
+			/is a rectangle/u,
+		);
+		await expect(
+			call(workspace, "update_layer", { id: box, change: { geometry: { frame: false } } }),
+		).rejects.toThrow(/must stay a frame or a group/u);
 	});
 
 	it("adds an asset from base64", async () => {

@@ -12,7 +12,7 @@ import { variableOf } from "./variable";
 
 type Check = (value: unknown) => boolean;
 
-const SHAPES: ReadonlySet<unknown> = new Set(["rectangle", "ellipse", "path"]);
+const SHAPES: ReadonlySet<unknown> = new Set(["rectangle", "ellipse", "path", "group"]);
 
 function isNumber(value: unknown): boolean {
 	return typeof value === "number" && Number.isFinite(value);
@@ -74,15 +74,28 @@ const LAYER_FIELDS: Readonly<Record<string, Check>> = {
 	overrides: isRecord,
 };
 
-function layerProblems(data: unknown, keys: readonly string[]): readonly string[] {
+function isContainer(geometry: unknown): boolean {
+	const bag = bagOf(geometry);
+	return (
+		bag["kind"] === "group" ||
+		(bag["kind"] === "rectangle" && bagOf(bag["rectangle"])["frame"] === true)
+	);
+}
+
+function layerProblems(data: unknown, keys: readonly string[], parent: boolean): readonly string[] {
 	const bag = bagOf(data);
-	return keys.flatMap((key) => {
-		const check = LAYER_FIELDS[key];
-		if (check === undefined) {
-			return [`${key} (botframe does not read this layer field)`];
-		}
-		return bag[key] === undefined || check(bag[key]) ? [] : [key];
-	});
+	const holds = !parent || !keys.includes("geometry") || isContainer(bag["geometry"]);
+	const kept = holds ? [] : ["geometry (a layer with children must stay a frame or a group)"];
+	return [
+		...kept,
+		...keys.flatMap((key) => {
+			const check = LAYER_FIELDS[key];
+			if (check === undefined) {
+				return [`${key} (botframe does not read this layer field)`];
+			}
+			return bag[key] === undefined || check(bag[key]) ? [] : [key];
+		}),
+	];
 }
 
 function variableProblems(scope: unknown): readonly string[] {
@@ -125,6 +138,7 @@ export function entryProblems(
 	root: string,
 	entry: unknown,
 	keys: readonly string[],
+	parent: boolean,
 ): readonly string[] {
 	if (entry === undefined) {
 		return [];
@@ -137,7 +151,7 @@ export function entryProblems(
 			return componentProblems(entry);
 		}
 		case "layers": {
-			return layerProblems(entry, keys);
+			return layerProblems(entry, keys, parent);
 		}
 		default: {
 			return [];
