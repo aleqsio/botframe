@@ -1,7 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { at, drawWith } from "../support";
 import type { Drag } from "../support";
-import { clickAt, dragCenterBy, makeRow, openRenderer, turnLayer, typeChip } from "./support";
+import {
+	EMPTY,
+	clickAt,
+	dragCenterBy,
+	makeRow,
+	openRenderer,
+	turnLayer,
+	typeChip,
+} from "./support";
 
 const GRAB = { x: 460, y: 300 };
 const DELTA = { x: 80, y: -40 };
@@ -45,6 +53,7 @@ test("a child dragged out of a row lands at the root with its center moved by th
 	await drawWith(page, origin, "r", INSIDE);
 	const child = layers.nth(2);
 	await makeRow(page, origin, child);
+	await clickAt(page, origin, EMPTY);
 
 	await dragCenterBy(page, child, at(origin, CHILD_IN_ROW), OUT_OF_THE_ROW_BY);
 
@@ -58,6 +67,7 @@ test("a fill child keeps its painted width when it leaves the row", async ({ pag
 	await drawWith(page, origin, "r", INSIDE);
 	const child = layers.nth(2);
 	await makeRow(page, origin, child);
+	await clickAt(page, origin, EMPTY);
 	await clickAt(page, origin, CHILD_IN_ROW);
 	await page.getByRole("group", { name: "W size" }).getByRole("button", { name: "Fill" }).click();
 	await expect(child).toHaveCSS("width", ROW_WIDTH);
