@@ -755,6 +755,11 @@ body {
 	line-height: 1.4;
 }
 
+.note-tip {
+	text-decoration: underline dotted;
+	cursor: help;
+}
+
 #inspector {
 	right: var(--edge);
 	width: var(--inspector-width);

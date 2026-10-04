@@ -71,7 +71,6 @@ export function DocumentSection({
 				<AddMenu
 					choices={variableChoices(doc, DOCUMENT_SCOPE)}
 					label="Add variable"
-					note="A token each layer can use"
 					onAdded={onAdded}
 				/>
 			</header>

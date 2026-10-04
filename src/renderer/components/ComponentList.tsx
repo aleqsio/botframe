@@ -5,8 +5,19 @@ import { placeComponent } from "../componentPlace";
 import type { Placement } from "../componentPlace";
 import { useComponentRows } from "../useDocument";
 
-const EMPTY_NOTE =
-	"Make a component from a frame, or import a folder. Each HTML component is a Name.html file, with Name.css and Name.json.";
+const FOLDER_TIP = "Each HTML component is a Name.html file, with Name.css and Name.json.";
+
+function EmptyNote(): ReactElement {
+	return (
+		<p className="panel-note">
+			Make a component from a frame, or{" "}
+			<span className="note-tip" title={FOLDER_TIP}>
+				import a folder
+			</span>
+			.
+		</p>
+	);
+}
 
 function ImportButton({ onImport }: { onImport: (files: readonly File[]) => void }): ReactElement {
 	return (
@@ -43,11 +54,12 @@ export function ComponentList(placement: Placement): ReactElement {
 					});
 				}}
 			/>
-			{[...report, ...(rows.length === 0 ? [EMPTY_NOTE] : [])].map((line) => (
+			{report.map((line) => (
 				<p className="panel-note" key={line}>
 					{line}
 				</p>
 			))}
+			{rows.length === 0 ? <EmptyNote /> : null}
 			<ul className="layer-list">
 				{rows.map((row) => (
 					<li key={row.id}>
