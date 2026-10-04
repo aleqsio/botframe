@@ -1,6 +1,9 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
 import { SET_EDIT_MENU } from "../shared/editMenu";
+import { ipcPage } from "./agent/ipcPage";
+import { listenAgent } from "./agent/listen";
+import { agentServer } from "./agent/server";
 import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
 import { connectFiles } from "./files";
@@ -44,6 +47,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 app.on("ready", () => {
 	connectClipboard();
 	connectFiles();
+	listenAgent(agentServer(ipcPage(), null));
 	createWindow();
 });
 
