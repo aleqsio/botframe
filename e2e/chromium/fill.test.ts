@@ -85,3 +85,21 @@ test("a drag of the media row under the paint row draws the paint over the media
 	await expect(layer).toHaveCSS("background-image", /^linear-gradient\(.*url\("blob:/u);
 	await expect(page.locator("[data-row]").first()).toHaveAttribute("data-row", "paint");
 });
+
+test("a document color from the fill styles binds the fill of the selected layer", async ({
+	page,
+}) => {
+	const { layers, origin } = await openRenderer(page);
+	const styles = page.getByRole("region", { name: "Fill styles" });
+	await styles.getByRole("button", { name: "Add color" }).click();
+	const hex = page.getByLabel("Hex", { exact: true });
+	await hex.fill("#ff0000");
+	await hex.press("Enter");
+	await page.keyboard.press("Escape");
+
+	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
+	await styles.getByRole("button", { name: "color", exact: true }).click();
+
+	await expect(layers.first()).toHaveCSS("background-color", "rgb(255, 0, 0)");
+	await expect(page.locator(".fill-row .variable-chip")).toHaveText("color");
+});
