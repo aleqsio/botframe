@@ -1,6 +1,7 @@
 import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, TreeDiffItem, TreeID } from "loro-crdt";
 import { AssetStore } from "./assets";
+import { FontStore } from "./fonts";
 import { clipTargetsIn } from "./clips";
 import { readPath } from "./dataPath";
 import type { DataPath } from "./dataPath";
@@ -53,6 +54,7 @@ const NO_CLIP_TARGETS: readonly LayerId[] = [];
 export class DesignDocument {
 	readonly assets: AssetStore;
 	readonly components: ComponentStore;
+	readonly fonts: FontStore;
 	readonly #doc: LoroDoc;
 	readonly #history: DocumentHistory;
 	readonly #tree: LayerTree;
@@ -77,6 +79,7 @@ export class DesignDocument {
 		this.#doc = doc;
 		this.#history = new DocumentHistory(doc);
 		this.assets = new AssetStore(doc);
+		this.fonts = new FontStore(doc, this.assets);
 		this.components = new ComponentStore(doc, (message, write) => {
 			this.commit(message);
 			write();
@@ -255,6 +258,7 @@ export class DesignDocument {
 		this.#groupStarts.clear();
 		this.#wantedLengths.clear();
 		this.#doc.commit({ message });
+		this.fonts.writeWaiting();
 		this.#refreshHistory();
 	}
 

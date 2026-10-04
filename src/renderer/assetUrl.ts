@@ -1,15 +1,15 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { mediaKind } from "../document/assets";
-import type { AssetId, AssetStore, MediaKind } from "../document/assets";
+import { assetKind } from "../document/assets";
+import type { AssetId, AssetKind, AssetStore } from "../document/assets";
 
 export interface AssetUrl {
-	kind: MediaKind;
+	kind: AssetKind;
 	url: string;
 }
 
 const URLS = new Map<AssetId, AssetUrl>();
 
-function assetUrl(store: AssetStore, id: AssetId): AssetUrl | null {
+export function assetUrlOf(store: AssetStore, id: AssetId): AssetUrl | null {
 	const cached = URLS.get(id);
 	if (cached !== undefined) {
 		return cached;
@@ -19,7 +19,7 @@ function assetUrl(store: AssetStore, id: AssetId): AssetUrl | null {
 		return null;
 	}
 	const blob = new Blob([asset.bytes], { type: asset.type });
-	const made = { kind: mediaKind(asset.type), url: URL.createObjectURL(blob) };
+	const made = { kind: assetKind(asset.type), url: URL.createObjectURL(blob) };
 	URLS.set(id, made);
 	return made;
 }
@@ -27,7 +27,7 @@ function assetUrl(store: AssetStore, id: AssetId): AssetUrl | null {
 export function useAssetUrl(store: AssetStore, id: AssetId | null): AssetUrl | null {
 	return useSyncExternalStore(
 		useCallback((listener: () => void) => store.subscribe(listener), [store]),
-		useCallback(() => (id === null ? null : assetUrl(store, id)), [store, id]),
+		useCallback(() => (id === null ? null : assetUrlOf(store, id)), [store, id]),
 	);
 }
 

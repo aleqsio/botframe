@@ -5,12 +5,13 @@ import type { TextGeometry, TextStyle } from "../../../document/text";
 import { FACTOR_STEP, LENGTH_STEP } from "../../input/step";
 import { NumberChip } from "../layout/NumberChip";
 import { Segmented } from "../layout/Segmented";
+import { useFontFaces } from "../../fonts/FontFaces";
+import { FontRows } from "./FontRows";
+import { useGoogleFamilies } from "./useGoogleFamilies";
 import { ALIGN_OPTIONS, CASE_OPTIONS, DECORATION_OPTIONS, VERTICAL_OPTIONS } from "./textOptions";
 
 const MESSAGE = "set text style";
-const WEIGHT_STEP = { small: 100, normal: 100, large: 100 };
 const SIZE_BOUND = { kind: "clamp", min: 1, max: 1000 } as const;
-const WEIGHT_BOUND = { kind: "clamp", min: 100, max: 900 } as const;
 const LINE_BOUND = { kind: "clamp", min: 0.1, max: 10 } as const;
 const SPACING_BOUND = { kind: "clamp", min: -100, max: 100 } as const;
 
@@ -37,20 +38,6 @@ function NumberRows({ commit, geometry, write }: TextChange): ReactElement {
 					value={geometry.fontSize}
 				/>
 				<NumberChip
-					bound={WEIGHT_BOUND}
-					label="Weight"
-					name="Font weight"
-					onCommit={commit}
-					onValue={(fontWeight) => {
-						write({ fontWeight });
-					}}
-					step={WEIGHT_STEP}
-					unit=""
-					value={geometry.fontWeight}
-				/>
-			</div>
-			<div className="chip-row">
-				<NumberChip
 					bound={LINE_BOUND}
 					label="Line"
 					name="Line height"
@@ -62,6 +49,8 @@ function NumberRows({ commit, geometry, write }: TextChange): ReactElement {
 					unit="×"
 					value={geometry.lineHeight}
 				/>
+			</div>
+			<div className="chip-row">
 				<NumberChip
 					bound={SPACING_BOUND}
 					label="Spacing"
@@ -142,6 +131,8 @@ export function TextSection({
 	geometry: TextGeometry;
 	layer: Layer;
 }): ReactElement {
+	const families = useGoogleFamilies();
+	const inFile = new Set(useFontFaces(doc).map((face) => face.family));
 	const change: TextChange = {
 		geometry,
 		write: (style) => {
@@ -157,6 +148,15 @@ export function TextSection({
 			<header className="layout-head">
 				<span className="group-label">Text</span>
 			</header>
+			<FontRows
+				families={families}
+				geometry={geometry}
+				inFile={inFile}
+				pick={(style) => {
+					change.write(style);
+					change.commit();
+				}}
+			/>
 			<NumberRows {...change} />
 			<ChoiceRows {...change} />
 		</section>

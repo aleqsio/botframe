@@ -18,8 +18,12 @@ test("the text tool places a layer, edits it in place, and the Text section styl
 	await expect(text).toHaveText("Hello\nworld");
 	await expect(text).not.toHaveAttribute("contenteditable");
 	const box = text.locator("..");
-	const outline = await page.locator(".selection").boundingBox();
-	expect(outline).toEqual(await box.boundingBox());
+	await expect
+		.poll(async () => {
+			const outline = await page.locator(".selection").boundingBox();
+			return JSON.stringify(outline) === JSON.stringify(await box.boundingBox());
+		})
+		.toBe(true);
 
 	const section = page.locator("section.layout-section", { hasText: "Decoration" });
 	await section.getByRole("button", { name: "Center", exact: true }).click();

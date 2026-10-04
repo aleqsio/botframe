@@ -70,6 +70,12 @@ claude mcp add --transport http botframe http://127.0.0.1:7341/mcp
 - The server refuses a request on `/mcp` that has an `Origin` header, and a request to a host name that is not loopback. The page channel accepts only the development and preview origins (ports 5173 and 4173) and the GitHub Pages origin.
 - Each new editor feature must also be available through the MCP server. CLAUDE.md tells what to add. A review gives a Major for a feature that an agent cannot use.
 
+## Fonts
+
+`src/renderer/fonts/googleFonts.json` is the list of families in the font picker. `scripts/google-fonts.sh` makes the list from the metadata in https://github.com/google/fonts. Run the script to get new families.
+
+When a text layer uses a font that is not in the file, the renderer downloads the font from Google Fonts and puts each file in the asset store. The canvas loads each font from the file, not from Google. The application ships Inter, with its license, in `src/renderer/fonts/inter/`. A new text layer uses Inter, so it needs no network.
+
 ## Review
 
 - **CodeRabbit** reviews each pull request. It is free for a public repository, and it reads AGENTS.md, REVIEW.md, and STACK.md.

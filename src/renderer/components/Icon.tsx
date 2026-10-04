@@ -6,6 +6,7 @@ const PATHS = {
 	textCenter: "M4 6h16M7 10h10M4 14h16M7 18h10",
 	textRight: "M4 6h16M10 10h10M4 14h16M10 18h10",
 	textJustify: "M4 6h16M4 10h16M4 14h16M4 18h16",
+	italic: "M10 5h8M6 19h8M14 5l-4 14",
 	underline: "M7 4v7a5 5 0 0 0 10 0V4M5 20h14",
 	strike:
 		"M4 12h16M16 7.5c-.5-2-2-3-4-3-2.5 0-4 1.3-4 3.2M8 16.3c.5 2.2 2.2 3.2 4.2 3.2 2.6 0 4.3-1.5 4.3-3.5",

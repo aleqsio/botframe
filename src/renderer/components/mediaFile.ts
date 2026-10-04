@@ -1,4 +1,4 @@
-import { assetOf, isAcceptedMedia, mediaKind } from "../../document/assets";
+import { assetOf, isAcceptedMedia, assetKind } from "../../document/assets";
 import type { Asset } from "../../document/assets";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
@@ -10,7 +10,7 @@ const ADD_MEDIA_MESSAGE = "add media";
 
 function keptFit(layer: Layer, asset: Asset): MediaFit {
 	const fit = layer.media?.fit ?? "cover";
-	return fit === "tile" && mediaKind(asset.type) === "video" ? "cover" : fit;
+	return fit === "tile" && assetKind(asset.type) === "video" ? "cover" : fit;
 }
 
 export function placeAsset(doc: DesignDocument, layers: readonly Layer[], asset: Asset): void {

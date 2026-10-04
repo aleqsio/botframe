@@ -3,6 +3,7 @@ import type { AgentLink } from "./agent/webLink";
 import { Canvas } from "./Canvas";
 import { FileBar } from "./components/FileBar";
 import { TabBar } from "./components/TabBar";
+import { FontFaces } from "./fonts/FontFaces";
 import { useSlot } from "./state/useSlot";
 import type { Workspace } from "./state/workspace";
 
@@ -16,6 +17,7 @@ export function App({ workspace, agent }: AppProps): ReactElement {
 
 	return (
 		<>
+			<FontFaces doc={tab.doc} />
 			<Canvas doc={tab.doc} key={tab.id} user={tab.user} />
 			<FileBar tab={tab} workspace={workspace} />
 			<TabBar agent={agent} workspace={workspace} />

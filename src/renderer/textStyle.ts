@@ -10,9 +10,15 @@ const VERTICAL_PLACE: Readonly<Record<TextStyle["verticalAlign"], string>> = {
 
 const GENERIC_FAMILY = "sans-serif";
 const QUOTE = /["\\]/gu;
+const LINE_BREAK = /[\n\r\f]/gu;
+
+export function quotedFamily(family: string): string {
+	const escaped = family.replace(QUOTE, (character) => `\\${character}`);
+	return `"${escaped.replace(LINE_BREAK, " ")}"`;
+}
 
 export function fontFamilyText(family: string): string {
-	return `"${family.replace(QUOTE, (character) => `\\${character}`)}", ${GENERIC_FAMILY}`;
+	return `${quotedFamily(family)}, ${GENERIC_FAMILY}`;
 }
 
 export function textBoxStyle(geometry: TextGeometry, width: SizeMode): CSSProperties {
