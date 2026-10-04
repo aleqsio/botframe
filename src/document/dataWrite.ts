@@ -2,9 +2,7 @@ import { LoroList, LoroMap, LoroTree } from "loro-crdt";
 import type { LoroDoc } from "loro-crdt";
 import { bagOf, isList } from "./bag";
 import { LIST, MAP, indexOf, isContainer, isSequence, locate } from "./dataPath";
-import type { DataPath, DataSegment, Owner, Place } from "./dataPath";
-
-type Sequence = Exclude<Owner, LoroDoc | LoroMap | LoroTree>;
+import type { DataPath, DataSegment, Owner, Place, Sequence } from "./dataPath";
 
 type Slots = LoroMap | Sequence;
 
@@ -48,17 +46,32 @@ function freeIndex(owner: Sequence, key: DataSegment): number {
 	return Math.min(index, owner.length);
 }
 
+function emptyKey(owner: LoroMap, key: string): string {
+	if (owner.get(key) !== undefined) {
+		owner.delete(key);
+	}
+	return key;
+}
+
 function childMap(owner: Slots, key: DataSegment): Slots {
-	return owner instanceof LoroMap
-		? owner.ensureMergeableMap(String(key))
-		: owner.insertContainer(freeIndex(owner, key), new LoroMap());
+	if (!(owner instanceof LoroMap)) {
+		return owner.insertContainer(freeIndex(owner, key), new LoroMap());
+	}
+	const map = owner.ensureMergeableMap(emptyKey(owner, String(key)));
+	map.clear();
+	return map;
 }
 
 function childList(owner: Slots, key: DataSegment): Slots {
-	return owner instanceof LoroMap
-		? owner.ensureMergeableList(String(key))
-		: owner.insertContainer(freeIndex(owner, key), new LoroList());
+	if (!(owner instanceof LoroMap)) {
+		return owner.insertContainer(freeIndex(owner, key), new LoroList());
+	}
+	const list = owner.ensureMergeableList(emptyKey(owner, String(key)));
+	list.clear();
+	return list;
 }
+
+const HOLDS_CONTAINER = `The path holds a container. Give {"${MAP}": {...}} for a map or {"${LIST}": [...]} for a list.`;
 
 function mergeMap(map: Slots, entries: readonly (readonly [string, unknown])[]): void {
 	for (const [key, item] of entries) {
@@ -93,6 +106,9 @@ function writeSlot(owner: Slots, key: DataSegment, value: unknown): void {
 	const held: unknown = owner instanceof LoroMap ? owner.get(String(key)) : owner.get(indexOf(key));
 	if (writeInto(held, value)) {
 		return;
+	}
+	if (isContainer(held)) {
+		throw new TypeError(HOLDS_CONTAINER);
 	}
 	const entries = entriesOf(value);
 	if (entries !== null) {
@@ -143,9 +159,7 @@ export function writePath(doc: LoroDoc, path: DataPath, value: unknown): void {
 		return;
 	}
 	if (isContainer(place.held)) {
-		throw new Error(
-			`The path holds a container. Give {"${MAP}": {...}} for a map or {"${LIST}": [...]} for a list.`,
-		);
+		throw new TypeError(HOLDS_CONTAINER);
 	}
 	writeSlot(slotsOf(place.owner), place.key, value);
 }

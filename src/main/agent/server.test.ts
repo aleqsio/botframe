@@ -130,6 +130,8 @@ describe("agent server", () => {
 		const base = await started(agentServer((tool, args) => page.call(tool, args), page));
 		const poll = await fetch(`${base}/page`, { headers: { Origin: "https://example.com" } });
 		expect(poll.status).toBe(403);
+		const otherApp = await fetch(`${base}/page`, { headers: { Origin: "http://localhost:3000" } });
+		expect(otherApp.status).toBe(403);
 		const answer = await json(await fetch(`${base}/mcp`, rpc("tools/call", { name: "undo" })));
 		expect(answer).toMatchObject({ result: { isError: true } });
 	});

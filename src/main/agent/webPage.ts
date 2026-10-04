@@ -73,7 +73,8 @@ export class WebPage {
 
 	#deliver(call: AgentCall): void {
 		const waiting = this.#waiting;
-		if (waiting === null) {
+		if (waiting === null || waiting.destroyed) {
+			this.#waiting = null;
 			this.#queue.push(call);
 			return;
 		}

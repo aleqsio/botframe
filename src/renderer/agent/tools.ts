@@ -10,6 +10,12 @@ import type { Handler } from "./layerTools";
 const TOOLS: Readonly<Record<string, Handler>> = { ...LAYER_TOOLS, ...DATA_TOOLS };
 
 const NO_CALL = -1;
+const READS: ReadonlySet<string> = new Set([
+	"get_outline",
+	"get_layer",
+	"list_components",
+	"read_data",
+]);
 
 function listDocuments(workspace: Workspace): unknown {
 	const active = workspace.active.get();
@@ -42,6 +48,9 @@ async function run(workspace: Workspace, tool: string, args: Args): Promise<unkn
 		throw new TypeError(`botframe has no tool ${tool}.`);
 	}
 	const { doc } = tabOf(workspace, args);
+	if (READS.has(tool)) {
+		return handler(doc, args);
+	}
 	try {
 		const result: unknown = await handler(doc, args);
 		return result;

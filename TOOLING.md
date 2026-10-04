@@ -67,7 +67,8 @@ claude mcp add --transport http botframe http://127.0.0.1:7341/mcp
 
 - `get_outline`, `get_layer`, `create_layers`, `update_layer`, and the other layer tools validate each value.
 - `read_data` and `write_data` read and write each CRDT value at a path. Use them for each change that the other tools do not give. The model ignores a value that it cannot read.
-- The server refuses a request on `/mcp` that has an `Origin` header, and a request to a host name that is not loopback. The page channel accepts only a localhost origin and the GitHub Pages origin.
+- The server refuses a request on `/mcp` that has an `Origin` header, and a request to a host name that is not loopback. The page channel accepts only the development and preview origins (ports 5173 and 4173) and the GitHub Pages origin.
+- Each new editor feature must also be available through the MCP server. CLAUDE.md tells what to add. A review gives a Major for a feature that an agent cannot use.
 
 ## Review
 

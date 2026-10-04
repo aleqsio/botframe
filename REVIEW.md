@@ -5,7 +5,7 @@ This file sets the standard for each reviewer, human or model.
 ## Severity
 
 - **Blocker.** Incorrect behavior, data loss, a security fault, a missed performance target from STACK.md, or a disabled check.
-- **Major.** A broken rule from AGENTS.md, no test for changed behavior, a dependency with no reason, or an abstraction with one implementation.
+- **Major.** A broken rule from AGENTS.md, no test for changed behavior, a dependency with no reason, an abstraction with one implementation, or a new editor feature that an agent cannot use through the MCP server.
 - **Nit.** Names, format that the formatter does not control, and word choice.
 
 ## Rules for reviewers

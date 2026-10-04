@@ -53,6 +53,14 @@ describe("runTool", () => {
 		expect(await call(workspace, "get_layer", { id })).toMatchObject({ fill: "#000000" });
 	});
 
+	it("does not commit the open gesture of the user on a read", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const { doc } = workspace.active.get();
+		doc.update(firstLayer(workspace), { x: 1 });
+		await call(workspace, "get_outline");
+		expect(doc.canUndo()).toBe(false);
+	});
+
 	it("gives the outline of the canvas", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		expect(await call(workspace, "get_outline")).toEqual([

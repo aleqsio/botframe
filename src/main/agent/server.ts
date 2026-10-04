@@ -8,7 +8,7 @@ import type { WebPage } from "./webPage";
 const MAX_BODY = 128 * 1024 * 1024;
 const LOOPBACK = new Set(["127.0.0.1", "localhost"]);
 const PAGE_ORIGIN =
-	/^(?:http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?|https:\/\/aleqsio\.github\.io)$/u;
+	/^(?:http:\/\/(?:localhost|127\.0\.0\.1):(?:5173|4173)|https:\/\/aleqsio\.github\.io)$/u;
 
 class BodyError extends Error {}
 

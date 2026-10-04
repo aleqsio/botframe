@@ -7,7 +7,7 @@ export type DataSegment = string | number;
 
 export type DataPath = readonly DataSegment[];
 
-type Sequence = LoroList | LoroMovableList;
+export type Sequence = LoroList | LoroMovableList;
 
 export type Owner = LoroDoc | LoroMap | Sequence | LoroTree;
 

@@ -84,6 +84,29 @@ describe("document data paths", () => {
 		}).toThrow(/map key or a list index/u);
 	});
 
+	it("refuses a nested plain value over a container", () => {
+		const doc = DesignDocument.create();
+		const id = firstId(doc);
+		expect(() => {
+			doc.writeData(["layers", id], { $map: { geometry: "circle" } });
+		}).toThrow(/holds a container/u);
+	});
+
+	it("makes a new map with no keys of a deleted map", () => {
+		const doc = DesignDocument.create();
+		doc.writeData(["scope", "notes"], { $map: { old: 1 } });
+		doc.deleteData(["scope", "notes"]);
+		doc.writeData(["scope", "notes"], { $map: { a: 1 } });
+		expect(doc.readData(["scope", "notes"])).toEqual({ $map: { a: 1 } });
+	});
+
+	it("changes a plain value into a map", () => {
+		const doc = DesignDocument.create();
+		doc.writeData(["scope", "plain"], { a: 1 });
+		doc.writeData(["scope", "plain"], { $map: { b: 2 } });
+		expect(doc.readData(["scope", "plain"])).toEqual({ $map: { b: 2 } });
+	});
+
 	it("refuses an index that is not a number", () => {
 		const doc = DesignDocument.create();
 		doc.writeData(["scope", "list"], { $list: [1] });

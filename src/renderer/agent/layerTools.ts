@@ -42,10 +42,10 @@ function createLayers(doc: DesignDocument, args: Args): unknown {
 	const index = indexArg(args);
 	const nodes = listArg(args, "layers").map((layer) => layerNodeFrom(layer));
 	const ids = nodes.map((node) => doc.createSubtree(node, parent));
-	if (index !== undefined) {
-		for (const [offset, id] of ids.entries()) {
-			doc.move(id, parent, index + offset);
-		}
+	const placed =
+		index === undefined || ids.every((id, offset) => doc.move(id, parent, index + offset));
+	if (!placed) {
+		throw new Error(`botframe made the layers ${ids.join(", ")} but refused the index.`);
 	}
 	return { ids };
 }

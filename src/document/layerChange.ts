@@ -111,8 +111,29 @@ function linksPatch(current: LayerNode, next: LayerNode): LayerPatch {
 	};
 }
 
+function refusedPaths(given: unknown, held: unknown, path: string): readonly string[] {
+	if (given === null) {
+		return held === undefined || held === null ? [] : [path];
+	}
+	if (typeof given !== "object") {
+		return given === held ? [] : [path];
+	}
+	if (typeof held !== "object" || held === null || isList(given) !== isList(held)) {
+		return [path];
+	}
+	const kept = bagOf(held);
+	return Object.entries(given).flatMap(([key, value]) =>
+		refusedPaths(value, kept[key], path === "" ? key : `${path}.${key}`),
+	);
+}
+
 export function layerPatchFrom(current: LayerNode, change: unknown): LayerPatch {
-	const next = layerNodeFrom(merged(flatOf(current), bagOf(change)));
+	const asked = bagOf(change);
+	const next = layerNodeFrom(merged(flatOf(current), asked));
+	const refused = refusedPaths({ ...asked, children: undefined }, flatOf(next), "");
+	if (refused.length > 0) {
+		throw new TypeError(`botframe cannot use these values: ${refused.join(", ")}.`);
+	}
 	return {
 		...changedKeys(current.fields, next.fields, FIELD_KEYS),
 		...changedKeys<NodeTraits>(current, next, NODE_KEYS),

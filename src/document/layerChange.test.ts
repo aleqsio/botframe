@@ -36,11 +36,14 @@ describe("layerPatchFrom", () => {
 		expect(patch.layout?.padding?.left).toEqual({ value: 0, unit: "px" });
 	});
 
-	it("drops a value that is not valid", () => {
+	it("refuses a value that is not valid, and names it", () => {
 		const doc = DesignDocument.create();
-		expect(layerPatchFrom(currentNode(doc), { x: "far", media: { asset: "nope" } })).toEqual({
-			x: 0,
-		});
+		expect(() => layerPatchFrom(currentNode(doc), { x: "far", media: { asset: "nope" } })).toThrow(
+			"botframe cannot use these values: x, media.",
+		);
+		expect(() => layerPatchFrom(currentNode(doc), { geometry: { kind: "star" } })).toThrow(
+			/geometry\.kind/u,
+		);
 	});
 
 	it("removes a binding that the change sets to null", () => {
