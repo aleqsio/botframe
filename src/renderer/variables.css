@@ -797,7 +797,8 @@
 }
 
 .mirror-row > .layout-flag,
-.mirror-row > .bound-summary {
+.mirror-row > .bound-summary,
+.mirror-row > .text-content {
 	flex: 1;
 	min-width: 0;
 }
@@ -950,4 +951,12 @@
 	height: 1px;
 	margin: var(--layout-space-2) 0;
 	background-color: var(--bar-border);
+}
+
+.text-content {
+	overflow: hidden;
+	color: var(--panel-label);
+	font-size: var(--layout-text-field);
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }

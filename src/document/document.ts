@@ -13,7 +13,7 @@ import { scaleGroup } from "./groupScale";
 import type { GroupStart } from "./groupScale";
 import { isGroup } from "./layer";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "./layer";
-import { readLayer, unbindCorners, writeLayer } from "./layerIo";
+import { readLayer, unbindGeometry, writeLayer } from "./layerIo";
 import { LayerTree, touchedNodes } from "./layerTree";
 import { basisIn } from "./basis";
 import { hasRelativeLength, settledLengths } from "./length";
@@ -234,7 +234,7 @@ export class DesignDocument {
 		if (node === null) {
 			return;
 		}
-		const allowed = this.#allowedPatch(node.parent()?.id, unbindCorners(this.layer(id), patch));
+		const allowed = this.#allowedPatch(node.parent()?.id, unbindGeometry(this.layer(id), patch));
 		const basis = basisIn(this.#read, this.#tree.parentOf(id));
 		for (const target of writeLayer(this.#tree, id, allowed, basis)) {
 			this.#refreshNode(target);

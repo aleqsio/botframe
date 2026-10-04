@@ -997,6 +997,20 @@ button.layer-chevron[aria-expanded="false"]::before {
 	letter-spacing: -0.5px;
 }
 
+.layer-glyph-text {
+	width: auto;
+	height: auto;
+	border: 0;
+	color: var(--panel-label);
+	font-weight: 600;
+	font-size: var(--layout-text-label);
+	line-height: 1;
+}
+
+.layer-glyph-text::before {
+	content: "T";
+}
+
 .layer-glyph-code::before {
 	content: "</>";
 }

@@ -1,6 +1,6 @@
 import type { BindingKey } from "./bindings";
 import { chosenClip } from "./clips";
-import type { LayerTraits } from "./layer";
+import type { Geometry, LayerTraits } from "./layer";
 import { PIXELS } from "./length";
 import type { BoxKey } from "./length";
 import type { Literal } from "./value";
@@ -24,6 +24,14 @@ function cornerTraits(
 		: traits;
 }
 
+function textTraits(
+	traits: LayerTraits,
+	change: { fontSize: number } | { content: string },
+): LayerTraits {
+	const { geometry } = traits;
+	return geometry.kind === "text" ? { ...traits, geometry: { ...geometry, ...change } } : traits;
+}
+
 type Apply = (traits: LayerTraits, value: Literal) => LayerTraits;
 
 function numeric(apply: (traits: LayerTraits, value: number) => LayerTraits): Apply {
@@ -44,7 +52,21 @@ const APPLY: Readonly<Record<BindingKey, Apply>> = {
 		typeof value === "boolean" ? { ...traits, mirrored: value } : traits,
 	cornerRadius: numeric((traits, value) => cornerTraits(traits, "cornerRadius", value)),
 	cornerSmoothing: numeric((traits, value) => cornerTraits(traits, "cornerSmoothing", value)),
+	fontSize: numeric((traits, value) =>
+		value > 0 ? textTraits(traits, { fontSize: value }) : traits,
+	),
+	content: (traits, value) => textTraits(traits, { content: String(value) }),
 };
+
+export function geometryValue(geometry: Geometry, key: BindingKey): Literal | null {
+	if (geometry.kind === "rectangle" && (key === "cornerRadius" || key === "cornerSmoothing")) {
+		return geometry[key];
+	}
+	if (geometry.kind === "text" && (key === "fontSize" || key === "content")) {
+		return geometry[key];
+	}
+	return null;
+}
 
 export function boundTraits(traits: LayerTraits, key: BindingKey, value: Literal): LayerTraits {
 	return APPLY[key](traits, value);

@@ -16,6 +16,8 @@ export const BINDING_TYPES = {
 	cornerRadius: "length",
 	cornerSmoothing: "number",
 	clip: "choice",
+	fontSize: "length",
+	content: "text",
 } as const satisfies Readonly<Record<string, VariableType>>;
 
 export type BindingKey = keyof typeof BINDING_TYPES;
@@ -37,6 +39,8 @@ export const BINDING_KEYS: readonly BindingKey[] = [
 	"cornerRadius",
 	"cornerSmoothing",
 	"clip",
+	"fontSize",
+	"content",
 ];
 
 export const NO_BINDINGS: Bindings = {};

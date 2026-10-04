@@ -1,6 +1,5 @@
 import type { Layer, LayerFields, LayerId, Rect } from "../../document/layer";
 import { DEFAULT_TEXT_STYLE } from "../../document/text";
-import { nextLayerName } from "../components/layerEntry";
 import type { Point } from "../state/camera";
 import { drawnRect } from "./draw";
 import { chainUnder } from "./drawBehavior";
@@ -9,23 +8,21 @@ import { NO_MODIFIERS } from "./modifiers";
 import { CREATE_TEXT, startTextEdit } from "./textEdit";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
-const TEXT_LABEL = "Text";
 const TEXT_FILL = "#000000";
 const LINE_PIXELS = DEFAULT_TEXT_STYLE.fontSize * DEFAULT_TEXT_STYLE.lineHeight;
 
-function textFields(target: PointerTarget, rect: Rect): LayerFields {
-	const layers = target.doc.layerIds().map((id) => target.doc.layer(id));
+function textFields(rect: Rect): LayerFields {
 	return {
 		...rect,
 		fill: TEXT_FILL,
-		name: nextLayerName(TEXT_LABEL, layers),
+		name: "",
 		clip: false,
 		geometry: { kind: "text", content: "", ...DEFAULT_TEXT_STYLE },
 	};
 }
 
 function placeText(target: PointerTarget, rect: Rect, chain: readonly Layer[]): LayerId {
-	const id = target.doc.createLayer(textFields(target, rect), chain.at(-1)?.id ?? null);
+	const id = target.doc.createLayer(textFields(rect), chain.at(-1)?.id ?? null);
 	target.user.selection.set([id]);
 	return id;
 }

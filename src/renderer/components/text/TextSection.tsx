@@ -3,40 +3,31 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import type { TextGeometry, TextStyle } from "../../../document/text";
 import { FACTOR_STEP, LENGTH_STEP } from "../../input/step";
+import { LayerChip } from "../layout/LayerChip";
 import { NumberChip } from "../layout/NumberChip";
 import { Segmented } from "../layout/Segmented";
 import { useFontFaces } from "../../fonts/FontFaces";
 import { FontRows } from "./FontRows";
+import { ContentRow, TEXT_MESSAGE, fontSizeField } from "./textFields";
 import { useGoogleFamilies } from "./useGoogleFamilies";
 import { ALIGN_OPTIONS, CASE_OPTIONS, DECORATION_OPTIONS, VERTICAL_OPTIONS } from "./textOptions";
 
-const MESSAGE = "set text style";
-const SIZE_BOUND = { kind: "clamp", min: 1, max: 1000 } as const;
 const LINE_BOUND = { kind: "clamp", min: 0.1, max: 10 } as const;
 const SPACING_BOUND = { kind: "clamp", min: -100, max: 100 } as const;
 
 interface TextChange {
+	doc: DesignDocument;
+	layer: Layer;
 	geometry: TextGeometry;
 	write: (change: Partial<TextStyle>) => void;
 	commit: () => void;
 }
 
-function NumberRows({ commit, geometry, write }: TextChange): ReactElement {
+function NumberRows({ commit, doc, geometry, layer, write }: TextChange): ReactElement {
 	return (
 		<>
 			<div className="chip-row">
-				<NumberChip
-					bound={SIZE_BOUND}
-					label="Size"
-					name="Font size"
-					onCommit={commit}
-					onValue={(fontSize) => {
-						write({ fontSize });
-					}}
-					step={LENGTH_STEP}
-					unit="px"
-					value={geometry.fontSize}
-				/>
+				<LayerChip doc={doc} field={fontSizeField(geometry)} layer={layer} />
 				<NumberChip
 					bound={LINE_BOUND}
 					label="Line"
@@ -134,12 +125,14 @@ export function TextSection({
 	const families = useGoogleFamilies();
 	const inFile = new Set(useFontFaces(doc).map((face) => face.family));
 	const change: TextChange = {
+		doc,
+		layer,
 		geometry,
 		write: (style) => {
 			doc.update(layer.id, { geometry: { ...geometry, ...style } });
 		},
 		commit: () => {
-			doc.commit(MESSAGE);
+			doc.commit(TEXT_MESSAGE);
 		},
 	};
 
@@ -148,6 +141,7 @@ export function TextSection({
 			<header className="layout-head">
 				<span className="group-label">Text</span>
 			</header>
+			<ContentRow doc={doc} geometry={geometry} layer={layer} />
 			<FontRows
 				families={families}
 				geometry={geometry}
