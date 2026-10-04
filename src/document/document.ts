@@ -18,7 +18,7 @@ import { LayerTree, touchedNodes } from "./layerTree";
 import { basisIn } from "./basis";
 import { hasRelativeLength, settledLengths } from "./length";
 import type { Basis, LayerLengths } from "./length";
-import { notify, subscribeTo } from "./listeners";
+import { notify, refreshed, subscribeTo } from "./listeners";
 import { nodeOf } from "./path";
 import type { Unsubscribe } from "./listeners";
 import { createSubtree, readSubtree } from "./subtree";
@@ -36,14 +36,6 @@ const SEED_RECTANGLE: LayerFields = {
 	clip: false,
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false },
 };
-
-function sameIds(cached: readonly LayerId[], next: readonly LayerId[]): boolean {
-	return cached.length === next.length && cached.every((id, index) => id === next[index]);
-}
-
-function refreshed(cached: readonly LayerId[], next: readonly LayerId[]): readonly LayerId[] {
-	return sameIds(cached, next) ? cached : next;
-}
 
 function treeItems(event: LoroEventBatch): TreeDiffItem[] {
 	return event.events.flatMap((entry) => (entry.diff.type === "tree" ? entry.diff.diff : []));

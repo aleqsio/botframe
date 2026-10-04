@@ -1,14 +1,21 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
 import { ACCEPTED_TYPES } from "../../../document/assets";
-import type { AssetId } from "../../../document/assets";
+import type { AssetId, AssetKind } from "../../../document/assets";
 import type { DesignDocument } from "../../../document/document";
 import { useAssetIds, useAssetUrl } from "../../assetUrl";
 import { Icon } from "../Icon";
+import type { IconName } from "../Icon";
 import { addMediaFile } from "../mediaFile";
 import { AddMenu } from "../variables/AddMenu";
 import { KIND_LABELS, MediaThumb } from "./MediaThumb";
 import { UrlCard, UrlField, mediaChoices, useUrlLoads } from "./MediaUrl";
+
+const KIND_ICONS: Readonly<Record<AssetKind, IconName>> = {
+	image: "image",
+	video: "video",
+	font: "text",
+};
 
 function MediaCard({ doc, id }: { doc: DesignDocument; id: AssetId }): ReactElement {
 	const kind = useAssetUrl(doc.assets, id)?.kind ?? "image";
@@ -17,7 +24,7 @@ function MediaCard({ doc, id }: { doc: DesignDocument; id: AssetId }): ReactElem
 			<span className="fill-card-preview">
 				<MediaThumb asset={id} store={doc.assets} />
 				<span className="media-badge">
-					<Icon name={kind} />
+					<Icon name={KIND_ICONS[kind]} />
 				</span>
 			</span>
 		</li>

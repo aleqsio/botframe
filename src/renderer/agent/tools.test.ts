@@ -158,6 +158,24 @@ describe("runTool", () => {
 		).rejects.toThrow("The component has no prop colour. Its props: hot, label.");
 	});
 
+	it("makes and changes a text layer", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const text = { kind: "text", content: "Hello", fontFamily: "Inter", fontSize: 24 };
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [{ name: "Title", layout: { width: "hug", height: "hug" }, geometry: text }],
+		});
+		const [, id] = workspace.active.get().doc.rootIds();
+		await call(workspace, "update_layer", {
+			id,
+			change: { geometry: { ...text, content: "Hello agent", textAlign: "center" } },
+		});
+
+		expect(await call(workspace, "get_layer", { id })).toMatchObject({
+			geometry: { kind: "text", content: "Hello agent", fontSize: 24, textAlign: "center" },
+		});
+	});
+
 	it("makes a layer with children a frame", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		await call(workspace, "create_layers", {

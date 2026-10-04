@@ -12,3 +12,8 @@ export function notify(listeners: Iterable<() => void>): void {
 		listener();
 	}
 }
+
+export function refreshed<T>(cached: readonly T[], next: readonly T[]): readonly T[] {
+	const same = cached.length === next.length && cached.every((item, index) => item === next[index]);
+	return same ? cached : next;
+}
