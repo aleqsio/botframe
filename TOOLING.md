@@ -46,6 +46,8 @@ When `window.botframe` is not there, `src/renderer/bridge.ts` uses the browser:
 - The clipboard uses `navigator.clipboard`. The layer flavor needs a browser that writes a `web ` custom format, for example Chromium.
 - The browser keeps Ctrl+T and Ctrl+W. Use the tab buttons.
 
+`.github/workflows/pages.yml` builds the website on each push to `main` and publishes it to GitHub Pages. The workflow tries to turn on Pages. If the first run fails at `configure-pages`, set Settings → Pages → Source to "GitHub Actions", and run the workflow again.
+
 ## Review
 
 - **CodeRabbit** reviews each pull request. It is free for a public repository, and it reads AGENTS.md, REVIEW.md, and STACK.md.
