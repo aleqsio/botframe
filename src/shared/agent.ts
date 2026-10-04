@@ -30,7 +30,11 @@ const DOCUMENT = {
 	description: "The id of an open document from list_documents. The default is the active tab.",
 };
 
-const LAYER_ID = { type: "string", description: "A layer id, for example 12@3 or 4@1~9@3." };
+const LAYER_ID = {
+	type: "string",
+	description:
+		"A layer id from get_outline. A node id is <counter>@<peer>, for example 77@4341970031908957027. A layer inside a component copy has a path id: the copy id, ~, and the node id, for example 12@4341970031908957027~5@4341970031908957027.",
+};
 
 const PARENT = {
 	type: ["string", "null"],
@@ -44,8 +48,17 @@ const DATA_PATH = {
 		"Keys from a root container. Roots: layers (the layer tree; the next key is a node id, then the keys of its data), components, sources, scope (document variables), assets. Map keys are strings. List items are indexes.",
 };
 
+const LAYOUT_GUIDE =
+	"Build a design as nested frames, as in HTML with flexbox. A frame is geometry {kind: rectangle, frame: true}; a plain rectangle is a shape, not a container. Give a container frame layout {display: column or row, gap, padding, align, distribute} and let its children flow, with layout.width or layout.height set to hug (fit the content) or fill (take the free space). x and y are pixels from the top-left corner of the parent. On the canvas root and in a display: block parent, each child is placed at its x and y. In a row, column, or grid parent, a child with position: default is placed by the parent layout and its x and y have no effect; position: offset moves it by x and y from that place; position: absolute takes it out of the flow and places it at x and y. A layer with children and no geometry becomes a frame.";
+
+const PROPS_GUIDE =
+	"content.props sets the props of a component copy: {propName: value}. Use the prop name or the variable id from list_components. botframe refuses a name that the component does not have.";
+
 const LAYER_SHAPE =
 	"Layer fields: x, y, width, height (pixels), fill (CSS color), name, clip (boolean), geometry ({kind: rectangle, cornerRadius, cornerSmoothing, frame} | {kind: ellipse} | {kind: path, vertices}), rotation, skewX, skewY, mirrored, origin {x, y} (0 to 1), lengths {x|y|width|height: {value, unit: px|rem|%|vw|vh}}, layout (width|height: fixed|hug|fill, position: default|offset|absolute, display: block|row|column|grid, wrap, distribute, align, gap, padding, margin, tracks, cell, turnedBox), guides [{axis, at}], media {asset, fit: cover|contain|stretch|tile} | null, content {kind: component, component, props} | {kind: none}, bindings {field: {var: variableId} | condition | null}, clipLayer (layer id) | null.";
+
+const HTML_GUIDE =
+	"An HTML component is a template, a stylesheet, and props. The html uses {{prop}} for the text of a prop, {{#prop}}...{{/prop}} for a part that shows when the prop is true or not empty, and {{^prop}}...{{/prop}} for a part that shows when it is false or empty. The css applies inside the component only. Each prop is {name, kind: text, initial: string} | {name, kind: boolean, initial: true|false} | {name, kind: choice, initial, options: [string]}. A prop name starts with a letter or _ and has only letters, digits, _ and -.";
 
 function tool(
 	name: string,
@@ -88,7 +101,7 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"create_layers",
-		`Creates layers, with their children, and gives the new ids. ${LAYER_SHAPE} Each layer can have children: [layers].`,
+		`Creates layers, with their children, and gives the new ids. ${LAYER_SHAPE} Each layer can have children: [layers]. ${LAYOUT_GUIDE} ${PROPS_GUIDE}`,
 		{
 			parent: PARENT,
 			index: { type: "integer", description: "The position among the siblings." },
@@ -98,7 +111,7 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"update_layer",
-		`Changes the fields of one layer. Give only the fields to change. Objects merge into the held value; arrays replace it. ${LAYER_SHAPE}`,
+		`Changes the fields of one layer. Give only the fields to change. Objects merge into the held value; arrays replace it. botframe refuses a value that it cannot read, and names it. ${LAYER_SHAPE} ${LAYOUT_GUIDE} ${PROPS_GUIDE}`,
 		{ id: LAYER_ID, change: { type: "object" } },
 		["id", "change"],
 	),
@@ -113,6 +126,17 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 		"Moves a layer to a different parent or position.",
 		{ id: LAYER_ID, parent: PARENT, index: { type: "integer" } },
 		["id", "parent"],
+	),
+	tool(
+		"create_html_component",
+		`Adds an HTML component, or changes the HTML component with the same name. It writes the source, the component, and one variable for each prop, and gives the component id. Put a copy on the canvas with create_layers and content {kind: component, component: <id>, props: {propName: value}}. ${HTML_GUIDE}`,
+		{
+			name: { type: "string" },
+			html: { type: "string" },
+			css: { type: "string" },
+			props: { type: "array", items: { type: "object" } },
+		},
+		["name", "html"],
 	),
 	tool(
 		"make_component",
@@ -137,7 +161,11 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 			id: { type: "string" },
 			name: { type: "string" },
 			type: { enum: ["color", "length", "number", "text", "boolean", "choice"] },
-			initial: { description: "A literal, {var: id}, or {when: [{test, is, result}], else}." },
+			initial: {
+				type: ["string", "number", "boolean", "object"],
+				description:
+					"A literal of the type (a text variable keeps its text exactly), {var: id}, or {when: [{test, is, result}], else}.",
+			},
 			options: { type: "array", items: { type: "string" }, description: "For a choice." },
 		},
 		["name", "type", "initial"],
@@ -150,7 +178,7 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"write_data",
-		'Writes a raw CRDT value at a path. A plain JSON value replaces the value at the path. {"$map": {...}} merges keys into a map and makes the map if necessary. {"$list": [...]} replaces the items of a list. The model ignores a value that it cannot read. Use this for each change that the other tools do not give.',
+		`Writes a raw CRDT value at a path. A plain JSON value replaces the value at the path. {"$map": {...}} merges keys into a map and makes the map if necessary. {"$list": [...]} replaces the items of a list. botframe checks each write to components, sources, and layer fields, and refuses a value that it cannot read, with the names of the bad fields. A source is sources/<address> = {name, html, css, props}; a component is components/<id> = {"$map": {name, kind: html, source: <address>, scope: {"$map": {}}}}. Use create_html_component in place of a raw write of a component. ${HTML_GUIDE}`,
 		{ path: DATA_PATH, value: {} },
 		["path", "value"],
 	),

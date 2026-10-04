@@ -90,6 +90,33 @@ function readSource(value: unknown): { source: ComponentSource; template: Templa
 	return { source: { name, html, css, props }, template };
 }
 
+const SOURCE_KEYS: ReadonlySet<string> = new Set(["name", "html", "css", "props"]);
+
+function propsProblems(props: unknown): readonly string[] {
+	if (!isList(props)) {
+		return ["props (a list)"];
+	}
+	return props.flatMap((spec, index) => (storedSpecOf(spec) === null ? [`props.${index}`] : []));
+}
+
+export function sourceProblems(value: unknown): readonly string[] {
+	if (typeof value !== "object" || value === null || isList(value)) {
+		return ["the source (an object {name, html, css, props})"];
+	}
+	const bag = bagOf(value);
+	const texts = ["name", "html", "css"].filter((key) => !isText(bag[key]));
+	const html = textOf(bag, "html");
+	const open =
+		html !== null && parseTemplate(html) === null ? ["html (a section is not closed)"] : [];
+	const unknown = Object.keys(bag).filter((key) => !SOURCE_KEYS.has(key));
+	return [
+		...texts.map((key) => `${key} (text)`),
+		...open,
+		...propsProblems(bag["props"]),
+		...unknown.map((key) => `${key} (botframe does not read it)`),
+	];
+}
+
 export function componentSourceOf(value: unknown): ComponentSource | null {
 	return readSource(value)?.source ?? null;
 }

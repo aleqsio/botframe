@@ -84,6 +84,92 @@ describe("runTool", () => {
 		expect(await call(workspace, "get_layer", { id })).toMatchObject({ name: "Raw" });
 	});
 
+	it("keeps text that looks like a number, and refuses a value of the wrong type", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const typed = await call(workspace, "set_variable", {
+			name: "Weight",
+			type: "text",
+			initial: 400,
+		});
+		expect(typed).toMatchObject({ initial: "400" });
+		const quoted = await call(workspace, "set_variable", {
+			name: "Age",
+			type: "text",
+			initial: "17",
+		});
+		expect(quoted).toMatchObject({ initial: "17" });
+		await expect(
+			call(workspace, "set_variable", { name: "Size", type: "number", initial: "big" }),
+		).rejects.toThrow('The initial value "big" does not fit the type number.');
+	});
+
+	it("makes the scope of a component that has none, and names an owner that is missing", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		await call(workspace, "write_data", {
+			path: ["components", "c1"],
+			value: { $map: { name: "Card", kind: "html", source: "a1" } },
+		});
+		const added = await call(workspace, "set_variable", {
+			owner: "c1",
+			name: "title",
+			type: "text",
+			initial: "Hi",
+		});
+		expect(added).toMatchObject({ name: "title" });
+		await expect(
+			call(workspace, "set_variable", { owner: "nope", name: "x", type: "text", initial: "" }),
+		).rejects.toThrow("No component has the id nope.");
+	});
+
+	it("adds an HTML component and sets the props of a copy by name", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const made = await call(workspace, "create_html_component", {
+			name: "Badge",
+			html: "<span>{{label}}</span>{{#hot}}!{{/hot}}",
+			css: "span { font-weight: 600; }",
+			props: [
+				{ name: "label", kind: "text", initial: "New" },
+				{ name: "hot", kind: "boolean", initial: false },
+			],
+		});
+		expect(made).toMatchObject({ props: [{ name: "hot" }, { name: "label" }] });
+		const [entry] = workspace.active.get().doc.components.entries();
+		const component = entry?.id ?? "";
+		expect(made).toMatchObject({ component });
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [
+				{
+					name: "Badge 1",
+					width: 80,
+					height: 24,
+					content: { kind: "component", component, props: { label: "Sale" } },
+				},
+			],
+		});
+		const layers = await call(workspace, "get_outline");
+		expect(JSON.stringify(layers)).toContain(component);
+		await expect(
+			call(workspace, "create_layers", {
+				parent: null,
+				layers: [{ content: { kind: "component", component, props: { colour: "red" } } }],
+			}),
+		).rejects.toThrow("The component has no prop colour. Its props: hot, label.");
+	});
+
+	it("makes a layer with children a frame", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [{ name: "Card", layout: { display: "column" }, children: [{ name: "Title" }] }],
+		});
+		const outline = await call(workspace, "get_outline");
+		expect(outline).toMatchObject([
+			{},
+			{ name: "Card", kind: "frame", children: [{ kind: "rectangle" }] },
+		]);
+	});
+
 	it("adds an asset from base64", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		const result = await call(workspace, "add_asset", { base64: btoa("png"), type: "image/png" });

@@ -2,6 +2,7 @@ import { disconnect, makeComponent } from "../../document/componentActions";
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId } from "../../document/layer";
 import { layerNodeFrom, layerPatchFrom } from "../../document/layerChange";
+import { layerInput } from "./layerInput";
 import { argsOf, indexArg, layerArg, listArg, parentArg } from "./args";
 import type { Args } from "./args";
 
@@ -40,7 +41,7 @@ function outlineOf(doc: DesignDocument, id: LayerId): readonly OutlineNode[] {
 function createLayers(doc: DesignDocument, args: Args): unknown {
 	const parent = parentArg(doc, args);
 	const index = indexArg(args);
-	const nodes = listArg(args, "layers").map((layer) => layerNodeFrom(layer));
+	const nodes = listArg(args, "layers").map((layer) => layerNodeFrom(layerInput(doc, layer, null)));
 	const ids = nodes.map((node) => doc.createSubtree(node, parent));
 	const placed =
 		index === undefined || ids.every((id, offset) => doc.move(id, parent, index + offset));
@@ -56,7 +57,8 @@ function updateLayer(doc: DesignDocument, args: Args): unknown {
 	if (current === null) {
 		throw new TypeError(`No layer has the id ${id}.`);
 	}
-	const patch = layerPatchFrom(current, argsOf(args["change"]));
+	const held = current.content.kind === "component" ? current.content.component : null;
+	const patch = layerPatchFrom(current, layerInput(doc, argsOf(args["change"]), held));
 	doc.update(id, patch);
 	return { applied: Object.keys(patch), layer: doc.layer(id) };
 }

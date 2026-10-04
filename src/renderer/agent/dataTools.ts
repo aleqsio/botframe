@@ -11,7 +11,7 @@ function scopeArg(doc: DesignDocument, args: Args): Scope {
 	if (owner !== DOCUMENT_SCOPE && doc.components.entry(owner) === null) {
 		throw new TypeError(`No component has the id ${owner}.`);
 	}
-	return doc.components.scope(owner);
+	return doc.components.ensureScope(owner);
 }
 
 function listComponents(doc: DesignDocument): unknown {
@@ -23,12 +23,24 @@ function listComponents(doc: DesignDocument): unknown {
 	};
 }
 
+function initialOf(args: Args): unknown {
+	const { initial, type } = args;
+	const plain = typeof initial === "number" || typeof initial === "boolean";
+	return type === "text" && plain ? String(initial) : initial;
+}
+
 function setVariable(doc: DesignDocument, args: Args): unknown {
 	const scope = scopeArg(doc, args);
 	const id = optionalText(args, "id") ?? newVariableId();
-	const variable = variableOf(id, args);
+	const initial = initialOf(args);
+	const variable = variableOf(id, { ...args, initial });
 	if (variable === null) {
 		throw new TypeError("Give a name, a type, and options for a choice.");
+	}
+	if (JSON.stringify(variable.initial) !== JSON.stringify(initial)) {
+		throw new TypeError(
+			`The initial value ${JSON.stringify(initial)} does not fit the type ${variable.type}.`,
+		);
 	}
 	scope.put(variable);
 	return variable;

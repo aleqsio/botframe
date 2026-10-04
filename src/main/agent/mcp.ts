@@ -15,7 +15,7 @@ const NO_METHOD = -32_601;
 const INVALID_PARAMS = -32_602;
 
 const INSTRUCTIONS =
-	"botframe is a design tool. These tools edit the documents that are open in botframe, and the editor shows each change at once. Start with list_documents and get_outline. Use get_layer to read a layer and update_layer to change it. Use read_data and write_data for each part of the document that the other tools do not give. Each call is one undo step.";
+	"botframe is a design tool. These tools edit the documents that are open in botframe, and the editor shows each change at once. Start with list_documents and get_outline. Use get_layer to read a layer and update_layer to change it. Use read_data and write_data for each part of the document that the other tools do not give. Each call is one undo step. Build a design as nested frames (geometry.frame: true) with layout.display row or column, gap, padding, and hug or fill sizes, as in HTML with flexbox, not as rectangles at absolute x and y.";
 
 class RpcError extends Error {
 	readonly code: number;
