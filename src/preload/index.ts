@@ -3,7 +3,7 @@ import { HAS_CLIPBOARD_LAYERS, READ_CLIPBOARD_LAYERS, WRITE_CLIPBOARD } from "..
 import type { ClipboardWrite } from "../shared/clipboard";
 import { EDIT_COMMAND, SET_EDIT_MENU } from "../shared/editMenu";
 import type { EditMenuItem } from "../shared/editMenu";
-import { OPEN_FILE, SAVE_FILE } from "../shared/file";
+import { OPEN_FILE, RENAME_FILE, SAVE_FILE } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
 
 async function invoke(channel: string, ...args: readonly unknown[]): Promise<unknown> {
@@ -56,8 +56,12 @@ contextBridge.exposeInMainWorld("botframe", {
 	async saveFile(
 		bytes: Uint8Array,
 		token: string | null,
+		name: string,
 		saveAs: boolean,
 	): Promise<SavedFile | null> {
-		return savedFile(await invoke(SAVE_FILE, bytes, token, saveAs));
+		return savedFile(await invoke(SAVE_FILE, bytes, token, name, saveAs));
+	},
+	async renameFile(token: string, name: string): Promise<SavedFile | null> {
+		return savedFile(await invoke(RENAME_FILE, token, name));
 	},
 });

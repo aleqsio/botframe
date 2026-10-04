@@ -208,7 +208,7 @@ test("the zoom pill steps the zoom of the canvas in and out", async () => {
 	await app.close();
 });
 
-test("the window drags by the file pill, and the top edge of the canvas takes presses", async () => {
+test("the window drags by the empty part of the file pill, and the top edge of the canvas takes presses", async () => {
 	const { app, window } = await launchApp();
 	const regionsAt = (point: { x: number; y: number }): Promise<string[]> =>
 		window.evaluate(
@@ -221,11 +221,13 @@ test("the window drags by the file pill, and the top edge of the canvas takes pr
 		);
 
 	await expect(window.locator(".layer")).toHaveCount(1);
+	const bar = await boxOf(window.locator("#file-bar"));
 	const name = await boxOf(window.locator("#file-bar .file-name"));
 	const fileButton = await boxOf(window.locator("#file-bar").getByRole("button", { name: "File" }));
 
 	expect(await regionsAt(TOP_OF_CANVAS)).toEqual([]);
-	expect((await regionsAt({ x: name.x + 2, y: name.y + 2 }))[0]).toBe("drag");
+	expect((await regionsAt({ x: bar.x + bar.width - 8, y: bar.y + 8 }))[0]).toBe("drag");
+	expect((await regionsAt({ x: name.x + 4, y: name.y + 4 }))[0]).toBe("no-drag");
 	expect((await regionsAt({ x: fileButton.x + 4, y: fileButton.y + 4 }))[0]).toBe("no-drag");
 
 	await app.close();

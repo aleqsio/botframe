@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DRAWN } from "../../document/documentFixtures";
-import { Tab, tabName } from "./tab";
+import { fileBytes, readFile } from "../../document/file";
+import { Tab } from "./tab";
 import { Workspace } from "./workspace";
 
 const POSTER = { token: "poster", name: "Poster" };
@@ -93,7 +94,7 @@ describe("a tab", () => {
 		tab.markSaved(POSTER, tab.doc.version());
 
 		expect(tab.hasChanges()).toBe(false);
-		expect(tabName(tab.file.get())).toBe("Poster");
+		expect(tab.name.get()).toBe("Poster");
 	});
 
 	it("keeps an edit made during a save as a change", () => {
@@ -113,11 +114,28 @@ describe("a tab", () => {
 
 		tab.loseFile();
 
-		expect(tabName(tab.file.get())).toBe("Untitled");
+		expect(tab.name.get()).toBe("Untitled");
+		expect(tab.token.get()).toBeNull();
 		expect(tab.hasChanges()).toBe(true);
 	});
 
 	it("is Untitled before a save", () => {
-		expect(tabName(Tab.untitled().file.get())).toBe("Untitled");
+		expect(Tab.untitled().name.get()).toBe("Untitled");
+	});
+
+	it("keeps its saved state through the bytes of its document", () => {
+		const tab = Tab.untitled();
+		tab.markSaved(POSTER, tab.doc.version());
+		const doc = readFile(fileBytes(tab.doc));
+		if (doc === null) {
+			throw new Error("the bytes are not a document");
+		}
+
+		const restored = new Tab(doc, POSTER, tab.savedVersion.get());
+
+		expect(restored.hasChanges()).toBe(false);
+		restored.doc.createLayer(DRAWN);
+		restored.doc.commit("create frame");
+		expect(restored.hasChanges()).toBe(true);
 	});
 });

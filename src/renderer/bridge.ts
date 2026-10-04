@@ -4,7 +4,7 @@ import { FILE_COMMANDS } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
 import { heldWithAccelerator } from "./input/command";
 import { readClipboardLayers, writesLayers, writeClipboard } from "./webClipboard";
-import { openFile, saveFile } from "./webFiles";
+import { openFile, renameFile, saveFile } from "./webFiles";
 
 export interface Bridge {
 	setEditMenu: (items: readonly EditMenuItem[]) => void;
@@ -13,7 +13,13 @@ export interface Bridge {
 	readClipboardLayers: () => Promise<string | null>;
 	hasClipboardLayers: () => Promise<boolean>;
 	openFile: () => Promise<OpenedFile | null>;
-	saveFile: (bytes: Uint8Array, token: string | null, saveAs: boolean) => Promise<SavedFile | null>;
+	saveFile: (
+		bytes: Uint8Array,
+		token: string | null,
+		name: string,
+		saveAs: boolean,
+	) => Promise<SavedFile | null>;
+	renameFile: (token: string, name: string) => Promise<SavedFile | null>;
 }
 
 declare global {
@@ -54,6 +60,7 @@ const WEB: Bridge = {
 	hasClipboardLayers: () => Promise.resolve(writesLayers()),
 	openFile,
 	saveFile,
+	renameFile,
 };
 
 export function inBrowser(): boolean {

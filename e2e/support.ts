@@ -1,5 +1,8 @@
 import { _electron as electron, expect } from "@playwright/test";
 import type { ElectronApplication, Locator, Page } from "@playwright/test";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export interface Point {
 	x: number;
@@ -12,7 +15,8 @@ export interface Drag {
 }
 
 export async function launchApp(): Promise<{ app: ElectronApplication; window: Page }> {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
+	const profile = await mkdtemp(join(tmpdir(), "botframe-profile-"));
+	const app = await electron.launch({ args: ["out/main/index.js", `--user-data-dir=${profile}`] });
 	const window = await app.firstWindow();
 	return { app, window };
 }

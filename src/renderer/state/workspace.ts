@@ -15,6 +15,11 @@ export class Workspace {
 		this.active.set(tab);
 	}
 
+	replace(tabs: readonly [Tab, ...Tab[]], active: Tab): void {
+		this.tabs.set(tabs);
+		this.active.set(tabs.includes(active) ? active : tabs[0]);
+	}
+
 	close(tab: Tab): void {
 		const tabs = this.tabs.get();
 		const index = tabs.indexOf(tab);

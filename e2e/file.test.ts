@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { DesignDocument } from "../src/document/document";
 import { fileBytes } from "../src/document/file";
 import { drawWith, openStage } from "./support";
@@ -81,6 +81,35 @@ test("New Tab and Close Tab in the File menu add a tab and take it away", async 
 
 	await pickFileItem(window, "Close Tab");
 	await expect(window.getByRole("tab")).toHaveCount(1);
+
+	await app.close();
+});
+
+test("a rename of a saved tab renames the file on the disk, and a taken name keeps the file", async () => {
+	const { app, window } = await openStage();
+	const path = await writtenFile();
+	await writeFile(join(dirname(path), "Taken.botframe"), "");
+	await answerDialogs(app, path);
+	await pickFileItem(window, "Open…");
+	const name = window.locator("#file-bar .file-name");
+	const field = window.getByLabel("File name", { exact: true });
+	await app.evaluate(({ dialog }) => {
+		dialog.showErrorBox = () => {};
+	});
+
+	await name.dblclick();
+	await field.fill("Taken");
+	await field.press("Enter");
+	await expect(name).toHaveText("Poster");
+
+	await name.dblclick();
+	await field.fill("Poster final");
+	await field.press("Enter");
+	await expect(name).toHaveText("Poster final");
+	expect((await readdir(dirname(path))).toSorted()).toEqual([
+		"Poster final.botframe",
+		"Taken.botframe",
+	]);
 
 	await app.close();
 });

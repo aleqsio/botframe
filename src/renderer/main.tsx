@@ -4,6 +4,7 @@ import { App } from "./App";
 import { watchClipboard } from "./clipboard";
 import { connectEditMenu } from "./editMenu";
 import { connectFileMenu } from "./file";
+import { keepSession } from "./session";
 import { Tab } from "./state/tab";
 import { Workspace } from "./state/workspace";
 
@@ -14,6 +15,7 @@ if (container !== null) {
 	connectEditMenu(workspace);
 	connectFileMenu(workspace);
 	watchClipboard(workspace);
+	void keepSession(workspace);
 	createRoot(container).render(
 		<StrictMode>
 			<App workspace={workspace} />

@@ -3,23 +3,26 @@ import { FILE_COMMANDS } from "../shared/file";
 import type { FileCommand } from "../shared/file";
 import { bridge, inBrowser } from "./bridge";
 import type { Bridge } from "./bridge";
-import { Tab, tabName } from "./state/tab";
+import { Tab } from "./state/tab";
 import type { Workspace } from "./state/workspace";
 
 const NOT_A_FILE = "The file is not a botframe document.";
 
 function closePrompt(tab: Tab): string {
-	return `Close ${tabName(tab.file.get())}? The changes that are not saved are lost.`;
+	return `Close ${tab.name.get()}? The changes that are not saved are lost.`;
 }
 
 function holdersOf(workspace: Workspace, token: string): readonly Tab[] {
-	return workspace.tabs.get().filter((tab) => tab.file.get()?.token === token);
+	return workspace.tabs.get().filter((tab) => tab.token.get() === token);
 }
+
+const renames = new WeakMap<Tab, Promise<void>>();
 
 async function save(shell: Bridge, workspace: Workspace, saveAs: boolean): Promise<void> {
 	const tab = workspace.active.get();
+	await renames.get(tab);
 	const version = tab.doc.version();
-	const saved = await shell.saveFile(fileBytes(tab.doc), tab.file.get()?.token ?? null, saveAs);
+	const saved = await shell.saveFile(fileBytes(tab.doc), tab.token.get(), tab.name.get(), saveAs);
 	if (saved === null) {
 		return;
 	}
@@ -47,6 +50,27 @@ async function open(shell: Bridge, workspace: Workspace): Promise<void> {
 	workspace.add(new Tab(doc, { token: opened.token, name: opened.name }));
 }
 
+async function applyRename(tab: Tab, name: string): Promise<void> {
+	const token = tab.token.get();
+	if (token === null) {
+		tab.name.set(name);
+		return;
+	}
+	const renamed = await bridge().renameFile(token, name);
+	if (renamed !== null) {
+		tab.name.set(renamed.name);
+	}
+}
+
+export function renameTab(tab: Tab, name: string): Promise<void> {
+	const next = (renames.get(tab) ?? Promise.resolve()).then(() => applyRename(tab, name));
+	renames.set(
+		tab,
+		next.catch(() => {}),
+	);
+	return next;
+}
+
 export function closeTab(workspace: Workspace, tab: Tab): void {
 	if (tab.hasChanges() && !window.confirm(closePrompt(tab))) {
 		return;
@@ -64,6 +88,9 @@ function runOnShell(command: FileCommand, workspace: Workspace): void {
 }
 
 export function runFileCommand(command: FileCommand, workspace: Workspace): void {
+	if (document.activeElement instanceof HTMLElement) {
+		document.activeElement.blur();
+	}
 	if (command.id === "newTab") {
 		workspace.add(Tab.untitled());
 		return;

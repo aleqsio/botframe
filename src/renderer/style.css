@@ -756,14 +756,33 @@ body {
 	width: var(--inspector-width);
 }
 
-.file-name {
-	flex: 1;
+.file-name,
+.file-name-input {
 	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	padding: 0 var(--layout-space-3);
 	font-size: 13px;
 	font-weight: 600;
+	-webkit-app-region: no-drag;
+}
+
+.file-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
 	white-space: nowrap;
+	cursor: default;
+}
+
+.file-name-input {
+	flex: 1;
+	box-sizing: border-box;
+	height: var(--layout-control);
+	border: 0;
+	border-radius: var(--layout-radius-field);
+	outline: none;
+	background-color: var(--panel-selected);
+	box-shadow: 0 0 0 1.5px var(--panel-focus);
+	color: inherit;
+	font-family: inherit;
 }
 
 .pill-button {
