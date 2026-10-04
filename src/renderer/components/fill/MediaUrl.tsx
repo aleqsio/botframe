@@ -81,7 +81,7 @@ export function UrlCard({
 				onClick={() => {
 					onDismiss(load.key);
 				}}
-				title={load.failed ? "The media did not load. Click to remove." : undefined}
+				title={load.failed ? "The media did not load." : undefined}
 				type="button"
 			>
 				<span className="fill-card-preview media-missing">
