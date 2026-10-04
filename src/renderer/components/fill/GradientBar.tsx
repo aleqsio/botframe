@@ -23,7 +23,7 @@ interface BarProps extends StopPick {
 	onCommit: () => void;
 }
 
-export function percentText(position: number): string {
+function percentText(position: number): string {
 	return `${Math.round(position * PERCENT)}%`;
 }
 

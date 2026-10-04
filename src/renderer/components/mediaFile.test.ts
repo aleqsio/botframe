@@ -87,30 +87,37 @@ describe("placeMediaFile", () => {
 	});
 });
 
+function ellipseIn(doc: DesignDocument, name: string): LayerId {
+	return doc.createLayer(
+		{
+			x: 0,
+			y: 0,
+			width: 10,
+			height: 10,
+			fill: "#ffffff",
+			name,
+			clip: false,
+			geometry: { kind: "ellipse" },
+		},
+		null,
+	);
+}
+
 describe("placeAsset", () => {
-	it("fills a second layer with an asset that the document holds, in one undo step", async () => {
+	it("fills each given layer with an asset that the document holds, in one undo step", async () => {
 		const { doc, layer } = seeded();
 		await placeMediaFile(doc, layer, new File(["picture"], "a.png", { type: "image/png" }));
 		const { asset } = mediaOf(doc, layer.id);
-		const other = doc.createLayer(
-			{
-				x: 0,
-				y: 0,
-				width: 10,
-				height: 10,
-				fill: "#ffffff",
-				name: "Other",
-				clip: false,
-				geometry: { kind: "ellipse" },
-			},
-			null,
-		);
-		doc.commit("add layer");
+		const one = ellipseIn(doc, "One");
+		const other = ellipseIn(doc, "Other");
+		doc.commit("add layers");
 
-		placeAsset(doc, layerOf(doc, other), assetOf(doc, asset));
+		placeAsset(doc, [layerOf(doc, one), layerOf(doc, other)], assetOf(doc, asset));
 
+		expect(mediaOf(doc, one)).toEqual({ asset, fit: "cover" });
 		expect(mediaOf(doc, other)).toEqual({ asset, fit: "cover" });
 		doc.undo();
+		expect(doc.layer(one)?.media).toBeNull();
 		expect(doc.layer(other)?.media).toBeNull();
 	});
 });

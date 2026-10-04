@@ -4,6 +4,7 @@ import { useSlot } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 import { ComponentList } from "./ComponentList";
 import { LayerList } from "./LayerList";
+import { FillLibrary } from "./fill/FillLibrary";
 
 export function SidePanel({
 	doc,
@@ -18,6 +19,9 @@ export function SidePanel({
 
 	if (panel === "layers") {
 		return <LayerList doc={doc} user={user} />;
+	}
+	if (panel === "fills") {
+		return <FillLibrary doc={doc} user={user} />;
 	}
 	return panel === "components" ? <ComponentList doc={doc} stage={stage} user={user} /> : null;
 }

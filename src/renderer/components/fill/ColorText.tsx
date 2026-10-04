@@ -6,12 +6,36 @@ import type { Rgba } from "../color";
 import { colorOf } from "../cssColor";
 import { setPaint } from "./paintEdit";
 import type { PaintEdit } from "./paintEdit";
-import { gradientSummary } from "./ShapeRows";
+import { gradientSummary } from "./stops";
 
 const PERCENT = 100;
 
 function alphaText(color: Rgba): string {
 	return `${Math.round(color.a * PERCENT)}%`;
+}
+
+export function ColorDraft({
+	label,
+	onPick,
+	value,
+}: {
+	label: string;
+	value: string;
+	onPick: (color: string) => void;
+}): ReactElement {
+	return (
+		<DraftInput
+			inputMode="text"
+			label={label}
+			onCommit={(text) => {
+				const next = colorOf(text);
+				if (next !== null) {
+					onPick(formatColor(next));
+				}
+			}}
+			value={value}
+		/>
+	);
 }
 
 export function HexField({
@@ -25,14 +49,10 @@ export function HexField({
 }): ReactElement {
 	return (
 		<div className="property-field hex-field">
-			<DraftInput
-				inputMode="text"
+			<ColorDraft
 				label={label}
-				onCommit={(text) => {
-					const next = colorOf(text);
-					if (next !== null) {
-						onPick(next);
-					}
+				onPick={(text) => {
+					onPick(parseColor(text) ?? color);
 				}}
 				value={formatColor(color)}
 			/>
@@ -60,14 +80,10 @@ export function PaintText({
 	const color = parseColor(paint.color);
 	return (
 		<>
-			<DraftInput
-				inputMode="text"
+			<ColorDraft
 				label="Fill"
-				onCommit={(text) => {
-					const next = colorOf(text);
-					if (next !== null) {
-						setPaint(edit, formatColor(next));
-					}
+				onPick={(text) => {
+					setPaint(edit, text);
 				}}
 				value={paint.color}
 			/>

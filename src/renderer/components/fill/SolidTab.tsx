@@ -15,10 +15,10 @@ export function SolidTab({
 }: {
 	color: string;
 	edit: PaintEdit;
-	target: EditTarget;
+	target: EditTarget | null;
 }): ReactElement {
 	const color = parseColor(text) ?? BLACK;
-	const swatches = documentSwatches(target.reach.view, "solid");
+	const swatches = target === null ? [] : documentSwatches(target.reach.view, "solid");
 
 	function pick(next: Rgba): void {
 		edit.change(formatColor(next));
@@ -35,7 +35,7 @@ export function SolidTab({
 				onCommit={edit.commit}
 			/>
 			<HexField color={color} label="Hex" onPick={pick} />
-			{swatches.length === 0 ? (
+			{target === null || swatches.length === 0 ? (
 				<PresetGrid color={color} onPick={pick} />
 			) : (
 				<DocumentPaints label="Document colors" swatches={swatches} target={target} />

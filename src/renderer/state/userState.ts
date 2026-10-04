@@ -75,7 +75,7 @@ export interface LayerMenu {
 	layerIds: readonly LayerId[];
 }
 
-export type SidePanel = "layers" | "components" | null;
+export type SidePanel = "layers" | "components" | "fills" | null;
 
 export class UserState {
 	readonly tool = new Slot<ToolId>(DEFAULT_TOOL);

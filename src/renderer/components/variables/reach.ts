@@ -3,8 +3,10 @@ import { heldValue, resolveVariable } from "../../../document/resolve";
 import type { ResolveSource } from "../../../document/resolve";
 import { isCondition, isLiteral, isReference } from "../../../document/value";
 import type { Case, Condition, Literal, VariableValue } from "../../../document/value";
+import { paintOf } from "../../../document/paint";
 import { DOCUMENT_SCOPE, emptyValue } from "../../../document/variable";
 import type { Variable, VariableType } from "../../../document/variable";
+import { gradientSummary } from "../fill/stops";
 
 const DOCUMENT_LABEL = "Document";
 
@@ -68,11 +70,15 @@ export function literalText(value: Literal): string {
 	if (typeof value === "boolean") {
 		return value ? "on" : "off";
 	}
-	return String(value);
+	const paint = typeof value === "string" ? paintOf(value) : null;
+	return paint?.kind === "gradient" ? gradientSummary(paint.gradient) : String(value);
 }
 
 export function isColor(value: Literal): value is string {
-	return typeof value === "string" && CSS.supports("color", value);
+	return (
+		typeof value === "string" &&
+		(CSS.supports("color", value) || paintOf(value).kind === "gradient")
+	);
 }
 
 export function firstValue(variable: Variable | null): Literal {

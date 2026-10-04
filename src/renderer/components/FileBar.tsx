@@ -12,12 +12,12 @@ interface PanelChoice {
 	panel: Exclude<SidePanel, null>;
 	label: string;
 	icon: IconName;
-	text: string | null;
 }
 
 const PANELS: readonly PanelChoice[] = [
-	{ panel: "layers", label: "Layers", icon: "layers", text: "Layers" },
-	{ panel: "components", label: "Components", icon: "component", text: null },
+	{ panel: "layers", label: "Layers", icon: "layers" },
+	{ panel: "components", label: "Components", icon: "component" },
+	{ panel: "fills", label: "Fills", icon: "gradient" },
 ];
 
 export function FileBar({ tab, workspace }: { tab: Tab; workspace: Workspace }): ReactElement {
@@ -41,7 +41,6 @@ export function FileBar({ tab, workspace }: { tab: Tab; workspace: Workspace }):
 					type="button"
 				>
 					<Icon name={choice.icon} />
-					{choice.text}
 				</button>
 			))}
 		</div>

@@ -1,30 +1,40 @@
 import type { ReactElement } from "react";
 import type { Gradient } from "../../../document/paint";
 import { slotsOf } from "../variables/reach";
-import { DraftInput } from "../PropertyField";
-import { formatColor } from "../color";
-import { colorOf } from "../cssColor";
-import { numberIn } from "../numberValue";
+import { PERCENT_STEP } from "../../input/step";
+import { NumberChip } from "../layout/NumberChip";
+import type { Bound } from "../numberValue";
+import { ColorDraft } from "./ColorText";
 import { IconButton } from "./IconButton";
-import { percentText } from "./GradientBar";
 import type { StopPick } from "./GradientBar";
 import { stopAdded, stopMoved, stopRecolored, stopRemoved } from "./stops";
 
 const PERCENT = 100;
 const MIN_STOPS = 2;
 const MIDDLE = 0.5;
+const PRECISION = 10;
 
 interface ListProps extends StopPick {
-	onSet: (gradient: Gradient) => void;
+	onWrite: (gradient: Gradient) => void;
+	onCommit: () => void;
 }
 
-function StopRow({
-	gradient,
-	index,
-	onSelect,
-	onSet,
-	selected,
-}: ListProps & { index: number }): ReactElement | null {
+function setOf({ onCommit, onWrite }: ListProps): (gradient: Gradient) => void {
+	return (gradient) => {
+		onWrite(gradient);
+		onCommit();
+	};
+}
+
+function neighborBound(gradient: Gradient, index: number): Bound {
+	const before = gradient.stops[index - 1]?.position ?? 0;
+	const after = gradient.stops[index + 1]?.position ?? 1;
+	return { kind: "clamp", min: before * PERCENT, max: after * PERCENT };
+}
+
+function StopRow(props: ListProps & { index: number }): ReactElement | null {
+	const { gradient, index, onCommit, onSelect, onWrite, selected } = props;
+	const onSet = setOf(props);
 	const stop = gradient.stops[index];
 	if (stop === undefined) {
 		return null;
@@ -38,30 +48,25 @@ function StopRow({
 				onSelect(index);
 			}}
 		>
-			<DraftInput
-				inputMode="numeric"
-				label={`${name} position`}
-				onCommit={(text) => {
-					const percent = numberIn(text);
-					if (percent !== null) {
-						const moved = stopMoved(gradient, index, percent / PERCENT);
-						onSelect(moved.index);
-						onSet(moved.gradient);
-					}
+			<NumberChip
+				bound={neighborBound(gradient, index)}
+				label="At"
+				name={`${name} position`}
+				onCommit={onCommit}
+				onValue={(percent) => {
+					onWrite(stopMoved(gradient, index, percent / PERCENT).gradient);
 				}}
-				value={percentText(stop.position)}
+				step={PERCENT_STEP}
+				unit="%"
+				value={Math.round(stop.position * PERCENT * PRECISION) / PRECISION}
 			/>
 			<span className="color-swatch">
 				<span className="color-swatch-fill" style={{ background: stop.color }} />
 			</span>
-			<DraftInput
-				inputMode="text"
+			<ColorDraft
 				label={`${name} color`}
-				onCommit={(text) => {
-					const color = colorOf(text);
-					if (color !== null) {
-						onSet(stopRecolored(gradient, index, formatColor(color)));
-					}
+				onPick={(color) => {
+					onSet(stopRecolored(gradient, index, color));
 				}}
 				value={stop.color}
 			/>
@@ -79,7 +84,8 @@ function StopRow({
 }
 
 export function StopList(props: ListProps): ReactElement {
-	const { gradient, onSelect, onSet } = props;
+	const { gradient, onSelect } = props;
+	const onSet = setOf(props);
 	return (
 		<div className="fill-part">
 			<div className="fill-part-head">

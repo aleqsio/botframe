@@ -11,8 +11,10 @@ function keptFit(layer: Layer, asset: Asset): MediaFit {
 	return fit === "tile" && mediaKind(asset.type) === "video" ? "cover" : fit;
 }
 
-export function placeAsset(doc: DesignDocument, layer: Layer, asset: Asset): void {
-	doc.update(layer.id, { media: { asset: asset.id, fit: keptFit(layer, asset) } });
+export function placeAsset(doc: DesignDocument, layers: readonly Layer[], asset: Asset): void {
+	for (const layer of layers) {
+		doc.update(layer.id, { media: { asset: asset.id, fit: keptFit(layer, asset) } });
+	}
 	doc.commit(MEDIA_MESSAGE);
 }
 
@@ -25,5 +27,5 @@ export async function placeMediaFile(doc: DesignDocument, layer: Layer, file: Fi
 		return;
 	}
 	doc.assets.put(asset);
-	placeAsset(doc, layer, asset);
+	placeAsset(doc, [layer], asset);
 }

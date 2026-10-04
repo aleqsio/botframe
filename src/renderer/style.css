@@ -543,6 +543,7 @@ body {
 #tab-bar,
 #layers,
 #components,
+#fills,
 #zoom,
 #inspector {
 	position: fixed;
@@ -658,6 +659,7 @@ body {
 
 #layers,
 #components,
+#fills,
 #inspector {
 	top: var(--card-top);
 	display: flex;
@@ -668,7 +670,8 @@ body {
 }
 
 #layers,
-#components {
+#components,
+#fills {
 	left: var(--edge);
 	width: var(--layers-width);
 	padding: 6px;

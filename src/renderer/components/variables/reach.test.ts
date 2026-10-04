@@ -3,7 +3,7 @@ import type { ComponentsView } from "../../../document/components";
 import type { Declared, ResolveSource } from "../../../document/resolve";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import type { Variable } from "../../../document/variable";
-import { groupsOf, kindOf, nearestOf, starterCondition } from "./reach";
+import { groupsOf, kindOf, literalText, nearestOf, starterCondition } from "./reach";
 
 function variable(id: string, held: Pick<Variable, "type"> & Partial<Variable>): Variable {
 	return { id, name: id, initial: "", options: [], ...held };
@@ -98,5 +98,18 @@ describe("kindOf", () => {
 		expect(kindOf(3)).toBe("value");
 		expect(kindOf({ var: "ink" })).toBe("variable");
 		expect(kindOf({ when: [], else: 3 })).toBe("condition");
+	});
+});
+
+describe("literalText", () => {
+	it("names a gradient by its shape and its stops", () => {
+		expect(literalText("linear-gradient(180deg, #ffc21a 0%, #f24822 100%)")).toBe(
+			"Linear · 2 stops",
+		);
+	});
+
+	it("keeps a color and a switch as text", () => {
+		expect(literalText("#0d99ff")).toBe("#0d99ff");
+		expect(literalText(true)).toBe("on");
 	});
 });

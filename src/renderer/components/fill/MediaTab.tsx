@@ -1,4 +1,4 @@
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
 import type { ReactElement } from "react";
 import { ACCEPTED_TYPES } from "../../../document/assets";
 import type { AssetId } from "../../../document/assets";
@@ -6,7 +6,7 @@ import type { DesignDocument } from "../../../document/document";
 import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
 import type { MediaFill, MediaFit } from "../../../document/media";
-import { useAssetUrl } from "../../assetUrl";
+import { useAssetIds, useAssetUrl } from "../../assetUrl";
 import { Icon } from "../Icon";
 import { Segmented } from "../layout/Segmented";
 import type { SegmentOption } from "../layout/Segmented";
@@ -94,7 +94,7 @@ function AssetTile({ doc, id, layer }: TabProps & { id: AssetId }): ReactElement
 			onClick={() => {
 				const asset = doc.assets.get(id);
 				if (asset !== null) {
-					placeAsset(doc, layer, asset);
+					placeAsset(doc, [layer], asset);
 				}
 			}}
 			type="button"
@@ -105,10 +105,7 @@ function AssetTile({ doc, id, layer }: TabProps & { id: AssetId }): ReactElement
 }
 
 function DocumentMedia({ doc, layer }: TabProps): ReactElement | null {
-	const ids = useSyncExternalStore(
-		(listener) => doc.assets.subscribe(listener),
-		() => doc.assets.ids(),
-	);
+	const ids = useAssetIds(doc.assets);
 	if (ids.length === 0) {
 		return null;
 	}

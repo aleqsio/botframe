@@ -4,10 +4,9 @@ import { paintOf } from "../../../document/paint";
 import type { Paint } from "../../../document/paint";
 import { FillTabs, tabOf } from "./FillTabs";
 import type { PickerView } from "./FillTabs";
-import { GradientTab } from "./GradientTab";
 import { MediaTab } from "./MediaTab";
 import type { FillProps } from "./paintEdit";
-import { SolidTab } from "./SolidTab";
+import { PaintBody } from "./PaintPicker";
 
 const POPUP_GAP = 10;
 
@@ -20,11 +19,7 @@ function TabBody({
 	if (view === "media") {
 		return <MediaTab doc={doc} layer={layer} />;
 	}
-	return paint.kind === "solid" ? (
-		<SolidTab color={paint.color} edit={edit} target={target} />
-	) : (
-		<GradientTab edit={edit} gradient={paint.gradient} target={target} />
-	);
+	return <PaintBody edit={edit} paint={paint} target={target} />;
 }
 
 export function FillPicker({
@@ -51,7 +46,7 @@ export function FillPicker({
 				<Popover.Positioner align="start" anchor={anchor} side="left" sideOffset={POPUP_GAP}>
 					{view === null ? null : (
 						<Popover.Popup className="color-popup fill-popup" data-tab={tabOf(view, paint)}>
-							<FillTabs edit={props.edit} onView={onView} paint={paint} view={view} />
+							<FillTabs edit={props.edit} media={{ view, onView }} paint={paint} />
 							<TabBody {...props} paint={paint} view={view} />
 						</Popover.Popup>
 					)}

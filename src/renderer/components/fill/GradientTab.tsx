@@ -16,25 +16,20 @@ export function GradientTab({
 }: {
 	edit: PaintEdit;
 	gradient: Gradient;
-	target: EditTarget;
+	target: EditTarget | null;
 }): ReactElement {
 	const [picked, setPicked] = useState(0);
 	const selected = Math.min(picked, gradient.stops.length - 1);
-	const swatches = documentSwatches(target.reach.view, "gradient");
+	const swatches = target === null ? [] : documentSwatches(target.reach.view, "gradient");
 
 	function write(next: Gradient): void {
 		edit.change(gradientText(next));
 	}
 
-	function set(next: Gradient): void {
-		write(next);
-		edit.commit();
-	}
-
 	const pick = { gradient, selected, onSelect: setPicked };
 	return (
 		<>
-			<ShapeRows gradient={gradient} onSet={set} />
+			<ShapeRows gradient={gradient} onCommit={edit.commit} onWrite={write} />
 			<GradientBar
 				{...pick}
 				onCommit={edit.commit}
@@ -43,9 +38,9 @@ export function GradientTab({
 					write(edited.gradient);
 				}}
 			/>
-			<StopList {...pick} onSet={set} />
+			<StopList {...pick} onCommit={edit.commit} onWrite={write} />
 			<StopColor {...pick} onCommit={edit.commit} onWrite={write} />
-			{swatches.length === 0 ? null : (
+			{target === null || swatches.length === 0 ? null : (
 				<DocumentPaints label="Document gradients" swatches={swatches} target={target} />
 			)}
 		</>

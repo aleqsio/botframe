@@ -1,10 +1,10 @@
 import { Popover } from "@base-ui-components/react/popover";
 import type { ReactElement } from "react";
-import { ColorPicker } from "./ColorPicker";
+import { paintOf } from "../../document/paint";
 import { DraftInput } from "./PropertyField";
-import { BLACK, formatColor, parseColor } from "./color";
+import { formatColor } from "./color";
 import { colorOf } from "./cssColor";
-import { PresetGrid } from "./fill/SwatchGrid";
+import { PaintPicker } from "./fill/PaintPicker";
 
 const POPUP_GAP = 10;
 
@@ -16,25 +16,11 @@ export interface ColorInputProps {
 }
 
 function ColorPopup({ onChange, onCommit, value }: ColorInputProps): ReactElement {
-	const color = parseColor(value) ?? BLACK;
 	return (
 		<Popover.Portal>
 			<Popover.Positioner align="end" side="left" sideOffset={POPUP_GAP}>
-				<Popover.Popup className="color-popup">
-					<ColorPicker
-						color={color}
-						onChange={(next) => {
-							onChange(formatColor(next));
-						}}
-						onCommit={onCommit}
-					/>
-					<PresetGrid
-						color={color}
-						onPick={(next) => {
-							onChange(formatColor(next));
-							onCommit();
-						}}
-					/>
+				<Popover.Popup className="color-popup fill-popup" data-tab={paintOf(value).kind}>
+					<PaintPicker edit={{ value, change: onChange, commit: onCommit }} target={null} />
 				</Popover.Popup>
 			</Popover.Positioner>
 		</Popover.Portal>

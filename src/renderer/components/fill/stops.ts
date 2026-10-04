@@ -1,9 +1,19 @@
 import { gradientText } from "../../../document/paint";
-import type { Gradient, GradientStop, Paint } from "../../../document/paint";
+import type { Gradient, GradientShape, GradientStop, Paint } from "../../../document/paint";
 import { BLACK, formatColor, heldRatio, parseColor } from "../color";
 import type { Rgba } from "../color";
 
 const MIN_STOPS = 2;
+
+export const SHAPE_LABELS: Readonly<Record<GradientShape, string>> = {
+	linear: "Linear",
+	radial: "Radial",
+	conic: "Conic",
+};
+
+export function gradientSummary(gradient: Gradient): string {
+	return `${SHAPE_LABELS[gradient.shape]} · ${gradient.stops.length} stops`;
+}
 
 export interface EditedStop {
 	gradient: Gradient;

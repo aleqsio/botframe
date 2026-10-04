@@ -90,6 +90,7 @@
 }
 
 .fill-popup {
+	width: calc(var(--inspector-width) - 3 * var(--layout-space-5) - var(--layout-space-4));
 	gap: var(--layout-space-4);
 	max-height: calc(100dvh - 2 * var(--edge));
 	overflow-y: auto;
@@ -129,20 +130,18 @@
 	margin-top: 0;
 }
 
-.angle-field {
+.angle-row .number-chip {
 	flex: 1;
-	min-width: 0;
 }
 
-.hex-field,
-.angle-field {
+.fill-popup .number-chip {
+	height: var(--layout-control);
+}
+
+.hex-field {
 	height: var(--layout-control);
 	padding: 0 var(--layout-space-4);
 	font-size: var(--layout-text-field);
-}
-
-.angle-field[data-disabled] {
-	opacity: 0.35;
 }
 
 .swatch-grid {
@@ -217,10 +216,7 @@
 
 .stop-row {
 	display: grid;
-	grid-template-columns: calc(var(--layout-control) + var(--layout-space-6)) auto minmax(
-			0,
-			1fr
-		) auto;
+	grid-template-columns: calc(3 * var(--layout-control)) auto minmax(0, 1fr) auto;
 	gap: var(--layout-space-3);
 	align-items: center;
 	height: var(--layout-control);
@@ -265,4 +261,94 @@
 .media-tile:focus-visible {
 	outline: var(--layout-space-1) solid var(--panel-focus);
 	outline-offset: var(--layout-space-1);
+}
+
+#fills {
+	gap: var(--layout-space-4);
+}
+
+.fill-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--layout-space-2);
+}
+
+.fill-group + .fill-group {
+	padding-top: var(--layout-space-4);
+	border-top: 1px solid var(--panel-border);
+}
+
+.fill-group-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: var(--layout-inner);
+	padding-left: var(--layout-space-1);
+}
+
+.fill-cards {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--layout-space-4) var(--layout-space-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.fill-card {
+	min-width: 0;
+}
+
+.fill-card-button {
+	display: flex;
+	flex-direction: column;
+	gap: var(--layout-space-2);
+	width: 100%;
+	padding: var(--layout-space-1);
+	border: 0;
+	border-radius: var(--layout-radius-field);
+	background: transparent;
+	color: var(--panel-text);
+	font: inherit;
+	font-size: var(--layout-text-label);
+	text-align: left;
+	cursor: default;
+}
+
+.fill-card-button:hover,
+.fill-card-button[data-popup-open] {
+	background-color: var(--panel-hover);
+}
+
+.fill-card-button:focus-visible {
+	outline: var(--layout-space-1) solid var(--panel-focus);
+	outline-offset: calc(-1 * var(--layout-space-1));
+}
+
+.fill-card-preview {
+	display: block;
+	height: calc(2 * var(--layout-control));
+	overflow: hidden;
+	border-radius: var(--layout-radius-field);
+	box-shadow: inset 0 0 0 1px var(--panel-border);
+}
+
+.fill-card-name {
+	min-width: 0;
+	overflow: hidden;
+	padding-left: var(--layout-space-1);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fill-editor-head {
+	display: flex;
+	align-items: center;
+	gap: var(--layout-space-2);
+	height: var(--layout-control);
+}
+
+.fill-editor-head .prop-name {
+	flex: 1;
+	min-width: 0;
 }
