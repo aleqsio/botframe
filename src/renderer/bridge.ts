@@ -3,7 +3,7 @@ import type { EditMenuItem } from "../shared/editMenu";
 import { FILE_COMMANDS } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
 import { heldWithAccelerator } from "./input/command";
-import { readClipboardLayers, writeClipboard } from "./webClipboard";
+import { readClipboardLayers, writesLayers, writeClipboard } from "./webClipboard";
 import { openFile, saveFile } from "./webFiles";
 
 export interface Bridge {
@@ -36,8 +36,11 @@ function matchesAccelerator(accelerator: string, event: KeyboardEvent): boolean 
 function onFileKey(listener: (id: string) => void): void {
 	window.addEventListener("keydown", (event) => {
 		const command = FILE_COMMANDS.find((entry) => matchesAccelerator(entry.accelerator, event));
-		if (command !== undefined) {
-			event.preventDefault();
+		if (command === undefined) {
+			return;
+		}
+		event.preventDefault();
+		if (!event.repeat) {
 			listener(command.id);
 		}
 	});
@@ -48,10 +51,14 @@ const WEB: Bridge = {
 	onCommand: onFileKey,
 	writeClipboard,
 	readClipboardLayers,
-	hasClipboardLayers: () => Promise.resolve(true),
+	hasClipboardLayers: () => Promise.resolve(writesLayers()),
 	openFile,
 	saveFile,
 };
+
+export function inBrowser(): boolean {
+	return window.botframe === undefined;
+}
 
 export function bridge(): Bridge {
 	return window.botframe ?? WEB;

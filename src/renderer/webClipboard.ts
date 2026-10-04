@@ -5,12 +5,16 @@ function blobOf(text: string, type: string): Blob {
 	return new Blob([text], { type });
 }
 
+export function writesLayers(): boolean {
+	return ClipboardItem.supports(LAYERS_FLAVOR);
+}
+
 function blobsOf(write: ClipboardWrite): Record<string, Blob> {
 	const blobs: Record<string, Blob> = {
 		[TEXT_FLAVOR]: blobOf(write.html, TEXT_FLAVOR),
 		[HTML_FLAVOR]: blobOf(write.html, HTML_FLAVOR),
 	};
-	if (write.layers !== null && ClipboardItem.supports(LAYERS_FLAVOR)) {
+	if (write.layers !== null && writesLayers()) {
 		blobs[LAYERS_FLAVOR] = blobOf(write.layers, LAYERS_FLAVOR);
 	}
 	return blobs;

@@ -81,3 +81,14 @@ test("the website copies and pastes layers through the clipboard of the browser"
 
 	await expect(layers).toHaveCount(3);
 });
+
+test("the website asks before it closes when a tab has changes", async ({ page }) => {
+	const { origin } = await openRenderer(page);
+	await drawWith(page, origin, "r", BOX);
+	const asked = page.waitForEvent("dialog");
+	await page.close({ runBeforeUnload: true });
+	const dialog = await asked;
+	expect(dialog.type()).toBe("beforeunload");
+	await dialog.dismiss();
+	expect(page.isClosed()).toBe(false);
+});

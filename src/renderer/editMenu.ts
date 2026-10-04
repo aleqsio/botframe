@@ -1,6 +1,6 @@
 import type { DesignDocument } from "../document/document";
 import type { EditMenuItem } from "../shared/editMenu";
-import { bridge } from "./bridge";
+import { bridge, inBrowser } from "./bridge";
 import type { Bridge } from "./bridge";
 import type { EditCommand } from "./input/command";
 import { EDIT_COMMANDS, commandById, runEditCommand } from "./input/editCommand";
@@ -102,6 +102,9 @@ function followTab(shell: Bridge, workspace: Workspace): () => void {
 }
 
 export function connectEditMenu(workspace: Workspace): void {
+	if (inBrowser()) {
+		return;
+	}
 	const shell = bridge();
 	let drop = followTab(shell, workspace);
 	workspace.active.subscribe(() => {

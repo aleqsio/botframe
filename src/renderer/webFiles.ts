@@ -3,6 +3,7 @@ import type { OpenedFile, SavedFile } from "../shared/file";
 
 const DOT_EXTENSION = `.${FILE_EXTENSION}`;
 const SAVE_PROMPT = "Save the document as:";
+const REVOKE_DELAY_MS = 40_000;
 
 const names = new Map<string, string>();
 
@@ -37,14 +38,16 @@ function download(bytes: Uint8Array, name: string): void {
 	link.href = url;
 	link.download = `${name}${DOT_EXTENSION}`;
 	link.click();
+	// Firefox and Safari stop a download when its blob URL is revoked too soon.
+	// https://github.com/eligrey/FileSaver.js/blob/master/src/FileSaver.js
 	setTimeout(() => {
 		URL.revokeObjectURL(url);
-	});
+	}, REVOKE_DELAY_MS);
 }
 
 function chooseName(current: string | undefined): string | null {
-	const name = window.prompt(SAVE_PROMPT, current ?? UNTITLED)?.trim() ?? "";
-	return name === "" ? null : withoutExtension(name);
+	const name = withoutExtension(window.prompt(SAVE_PROMPT, current ?? UNTITLED)?.trim() ?? "");
+	return name === "" ? null : name;
 }
 
 export async function openFile(): Promise<OpenedFile | null> {
