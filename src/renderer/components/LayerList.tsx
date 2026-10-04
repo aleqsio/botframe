@@ -107,7 +107,7 @@ function LayerRow({
 					type="button"
 				>
 					<span className={`layer-glyph layer-glyph-${glyphOf(layer, code)}`} />
-					{entry.label}
+					<span className="layer-label">{entry.label}</span>
 					{clips === "" ? null : <span className="layer-meta">clips {clips}</span>}
 				</button>
 			</div>

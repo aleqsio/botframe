@@ -49,8 +49,9 @@ export function endTextEdit(doc: DesignDocument, slots: TextEditSlots): void {
 		return;
 	}
 	slots.textEdit.set(null);
-	const geometry = doc.layer(edit.id)?.geometry;
-	if (geometry?.kind === "text" && geometry.content.trim() === "") {
+	const layer = doc.layer(edit.id);
+	const empty = layer?.geometry.kind === "text" && layer.geometry.content.trim() === "";
+	if (empty && layer.bindings.content === undefined) {
 		doc.deleteLayer(edit.id);
 		slots.selection.set(NOTHING_SELECTED);
 	}

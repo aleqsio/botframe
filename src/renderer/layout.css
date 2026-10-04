@@ -215,7 +215,8 @@
 }
 
 .layout-segment[aria-disabled="true"],
-.layout-flag[aria-disabled="true"] {
+.layout-flag[aria-disabled="true"],
+.font-list .choice-pick[aria-disabled="true"] {
 	opacity: 0.35;
 }
 
@@ -874,7 +875,6 @@
 	flex: 1;
 }
 
-.font-trigger,
 .layout-section .chip-row > .choice-trigger {
 	height: var(--layout-control);
 	padding: 0 var(--layout-space-3);

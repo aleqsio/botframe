@@ -19,7 +19,9 @@ function urlOf(input: RequestInfo | URL | undefined): string {
 }
 
 function answer(input: RequestInfo | URL): Promise<Response> {
-	return urlOf(input).includes("css2") ? respond(LOBSTER_CSS) : respond(new Uint8Array([7, 7, 7]));
+	return urlOf(input).includes("css2")
+		? respond(LOBSTER_CSS)
+		: respond(new Uint8Array([0x77, 0x4f, 0x46, 0x32, 7]));
 }
 
 afterEach(() => {

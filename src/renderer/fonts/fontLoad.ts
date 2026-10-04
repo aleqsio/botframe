@@ -61,7 +61,11 @@ async function cssSourceOf(doc: DesignDocument, request: FontRequest): Promise<C
 }
 
 async function fileOf(source: FaceSource, css: CssSource): Promise<FontFile> {
-	return { asset: await fontAssetOf(await css.bytesOf(source.url)), face: source.face };
+	const asset = await fontAssetOf(await css.bytesOf(source.url));
+	if (asset === null) {
+		throw new Error(`the file ${source.url} is not a WOFF2 font`);
+	}
+	return { asset, face: source.face };
 }
 
 async function load(doc: DesignDocument, request: FontRequest): Promise<boolean> {

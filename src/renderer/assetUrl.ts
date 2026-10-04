@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { assetKind } from "../document/assets";
-import type { AssetId, AssetKind, AssetStore } from "../document/assets";
+import type { Asset, AssetId, AssetKind, AssetStore } from "../document/assets";
 
 export interface AssetUrl {
 	kind: AssetKind;
@@ -9,12 +9,12 @@ export interface AssetUrl {
 
 const URLS = new Map<AssetId, AssetUrl>();
 
-export function assetUrlOf(store: AssetStore, id: AssetId): AssetUrl | null {
+export function assetUrlOf(read: (id: AssetId) => Asset | null, id: AssetId): AssetUrl | null {
 	const cached = URLS.get(id);
 	if (cached !== undefined) {
 		return cached;
 	}
-	const asset = store.get(id);
+	const asset = read(id);
 	if (asset === null) {
 		return null;
 	}
@@ -27,7 +27,10 @@ export function assetUrlOf(store: AssetStore, id: AssetId): AssetUrl | null {
 export function useAssetUrl(store: AssetStore, id: AssetId | null): AssetUrl | null {
 	return useSyncExternalStore(
 		useCallback((listener: () => void) => store.subscribe(listener), [store]),
-		useCallback(() => (id === null ? null : assetUrlOf(store, id)), [store, id]),
+		useCallback(
+			() => (id === null ? null : assetUrlOf((held) => store.get(held), id)),
+			[store, id],
+		),
 	);
 }
 

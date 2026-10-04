@@ -951,6 +951,13 @@ button.layer-chevron[aria-expanded="false"]::before {
 	cursor: default;
 }
 
+.layer-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .layer-row:hover {
 	background-color: var(--panel-hover);
 }

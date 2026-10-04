@@ -1,4 +1,4 @@
-import type { Bindings, BindingsPatch } from "./bindings";
+import type { BindingKey, Bindings, BindingsPatch } from "./bindings";
 import type { Guide } from "./guides";
 import type { LayerLayout, LayoutPatch } from "./layout";
 import type { LayerLengths } from "./length";
@@ -125,10 +125,15 @@ export type LayerPatch = Partial<LayerFields> & {
 	bindings?: BindingsPatch;
 };
 
-const CORNER_KEYS: ReadonlySet<string> = new Set(["cornerRadius", "cornerSmoothing"]);
+export const GEOMETRY_BINDINGS: readonly BindingKey[] = [
+	"cornerRadius",
+	"cornerSmoothing",
+	"fontSize",
+	"content",
+];
 
 export function isChanged(layer: Pick<Layer, "changed">, key: string): boolean {
-	const own = CORNER_KEYS.has(key) ? "geometry" : key;
+	const own = GEOMETRY_BINDINGS.some((held) => held === key) ? "geometry" : key;
 	return layer.changed.some(
 		(held) => held === own || held === `${key}Unit` || held === `bindings.${key}`,
 	);

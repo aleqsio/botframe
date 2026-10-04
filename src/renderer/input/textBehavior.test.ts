@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LayerId } from "../../document/layer";
+import { DOCUMENT_SCOPE } from "../../document/variable";
 import { IDENTITY_CAMERA } from "../state/camera";
 import { NO_MODIFIERS as NO_KEYS } from "./modifiers";
 import { behaviorFor } from "./toolBehavior";
@@ -34,14 +35,14 @@ describe("the text tool", () => {
 		expect(target.user.textEdit.get()).toEqual({ id: layer.id, message: "create text" });
 	});
 
-	it("gives a dragged text layer the width of the drag, and lets the height hug the text", () => {
+	it("gives a dragged text layer the width and the height of the drag", () => {
 		const target = targetOf(false);
 
 		dragOver(behaviorFor("text"), target, DRAG);
 		const layer = lastDrawn(target);
 
-		expect(layer).toMatchObject({ x: 40, y: 50, width: 200 });
-		expect(layer.layout).toMatchObject({ width: "fixed", height: "hug" });
+		expect(layer).toMatchObject({ x: 40, y: 50, width: 200, height: 40 });
+		expect(layer.layout).toMatchObject({ width: "fixed", height: "fixed" });
 		expect(target.user.textEdit.get()?.id).toBe(layer.id);
 	});
 
@@ -67,6 +68,24 @@ describe("the text tool", () => {
 
 		expect(target.doc.layer(id)).toBeNull();
 		expect(target.user.selection.get()).toEqual([]);
+	});
+});
+
+describe("a bound text layer", () => {
+	it("stays when its variable gives no text and an edit ends with no typing", () => {
+		const { target, id } = placedText();
+		typeText(target.doc, id, "Hi");
+		endTextEdit(target.doc, target.user);
+		target.doc.components
+			.scope(DOCUMENT_SCOPE)
+			.put({ id: "empty", name: "empty", type: "text", initial: "", options: [] });
+		target.doc.update(id, { bindings: { content: { var: "empty" } } });
+		target.doc.commit("bind");
+
+		handleStroke(target.doc, target.user, ENTER);
+		endTextEdit(target.doc, target.user);
+
+		expect(target.doc.layer(id)?.geometry).toMatchObject({ content: "" });
 	});
 });
 

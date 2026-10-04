@@ -32,7 +32,7 @@ export interface InspectorHeading {
 const PAGE_HEADING: InspectorHeading = { glyph: "page", name: "Page", kind: "Nothing is selected" };
 
 const GROUP_KIND = "Selection";
-const NAME_LENGTH = 40;
+const NAME_LENGTH = 24;
 
 export interface LayerEntry {
 	label: string;

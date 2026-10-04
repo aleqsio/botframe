@@ -4,6 +4,7 @@ import type { TreeID } from "loro-crdt";
 import type { SyncMode } from "./instanceState";
 import { changedKeys, instanceOf, routeWrite, routingOf, viewOf } from "./instances";
 import { sharedPatch } from "./instanceSync";
+import { GEOMETRY_BINDINGS } from "./layer";
 import type { Layer, LayerPatch, LayerTraits } from "./layer";
 import { readLayerData, writePatch } from "./layerData";
 import type { LayerTree, Target } from "./layerTree";
@@ -59,13 +60,6 @@ export function writeLayer(
 	writeTargets(routing.routed, basis, mode);
 	return [...ids, instance.node.id];
 }
-
-const GEOMETRY_BINDINGS: readonly BindingKey[] = [
-	"cornerRadius",
-	"cornerSmoothing",
-	"fontSize",
-	"content",
-];
 
 function changedBindings(layer: Layer, patch: LayerPatch): readonly BindingKey[] {
 	const { geometry } = patch;

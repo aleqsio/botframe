@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import type { CSSProperties, ReactElement } from "react";
 import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
@@ -27,7 +27,9 @@ function listen(element: HTMLSpanElement, target: EditorTarget): () => void {
 	element.addEventListener(
 		"blur",
 		() => {
-			endTextEdit(doc, slots);
+			if (document.hasFocus()) {
+				endTextEdit(doc, slots);
+			}
 		},
 		options,
 	);
@@ -67,7 +69,18 @@ export function TextEditor({
 	slots: TextEditSlots;
 }): ReactElement {
 	const start = useRef({ content, target: { doc, id, slots } });
+	const editor = useRef<HTMLSpanElement | null>(null);
+	const background = String(paint.background ?? "");
+	useLayoutEffect(() => {
+		const style = editor.current?.style;
+		if (style !== undefined) {
+			style.background = background;
+			style.backgroundClip = "text";
+			style.color = "transparent";
+		}
+	}, [background]);
 	const mount = useCallback((element: HTMLSpanElement) => {
+		editor.current = element;
 		element.textContent = editorText(start.current.content);
 		const stop = listen(element, start.current.target);
 		element.focus();
@@ -81,7 +94,6 @@ export function TextEditor({
 			contentEditable="plaintext-only"
 			data-layer-id={id}
 			ref={mount}
-			style={paint}
 			suppressContentEditableWarning
 		/>
 	);

@@ -14,5 +14,12 @@ export function useFontFaces(doc: DesignDocument): readonly StoredFace[] {
 
 export function FontFaces({ doc }: { doc: DesignDocument }): ReactElement {
 	const faces = useFontFaces(doc);
-	return <style>{fontFaceCss(faces, (asset) => assetUrlOf(doc.assets, asset)?.url ?? null)}</style>;
+	return (
+		<style>
+			{fontFaceCss(
+				faces,
+				(asset) => assetUrlOf((held) => doc.fonts.fileOf(held), asset)?.url ?? null,
+			)}
+		</style>
+	);
 }

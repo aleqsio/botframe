@@ -28,7 +28,14 @@ export function LayerText({
 }): ReactElement {
 	const { fontFamily: family, fontWeight: weight, italic } = geometry;
 	useEffect(() => {
-		void ensureFont(doc, { family, italic, weight });
+		const load = (): void => {
+			void ensureFont(doc, { family, italic, weight });
+		};
+		load();
+		window.addEventListener("online", load);
+		return () => {
+			window.removeEventListener("online", load);
+		};
 	}, [doc, family, italic, weight]);
 	const paint = textPaintStyle(paintedStyle({ background: layer.fill }, layer.media, media));
 	// React sets only the changed `background` shorthand, and the browser then resets `background-clip`. A new element for each paint keeps the clip.
@@ -37,14 +44,7 @@ export function LayerText({
 
 	if (editing) {
 		return (
-			<TextEditor
-				content={geometry.content}
-				doc={doc}
-				id={layer.id}
-				key={paintKey}
-				paint={paint}
-				slots={slots}
-			/>
+			<TextEditor content={geometry.content} doc={doc} id={layer.id} paint={paint} slots={slots} />
 		);
 	}
 

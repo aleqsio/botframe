@@ -70,10 +70,17 @@ export class FontStore {
 	}
 
 	faces(): readonly StoredFace[] {
-		this.#faces ??= Object.entries(bagOf(this.#map.toJSON())).flatMap(
-			([asset, value]) => storedFace(asset, value) ?? [],
-		);
+		this.#faces ??= [
+			...Object.entries(bagOf(this.#map.toJSON())).flatMap(
+				([asset, value]) => storedFace(asset, value) ?? [],
+			),
+			...this.#waiting.map(({ asset, face }) => ({ ...face, asset: asset.id })),
+		];
 		return this.#faces;
+	}
+
+	fileOf(id: AssetId): Asset | null {
+		return this.#waiting.find(({ asset }) => asset.id === id)?.asset ?? this.#assets.get(id);
 	}
 
 	covers(family: string, italic: boolean, weight: number): boolean {
@@ -88,6 +95,8 @@ export class FontStore {
 
 	add(files: readonly FontFile[]): void {
 		this.#waiting.push(...files);
+		this.#faces = null;
+		notify(this.#listeners);
 		if (this.#doc.getPendingTxnLength() === 0) {
 			this.writeWaiting();
 		}

@@ -32,8 +32,8 @@ function beginEdit(target: PointerTarget, id: LayerId): void {
 	startTextEdit(target.user, id, CREATE_TEXT);
 }
 
-function lineAt(point: Point, width: number): Rect {
-	return { x: point.x, y: point.y, width, height: LINE_PIXELS };
+function lineAt(point: Point): Rect {
+	return { x: point.x, y: point.y, width: 0, height: LINE_PIXELS };
 }
 
 function stretch(target: PointerTarget, point: Point): LayerId | null {
@@ -43,7 +43,7 @@ function stretch(target: PointerTarget, point: Point): LayerId | null {
 	}
 	const chain = parentChain((id) => target.doc.layer(id), draw.id);
 	const rect = drawnRect(draw.origin, toParentPoint(chain, point), NO_MODIFIERS);
-	target.doc.update(draw.id, { x: rect.x, y: rect.y, width: rect.width });
+	target.doc.update(draw.id, rect);
 	return draw.id;
 }
 
@@ -51,7 +51,7 @@ export function createTextBehavior(): ToolBehavior {
 	return {
 		tap(target, point) {
 			const chain = chainUnder(target);
-			const id = placeText(target, lineAt(toParentPoint(chain, point.canvas), 0), chain);
+			const id = placeText(target, lineAt(toParentPoint(chain, point.canvas)), chain);
 			target.doc.update(id, { layout: { width: "hug", height: "hug" } });
 			beginEdit(target, id);
 			return true;
@@ -59,8 +59,7 @@ export function createTextBehavior(): ToolBehavior {
 		dragStart(target, start, point) {
 			const chain = chainUnder(target);
 			const origin = toParentPoint(chain, start.canvas);
-			const id = placeText(target, lineAt(origin, 0), chain);
-			target.doc.update(id, { layout: { height: "hug" } });
+			const id = placeText(target, lineAt(origin), chain);
 			target.user.draw.set({ id, origin });
 			stretch(target, point.canvas);
 			return true;

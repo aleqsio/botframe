@@ -20,6 +20,12 @@ function isTyping(target: EventTarget | null): boolean {
 	);
 }
 
+const PRESS_KEYS: ReadonlySet<string> = new Set(["Enter", " "]);
+
+function pressesButton(event: KeyboardEvent): boolean {
+	return event.target instanceof HTMLButtonElement && PRESS_KEYS.has(event.key);
+}
+
 function transformLayer(doc: DesignDocument, user: UserState, stroke: KeyStroke): boolean {
 	const command = commandFor(stroke);
 	const layers = user.selection.get().flatMap((id) => doc.layer(id) ?? []);
@@ -71,7 +77,7 @@ export function useKeyInput(doc: DesignDocument, user: UserState): void {
 				runTextEdit(edit);
 				return;
 			}
-			if (event.defaultPrevented || isTyping(event.target)) {
+			if (event.defaultPrevented || isTyping(event.target) || pressesButton(event)) {
 				return;
 			}
 			if (handleStroke(doc, user, event)) {

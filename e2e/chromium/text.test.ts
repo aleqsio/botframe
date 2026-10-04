@@ -32,6 +32,10 @@ test("the text tool places a layer, edits it in place, and the Text section styl
 	await expect(box).toHaveCSS("text-decoration-line", "underline");
 
 	await page.keyboard.press("Enter");
+	await expect(text).not.toHaveAttribute("contenteditable");
+
+	await text.dblclick();
+	await expect(text).toHaveAttribute("contenteditable", "plaintext-only");
 	await page.keyboard.press("Control+a");
 	await page.keyboard.press("Delete");
 	await page.keyboard.press("Escape");

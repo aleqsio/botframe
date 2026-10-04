@@ -57,7 +57,7 @@ export function FontPicker({
 
 	return (
 		<Popover.Root onOpenChange={setOpen} open={open}>
-			<Popover.Trigger aria-label="Font" className="property-input choice-trigger font-trigger">
+			<Popover.Trigger aria-label="Font" className="property-input choice-trigger">
 				<span className="choice-value">{value}</span>
 				<Icon name="chevron" />
 			</Popover.Trigger>

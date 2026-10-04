@@ -78,8 +78,14 @@ export async function assetOf(bytes: Uint8Array<ArrayBuffer>, type: string): Pro
 	return { id: await contentAddress(bytes), type, bytes };
 }
 
-export async function fontAssetOf(bytes: Uint8Array<ArrayBuffer>): Promise<Asset> {
-	return { id: await contentAddress(bytes), type: FONT_TYPE, bytes };
+const WOFF2_SIGNATURE = [0x77, 0x4f, 0x46, 0x32];
+
+function isWoff2(bytes: Uint8Array): boolean {
+	return bytes.length <= MAX_BYTES && WOFF2_SIGNATURE.every((byte, index) => bytes[index] === byte);
+}
+
+export async function fontAssetOf(bytes: Uint8Array<ArrayBuffer>): Promise<Asset | null> {
+	return isWoff2(bytes) ? { id: await contentAddress(bytes), type: FONT_TYPE, bytes } : null;
 }
 
 function isBytes(value: unknown): value is Uint8Array<ArrayBuffer> {
