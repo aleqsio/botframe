@@ -160,6 +160,7 @@
 	color: var(--panel-label);
 	font-size: var(--layout-text-label);
 	line-height: 1.4;
+	overflow-wrap: anywhere;
 }
 
 .layout-row {
