@@ -50,10 +50,6 @@ async function run(workspace: Workspace, tool: string, args: Args): Promise<unkn
 	}
 }
 
-function messageOf(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
-
 export async function runTool(workspace: Workspace, call: unknown): Promise<AgentReply> {
 	const { id, tool, args } = argsOf(call);
 	if (typeof id !== "number" || typeof tool !== "string") {
@@ -66,6 +62,6 @@ export async function runTool(workspace: Workspace, call: unknown): Promise<Agen
 	try {
 		return { id, ok: true, result: (await run(workspace, tool, argsOf(args))) ?? null };
 	} catch (error) {
-		return { id, ok: false, error: messageOf(error) };
+		return { id, ok: false, error: error instanceof Error ? error.message : String(error) };
 	}
 }
