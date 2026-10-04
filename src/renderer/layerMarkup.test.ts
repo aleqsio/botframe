@@ -7,6 +7,7 @@ import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle } from "./layerStyle";
 import { layerMarkup } from "./layerMarkup";
+import { verticesOf } from "../document/vertices";
 
 const NO_COMPONENTS = (): null => null;
 
@@ -93,13 +94,14 @@ describe("layerMarkup", () => {
 		expect(markup.endsWith("</div></div></div>")).toBe(true);
 	});
 
-	it("escapes the text that a path geometry puts in the attribute", () => {
-		const markup = layerMarkup(
-			nodeOf({ geometry: { kind: "path", d: '" onload="alert(1)' } }),
-			NO_COMPONENTS,
-		);
-		expect(markup).toContain("clip-path: path(&quot;&quot; onload=&quot;alert(1)&quot;)");
-		expect(markup).not.toContain('onload="');
+	it("writes the shape of a path geometry", () => {
+		const vertices = verticesOf([
+			{ x: 0, y: 0 },
+			{ x: 1, y: 0.5 },
+			{ x: 0, y: 1 },
+		]);
+		const markup = layerMarkup(nodeOf({ geometry: { kind: "path", vertices } }), NO_COMPONENTS);
+		expect(markup).toContain("clip-path: shape(from 0% 0%, line to 100% 50%");
 	});
 
 	it("writes the angle of a layer that a person turned", () => {

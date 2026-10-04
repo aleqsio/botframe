@@ -41,11 +41,20 @@ function solve(held: RefObject<ToolGesture | null>, current: ToolGesture): void 
 	}
 }
 
+function doubleTap(start: ToolStart, point: StagePoint, modifiers: Modifiers): void {
+	if (start.behavior.doubleTap?.(start.target, point, modifiers) !== true) {
+		start.behavior.tap?.(start.target, point, modifiers);
+	}
+}
+
 export function useToolInput(doc: DesignDocument, user: UserState): StageInputHandlers {
 	const gesture = useRef<ToolGesture | null>(null);
 
 	function begin(layerIds: readonly LayerId[]): ToolStart {
-		return { behavior: behaviorFor(user.tool.get()), target: targetOf(doc, user, layerIds) };
+		return {
+			behavior: behaviorFor(user.tool.get(), user.pathEdit.get() !== null),
+			target: targetOf(doc, user, layerIds),
+		};
 	}
 
 	function trackHover(point: StagePoint): void {
@@ -81,6 +90,9 @@ export function useToolInput(doc: DesignDocument, user: UserState): StageInputHa
 		onTap(layerIds, point, modifiers) {
 			const current = begin(layerIds);
 			current.behavior.tap?.(current.target, point, modifiers);
+		},
+		onDoubleTap(layerIds, point, modifiers) {
+			doubleTap(begin(layerIds), point, modifiers);
 		},
 		onHover(point) {
 			trackHover(point);

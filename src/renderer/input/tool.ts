@@ -18,6 +18,7 @@ export interface ToolBehavior {
 	hover?: (target: PointerTarget, point: StagePoint) => CursorKey | null;
 	highlight?: (target: PointerTarget, point: StagePoint) => LayerId | null;
 	tap?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => boolean;
+	doubleTap?: (target: PointerTarget, point: StagePoint, modifiers: Modifiers) => boolean;
 	dragStart?: (
 		target: PointerTarget,
 		origin: StagePoint,

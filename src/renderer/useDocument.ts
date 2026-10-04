@@ -241,3 +241,12 @@ export function useSelectionBox(doc: DesignDocument, ids: readonly LayerId[]): R
 		),
 	);
 }
+
+const NO_TARGETS: readonly LayerId[] = [];
+
+export function useClipTargets(doc: DesignDocument, id: LayerId | null): readonly LayerId[] {
+	return useSyncExternalStore(
+		useCallback((listener: () => void) => doc.subscribeClips(listener), [doc]),
+		useCallback(() => (id === null ? NO_TARGETS : doc.clipTargetsOf(id)), [doc, id]),
+	);
+}

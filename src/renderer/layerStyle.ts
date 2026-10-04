@@ -17,6 +17,7 @@ import type {
 import { PERCENT, roundNumber } from "../document/length";
 import type { Axis } from "../document/length";
 import { pivotOf, turnedBounds } from "./input/layerSpace";
+import { shapeText } from "./pathShape";
 import type { Turned } from "./input/layerSpace";
 
 declare module "react" {
@@ -89,7 +90,7 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 			return { borderRadius: "50%" };
 		}
 		case "path": {
-			return { clipPath: `path("${geometry.d}")` };
+			break;
 		}
 		case "unsupported": {
 			break;
@@ -333,12 +334,30 @@ function containerStyle(layout: LayerLayout): CSSProperties {
 	return { ...displayStyle(layout), ...children, ...paddingStyle(layout.padding) };
 }
 
+function ownClipStyle(layer: StyledLayer): CSSProperties {
+	if (!layer.clip) {
+		return {};
+	}
+	return layer.geometry.kind === "path"
+		? { clipPath: shapeText(layer.geometry.vertices) }
+		: { overflow: "hidden" };
+}
+
+export function pathPaintStyle(
+	layer: Pick<StyledLayer, "fill" | "geometry">,
+): CSSProperties | null {
+	if (layer.geometry.kind !== "path") {
+		return null;
+	}
+	return { background: layer.fill, clipPath: shapeText(layer.geometry.vertices) };
+}
+
 export function layerStyle(layer: StyledLayer, parentDisplay: DisplayMode | null): CSSProperties {
 	return {
 		...selfStyle(layer, parentDisplay),
 		...containerStyle(layer.layout),
-		background: layer.fill,
-		overflow: layer.clip ? "hidden" : undefined,
+		background: layer.geometry.kind === "path" ? undefined : layer.fill,
+		...ownClipStyle(layer),
 		...geometryStyle(layer.geometry),
 	};
 }

@@ -1,6 +1,7 @@
 import type { Point } from "../state/camera";
 
 const TAP_LIMIT = 4;
+const DOUBLE_TAP_TIME = 500;
 const TOUCH_POINTER = "touch";
 
 export interface PointerSample {
@@ -8,6 +9,12 @@ export interface PointerSample {
 	x: number;
 	y: number;
 	touch: boolean;
+	time: number;
+}
+
+interface Tap {
+	point: Point;
+	time: number;
 }
 
 export type Gesture =
@@ -15,6 +22,7 @@ export type Gesture =
 	| { kind: "dragMove"; point: Point }
 	| { kind: "dragEnd"; point: Point }
 	| { kind: "tap"; point: Point }
+	| { kind: "doubleTap"; point: Point }
 	| { kind: "pinch"; center: Point; pan: Point; scale: number };
 
 export interface PointerDown {
@@ -42,6 +50,7 @@ export interface PointerInput {
 	pointerType: string;
 	clientX: number;
 	clientY: number;
+	timeStamp: number;
 }
 
 export function sampleOf(event: PointerInput): PointerSample {
@@ -50,6 +59,7 @@ export function sampleOf(event: PointerInput): PointerSample {
 		x: event.clientX,
 		y: event.clientY,
 		touch: event.pointerType === TOUCH_POINTER,
+		time: event.timeStamp,
 	};
 }
 
@@ -107,6 +117,7 @@ export class GestureRecognizer {
 	#pointer: TrackedPointer | null = null;
 	#pinch: Pinch | null = null;
 	#resting: number | null = null;
+	#lastTap: Tap | null = null;
 
 	down(sample: PointerSample): PointerDown {
 		if (this.#pinch !== null || this.#resting !== null) {
@@ -157,6 +168,7 @@ export class GestureRecognizer {
 			return null;
 		}
 		pointer.dragging = true;
+		this.#lastTap = null;
 		return { kind: "dragStart", origin: pointer.origin, point: pointer.point };
 	}
 
@@ -169,7 +181,7 @@ export class GestureRecognizer {
 			return null;
 		}
 		const point = pointOf(sample);
-		return pointer.dragging ? { kind: "dragEnd", point } : { kind: "tap", point };
+		return pointer.dragging ? { kind: "dragEnd", point } : this.#tapAt(point, sample.time);
 	}
 
 	cancel(sample: PointerSample): Gesture | null {
@@ -178,6 +190,20 @@ export class GestureRecognizer {
 		}
 		const pointer = this.#release(sample);
 		return pointer === null ? null : endOf(pointer);
+	}
+
+	#tapAt(point: Point, time: number): Gesture {
+		const last = this.#lastTap;
+		if (
+			last !== null &&
+			time - last.time <= DOUBLE_TAP_TIME &&
+			!beyondTapLimit(last.point, point)
+		) {
+			this.#lastTap = null;
+			return { kind: "doubleTap", point };
+		}
+		this.#lastTap = { point, time };
+		return { kind: "tap", point };
 	}
 
 	#pinchMove(pinch: Pinch, sample: PointerSample): Gesture | null {

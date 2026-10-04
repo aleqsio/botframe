@@ -90,6 +90,10 @@ function SoleOutline({
 	id: LayerId;
 	user: UserState;
 }): ReactNode {
+	if (useSlot(user.pathEdit) === id) {
+		return null;
+	}
+
 	return (
 		<>
 			<LayerOutline className="selection" doc={doc} id={id}>

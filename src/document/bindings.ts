@@ -15,7 +15,7 @@ export const BINDING_TYPES = {
 	mirrored: "boolean",
 	cornerRadius: "length",
 	cornerSmoothing: "number",
-	clip: "boolean",
+	clip: "choice",
 } as const satisfies Readonly<Record<string, VariableType>>;
 
 export type BindingKey = keyof typeof BINDING_TYPES;

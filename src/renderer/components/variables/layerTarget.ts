@@ -1,5 +1,6 @@
 import { BINDING_TYPES, isPlacementBinding } from "../../../document/bindings";
 import type { BindingKey } from "../../../document/bindings";
+import { CLIP_OPTIONS, clipChoiceOf } from "../../../document/clips";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { isLiteral } from "../../../document/value";
@@ -10,6 +11,8 @@ import { innerFirst, ownerLabel } from "./reach";
 import { makeVariable, testMaker } from "./scopeEdit";
 import type { EditTarget, MakeAction } from "./target";
 
+const NO_OPTIONS: readonly string[] = [];
+
 export interface FieldSpec {
 	key: BindingKey;
 	label: string;
@@ -17,6 +20,9 @@ export interface FieldSpec {
 }
 
 function currentOf(layer: Layer, key: BindingKey): Literal {
+	if (key === "clip") {
+		return clipChoiceOf(layer);
+	}
 	if (key === "cornerRadius" || key === "cornerSmoothing") {
 		return layer.geometry.kind === "rectangle" ? layer.geometry[key] : 0;
 	}
@@ -25,9 +31,9 @@ function currentOf(layer: Layer, key: BindingKey): Literal {
 
 function makeAction(
 	doc: DesignDocument,
-	target: Pick<EditTarget, "reach" | "label" | "type" | "current">,
+	target: Pick<EditTarget, "reach" | "label" | "type" | "current" | "options">,
 ): MakeAction {
-	const { current, label, reach, type } = target;
+	const { current, label, options, reach, type } = target;
 	const [owner = DOCUMENT_SCOPE] = innerFirst(reach.owners);
 	return {
 		label:
@@ -35,7 +41,7 @@ function makeAction(
 				? "Make a document variable"
 				: `Make a prop of ${ownerLabel(reach.view, owner)}`,
 		name: label.toLowerCase(),
-		run: (name) => makeVariable(doc, owner, { name, type, initial: current, options: [] }),
+		run: (name) => makeVariable(doc, owner, { name, type, initial: current, options }),
 	};
 }
 
@@ -59,14 +65,15 @@ export function useLayerTarget(doc: DesignDocument, layer: Layer, spec: FieldSpe
 	};
 	const type = BINDING_TYPES[key];
 	const current = currentOf(layer, key);
+	const options = key === "clip" ? CLIP_OPTIONS : NO_OPTIONS;
 	return {
 		reach,
 		label,
 		type,
-		options: [],
+		options,
 		value: layer.bindings[key] ?? current,
 		current,
-		make: makeAction(doc, { reach, label, type, current }),
+		make: makeAction(doc, { reach, label, type, current, options }),
 		addTest: testMaker(doc, reach.owners),
 		onChange: (next) => {
 			const patch = patchOf(spec, next);
