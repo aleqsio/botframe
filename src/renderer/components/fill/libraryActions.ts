@@ -1,14 +1,14 @@
 import type { DesignDocument } from "../../../document/document";
 import type { LayerId } from "../../../document/layer";
 import { gradientText } from "../../../document/paint";
-import type { Paint } from "../../../document/paint";
+import type { EditableKind } from "../../../document/paint";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { makeVariable } from "../variables/scopeEdit";
 
 const FILL_MESSAGE = "set fill";
 const ADD_MESSAGE = "add variable";
 
-const NEW_PAINT: Readonly<Record<Paint["kind"], { name: string; initial: string }>> = {
+const NEW_PAINT: Readonly<Record<EditableKind, { name: string; initial: string }>> = {
 	solid: { name: "color", initial: "#d9d9d9" },
 	gradient: {
 		name: "gradient",
@@ -23,7 +23,7 @@ const NEW_PAINT: Readonly<Record<Paint["kind"], { name: string; initial: string 
 	},
 };
 
-export function addPaintVariable(doc: DesignDocument, kind: Paint["kind"]): string {
+export function addPaintVariable(doc: DesignDocument, kind: EditableKind): string {
 	const id = makeVariable(doc, DOCUMENT_SCOPE, { ...NEW_PAINT[kind], type: "color", options: [] });
 	doc.commit(ADD_MESSAGE);
 	return id;

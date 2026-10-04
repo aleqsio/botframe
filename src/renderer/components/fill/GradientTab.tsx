@@ -2,25 +2,41 @@ import { useState } from "react";
 import type { ReactElement } from "react";
 import { gradientText } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
-import type { EditTarget } from "../variables/target";
-import { DocumentPaints, documentSwatches } from "./DocumentPaints";
-import { GradientBar, StopColor } from "./GradientBar";
+import { GradientBar } from "./GradientBar";
+import type { StopPick } from "./GradientBar";
 import { ShapeRows } from "./ShapeRows";
 import type { PaintEdit } from "./paintEdit";
 import { StopList } from "./StopList";
+import { stopRecolored } from "./stops";
+import { ColorPicker } from "../ColorPicker";
+import { BLACK, formatColor, parseColor } from "../color";
+
+function StopColor({
+	gradient,
+	onCommit,
+	onWrite,
+	selected,
+}: StopPick & { onWrite: (gradient: Gradient) => void; onCommit: () => void }): ReactElement {
+	return (
+		<ColorPicker
+			color={parseColor(gradient.stops[selected]?.color ?? "") ?? BLACK}
+			onChange={(next) => {
+				onWrite(stopRecolored(gradient, selected, formatColor(next)));
+			}}
+			onCommit={onCommit}
+		/>
+	);
+}
 
 export function GradientTab({
 	edit,
 	gradient,
-	target,
 }: {
 	edit: PaintEdit;
 	gradient: Gradient;
-	target: EditTarget | null;
 }): ReactElement {
 	const [picked, setPicked] = useState(0);
 	const selected = Math.min(picked, gradient.stops.length - 1);
-	const swatches = target === null ? [] : documentSwatches(target.reach.view, "gradient");
 
 	function write(next: Gradient): void {
 		edit.change(gradientText(next));
@@ -40,9 +56,6 @@ export function GradientTab({
 			/>
 			<StopList {...pick} onCommit={edit.commit} onWrite={write} />
 			<StopColor {...pick} onCommit={edit.commit} onWrite={write} />
-			{target === null || swatches.length === 0 ? null : (
-				<DocumentPaints label="Document gradients" swatches={swatches} target={target} />
-			)}
 		</>
 	);
 }

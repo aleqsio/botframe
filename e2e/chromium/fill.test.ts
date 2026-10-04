@@ -25,3 +25,33 @@ test("the gradient tab paints the layer, and a stop takes a color", async ({ pag
 	await page.getByRole("button", { name: "Solid", exact: true }).click();
 	await expect(layer).toHaveCSS("background-image", "none");
 });
+
+test("a stop that the arrow keys move past an other stop keeps the focus", async ({ page }) => {
+	const { origin } = await openRenderer(page);
+	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
+	await page.getByRole("button", { name: "Fill picker" }).click();
+	await page.getByRole("button", { name: "Gradient", exact: true }).click();
+	await page.getByRole("button", { name: "Add stop" }).click();
+
+	await page.getByRole("button", { name: "Stop 1 at 0%" }).focus();
+	await Array.from({ length: 6 }).reduce<Promise<void>>(
+		(done) => done.then(() => page.keyboard.press("Shift+ArrowRight")),
+		Promise.resolve(),
+	);
+
+	await expect(page.locator(".gradient-handle:focus")).toHaveAccessibleName("Stop 2 at 60%");
+});
+
+test("the picker closes when the selection goes to an other layer without a press outside", async ({
+	page,
+}) => {
+	const { origin } = await openRenderer(page);
+	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
+	await page.keyboard.press("ControlOrMeta+d");
+	await page.getByRole("button", { name: "Fill picker" }).click();
+	await expect(page.getByRole("group", { name: "Fill type" })).toBeVisible();
+
+	await page.locator(".layer-row[aria-pressed='false']").dispatchEvent("click");
+
+	await expect(page.getByRole("group", { name: "Fill type" })).toHaveCount(0);
+});

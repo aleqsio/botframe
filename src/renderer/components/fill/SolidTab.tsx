@@ -4,7 +4,7 @@ import { BLACK, formatColor, parseColor } from "../color";
 import type { Rgba } from "../color";
 import type { EditTarget } from "../variables/target";
 import { DocumentPaints, documentSwatches } from "./DocumentPaints";
-import { HexField } from "./ColorText";
+import { ColorEntry } from "./ColorText";
 import type { PaintEdit } from "./paintEdit";
 import { PresetGrid } from "./SwatchGrid";
 
@@ -18,7 +18,7 @@ export function SolidTab({
 	target: EditTarget | null;
 }): ReactElement {
 	const color = parseColor(text) ?? BLACK;
-	const swatches = target === null ? [] : documentSwatches(target.reach.view, "solid");
+	const swatches = target === null ? [] : documentSwatches(target.reach, "solid");
 
 	function pick(next: Rgba): void {
 		edit.change(formatColor(next));
@@ -34,7 +34,16 @@ export function SolidTab({
 				}}
 				onCommit={edit.commit}
 			/>
-			<HexField color={color} label="Hex" onPick={pick} />
+			<div className="property-field hex-field">
+				<ColorEntry
+					label="Hex"
+					onPick={(next) => {
+						edit.change(next);
+						edit.commit();
+					}}
+					value={formatColor(color)}
+				/>
+			</div>
 			{target === null || swatches.length === 0 ? (
 				<PresetGrid color={color} onPick={pick} />
 			) : (

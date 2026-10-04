@@ -9,6 +9,7 @@ import type { PaintEdit } from "./paintEdit";
 import { gradientSummary } from "./stops";
 
 const PERCENT = 100;
+const CUSTOM_TEXT = "Custom CSS";
 
 function alphaText(color: Rgba): string {
 	return `${Math.round(color.a * PERCENT)}%`;
@@ -38,26 +39,21 @@ export function ColorDraft({
 	);
 }
 
-export function HexField({
-	color,
+export function ColorEntry({
 	label,
 	onPick,
+	value,
 }: {
-	color: Rgba;
 	label: string;
-	onPick: (color: Rgba) => void;
+	value: string;
+	onPick: (color: string) => void;
 }): ReactElement {
+	const color = parseColor(value);
 	return (
-		<div className="property-field hex-field">
-			<ColorDraft
-				label={label}
-				onPick={(text) => {
-					onPick(parseColor(text) ?? color);
-				}}
-				value={formatColor(color)}
-			/>
-			<span className="fill-alpha">{alphaText(color)}</span>
-		</div>
+		<>
+			<ColorDraft label={label} onPick={onPick} value={value} />
+			{color === null ? null : <span className="fill-alpha">{alphaText(color)}</span>}
+		</>
 	);
 }
 
@@ -70,24 +66,25 @@ export function PaintText({
 	paint: Paint;
 	onOpen: () => void;
 }): ReactElement {
-	if (paint.kind === "gradient") {
+	if (paint.kind === "solid") {
 		return (
-			<button className="fill-name" onClick={onOpen} type="button">
-				{gradientSummary(paint.gradient)}
-			</button>
-		);
-	}
-	const color = parseColor(paint.color);
-	return (
-		<>
-			<ColorDraft
+			<ColorEntry
 				label="Fill"
 				onPick={(text) => {
 					setPaint(edit, text);
 				}}
 				value={paint.color}
 			/>
-			{color === null ? null : <span className="fill-alpha">{alphaText(color)}</span>}
-		</>
+		);
+	}
+	return (
+		<button
+			className="fill-name"
+			onClick={onOpen}
+			title={paint.kind === "custom" ? paint.text : undefined}
+			type="button"
+		>
+			{paint.kind === "gradient" ? gradientSummary(paint.gradient) : CUSTOM_TEXT}
+		</button>
 	);
 }

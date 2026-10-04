@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
-import { useSlot } from "../../state/useSlot";
-import type { UserState } from "../../state/userState";
+import type { LayerId } from "../../../document/layer";
 import { useComponentsView } from "../../useDocument";
 import { documentSwatches } from "./DocumentPaints";
 import { IconButton } from "./IconButton";
@@ -20,11 +19,14 @@ function PaintGroup({
 	group,
 	...props
 }: CardProps & { group: (typeof GROUPS)[number]; onAdded: (id: string) => void }): ReactElement {
-	const swatches = documentSwatches(props.view, group.kind);
+	const swatches = documentSwatches(
+		{ view: props.view, source: props.doc.tree.resolver() },
+		group.kind,
+	);
 	return (
-		<section className="fill-group">
+		<div className="fill-group">
 			<div className="fill-group-head">
-				<span className="group-label">{group.title}</span>
+				<span className="layout-sub">{group.title}</span>
 				<IconButton
 					icon="plus"
 					label={`Add ${group.noun}`}
@@ -42,13 +44,18 @@ function PaintGroup({
 					))}
 				</ul>
 			)}
-		</section>
+		</div>
 	);
 }
 
-export function FillLibrary({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
+export function FillStyles({
+	doc,
+	selection,
+}: {
+	doc: DesignDocument;
+	selection: readonly LayerId[];
+}): ReactElement {
 	const view = useComponentsView(doc);
-	const selection = useSlot(user.selection);
 	const [editing, setEditing] = useState<string | null>(null);
 	const [fresh, setFresh] = useState<string | null>(null);
 	const props = {
@@ -67,11 +74,14 @@ export function FillLibrary({ doc, user }: { doc: DesignDocument; user: UserStat
 		},
 	};
 	return (
-		<aside aria-label="Fills" id="fills">
+		<section aria-label="Fill styles" className="field-group layout-section fill-styles">
+			<header className="layout-head">
+				<span className="group-label">Fill styles</span>
+			</header>
 			{GROUPS.map((group) => (
 				<PaintGroup {...props} group={group} key={group.kind} />
 			))}
 			<MediaCards doc={doc} selection={selection} />
-		</aside>
+		</section>
 	);
 }

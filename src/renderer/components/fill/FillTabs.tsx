@@ -44,7 +44,7 @@ export function FillTabs({
 			label="Fill type"
 			onPick={(tab) => {
 				media?.onView(tab === "media" ? "media" : "paint");
-				if (tab !== "media" && tab !== paint.kind) {
+				if ((tab === "solid" || tab === "gradient") && tab !== paint.kind) {
 					setPaint(edit, paintTextAs(paint, tab));
 				}
 			}}

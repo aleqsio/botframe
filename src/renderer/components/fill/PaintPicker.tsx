@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { paintOf } from "../../../document/paint";
 import type { Paint } from "../../../document/paint";
 import type { EditTarget } from "../variables/target";
+import { DocumentPaints, documentSwatches } from "./DocumentPaints";
 import { FillTabs } from "./FillTabs";
 import { GradientTab } from "./GradientTab";
 import type { PaintEdit } from "./paintEdit";
@@ -12,11 +13,24 @@ interface PaintProps {
 	target: EditTarget | null;
 }
 
+const CUSTOM_NOTE =
+	"This fill is CSS that the picker cannot change. Pick Solid or Gradient to replace it.";
+
 export function PaintBody({ edit, paint, target }: PaintProps & { paint: Paint }): ReactElement {
-	return paint.kind === "solid" ? (
-		<SolidTab color={paint.color} edit={edit} target={target} />
-	) : (
-		<GradientTab edit={edit} gradient={paint.gradient} target={target} />
+	if (paint.kind === "custom") {
+		return <p className="layout-note">{CUSTOM_NOTE}</p>;
+	}
+	if (paint.kind === "solid") {
+		return <SolidTab color={paint.color} edit={edit} target={target} />;
+	}
+	const swatches = target === null ? [] : documentSwatches(target.reach, "gradient");
+	return (
+		<>
+			<GradientTab edit={edit} gradient={paint.gradient} />
+			{target === null || swatches.length === 0 ? null : (
+				<DocumentPaints label="Document gradients" swatches={swatches} target={target} />
+			)}
+		</>
 	);
 }
 

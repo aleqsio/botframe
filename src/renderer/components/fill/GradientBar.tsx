@@ -1,10 +1,10 @@
+import { flushSync } from "react-dom";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 import { gradientText } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
 import { slotsOf } from "../variables/reach";
-import { ColorPicker } from "../ColorPicker";
-import { BLACK, formatColor, heldRatio, parseColor } from "../color";
-import { stopAdded, stopMoved, stopRecolored } from "./stops";
+import { heldRatio } from "../color";
+import { stopAdded, stopMoved } from "./stops";
 import type { EditedStop } from "./stops";
 
 const PERCENT = 100;
@@ -61,8 +61,13 @@ function StopHandle({
 				}
 				event.preventDefault();
 				const size = event.shiftKey ? LARGE_STEP : SMALL_STEP;
-				onWrite(stopMoved(gradient, index, stop.position + step * size));
+				const moved = stopMoved(gradient, index, stop.position + step * size);
+				const bar = event.currentTarget.parentElement;
+				flushSync(() => {
+					onWrite(moved);
+				});
 				onCommit();
+				bar?.querySelector<HTMLElement>(`[data-index="${moved.index}"]`)?.focus();
 			}}
 			style={{ left: percentText(stop.position), background: stop.color }}
 			type="button"
@@ -104,22 +109,5 @@ export function GradientBar(props: BarProps): ReactElement {
 				<StopHandle {...props} index={index} key={slotsOf(gradient.stops.length)[index]} />
 			))}
 		</div>
-	);
-}
-
-export function StopColor({
-	gradient,
-	onCommit,
-	onWrite,
-	selected,
-}: StopPick & { onWrite: (gradient: Gradient) => void; onCommit: () => void }): ReactElement {
-	return (
-		<ColorPicker
-			color={parseColor(gradient.stops[selected]?.color ?? "") ?? BLACK}
-			onChange={(next) => {
-				onWrite(stopRecolored(gradient, selected, formatColor(next)));
-			}}
-			onCommit={onCommit}
-		/>
 	);
 }

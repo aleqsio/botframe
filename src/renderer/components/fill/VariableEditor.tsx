@@ -25,7 +25,7 @@ function panelEdge(card: HTMLElement | null): Edge | null {
 	return {
 		getBoundingClientRect: () => {
 			const box = card.getBoundingClientRect();
-			return new DOMRect(panel.getBoundingClientRect().right, box.top, 0, box.height);
+			return new DOMRect(panel.getBoundingClientRect().left, box.top, 0, box.height);
 		},
 	};
 }
@@ -83,7 +83,7 @@ export function VariableEditor({
 				<Popover.Positioner
 					align="start"
 					anchor={() => panelEdge(anchor.current)}
-					side="right"
+					side="left"
 					sideOffset={POPUP_GAP}
 				>
 					<Popover.Popup className="color-popup fill-popup" data-tab={paintOf(edit.value).kind}>

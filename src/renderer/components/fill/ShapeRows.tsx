@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { GRADIENT_SHAPES } from "../../../document/paint";
+import { GRADIENT_SHAPES, withShape } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
 import { ANGLE_STEP } from "../../input/step";
 import { Segmented } from "../layout/Segmented";
@@ -25,13 +25,17 @@ interface GradientChange {
 	onCommit: () => void;
 }
 
-function AngleRow({ gradient, onCommit, onWrite }: GradientChange): ReactElement {
-	const off = gradient.shape === "radial";
+type AngledGradient = Exclude<Gradient, { shape: "radial" }>;
+
+function AngleRow({
+	gradient,
+	onCommit,
+	onWrite,
+}: GradientChange & { gradient: AngledGradient }): ReactElement {
 	return (
 		<div className="guide-row angle-row">
 			<NumberChip
 				bound={{ kind: "wrap", min: 0, max: FULL_TURN }}
-				disabled={off}
 				label="Angle"
 				name="Angle"
 				onCommit={onCommit}
@@ -43,7 +47,6 @@ function AngleRow({ gradient, onCommit, onWrite }: GradientChange): ReactElement
 				value={gradient.angle}
 			/>
 			<IconButton
-				disabled={off}
 				icon="turnCw"
 				label="Rotate 90°"
 				onClick={() => {
@@ -62,13 +65,13 @@ export function ShapeRows(props: GradientChange): ReactElement {
 			<Segmented
 				label="Gradient shape"
 				onPick={(shape) => {
-					onWrite({ ...gradient, shape });
+					onWrite(withShape(gradient, shape));
 					onCommit();
 				}}
 				options={SHAPE_OPTIONS}
 				value={gradient.shape}
 			/>
-			<AngleRow {...props} />
+			{gradient.shape === "radial" ? null : <AngleRow {...props} gradient={gradient} />}
 		</>
 	);
 }

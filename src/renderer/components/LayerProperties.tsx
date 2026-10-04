@@ -64,7 +64,7 @@ export function LayerProperties({
 			{fieldGroupsOf(layer).map((group) => (
 				<ChipGroup doc={doc} group={group} key={group.name} layer={layer} />
 			))}
-			<FillSection doc={doc} layer={layer} />
+			<FillSection doc={doc} key={layer.id} layer={layer} />
 			<ClipField doc={doc} layer={layer} />
 			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
 			{isFrame(layer) ? <FrameFooter doc={doc} layer={layer} /> : null}

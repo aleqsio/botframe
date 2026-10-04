@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { MIN_STOPS } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
 import { slotsOf } from "../variables/reach";
 import { PERCENT_STEP } from "../../input/step";
@@ -10,7 +11,6 @@ import type { StopPick } from "./GradientBar";
 import { stopAdded, stopMoved, stopRecolored, stopRemoved } from "./stops";
 
 const PERCENT = 100;
-const MIN_STOPS = 2;
 const MIDDLE = 0.5;
 const PRECISION = 10;
 

@@ -44,9 +44,9 @@ function MediaCard({ doc, id, selection }: MediaProps & { id: AssetId }): ReactE
 export function MediaCards({ doc, selection }: MediaProps): ReactElement {
 	const ids = useAssetIds(doc.assets);
 	return (
-		<section className="fill-group">
+		<div className="fill-group">
 			<div className="fill-group-head">
-				<span className="group-label">Media</span>
+				<span className="layout-sub">Media</span>
 			</div>
 			{ids.length === 0 ? (
 				<p className="component-note">No media. Choose a file in the fill picker.</p>
@@ -57,6 +57,6 @@ export function MediaCards({ doc, selection }: MediaProps): ReactElement {
 					))}
 				</ul>
 			)}
-		</section>
+		</div>
 	);
 }

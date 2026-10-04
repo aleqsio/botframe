@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { StepRule } from "../../input/step";
 import { DraftInput } from "../PropertyField";
-import { boundValue, formatNumber, numberIn } from "../numberValue";
+import { boundValue, formatNumber } from "../numberValue";
 import type { Bound } from "../numberValue";
 import { ChipGrip } from "./ChipGrip";
 
@@ -27,8 +27,8 @@ export function NumberChip(props: NumberChipProps): ReactElement {
 				inputMode="numeric"
 				label={`${name} value`}
 				onCommit={(text) => {
-					const typed = numberIn(text);
-					if (typed !== null) {
+					const typed = Number(text.trim());
+					if (text.trim() !== "" && Number.isFinite(typed)) {
 						onValue(boundValue(bound, typed));
 						onCommit();
 					}

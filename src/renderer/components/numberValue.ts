@@ -11,14 +11,6 @@ export interface NumberDrag {
 	bound: Bound;
 }
 
-const UNIT = /[%°\s]/gu;
-
-export function numberIn(text: string): number | null {
-	const digits = text.replace(UNIT, "");
-	const value = digits === "" ? Number.NaN : Number(digits);
-	return Number.isFinite(value) ? value : null;
-}
-
 export function formatNumber(value: number): string {
 	return String(roundNumber(value));
 }

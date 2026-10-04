@@ -1,19 +1,23 @@
 import type { ReactElement } from "react";
-import type { ComponentsView } from "../../../document/components";
 import { paintOf } from "../../../document/paint";
-import type { Paint } from "../../../document/paint";
+import type { EditableKind } from "../../../document/paint";
+import { resolveValue } from "../../../document/resolve";
 import { isReference } from "../../../document/value";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
+import type { Reach } from "../variables/reach";
 import type { EditTarget } from "../variables/target";
 import { SwatchGrid } from "./SwatchGrid";
 import type { Swatch } from "./SwatchGrid";
 
-export function documentSwatches(view: ComponentsView, kind: Paint["kind"]): readonly Swatch[] {
+export function documentSwatches(
+	{ source, view }: Pick<Reach, "view" | "source">,
+	kind: EditableKind,
+): readonly Swatch[] {
 	return view.variables(DOCUMENT_SCOPE).flatMap((variable) => {
-		const { initial } = variable;
-		const fits = variable.type === "color" && typeof initial === "string";
-		return fits && paintOf(initial).kind === kind
-			? [{ key: variable.id, label: variable.name, paint: initial }]
+		const paint = resolveValue(source, variable.initial, []);
+		const fits = variable.type === "color" && typeof paint === "string";
+		return fits && paintOf(paint).kind === kind
+			? [{ key: variable.id, label: variable.name, paint }]
 			: [];
 	});
 }

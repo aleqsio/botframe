@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { roundNumber } from "../../document/length";
-import { boundValue, draggedValue, formatNumber, numberIn } from "./numberValue";
+import { boundValue, draggedValue, formatNumber } from "./numberValue";
 import type { Bound } from "./numberValue";
 
 const SIZE: Bound = { kind: "clamp", min: 1, max: 100 };
@@ -62,19 +62,5 @@ describe("formatNumber", () => {
 	it("cuts an angle from a drag to two decimals", () => {
 		expect(formatNumber(37.423_42)).toBe("37.42");
 		expect(formatNumber(-0.004)).toBe("0");
-	});
-});
-
-describe("numberIn", () => {
-	it("reads a number with a percent or a degree sign", () => {
-		expect(numberIn("55%")).toBe(55);
-		expect(numberIn(" 135° ")).toBe(135);
-		expect(numberIn("-12.5")).toBe(-12.5);
-	});
-
-	it("refuses text that has no number", () => {
-		expect(numberIn("")).toBeNull();
-		expect(numberIn("%")).toBeNull();
-		expect(numberIn("abc")).toBeNull();
 	});
 });

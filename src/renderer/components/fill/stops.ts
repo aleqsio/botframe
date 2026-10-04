@@ -1,9 +1,13 @@
-import { gradientText } from "../../../document/paint";
-import type { Gradient, GradientShape, GradientStop, Paint } from "../../../document/paint";
+import { MIN_STOPS, gradientText } from "../../../document/paint";
+import type {
+	EditableKind,
+	Gradient,
+	GradientShape,
+	GradientStop,
+	Paint,
+} from "../../../document/paint";
 import { BLACK, formatColor, heldRatio, parseColor } from "../color";
 import type { Rgba } from "../color";
-
-const MIN_STOPS = 2;
 
 export const SHAPE_LABELS: Readonly<Record<GradientShape, string>> = {
 	linear: "Linear",
@@ -92,12 +96,19 @@ export function stopRecolored(gradient: Gradient, index: number, color: string):
 	};
 }
 
-export function paintTextAs(paint: Paint, kind: Paint["kind"]): string {
+function firstColor(paint: Paint): string {
 	if (paint.kind === "solid") {
-		return kind === "solid" ? paint.color : gradientText(seededGradient(paint.color));
+		return paint.color;
 	}
-	if (kind === "gradient") {
-		return gradientText(paint.gradient);
+	const first = paint.kind === "gradient" ? paint.gradient.stops[0]?.color : undefined;
+	return first ?? formatColor(BLACK);
+}
+
+export function paintTextAs(paint: Paint, kind: EditableKind): string {
+	if (kind === "solid") {
+		return firstColor(paint);
 	}
-	return paint.gradient.stops[0]?.color ?? formatColor(BLACK);
+	return gradientText(
+		paint.kind === "gradient" ? paint.gradient : seededGradient(firstColor(paint)),
+	);
 }
