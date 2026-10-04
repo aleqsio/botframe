@@ -44,7 +44,7 @@ export function ComponentList(placement: Placement): ReactElement {
 				}}
 			/>
 			{[...report, ...(rows.length === 0 ? [EMPTY_NOTE] : [])].map((line) => (
-				<p className="component-note" key={line}>
+				<p className="panel-note" key={line}>
 					{line}
 				</p>
 			))}

@@ -581,8 +581,7 @@ body {
 
 #file-bar,
 #tab-bar,
-#layers,
-#components,
+#side-panel,
 #zoom,
 #inspector {
 	position: fixed;
@@ -608,7 +607,11 @@ body {
 	left: var(--edge);
 	-webkit-app-region: drag;
 	width: var(--layers-width);
-	padding: 0 4px 0 78px;
+	padding: 0 var(--layout-space-2);
+}
+
+#file-bar[data-window-buttons] {
+	padding-left: 78px;
 }
 
 #tab-bar {
@@ -696,8 +699,7 @@ body {
 	padding: 0 4px;
 }
 
-#layers,
-#components,
+#side-panel,
 #inspector {
 	top: var(--card-top);
 	display: flex;
@@ -707,11 +709,29 @@ body {
 	border-radius: 14px;
 }
 
+#side-panel {
+	left: var(--edge);
+	gap: var(--layout-space-3);
+	width: var(--layers-width);
+	overflow-y: hidden;
+	padding: var(--layout-space-3);
+}
+
+#side-panel > .layout-seg {
+	flex: none;
+}
+
+#side-panel .layout-segment .icon {
+	width: var(--layout-icon);
+	height: var(--layout-icon);
+}
+
 #layers,
 #components {
-	left: var(--edge);
-	width: var(--layers-width);
-	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
 }
 
 #components {
@@ -724,7 +744,7 @@ body {
 	background-color: var(--panel-hover);
 }
 
-.component-note {
+.panel-note {
 	padding: 0 var(--layout-space-4);
 	color: var(--panel-label);
 	font-size: var(--layout-text-label);
@@ -774,7 +794,6 @@ body {
 	background-color: var(--panel-hover);
 }
 
-.pill-button[aria-pressed="true"],
 .pill-button[data-popup-open] {
 	background-color: var(--panel-selected);
 }
