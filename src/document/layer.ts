@@ -8,6 +8,7 @@ import type { LayerId } from "./path";
 import type { Literal, VariableValue } from "./value";
 import type { Assignments } from "./variable";
 import type { Vertex } from "./vertices";
+import type { TextGeometry } from "./text";
 
 export type { LayerId } from "./path";
 
@@ -16,6 +17,7 @@ export type Geometry =
 	| { kind: "ellipse" }
 	| { kind: "path"; vertices: readonly Vertex[] }
 	| { kind: "group" }
+	| TextGeometry
 	| { kind: "unsupported" };
 
 export const GROUP_GEOMETRY: WritableGeometry = { kind: "group" };

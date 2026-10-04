@@ -11,6 +11,7 @@ import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
 import { mediaOf } from "./media";
+import { textGeometryOf } from "./text";
 import { verticesOf } from "./vertices";
 import type { LayerLengths, Length } from "./length";
 import { PLAIN_RECTANGLE } from "./subtree";
@@ -55,6 +56,7 @@ const SHAPES: Readonly<Record<WritableGeometry["kind"], (bag: Bag) => WritableGe
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (bag) => ({ kind: "path", vertices: verticesOf(bag["vertices"]) }),
 	group: () => ({ kind: "group" }),
+	text: (bag) => textGeometryOf({ get: (key) => bag[key] }),
 };
 
 function shapeOf(value: unknown): WritableGeometry {

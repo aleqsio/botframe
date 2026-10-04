@@ -6,6 +6,7 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 	ellipse: "Ellipse",
 	path: "Path",
 	group: "Group",
+	text: "Text",
 	unsupported: "Layer",
 };
 

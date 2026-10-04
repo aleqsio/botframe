@@ -1,6 +1,14 @@
 import type { LoroMap } from "loro-crdt";
 import { CENTER_ORIGIN, heldSkew } from "./layer";
-import type { Geometry, LayerId, LayerPatch, LayerTraits, Origin, Rect } from "./layer";
+import type {
+	Geometry,
+	LayerId,
+	LayerPatch,
+	LayerTraits,
+	Origin,
+	Rect,
+	WritableGeometry,
+} from "./layer";
 import { isLayerId } from "./path";
 import { jsonOf, readBindings, readContent, unboundBy, writeLinks } from "./layerLinks";
 import { guidesOf } from "./guides";
@@ -23,6 +31,7 @@ import { verticesOf } from "./vertices";
 import type { MediaFill } from "./media";
 import { readBoolean, readNumber, readString, readVariant } from "./read";
 import type { FieldSource } from "./read";
+import { textGeometryOf, writeTextGeometry } from "./text";
 import { writeVariant } from "./write";
 
 const GEOMETRY = "geometry";
@@ -53,6 +62,7 @@ const GEOMETRY_READERS: Readonly<
 	ellipse: () => ({ kind: "ellipse" }),
 	path: (fields) => ({ kind: "path", vertices: verticesOf(fields?.get("vertices")) }),
 	group: () => ({ kind: "group" }),
+	text: textGeometryOf,
 };
 
 function unitKey(key: BoxKey): string {
@@ -208,6 +218,15 @@ function writeLayout(map: LoroMap, patch: LayoutPatch): void {
 	}
 }
 
+function writeGeometry(data: LoroMap, geometry: WritableGeometry): void {
+	const bag = data.ensureMergeableMap(GEOMETRY);
+	if (geometry.kind === "text") {
+		writeTextGeometry(bag, geometry);
+		return;
+	}
+	writeVariant(bag, geometry);
+}
+
 function writeClipLayer(data: LoroMap, clipLayer: LayerId | null): void {
 	if (clipLayer === null) {
 		data.delete(CLIP_LAYER);
@@ -240,7 +259,7 @@ export function writePatch(data: LoroMap, patch: LayerPatch, basis: Basis): void
 	writeBox(data, { x, y, width, height }, basis);
 	writeLengths(data, lengths, basis);
 	if (geometry !== undefined) {
-		writeVariant(data.ensureMergeableMap(GEOMETRY), geometry);
+		writeGeometry(data, geometry);
 	}
 	if (layout !== undefined) {
 		writeLayout(data.ensureMergeableMap(LAYOUT), layout);

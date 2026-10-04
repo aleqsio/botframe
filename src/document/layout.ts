@@ -68,7 +68,7 @@ const SECOND_LINE = 2;
 const COLUMN_COUNT = 3;
 const ROW_COUNT = 2;
 
-function oneOf<T extends string>(choices: readonly T[], value: unknown, fallback: T): T {
+export function oneOf<T extends string>(choices: readonly T[], value: unknown, fallback: T): T {
 	return choices.find((choice) => choice === value) ?? fallback;
 }
 

@@ -92,6 +92,7 @@ function geometryStyle(geometry: Geometry): CSSProperties {
 		case "path": {
 			break;
 		}
+		case "text":
 		case "group":
 		case "unsupported": {
 			break;
