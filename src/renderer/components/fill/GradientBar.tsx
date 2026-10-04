@@ -1,4 +1,3 @@
-import { flushSync } from "react-dom";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
 import { gradientText } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
@@ -63,9 +62,7 @@ function StopHandle({
 				const size = event.shiftKey ? LARGE_STEP : SMALL_STEP;
 				const moved = stopMoved(gradient, index, stop.position + step * size);
 				const bar = event.currentTarget.parentElement;
-				flushSync(() => {
-					onWrite(moved);
-				});
+				onWrite(moved);
 				onCommit();
 				bar?.querySelector<HTMLElement>(`[data-index="${moved.index}"]`)?.focus();
 			}}

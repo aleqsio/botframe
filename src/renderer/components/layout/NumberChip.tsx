@@ -12,18 +12,16 @@ export interface NumberChipProps {
 	value: number;
 	bound: Bound;
 	step: StepRule;
-	disabled?: boolean | undefined;
 	onValue: (value: number) => void;
 	onCommit: () => void;
 }
 
 export function NumberChip(props: NumberChipProps): ReactElement {
-	const { bound, disabled = false, name, onCommit, onValue, unit, value } = props;
+	const { bound, name, onCommit, onValue, unit, value } = props;
 	return (
-		<div className={disabled ? "number-chip layout-chip-off" : "number-chip"}>
+		<div className="number-chip">
 			<ChipGrip {...props} />
 			<DraftInput
-				disabled={disabled}
 				inputMode="numeric"
 				label={`${name} value`}
 				onCommit={(text) => {

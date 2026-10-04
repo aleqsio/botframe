@@ -26,8 +26,6 @@ export type EditableKind = "solid" | "gradient";
 
 const GRADIENT_TEXT = /^(linear|radial|conic)-gradient\((.*)\)$/su;
 const NUMBER = "(-?\\d+(?:\\.\\d+)?)";
-const LINEAR_LEAD = new RegExp(`^${NUMBER}deg$`, "u");
-const CONIC_LEAD = new RegExp(`^from ${NUMBER}deg$`, "u");
 const STOP_TEXT = new RegExp(`^(#[0-9a-f]{3,8}) ${NUMBER}%$`, "iu");
 const PERCENT = 100;
 const PRECISION = 10;
@@ -50,8 +48,8 @@ function stopsOf(parts: readonly string[]): readonly GradientStop[] | null {
 }
 
 const LEADS: Readonly<Record<"linear" | "conic", RegExp>> = {
-	linear: LINEAR_LEAD,
-	conic: CONIC_LEAD,
+	linear: new RegExp(`^${NUMBER}deg$`, "u"),
+	conic: new RegExp(`^from ${NUMBER}deg$`, "u"),
 };
 
 function angledOf(shape: "linear" | "conic", parts: readonly string[]): Gradient | null {
@@ -94,6 +92,10 @@ function rounded(value: number): number {
 	return Math.round(value * PRECISION) / PRECISION;
 }
 
+export function percentOf(position: number): number {
+	return rounded(position * PERCENT);
+}
+
 function leadText(gradient: Gradient): string {
 	if (gradient.shape === "radial") {
 		return "";
@@ -104,7 +106,7 @@ function leadText(gradient: Gradient): string {
 
 export function gradientText(gradient: Gradient): string {
 	const stops = gradient.stops
-		.map((stop) => `${stop.color} ${rounded(stop.position * PERCENT)}%`)
+		.map((stop) => `${stop.color} ${percentOf(stop.position)}%`)
 		.join(", ");
 	return `${gradient.shape}-gradient(${leadText(gradient)}${stops})`;
 }

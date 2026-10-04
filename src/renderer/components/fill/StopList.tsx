@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { MIN_STOPS } from "../../../document/paint";
+import { MIN_STOPS, percentOf } from "../../../document/paint";
 import type { Gradient } from "../../../document/paint";
 import { slotsOf } from "../variables/reach";
 import { PERCENT_STEP } from "../../input/step";
@@ -12,18 +12,10 @@ import { stopAdded, stopMoved, stopRecolored, stopRemoved } from "./stops";
 
 const PERCENT = 100;
 const MIDDLE = 0.5;
-const PRECISION = 10;
 
 interface ListProps extends StopPick {
 	onWrite: (gradient: Gradient) => void;
 	onCommit: () => void;
-}
-
-function setOf({ onCommit, onWrite }: ListProps): (gradient: Gradient) => void {
-	return (gradient) => {
-		onWrite(gradient);
-		onCommit();
-	};
 }
 
 function neighborBound(gradient: Gradient, index: number): Bound {
@@ -34,7 +26,6 @@ function neighborBound(gradient: Gradient, index: number): Bound {
 
 function StopRow(props: ListProps & { index: number }): ReactElement | null {
 	const { gradient, index, onCommit, onSelect, onWrite, selected } = props;
-	const onSet = setOf(props);
 	const stop = gradient.stops[index];
 	if (stop === undefined) {
 		return null;
@@ -58,7 +49,7 @@ function StopRow(props: ListProps & { index: number }): ReactElement | null {
 				}}
 				step={PERCENT_STEP}
 				unit="%"
-				value={Math.round(stop.position * PERCENT * PRECISION) / PRECISION}
+				value={percentOf(stop.position)}
 			/>
 			<span className="color-swatch">
 				<span className="color-swatch-fill" style={{ background: stop.color }} />
@@ -66,7 +57,8 @@ function StopRow(props: ListProps & { index: number }): ReactElement | null {
 			<ColorDraft
 				label={`${name} color`}
 				onPick={(color) => {
-					onSet(stopRecolored(gradient, index, color));
+					onWrite(stopRecolored(gradient, index, color));
+					onCommit();
 				}}
 				value={stop.color}
 			/>
@@ -76,7 +68,8 @@ function StopRow(props: ListProps & { index: number }): ReactElement | null {
 				label={`Remove ${name.toLowerCase()}`}
 				onClick={() => {
 					onSelect(0);
-					onSet(stopRemoved(gradient, index));
+					onWrite(stopRemoved(gradient, index));
+					onCommit();
 				}}
 			/>
 		</div>
@@ -84,8 +77,7 @@ function StopRow(props: ListProps & { index: number }): ReactElement | null {
 }
 
 export function StopList(props: ListProps): ReactElement {
-	const { gradient, onSelect } = props;
-	const onSet = setOf(props);
+	const { gradient, onCommit, onSelect, onWrite } = props;
 	return (
 		<div className="fill-part">
 			<div className="fill-part-head">
@@ -96,7 +88,8 @@ export function StopList(props: ListProps): ReactElement {
 					onClick={() => {
 						const added = stopAdded(gradient, MIDDLE);
 						onSelect(added.index);
-						onSet(added.gradient);
+						onWrite(added.gradient);
+						onCommit();
 					}}
 				/>
 			</div>

@@ -4,9 +4,7 @@ import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerId } from "../../../document/layer";
 import { useAssetIds, useAssetUrl } from "../../assetUrl";
 import { placeAsset } from "../mediaFile";
-import { MediaThumb } from "./MediaThumb";
-
-const KIND_LABELS = { image: "Image", video: "Video" } as const;
+import { KIND_LABELS, MediaThumb } from "./MediaThumb";
 
 interface MediaProps {
 	doc: DesignDocument;
