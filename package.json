@@ -18,6 +18,7 @@
 		"build": "electron-vite build",
 		"start": "electron-vite preview",
 		"dev:web": "vite",
+		"agent": "bun src/main/agent/relay.ts",
 		"build:web": "vite build",
 		"start:web": "vite build && vite preview",
 		"test:e2e": "electron-vite build && playwright test --project electron",

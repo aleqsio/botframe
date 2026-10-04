@@ -50,6 +50,26 @@ When `window.botframe` is not there, `src/renderer/bridge.ts` uses the browser:
 
 `.github/workflows/preview.yml` builds each pull request from this repository and commits the build to `pr/<number>/` on the `pages-previews` branch. A comment on the pull request gives the link. When the `preview` run ends, `pages.yml` publishes `main` and each folder in `pr/` together. When the pull request closes, its folder goes away. A pull request from a fork gets no preview.
 
+## Agents
+
+An MCP server lets an agent read and change each open document. The server uses Streamable HTTP at `http://127.0.0.1:7341/mcp`. The tools operate on the document API, as STACK.md says. Each tool call is one undo step.
+
+| Shell | Server | Page |
+| --- | --- | --- |
+| Desktop | The application starts the server. | The window connects through IPC. |
+| Website | Run `bun run agent`. | Open the Agent button in the tab bar and press Connect. The page polls the server. |
+
+The Agent button in the tab bar gives these steps and copies each command. Add the server to Claude Code:
+
+```bash
+claude mcp add --transport http botframe http://127.0.0.1:7341/mcp
+```
+
+- `get_outline`, `get_layer`, `create_layers`, `update_layer`, and the other layer tools validate each value.
+- `read_data` and `write_data` read and write each CRDT value at a path. Use them for each change that the other tools do not give. The model ignores a value that it cannot read.
+- The server refuses a request on `/mcp` that has an `Origin` header, and a request to a host name that is not loopback. The page channel accepts only the development and preview origins (ports 5173 and 4173) and the GitHub Pages origin.
+- Each new editor feature must also be available through the MCP server. CLAUDE.md tells what to add. A review gives a Major for a feature that an agent cannot use.
+
 ## Review
 
 - **CodeRabbit** reviews each pull request. It is free for a public repository, and it reads AGENTS.md, REVIEW.md, and STACK.md.

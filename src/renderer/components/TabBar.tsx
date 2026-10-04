@@ -1,8 +1,10 @@
 import type { ReactElement } from "react";
+import type { AgentLink } from "../agent/webLink";
 import { closeTab } from "../file";
 import { useSlot } from "../state/useSlot";
 import { Tab } from "../state/tab";
 import type { Workspace } from "../state/workspace";
+import { AgentButton } from "./AgentButton";
 import { Icon } from "./Icon";
 
 const LIST_LABEL = "Documents";
@@ -45,7 +47,12 @@ function TabItem({ tab, selected, workspace }: ItemProps): ReactElement {
 	);
 }
 
-export function TabBar({ workspace }: { workspace: Workspace }): ReactElement {
+interface TabBarProps {
+	workspace: Workspace;
+	agent: AgentLink | null;
+}
+
+export function TabBar({ workspace, agent }: TabBarProps): ReactElement {
 	const tabs = useSlot(workspace.tabs);
 	const active = useSlot(workspace.active);
 
@@ -67,6 +74,7 @@ export function TabBar({ workspace }: { workspace: Workspace }): ReactElement {
 			>
 				<Icon name="plus" />
 			</button>
+			<AgentButton link={agent} />
 		</div>
 	);
 }

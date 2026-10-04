@@ -116,7 +116,7 @@ function contentOf(value: unknown): LayerContent {
 function componentsOf(value: unknown): Readonly<Record<string, PackedComponent>> {
 	return Object.fromEntries(
 		Object.entries(bagOf(value)).flatMap(([id, packed]) => {
-			const held = packedOf(packed, nodeOf);
+			const held = packedOf(packed, layerNodeOf);
 			return held === null ? [] : [[id, held]];
 		}),
 	);
@@ -126,7 +126,7 @@ function layerIdOf(value: unknown): LayerId | null {
 	return typeof value === "string" && isLayerId(value) ? value : null;
 }
 
-function nodeOf(value: unknown): LayerNode {
+export function layerNodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
 	return {
@@ -144,7 +144,7 @@ function nodeOf(value: unknown): LayerNode {
 		bindings: bindingsOf(bag["bindings"]),
 		key: layerIdOf(bag["key"]) ?? undefined,
 		clipLayer: layerIdOf(bag["clipLayer"]) ?? undefined,
-		children: listOf(bag["children"]).map((child) => nodeOf(child)),
+		children: listOf(bag["children"]).map((child) => layerNodeOf(child)),
 	};
 }
 
@@ -176,7 +176,7 @@ export function parseEnvelope(raw: string): LayerEnvelope | null {
 	return {
 		sourceParent: typeof parent === "string" ? parent : null,
 		sourceIds: listOf(bag["sourceIds"]).filter((id) => typeof id === "string"),
-		layers: listOf(bag["layers"]).map((layer) => nodeOf(layer)),
+		layers: listOf(bag["layers"]).map((layer) => layerNodeOf(layer)),
 		components: componentsOf(bag["components"]),
 	};
 }

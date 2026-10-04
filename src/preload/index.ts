@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { AGENT_CALL, AGENT_REPLY } from "../shared/agent";
 import { HAS_CLIPBOARD_LAYERS, READ_CLIPBOARD_LAYERS, WRITE_CLIPBOARD } from "../shared/clipboard";
 import type { ClipboardWrite } from "../shared/clipboard";
 import { EDIT_COMMAND, SET_EDIT_MENU } from "../shared/editMenu";
@@ -26,6 +27,10 @@ function openedFile(value: unknown): OpenedFile | null {
 	const file = savedFile(value);
 	const bytes = fieldsOf(value)?.bytes;
 	return file !== null && bytes instanceof Uint8Array ? { ...file, bytes } : null;
+}
+
+async function answer(run: (call: unknown) => Promise<unknown>, call: unknown): Promise<void> {
+	ipcRenderer.send(AGENT_REPLY, await run(call));
 }
 
 contextBridge.exposeInMainWorld("botframe", {
@@ -63,5 +68,10 @@ contextBridge.exposeInMainWorld("botframe", {
 	},
 	async renameFile(token: string, name: string): Promise<SavedFile | null> {
 		return savedFile(await invoke(RENAME_FILE, token, name));
+	},
+	serveAgent(run: (call: unknown) => Promise<unknown>): void {
+		ipcRenderer.on(AGENT_CALL, (_event, ...args: unknown[]) => {
+			void answer(run, args[0]);
+		});
 	},
 });

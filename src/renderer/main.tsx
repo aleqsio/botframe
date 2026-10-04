@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { connectAgent } from "./agent/connect";
 import { App } from "./App";
 import { watchClipboard } from "./clipboard";
 import { connectEditMenu } from "./editMenu";
@@ -16,9 +17,10 @@ if (container !== null) {
 	connectFileMenu(workspace);
 	watchClipboard(workspace);
 	void keepSession(workspace);
+	const agent = connectAgent(workspace);
 	createRoot(container).render(
 		<StrictMode>
-			<App workspace={workspace} />
+			<App agent={agent} workspace={workspace} />
 		</StrictMode>,
 	);
 }

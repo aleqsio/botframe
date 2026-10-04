@@ -2,6 +2,9 @@ import { LoroDoc } from "loro-crdt";
 import type { LoroEventBatch, TreeDiffItem, TreeID } from "loro-crdt";
 import { AssetStore } from "./assets";
 import { clipTargetsIn } from "./clips";
+import { readPath } from "./dataPath";
+import type { DataPath } from "./dataPath";
+import { deletePath, writePath } from "./dataWrite";
 import { ComponentStore } from "./components";
 import { DocumentHistory, KEPT_ORIGIN } from "./history";
 import { fitGroups } from "./groupFit";
@@ -273,6 +276,18 @@ export class DesignDocument {
 
 	subscribeHistory(listener: () => void): Unsubscribe {
 		return subscribeTo(this.#historyListeners, listener);
+	}
+
+	readData(path: DataPath): unknown {
+		return readPath(this.#doc, path);
+	}
+
+	writeData(path: DataPath, value: unknown): void {
+		writePath(this.#doc, path, value);
+	}
+
+	deleteData(path: DataPath): void {
+		deletePath(this.#doc, path);
 	}
 
 	snapshot(): Uint8Array {

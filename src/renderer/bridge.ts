@@ -1,3 +1,4 @@
+import type { AgentReply } from "../shared/agent";
 import type { ClipboardWrite } from "../shared/clipboard";
 import type { EditMenuItem } from "../shared/editMenu";
 import { FILE_COMMANDS } from "../shared/file";
@@ -20,6 +21,7 @@ export interface Bridge {
 		saveAs: boolean,
 	) => Promise<SavedFile | null>;
 	renameFile: (token: string, name: string) => Promise<SavedFile | null>;
+	serveAgent: (run: (call: unknown) => Promise<AgentReply>) => void;
 }
 
 declare global {
@@ -61,6 +63,7 @@ const WEB: Bridge = {
 	openFile,
 	saveFile,
 	renameFile,
+	serveAgent: () => {},
 };
 
 export function inBrowser(): boolean {
