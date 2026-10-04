@@ -70,7 +70,7 @@ for (const scheme of SCHEMES) {
 		const boxes = await Promise.all(
 			[
 				choose,
-				page.getByRole("button", { name: "Remove media" }),
+				inspector.locator(".fill-row", { has: page.getByRole("button", { name: "Remove media" }) }),
 				page.getByRole("group", { name: "Media fit" }),
 			].map((control) => rectOf(control)),
 		);
