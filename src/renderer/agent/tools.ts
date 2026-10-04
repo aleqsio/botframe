@@ -3,11 +3,16 @@ import type { Tab } from "../state/tab";
 import type { Workspace } from "../state/workspace";
 import { argsOf, optionalText } from "./args";
 import type { Args } from "./args";
+import { COMPONENT_TOOLS } from "./componentTools";
 import { DATA_TOOLS } from "./dataTools";
 import { LAYER_TOOLS } from "./layerTools";
 import type { Handler } from "./layerTools";
 
-const TOOLS: Readonly<Record<string, Handler>> = { ...LAYER_TOOLS, ...DATA_TOOLS };
+const TOOLS: Readonly<Record<string, Handler>> = {
+	...LAYER_TOOLS,
+	...DATA_TOOLS,
+	...COMPONENT_TOOLS,
+};
 
 const NO_CALL = -1;
 const READS: ReadonlySet<string> = new Set([

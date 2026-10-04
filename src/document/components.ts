@@ -120,6 +120,15 @@ export class ComponentStore {
 		return scope;
 	}
 
+	ensureScope(owner: string): Scope {
+		const entry: unknown =
+			owner === DOCUMENT_SCOPE ? null : this.#doc.getMap(COMPONENTS).get(owner);
+		if (entry instanceof LoroMap && !(entry.get(SCOPE) instanceof LoroMap)) {
+			entry.ensureMergeableMap(SCOPE);
+		}
+		return this.scope(owner);
+	}
+
 	declared(variable: string): Declared | null {
 		this.#declared ??= this.#readDeclared();
 		return this.#declared.get(variable) ?? null;

@@ -24,6 +24,10 @@ export function isGroup<T extends Pick<Layer, "geometry">>(layer: T | null): lay
 	return layer?.geometry.kind === "group";
 }
 
+export function holdsChildren(geometry: Geometry): boolean {
+	return geometry.kind === "group" || (geometry.kind === "rectangle" && geometry.frame);
+}
+
 export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;
 
 export type Rect = {

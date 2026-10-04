@@ -37,6 +37,7 @@ describe("runTool", () => {
 	it("creates, changes, and reads a layer, with one undo step for each call", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		const parent = firstLayer(workspace);
+		await call(workspace, "update_layer", { id: parent, change: { geometry: { frame: true } } });
 		const created = await call(workspace, "create_layers", {
 			parent,
 			layers: [{ name: "Dot", width: 10, height: 10, geometry: { kind: "ellipse" } }],
@@ -82,6 +83,120 @@ describe("runTool", () => {
 			variables: { document: [{ name: "Brand" }] },
 		});
 		expect(await call(workspace, "get_layer", { id })).toMatchObject({ name: "Raw" });
+	});
+
+	it("keeps text that looks like a number, and refuses a value of the wrong type", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const typed = await call(workspace, "set_variable", {
+			name: "Weight",
+			type: "text",
+			initial: 400,
+		});
+		expect(typed).toMatchObject({ initial: "400" });
+		const quoted = await call(workspace, "set_variable", {
+			name: "Age",
+			type: "text",
+			initial: "17",
+		});
+		expect(quoted).toMatchObject({ initial: "17" });
+		await expect(
+			call(workspace, "set_variable", { name: "Size", type: "number", initial: "big" }),
+		).rejects.toThrow('The initial value "big" does not fit the type number.');
+	});
+
+	it("makes the scope of a component that has none, and names an owner that is missing", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		await call(workspace, "write_data", {
+			path: ["components", "c1"],
+			value: { $map: { name: "Card", kind: "html", source: "a1" } },
+		});
+		const added = await call(workspace, "set_variable", {
+			owner: "c1",
+			name: "title",
+			type: "text",
+			initial: "Hi",
+		});
+		expect(added).toMatchObject({ name: "title" });
+		await expect(
+			call(workspace, "set_variable", { owner: "nope", name: "x", type: "text", initial: "" }),
+		).rejects.toThrow("No component has the id nope.");
+	});
+
+	it("adds an HTML component and sets the props of a copy by name", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const made = await call(workspace, "create_html_component", {
+			name: "Badge",
+			html: "<span>{{label}}</span>{{#hot}}!{{/hot}}",
+			css: "span { font-weight: 600; }",
+			props: [
+				{ name: "label", kind: "text", initial: "New" },
+				{ name: "hot", kind: "boolean", initial: false },
+			],
+		});
+		expect(made).toMatchObject({ props: [{ name: "hot" }, { name: "label" }] });
+		const [entry] = workspace.active.get().doc.components.entries();
+		const component = entry?.id ?? "";
+		expect(made).toMatchObject({ component });
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [
+				{
+					name: "Badge 1",
+					width: 80,
+					height: 24,
+					content: { kind: "component", component, props: { label: "Sale" } },
+				},
+			],
+		});
+		const layers = await call(workspace, "get_outline");
+		expect(JSON.stringify(layers)).toContain(component);
+		await expect(
+			call(workspace, "create_layers", {
+				parent: null,
+				layers: [{ content: { kind: "component", component, props: { colour: "red" } } }],
+			}),
+		).rejects.toThrow("The component has no prop colour. Its props: hot, label.");
+	});
+
+	it("makes a layer with children a frame", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [{ name: "Card", layout: { display: "column" }, children: [{ name: "Title" }] }],
+		});
+		const outline = await call(workspace, "get_outline");
+		expect(outline).toMatchObject([
+			{},
+			{ name: "Card", kind: "frame", children: [{ kind: "rectangle" }] },
+		]);
+	});
+
+	it("puts layers only in a frame or a group, as the editor does", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const rectangle = firstLayer(workspace);
+		await expect(
+			call(workspace, "create_layers", { parent: rectangle, layers: [{ name: "Child" }] }),
+		).rejects.toThrow(
+			`Only a frame or a group can hold layers, as in the editor. ${rectangle} is a rectangle.`,
+		);
+		await expect(
+			call(workspace, "create_layers", {
+				parent: null,
+				layers: [{ name: "Dot", geometry: { kind: "ellipse" }, children: [{ name: "Child" }] }],
+			}),
+		).rejects.toThrow('Give "Dot" geometry {kind: rectangle, frame: true} or {kind: group}.');
+		await call(workspace, "create_layers", {
+			parent: null,
+			layers: [{ name: "Box", children: [{ name: "Child" }] }],
+		});
+		const [, box] = workspace.active.get().doc.rootIds();
+		const [child] = workspace.active.get().doc.childIds(box ?? rectangle);
+		await expect(call(workspace, "move_layer", { id: child, parent: rectangle })).rejects.toThrow(
+			/is a rectangle/u,
+		);
+		await expect(
+			call(workspace, "update_layer", { id: box, change: { geometry: { frame: false } } }),
+		).rejects.toThrow(/must stay a frame or a group/u);
 	});
 
 	it("adds an asset from base64", async () => {

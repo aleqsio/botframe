@@ -4,7 +4,7 @@ import { AssetStore } from "./assets";
 import { clipTargetsIn } from "./clips";
 import { readPath } from "./dataPath";
 import type { DataPath } from "./dataPath";
-import { deletePath, writePath } from "./dataWrite";
+import { deleteChecked, writeChecked } from "./dataEdit";
 import { ComponentStore } from "./components";
 import { DocumentHistory, KEPT_ORIGIN } from "./history";
 import { fitGroups } from "./groupFit";
@@ -283,11 +283,11 @@ export class DesignDocument {
 	}
 
 	writeData(path: DataPath, value: unknown): void {
-		writePath(this.#doc, path, value);
+		writeChecked(this.#doc, path, value);
 	}
 
 	deleteData(path: DataPath): void {
-		deletePath(this.#doc, path);
+		deleteChecked(this.#doc, path);
 	}
 
 	snapshot(): Uint8Array {
