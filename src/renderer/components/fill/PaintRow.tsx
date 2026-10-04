@@ -5,15 +5,21 @@ import { BindButton } from "../variables/BindButton";
 import { BoundSummary } from "../variables/BoundSummary";
 import { PaintText } from "./ColorText";
 import { IconButton } from "./IconButton";
+import type { RowDrag } from "./fillOrder";
 import type { FillProps } from "./paintEdit";
 
 const REMOVE_MESSAGE = "remove fill";
 
-export function PaintRow({ onOpen, ...props }: FillProps & { onOpen: () => void }): ReactElement {
+export function PaintRow({
+	drag,
+	onOpen,
+	...props
+}: FillProps & { drag: RowDrag; onOpen: () => void }): ReactElement {
 	const { doc, edit, layer, target } = props;
 	const bound = layer.bindings.fill;
 	return (
 		<div
+			{...drag}
 			className="property-field color-field fill-row"
 			data-changed={isChanged(layer, "fill") ? "" : undefined}
 		>

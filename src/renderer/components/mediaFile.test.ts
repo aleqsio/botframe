@@ -114,8 +114,8 @@ describe("placeAsset", () => {
 
 		placeAsset(doc, [layerOf(doc, one), layerOf(doc, other)], assetOf(doc, asset));
 
-		expect(mediaOf(doc, one)).toEqual({ asset, fit: "cover" });
-		expect(mediaOf(doc, other)).toEqual({ asset, fit: "cover" });
+		expect(mediaOf(doc, one)).toEqual({ asset, fit: "cover", stack: "over" });
+		expect(mediaOf(doc, other)).toEqual({ asset, fit: "cover", stack: "over" });
 		doc.undo();
 		expect(doc.layer(one)?.media).toBeNull();
 		expect(doc.layer(other)?.media).toBeNull();

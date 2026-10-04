@@ -5,10 +5,10 @@ import type { Layer } from "../../../document/layer";
 import { RECTANGLE_DEFAULTS } from "../layerDefaults";
 import { FillPicker } from "./FillPicker";
 import type { PickerView } from "./FillTabs";
+import { FillRows } from "./FillRows";
 import { IconButton } from "./IconButton";
-import { MediaRow } from "./MediaRow";
+import { useFillOrder } from "./fillOrder";
 import { hasPaint, setPaint, useFillProps } from "./paintEdit";
-import { PaintRow } from "./PaintRow";
 
 export function FillSection({ doc, layer }: { doc: DesignDocument; layer: Layer }): ReactElement {
 	const props = useFillProps(doc, layer);
@@ -16,9 +16,10 @@ export function FillSection({ doc, layer }: { doc: DesignDocument; layer: Layer 
 	const [view, setView] = useState<PickerView | null>(null);
 	const anchor = useRef<HTMLDivElement>(null);
 	const painted = hasPaint(layer);
+	const order = useFillOrder(doc, layer, anchor);
 
 	return (
-		<div className="field-group layout-section fill-section" ref={anchor}>
+		<div {...order.section} className="field-group layout-section fill-section" ref={anchor}>
 			<div className="layout-head">
 				<span className="group-label">Fill</span>
 				<IconButton
@@ -33,24 +34,16 @@ export function FillSection({ doc, layer }: { doc: DesignDocument; layer: Layer 
 					}}
 				/>
 			</div>
-			{layer.media === null ? null : (
-				<MediaRow
-					doc={doc}
-					layer={layer}
-					media={layer.media}
-					onOpen={() => {
-						setView("media");
-					}}
-				/>
-			)}
-			{painted ? (
-				<PaintRow
-					{...props}
-					onOpen={() => {
-						setView("paint");
-					}}
-				/>
-			) : null}
+			<FillRows
+				{...props}
+				onOpen={(next) => {
+					if (!order.dropped()) {
+						setView(next);
+					}
+				}}
+				order={order}
+				painted={painted}
+			/>
 			{painted || layer.media !== null ? null : <span className="layout-sub">No fill</span>}
 			<FillPicker {...props} anchor={anchor} onView={setView} view={view} />
 		</div>

@@ -354,3 +354,7 @@
 	flex: 1;
 	min-width: 0;
 }
+
+.fill-row[data-dragged] {
+	opacity: 0.6;
+}

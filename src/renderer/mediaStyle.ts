@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { MediaFit } from "../document/media";
+import type { MediaFill, MediaFit, MediaStack } from "../document/media";
 import type { AssetUrl } from "./assetUrl";
 
 const IMAGE_PLACE: Readonly<Record<MediaFit, string>> = {
@@ -16,19 +16,32 @@ const VIDEO_FIT: Readonly<Record<MediaFit, CSSProperties["objectFit"]>> = {
 	tile: "none",
 };
 
-export function imageBackground(fill: string, url: string, fit: MediaFit): string {
-	return `url("${url}") ${IMAGE_PLACE[fit]}, ${fill}`;
+function paintImage(fill: string): string {
+	return fill.includes("gradient(") ? fill : `linear-gradient(${fill}, ${fill})`;
+}
+
+export function imageBackground(
+	fill: string,
+	url: string,
+	fit: MediaFit,
+	stack: MediaStack,
+): string {
+	const image = `url("${url}") ${IMAGE_PLACE[fit]}`;
+	return stack === "over" ? `${image}, ${fill}` : `${paintImage(fill)}, ${image}`;
 }
 
 export function paintedStyle(
 	style: CSSProperties,
-	fit: MediaFit | null,
+	fill: MediaFill | null,
 	media: AssetUrl | null,
 ): CSSProperties {
-	if (fit === null || media?.kind !== "image" || typeof style.background !== "string") {
+	if (fill === null || media?.kind !== "image" || typeof style.background !== "string") {
 		return style;
 	}
-	return { ...style, background: imageBackground(style.background, media.url, fit) };
+	return {
+		...style,
+		background: imageBackground(style.background, media.url, fill.fit, fill.stack),
+	};
 }
 
 export function videoStyle(fit: MediaFit): CSSProperties {

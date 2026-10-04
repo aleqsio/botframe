@@ -39,7 +39,7 @@ export function LayerView({
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
 	const lifted = useLift(lift, id);
-	const fit = layer?.media?.fit ?? null;
+	const fill = layer?.media ?? null;
 	const media = useAssetUrl(doc.assets, layer?.media?.asset ?? null);
 	const writeShadow = useShadowWriter(doc, layer?.content ?? null);
 
@@ -54,9 +54,9 @@ export function LayerView({
 			data-layer-id={id}
 			data-selected={selected ? "" : undefined}
 			ref={writeShadow}
-			style={liftedStyle(paintedStyle(layerStyle(layer, parentDisplay), fit, media), lifted)}
+			style={liftedStyle(paintedStyle(layerStyle(layer, parentDisplay), fill, media), lifted)}
 		>
-			<LayerVideo fit={fit} media={media} />
+			<LayerVideo fill={fill} media={media} paint={layer.fill} />
 			{childIds.map((childId) => (
 				<LayerView
 					doc={doc}

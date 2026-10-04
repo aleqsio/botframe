@@ -59,7 +59,7 @@ describe("visibleLayerIds", () => {
 	it("keeps a layer with a transparent fill and a media fill", () => {
 		const ids = visibleLayerIds([TOP], () => ({
 			fill: "transparent",
-			media: { asset: PICTURE, fit: "cover" },
+			media: { asset: PICTURE, fit: "cover", stack: "over" },
 			content: NO_CONTENT,
 		}));
 

@@ -189,7 +189,7 @@ function writeMedia(data: LoroMap, media: MediaFill | null): void {
 		data.delete(MEDIA);
 		return;
 	}
-	data.set(MEDIA, { asset: media.asset, fit: media.fit });
+	data.set(MEDIA, { asset: media.asset, fit: media.fit, stack: media.stack });
 }
 
 function writeLayout(map: LoroMap, patch: LayoutPatch): void {

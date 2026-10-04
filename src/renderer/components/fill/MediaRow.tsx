@@ -5,6 +5,7 @@ import type { Layer } from "../../../document/layer";
 import type { MediaFill } from "../../../document/media";
 import { useAssetUrl } from "../../assetUrl";
 import { MEDIA_MESSAGE } from "../mediaFile";
+import type { RowDrag } from "./fillOrder";
 import { IconButton } from "./IconButton";
 import { FIT_LABELS } from "./MediaTab";
 import { MediaThumb } from "./MediaThumb";
@@ -15,6 +16,7 @@ interface RowProps {
 	doc: DesignDocument;
 	layer: Layer;
 	onOpen: () => void;
+	drag: RowDrag;
 }
 
 export function MediaRow({
@@ -22,10 +24,12 @@ export function MediaRow({
 	layer,
 	media,
 	onOpen,
+	drag,
 }: RowProps & { media: MediaFill }): ReactElement {
 	const kind = useAssetUrl(doc.assets, media.asset)?.kind ?? "image";
 	return (
 		<div
+			{...drag}
 			className="property-field fill-row"
 			data-changed={isChanged(layer, "media") ? "" : undefined}
 		>

@@ -13,7 +13,9 @@ function keptFit(layer: Layer, asset: Asset): MediaFit {
 
 export function placeAsset(doc: DesignDocument, layers: readonly Layer[], asset: Asset): void {
 	for (const layer of layers) {
-		doc.update(layer.id, { media: { asset: asset.id, fit: keptFit(layer, asset) } });
+		doc.update(layer.id, {
+			media: { asset: asset.id, fit: keptFit(layer, asset), stack: layer.media?.stack ?? "over" },
+		});
 	}
 	doc.commit(MEDIA_MESSAGE);
 }
