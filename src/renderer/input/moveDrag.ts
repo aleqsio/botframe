@@ -6,6 +6,7 @@ import { BACK_TO_FLOW } from "../components/layout/resetChildren";
 import { dropParentOf } from "./dropTarget";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import { anchorOf, poseInside, seenLinear } from "./layerSpace";
+import { fixedFill } from "./layoutGeometry";
 import type { Linear } from "./linear";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
@@ -30,19 +31,10 @@ function seenOf(target: PointerTarget, layer: Layer): Linear {
 	return seenLinear(parentChainOf(target, layer.id), layer);
 }
 
-function fixedFill(target: PointerTarget, id: LayerId): LayerPatch {
+function fixedFillOf(target: PointerTarget, id: LayerId): LayerPatch {
 	const layer = target.doc.layer(id);
 	const drawn = drawnReaderOf(target)(id);
-	if (layer === null || drawn === null) {
-		return {};
-	}
-	const wide = layer.layout.width === "fill";
-	const tall = layer.layout.height === "fill";
-	return {
-		...(wide ? { width: drawn.width } : {}),
-		...(tall ? { height: drawn.height } : {}),
-		layout: { ...(wide ? { width: "fixed" } : {}), ...(tall ? { height: "fixed" } : {}) },
-	};
+	return layer === null || drawn === null ? {} : fixedFill(layer, drawn);
 }
 
 function landedPatch(
@@ -55,7 +47,7 @@ function landedPatch(
 	if (display !== undefined && display !== null && display !== "block") {
 		return { ...BACK_TO_FLOW, ...pose, layout: { ...BACK_TO_FLOW.layout, cell: AUTO_CELL } };
 	}
-	const loose = fixedFill(target, move.id);
+	const loose = fixedFillOf(target, move.id);
 	const layout = { ...loose.layout, position: move.start.position, cell: AUTO_CELL };
 	return { ...loose, ...pose, layout };
 }

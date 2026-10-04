@@ -114,6 +114,15 @@ export class LayerTree {
 			.map((node) => node.id);
 	}
 
+	rootIndex(id: LayerId, index: number): number {
+		const all = this.tree()
+			.roots()
+			.map((node) => node.id)
+			.filter((root) => root !== id);
+		const next = this.canvasRoots().filter((root) => root !== id)[index];
+		return next === undefined ? all.length : all.indexOf(nodeOf(next));
+	}
+
 	canvasNodes(): readonly LayerId[] {
 		return this.tree()
 			.getNodes()

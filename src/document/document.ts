@@ -179,7 +179,8 @@ export class DesignDocument {
 			return false;
 		}
 		const before = this.layer(id);
-		this.#tree.tree().move(node.id, this.#tree.containerOf(parent), index);
+		const at = parent === null && index !== undefined ? this.#tree.rootIndex(id, index) : index;
+		this.#tree.tree().move(node.id, this.#tree.containerOf(parent), at);
 		this.#invalidateNode(node.id);
 		this.#notifyStructure();
 		if (before !== null) {

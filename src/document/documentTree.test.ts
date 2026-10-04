@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { makeComponent } from "./componentActions";
 import { DesignDocument } from "./document";
 import { DRAWN, firstId } from "./documentFixtures";
 
@@ -175,6 +176,18 @@ describe("a move of a layer", () => {
 		expect(doc.move(first, parent, 2)).toBe(true);
 
 		expect(doc.childIds(parent)).toEqual([second, third, first]);
+	});
+
+	it("counts the index of a move at the root among the canvas roots only", () => {
+		const doc = DesignDocument.create();
+		const frame = doc.createLayer(DRAWN);
+		makeComponent(doc, frame);
+		const first = doc.createLayer(DRAWN);
+		const second = doc.createLayer(DRAWN);
+
+		expect(doc.move(first, null, 3)).toBe(true);
+
+		expect(doc.rootIds().slice(-3)).toEqual([frame, second, first]);
 	});
 
 	it("refuses an index beyond the end of the new child list", () => {
