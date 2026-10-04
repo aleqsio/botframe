@@ -82,9 +82,7 @@ function pointerDown<Id>(session: DragSession<Id>, event: DragPointerEvent, id: 
 	input.dropped = false;
 	input.id = id;
 	input.pointer = { x: event.clientX, y: event.clientY };
-	if (input.recognizer.down(sampleOf(event)).taken) {
-		event.currentTarget.setPointerCapture(event.pointerId);
-	}
+	input.recognizer.down(sampleOf(event));
 }
 
 function pointerMove<Id>(session: DragSession<Id>, event: DragPointerEvent): void {
@@ -93,6 +91,7 @@ function pointerMove<Id>(session: DragSession<Id>, event: DragPointerEvent): voi
 		return;
 	}
 	if (session.input.recognizer.move(sampleOf(event))?.kind === "dragStart") {
+		event.currentTarget.setPointerCapture(event.pointerId);
 		session.rules.begin(id);
 		schedule(session);
 	}
