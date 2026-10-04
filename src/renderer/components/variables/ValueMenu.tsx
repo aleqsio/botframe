@@ -177,7 +177,7 @@ export function ValueMenu({
 						))}
 					</div>
 				))}
-				{groups.length === 0 ? <p className="component-note">No variable here.</p> : null}
+				{groups.length === 0 ? <p className="panel-note">No variable here.</p> : null}
 			</div>
 			<Actions query={query} target={target} />
 		</div>

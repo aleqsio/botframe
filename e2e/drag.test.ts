@@ -1,5 +1,5 @@
-import { _electron as electron, expect, test } from "@playwright/test";
-import { dragOn, drawWith, openStage } from "./support";
+import { expect, test } from "@playwright/test";
+import { dragOn, drawWith, launchApp, openStage } from "./support";
 
 const START = { x: 420, y: 260 };
 const DELTA = { x: 100, y: 70 };
@@ -8,8 +8,7 @@ const COVER = { from: { x: 700, y: 240 }, to: { x: 500, y: 400 } };
 const OVERLAP = { from: { x: 560, y: 320 }, to: { x: 620, y: 360 } };
 
 test("dragging the rectangle writes the new position into the document", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 
 	await expect(layer).toBeVisible();

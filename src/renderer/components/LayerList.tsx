@@ -118,6 +118,8 @@ function LayerRow({
 	);
 }
 
+const EMPTY_NOTE = "The page has no layers. Pick a tool in the bar below, and draw on the canvas.";
+
 export function LayerList({ doc, user }: { doc: DesignDocument; user: UserState }): ReactElement {
 	const ids = useRootIds(doc);
 	const panel = useRef<HTMLElement>(null);
@@ -125,7 +127,11 @@ export function LayerList({ doc, user }: { doc: DesignDocument; user: UserState 
 
 	return (
 		<aside aria-label="Layers" id="layers" ref={panel}>
-			<LayerBranch doc={doc} ids={ids} rows={rows} user={user} />
+			{ids.length === 0 ? (
+				<p className="panel-note">{EMPTY_NOTE}</p>
+			) : (
+				<LayerBranch doc={doc} ids={ids} rows={rows} user={user} />
+			)}
 		</aside>
 	);
 }

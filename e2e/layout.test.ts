@@ -54,29 +54,6 @@ test("the inspector heads the page with nothing selected and stays in its place 
 	await app.close();
 });
 
-test("the Layers button of the file pill takes the layer card away and brings it back", async () => {
-	const { app, window } = await launchApp();
-	const toggle = window.locator("#file-bar").getByRole("button", { name: "Layers" });
-	const card = window.locator("#layers");
-
-	await expect(window.locator("#file-bar .file-name")).toHaveText("Untitled");
-	await expect(toggle).toHaveAttribute("aria-pressed", "true");
-	await expect(card).toHaveCount(1);
-	expect((await boxOf(window.locator("#file-bar"))).width).toBe((await boxOf(card)).width);
-
-	await toggle.click();
-
-	await expect(toggle).toHaveAttribute("aria-pressed", "false");
-	await expect(card).toHaveCount(0);
-
-	await toggle.click();
-
-	await expect(card).toHaveCount(1);
-	await expect(card.locator(".layer-row")).toHaveText(["Rectangle"]);
-
-	await app.close();
-});
-
 test("the frame tool opens a bar of presets above the tool bar, and select opens none", async () => {
 	const { app, window } = await launchApp();
 	const tools = window.getByRole("toolbar", { name: "Tools" });
@@ -231,7 +208,7 @@ test("the zoom pill steps the zoom of the canvas in and out", async () => {
 	await app.close();
 });
 
-test("the window drags by the file pill, and the top edge of the canvas takes presses", async () => {
+test("the window drags by the empty part of the file pill, and the top edge of the canvas takes presses", async () => {
 	const { app, window } = await launchApp();
 	const regionsAt = (point: { x: number; y: number }): Promise<string[]> =>
 		window.evaluate(
@@ -244,12 +221,14 @@ test("the window drags by the file pill, and the top edge of the canvas takes pr
 		);
 
 	await expect(window.locator(".layer")).toHaveCount(1);
+	const bar = await boxOf(window.locator("#file-bar"));
 	const name = await boxOf(window.locator("#file-bar .file-name"));
-	const toggle = await boxOf(window.locator("#file-bar").getByRole("button", { name: "Layers" }));
+	const fileButton = await boxOf(window.locator("#file-bar").getByRole("button", { name: "File" }));
 
 	expect(await regionsAt(TOP_OF_CANVAS)).toEqual([]);
-	expect((await regionsAt({ x: name.x + 2, y: name.y + 2 }))[0]).toBe("drag");
-	expect((await regionsAt({ x: toggle.x + 4, y: toggle.y + 4 }))[0]).toBe("no-drag");
+	expect((await regionsAt({ x: bar.x + bar.width - 8, y: bar.y + 8 }))[0]).toBe("drag");
+	expect((await regionsAt({ x: name.x + 4, y: name.y + 4 }))[0]).toBe("no-drag");
+	expect((await regionsAt({ x: fileButton.x + 4, y: fileButton.y + 4 }))[0]).toBe("no-drag");
 
 	await app.close();
 });

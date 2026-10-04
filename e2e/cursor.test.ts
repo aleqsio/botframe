@@ -1,10 +1,10 @@
-import { _electron as electron, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { launchApp } from "./support";
 
 const CENTER = { x: 540, y: 340 };
 
 test("the select tool shows the pointer over a layer and grabbing only while it moves", async () => {
-	const app = await electron.launch({ args: ["out/main/index.js"] });
-	const window = await app.firstWindow();
+	const { app, window } = await launchApp();
 	const layer = window.locator(".layer");
 
 	await expect(layer).toBeVisible();

@@ -6,7 +6,7 @@ const FIXTURES = "e2e/fixtures/components";
 const SCHEMES = ["light", "dark"] as const;
 
 async function importFixtures(page: Page): Promise<Locator> {
-	await page.locator("#file-bar").getByRole("button", { name: "Components" }).click();
+	await page.locator("#side-panel").getByRole("button", { name: "Components" }).click();
 	const card = page.getByRole("complementary", { name: "Components" });
 	await card.getByLabel("Import folder").setInputFiles(FIXTURES);
 	await expect(card.getByText("Imported 3 components.")).toBeVisible();
@@ -84,7 +84,7 @@ test("the toggle switches its track and its switch state from the on prop", asyn
 });
 
 for (const scheme of SCHEMES) {
-	test(`the components card and the file bar fit their text in the ${scheme} scheme`, async ({
+	test(`the components card, the panel selector and the file bar fit their text in the ${scheme} scheme`, async ({
 		page,
 	}) => {
 		await page.emulateMedia({ colorScheme: scheme });
@@ -92,11 +92,11 @@ for (const scheme of SCHEMES) {
 		const card = await importFixtures(page);
 
 		const fits = await Promise.all(
-			[card, page.locator("#file-bar")].map((panel) =>
+			[card, page.locator("#side-panel"), page.locator("#file-bar")].map((panel) =>
 				panel.evaluate((element) => element.scrollWidth <= element.clientWidth),
 			),
 		);
 
-		expect(fits).toEqual([true, true]);
+		expect(fits).toEqual([true, true, true]);
 	});
 }

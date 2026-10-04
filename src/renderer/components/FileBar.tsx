@@ -1,49 +1,18 @@
 import type { ReactElement } from "react";
-import { useSlot } from "../state/useSlot";
-import { tabName } from "../state/tab";
+import { inBrowser } from "../bridge";
+import { onApple } from "../input/command";
 import type { Tab } from "../state/tab";
-import type { SidePanel } from "../state/userState";
 import type { Workspace } from "../state/workspace";
 import { FileMenu } from "./FileMenu";
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon";
-
-interface PanelChoice {
-	panel: Exclude<SidePanel, null>;
-	label: string;
-	icon: IconName;
-	text: string | null;
-}
-
-const PANELS: readonly PanelChoice[] = [
-	{ panel: "layers", label: "Layers", icon: "layers", text: "Layers" },
-	{ panel: "components", label: "Components", icon: "component", text: null },
-];
+import { FileName } from "./FileName";
 
 export function FileBar({ tab, workspace }: { tab: Tab; workspace: Workspace }): ReactElement {
-	const open = useSlot(tab.user.panel);
-	const name = tabName(useSlot(tab.file));
+	const windowButtons = onApple() && !inBrowser();
 
 	return (
-		<div id="file-bar">
+		<div data-window-buttons={windowButtons ? "" : undefined} id="file-bar">
 			<FileMenu workspace={workspace} />
-			<strong className="file-name">{name}</strong>
-			{PANELS.map((choice) => (
-				<button
-					aria-label={choice.label}
-					aria-pressed={open === choice.panel}
-					className="pill-button"
-					key={choice.panel}
-					onClick={() => {
-						tab.user.panel.set(open === choice.panel ? null : choice.panel);
-					}}
-					title={choice.label}
-					type="button"
-				>
-					<Icon name={choice.icon} />
-					{choice.text}
-				</button>
-			))}
+			<FileName key={tab.id} tab={tab} />
 		</div>
 	);
 }

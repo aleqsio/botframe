@@ -1,0 +1,84 @@
+name: preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+env:
+  BRANCH: pages-previews
+  FOLDER: pr/${{ github.event.pull_request.number }}
+jobs:
+  build:
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      - run: bun run build:web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview
+          path: out/web
+  publish:
+    needs: build
+    if: >-
+      always() &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (needs.build.result == 'success' || github.event.action == 'closed')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out the preview branch
+        run: |
+          git init -q site
+          cd site
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin "$BRANCH"; then
+            git checkout -q -b "$BRANCH" FETCH_HEAD
+          else
+            git checkout -q --orphan "$BRANCH"
+          fi
+          rm -rf "$FOLDER"
+      - if: github.event.action != 'closed'
+        uses: actions/download-artifact@v4
+        with:
+          name: preview
+          path: site/${{ env.FOLDER }}
+      - name: Push the preview branch
+        working-directory: site
+        run: |
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q --allow-empty -m "${{ github.event.action }} ${FOLDER}"
+          for attempt in 1 2 3 4; do
+            git push -q origin "HEAD:$BRANCH" && exit 0
+            git pull -q --rebase origin "$BRANCH"
+          done
+          exit 1
+      - if: github.event.action != 'closed'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = "<!-- botframe-preview -->";
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const url = `https://${owner}.github.io/${repo}/${process.env.FOLDER}/`;
+            const body = `${marker}\nPreview: ${url}\n\nThe page updates about one minute after each push, when the \`pages\` workflow ends.`;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const old = comments.find((comment) => comment.body?.startsWith(marker));
+            if (old === undefined) {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

@@ -1,8 +1,10 @@
 export const OPEN_FILE = "file:open";
 export const SAVE_FILE = "file:save";
+export const RENAME_FILE = "file:rename";
 
 export const FILE_EXTENSION = "botframe";
 export const UNTITLED = "Untitled";
+export const FILE_NAME = /^(?!\s*\.{0,2}\s*$)[^\\/]+$/u;
 
 export interface FileCommand {
 	id: "newTab" | "open" | "save" | "saveAs" | "closeTab";

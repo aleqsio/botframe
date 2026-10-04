@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { closeTab } from "../file";
 import { useSlot } from "../state/useSlot";
-import { Tab, tabName } from "../state/tab";
+import { Tab } from "../state/tab";
 import type { Workspace } from "../state/workspace";
 import { Icon } from "./Icon";
 
@@ -15,7 +15,7 @@ interface ItemProps {
 }
 
 function TabItem({ tab, selected, workspace }: ItemProps): ReactElement {
-	const name = tabName(useSlot(tab.file));
+	const name = useSlot(tab.name);
 
 	return (
 		<div className="tab" data-selected={selected ? "" : undefined}>

@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: [preview]
+    types: [completed]
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -12,6 +15,7 @@ permissions:
   id-token: write
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,6 +27,11 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       - run: bun run build:web
+      - name: Add the previews of the open pull requests
+        run: |
+          if git fetch -q --depth 1 origin pages-previews && git cat-file -e FETCH_HEAD:pr 2>/dev/null; then
+            git archive FETCH_HEAD pr | tar -x -C out/web
+          fi
       - uses: actions/configure-pages@v5
         with:
           enablement: true

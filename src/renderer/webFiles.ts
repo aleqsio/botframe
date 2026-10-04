@@ -1,16 +1,12 @@
-import { FILE_EXTENSION, UNTITLED } from "../shared/file";
+import { FILE_EXTENSION } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
 
 const DOT_EXTENSION = `.${FILE_EXTENSION}`;
 const SAVE_PROMPT = "Save the document as:";
 const REVOKE_DELAY_MS = 40_000;
 
-const names = new Map<string, string>();
-
 function savedFile(name: string): SavedFile {
-	const token = crypto.randomUUID();
-	names.set(token, name);
-	return { token, name };
+	return { token: crypto.randomUUID(), name };
 }
 
 function withoutExtension(name: string): string {
@@ -45,8 +41,8 @@ function download(bytes: Uint8Array, name: string): void {
 	}, REVOKE_DELAY_MS);
 }
 
-function chooseName(current: string | undefined): string | null {
-	const name = withoutExtension(window.prompt(SAVE_PROMPT, current ?? UNTITLED)?.trim() ?? "");
+function chooseName(suggested: string): string | null {
+	const name = withoutExtension(window.prompt(SAVE_PROMPT, suggested)?.trim() ?? "");
 	return name === "" ? null : name;
 }
 
@@ -59,9 +55,17 @@ export async function openFile(): Promise<OpenedFile | null> {
 	return { ...savedFile(withoutExtension(file.name)), bytes };
 }
 
-function saveTo(bytes: Uint8Array, token: string | null, saveAs: boolean): SavedFile | null {
-	const current = token === null ? undefined : names.get(token);
-	if (token !== null && current !== undefined && !saveAs) {
+interface SaveRequest {
+	token: string | null;
+	name: string;
+	saveAs: boolean;
+}
+
+function saveTo(
+	bytes: Uint8Array,
+	{ token, name: current, saveAs }: SaveRequest,
+): SavedFile | null {
+	if (token !== null && !saveAs) {
 		download(bytes, current);
 		return { token, name: current };
 	}
@@ -76,7 +80,12 @@ function saveTo(bytes: Uint8Array, token: string | null, saveAs: boolean): Saved
 export function saveFile(
 	bytes: Uint8Array,
 	token: string | null,
+	name: string,
 	saveAs: boolean,
 ): Promise<SavedFile | null> {
-	return Promise.resolve(saveTo(bytes, token, saveAs));
+	return Promise.resolve(saveTo(bytes, { token, name, saveAs }));
+}
+
+export function renameFile(token: string, name: string): Promise<SavedFile | null> {
+	return Promise.resolve({ token, name });
 }

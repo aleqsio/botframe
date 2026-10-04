@@ -63,9 +63,7 @@ export function FrameSection({ doc, layer, user }: PanelProps): ReactElement {
 					}
 				}}
 			/>
-			<p className="component-note">
-				A component can set variables, and its instances stay in sync.
-			</p>
+			<p className="panel-note">A component can set variables, and its instances stay in sync.</p>
 		</div>
 	);
 }
