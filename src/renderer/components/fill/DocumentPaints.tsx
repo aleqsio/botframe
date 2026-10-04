@@ -9,17 +9,22 @@ import type { EditTarget } from "../variables/target";
 import { SwatchGrid } from "./SwatchGrid";
 import type { Swatch } from "./SwatchGrid";
 
-export function documentSwatches(
-	{ source, view }: Pick<Reach, "view" | "source">,
-	kind: EditableKind,
-): readonly Swatch[] {
+type PaintReach = Pick<Reach, "view" | "source">;
+
+export function colorSwatches({ source, view }: PaintReach): readonly Swatch[] {
 	return view.variables(DOCUMENT_SCOPE).flatMap((variable) => {
+		if (variable.type !== "color") {
+			return [];
+		}
 		const paint = resolveValue(source, variable.initial, []);
-		const fits = variable.type === "color" && typeof paint === "string";
-		return fits && paintOf(paint).kind === kind
-			? [{ key: variable.id, label: variable.name, paint }]
-			: [];
+		return [
+			{ key: variable.id, label: variable.name, paint: typeof paint === "string" ? paint : "" },
+		];
 	});
+}
+
+export function documentSwatches(reach: PaintReach, kind: EditableKind): readonly Swatch[] {
+	return colorSwatches(reach).filter((swatch) => paintOf(swatch.paint).kind === kind);
 }
 
 export function DocumentPaints({

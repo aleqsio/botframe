@@ -53,7 +53,7 @@ export function PaintCard({
 					edit();
 				}}
 				ref={anchor}
-				title={paint === null ? `${swatch.label}: edit it in Document variables` : swatch.label}
+				title={paint === null ? `${swatch.label} uses a variable or a condition` : swatch.label}
 				type="button"
 			>
 				<span className="fill-card-preview" style={{ background: swatch.paint }} />

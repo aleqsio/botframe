@@ -1,14 +1,12 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
-import type { DesignDocument } from "../../../document/document";
-import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentRows, useComponentsView } from "../../useDocument";
 import { isFrame } from "../layerEntry";
 import { FrameSection } from "./ComponentActions";
 import type { PanelProps } from "./ComponentActions";
-import { AddMenu } from "./AddMenu";
+import { AddMenu, variableChoices } from "./AddMenu";
 import { InstanceHeader } from "./InstanceHeader";
-import { CopyPropRow, DefaultRow } from "./PropRows";
+import { CopyPropRow } from "./PropRows";
 
 function CopySection(props: PanelProps & { component: string }): ReactElement {
 	const { component, doc, layer } = props;
@@ -31,11 +29,10 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 				<span className="property-label">Props</span>
 				{locked ? null : (
 					<AddMenu
-						doc={doc}
+						choices={variableChoices(doc, component)}
 						label="Add prop"
 						note="A prop each instance can set"
 						onAdded={setFresh}
-						owner={component}
 					/>
 				)}
 			</div>
@@ -66,37 +63,4 @@ export function LayerPanels(props: PanelProps): ReactElement | null {
 		return <CopySection {...props} component={content.component} />;
 	}
 	return isFrame(layer) ? <FrameSection {...props} /> : null;
-}
-
-export function DocumentPanels({ doc }: { doc: DesignDocument }): ReactElement {
-	const view = useComponentsView(doc);
-	const [fresh, setFresh] = useState<string | null>(null);
-	return (
-		<section aria-label="Document variables" className="field-group layout-section">
-			<header className="layout-head">
-				<span className="group-label">Document variables</span>
-				<AddMenu
-					doc={doc}
-					label="Add variable"
-					note="A token each layer can use"
-					onAdded={setFresh}
-					owner={DOCUMENT_SCOPE}
-				/>
-			</header>
-			{view.variables(DOCUMENT_SCOPE).map((variable) => (
-				<DefaultRow
-					doc={doc}
-					fresh={fresh === variable.id}
-					key={variable.id}
-					locked={false}
-					onSettled={() => {
-						setFresh(null);
-					}}
-					owner={DOCUMENT_SCOPE}
-					variable={variable}
-					view={view}
-				/>
-			))}
-		</section>
-	);
 }

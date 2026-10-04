@@ -86,20 +86,38 @@ test("a drag of the media row under the paint row draws the paint over the media
 	await expect(page.locator("[data-row]").first()).toHaveAttribute("data-row", "paint");
 });
 
-test("a document color from the fill styles binds the fill of the selected layer", async ({
-	page,
-}) => {
+test("a document color card binds the fill of the selected layer", async ({ page }) => {
 	const { layers, origin } = await openRenderer(page);
-	const styles = page.getByRole("region", { name: "Fill styles" });
-	await styles.getByRole("button", { name: "Add color" }).click();
+	const section = page.getByRole("region", { name: "Document" });
+	await section.getByRole("button", { name: "Add color" }).click();
+	await page.getByRole("menuitem", { name: "Color" }).click();
+	await page.keyboard.press("Enter");
 	const hex = page.getByLabel("Hex", { exact: true });
 	await hex.fill("#ff0000");
 	await hex.press("Enter");
 	await page.keyboard.press("Escape");
 
 	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
-	await styles.getByRole("button", { name: "color", exact: true }).click();
+	await page
+		.getByRole("region", { name: "Document" })
+		.getByRole("button", { name: "color", exact: true })
+		.click();
 
 	await expect(layers.first()).toHaveCSS("background-color", "rgb(255, 0, 0)");
 	await expect(page.locator(".fill-row .variable-chip")).toHaveText("color");
+});
+
+test("a document color shows as one card and never as a variable row", async ({ page }) => {
+	await openRenderer(page);
+	const section = page.getByRole("region", { name: "Document" });
+	await section.getByRole("button", { name: "Add variable" }).click();
+	await page.getByRole("menuitem", { name: "Color" }).click();
+	await page.keyboard.press("Escape");
+	await section.getByRole("button", { name: "Add variable" }).click();
+	await page.getByRole("menuitem", { name: "Text" }).click();
+	await page.keyboard.press("Enter");
+
+	await expect(section.locator(".fill-card")).toHaveCount(1);
+	await expect(section.locator(".prop-row")).toHaveCount(1);
+	await expect(page.getByRole("region", { name: "Fill styles" })).toHaveCount(0);
 });

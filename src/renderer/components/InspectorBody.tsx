@@ -7,8 +7,8 @@ import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
 import { NameField } from "./NameField";
-import { DocumentPanels, LayerPanels } from "./variables/ComponentPanels";
-import { FillStyles } from "./fill/FillStyles";
+import { LayerPanels } from "./variables/ComponentPanels";
+import { DocumentSection } from "./variables/DocumentSection";
 
 function PageProperties({ doc }: { doc: DesignDocument }): ReactElement {
 	const count = useLayerCount(doc);
@@ -36,8 +36,7 @@ export function InspectorBody({
 		return (
 			<>
 				<PageProperties doc={doc} />
-				<DocumentPanels doc={doc} />
-				<FillStyles doc={doc} selection={[]} />
+				<DocumentSection doc={doc} selection={[]} />
 			</>
 		);
 	}
@@ -51,7 +50,7 @@ export function InspectorBody({
 			) : (
 				<MixedProperties doc={doc} layers={layers} />
 			)}
-			<FillStyles doc={doc} selection={layers.map((layer) => layer.id)} />
+			<DocumentSection doc={doc} selection={layers.map((layer) => layer.id)} />
 		</>
 	);
 }
