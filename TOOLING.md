@@ -27,9 +27,26 @@ Lint limits: cyclomatic complexity 10, cognitive complexity 15 (both from `oxlin
 
 The lint rules also hold the module boundaries from AGENTS.md. `src/document/` imports no React, no Electron, and no Node module.
 
-`bun run test:e2e:chromium` builds the renderer and opens `out/renderer` in headless Chromium. The Playwright project `chromium` in `e2e/chromium/` serves the build through `page.route`, so no server runs. It holds the invariants that need real layout: the center of the bounding client rect of a dragged layer moves by the mouse delta, through a turn, a corner origin, a change of parent, and a change of size. The Playwright project `electron` in `e2e/` keeps the menu, the clipboard, and the window. CI runs the `chromium` project and not the `electron` project.
+`bun run test:e2e:chromium` builds the website and opens `out/web` in headless Chromium. The Playwright project `chromium` in `e2e/chromium/` serves the build through `page.route`, so no server runs. It holds the invariants that need real layout: the center of the bounding client rect of a dragged layer moves by the mouse delta, through a turn, a corner origin, a change of parent, and a change of size. The Playwright project `electron` in `e2e/` keeps the menu, the clipboard, and the window. CI runs the `chromium` project and not the `electron` project.
 
 lefthook runs the format, the lint, and the typecheck before each commit. CI is the gate that counts, because a user can skip a hook.
+
+## Website
+
+The renderer also runs in a browser, with no Electron. `vite.config.ts` gives the renderer configuration to Electron and to the website.
+
+| Command | Result |
+| --- | --- |
+| `bun run dev:web` | starts a development server at http://localhost:5173 |
+| `bun run start:web` | builds the website to `out/web` and serves it at http://localhost:4173 |
+| `bun run build:web` | builds the website to `out/web`. Put the folder on a static host. |
+
+When `window.botframe` is not there, `src/renderer/bridge.ts` uses the browser:
+- Open uses a file input. Save downloads the file. The first save and Save As ask for a name.
+- The clipboard uses `navigator.clipboard`. The layer flavor needs a browser that writes a `web ` custom format, for example Chromium.
+- The browser keeps Ctrl+T and Ctrl+W. Use the tab buttons.
+
+`.github/workflows/pages.yml` builds the website on each push to `main` and publishes it to GitHub Pages. The workflow tries to turn on Pages. If the first run fails at `configure-pages`, set Settings → Pages → Source to "GitHub Actions", and run the workflow again.
 
 ## Review
 

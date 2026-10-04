@@ -1,7 +1,7 @@
 import { fileBytes, readFile } from "../document/file";
 import { FILE_COMMANDS } from "../shared/file";
 import type { FileCommand } from "../shared/file";
-import { bridge } from "./bridge";
+import { bridge, inBrowser } from "./bridge";
 import type { Bridge } from "./bridge";
 import { Tab, tabName } from "./state/tab";
 import type { Workspace } from "./state/workspace";
@@ -56,9 +56,6 @@ export function closeTab(workspace: Workspace, tab: Tab): void {
 
 function runOnShell(command: FileCommand, workspace: Workspace): void {
 	const shell = bridge();
-	if (shell === null) {
-		return;
-	}
 	if (command.id === "open") {
 		void open(shell, workspace);
 		return;
@@ -78,8 +75,19 @@ export function runFileCommand(command: FileCommand, workspace: Workspace): void
 	runOnShell(command, workspace);
 }
 
+function guardUnload(workspace: Workspace): void {
+	window.addEventListener("beforeunload", (event) => {
+		if (workspace.tabs.get().some((tab) => tab.hasChanges())) {
+			event.preventDefault();
+		}
+	});
+}
+
 export function connectFileMenu(workspace: Workspace): void {
-	bridge()?.onCommand((id) => {
+	if (inBrowser()) {
+		guardUnload(workspace);
+	}
+	bridge().onCommand((id) => {
 		const command = FILE_COMMANDS.find((entry) => entry.id === id);
 		if (command !== undefined) {
 			runFileCommand(command, workspace);

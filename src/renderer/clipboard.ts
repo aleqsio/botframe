@@ -29,13 +29,8 @@ async function sendToClipboard(
 	user.pasteReady.set(layers !== null);
 }
 
-function write(user: UserState, html: string, layers: string | null): boolean {
-	const shell = bridge();
-	if (shell === null) {
-		return false;
-	}
-	void sendToClipboard(shell, user, html, layers);
-	return true;
+function write(user: UserState, html: string, layers: string | null): void {
+	void sendToClipboard(bridge(), user, html, layers);
 }
 
 function pastedId(
@@ -83,12 +78,16 @@ export function copySelection(doc: DesignDocument, user: UserState): boolean {
 		layers: nodes,
 		components: packedFor(doc, nodes),
 	};
-	return write(user, markupOf(doc, user.selection.get()), serializeEnvelope(envelope));
+	write(user, markupOf(doc, user.selection.get()), serializeEnvelope(envelope));
+	return true;
 }
 
 export function copyAsHtml(doc: DesignDocument, user: UserState): boolean {
-	const nodes = selectedNodes(doc, user);
-	return nodes.length > 0 && write(user, markupOf(doc, user.selection.get()), null);
+	if (selectedNodes(doc, user).length === 0) {
+		return false;
+	}
+	write(user, markupOf(doc, user.selection.get()), null);
+	return true;
 }
 
 export function cutSelection(doc: DesignDocument, user: UserState): boolean {
@@ -103,11 +102,7 @@ export function cutSelection(doc: DesignDocument, user: UserState): boolean {
 }
 
 export function pasteFromClipboard(doc: DesignDocument, user: UserState): boolean {
-	const shell = bridge();
-	if (shell === null) {
-		return false;
-	}
-	void readClipboard(shell, doc, user);
+	void readClipboard(bridge(), doc, user);
 	return true;
 }
 
@@ -117,9 +112,6 @@ async function refreshPasteReady(shell: Bridge, user: UserState): Promise<void> 
 
 export function watchClipboard(workspace: Workspace): void {
 	const shell = bridge();
-	if (shell === null) {
-		return;
-	}
 	const refresh = (): void => {
 		void refreshPasteReady(shell, workspace.active.get().user);
 	};
