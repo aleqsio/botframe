@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { parseColor } from "../color";
+import { formatColor, parseColor } from "../color";
 import type { Rgba } from "../color";
 
 export interface Swatch {
@@ -9,16 +9,53 @@ export interface Swatch {
 }
 
 const PRESETS: readonly Swatch[] = [
-	"#000000",
-	"#ffffff",
-	"#d9d9d9",
-	"#ff3b30",
-	"#ff9500",
-	"#ffcc00",
-	"#34c759",
-	"#0d99ff",
-	"#af52de",
-].map((text) => ({ key: text, label: text, paint: text }));
+	[
+		"#000000",
+		"#262626",
+		"#404040",
+		"#595959",
+		"#808080",
+		"#a6a6a6",
+		"#d9d9d9",
+		"#f2f2f2",
+		"#ffffff",
+	],
+	[
+		"#ff3b30",
+		"#ff9500",
+		"#ffcc00",
+		"#34c759",
+		"#00c7be",
+		"#0d99ff",
+		"#5856d6",
+		"#af52de",
+		"#ff2d55",
+	],
+	[
+		"#ffb3ae",
+		"#ffd599",
+		"#ffeb99",
+		"#aee9bd",
+		"#99e9e5",
+		"#9ed6ff",
+		"#bcbbef",
+		"#dfbaf2",
+		"#ffabbb",
+	],
+	[
+		"#a6261f",
+		"#a66100",
+		"#a68500",
+		"#22813a",
+		"#00817b",
+		"#0963a6",
+		"#39388b",
+		"#723590",
+		"#a61d37",
+	],
+]
+	.flat()
+	.map((text) => ({ key: text, label: text, paint: text }));
 
 export function SwatchGrid({
 	label,
@@ -67,7 +104,7 @@ export function PresetGrid({
 					onPick({ ...picked, a: color.a });
 				}
 			}}
-			picked={null}
+			picked={formatColor({ ...color, a: 1 })}
 			swatches={PRESETS}
 		/>
 	);

@@ -7,6 +7,7 @@ import { agentServer } from "./agent/server";
 import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
 import { connectFiles } from "./files";
+import { connectMedia } from "./media";
 
 function createWindow(): void {
 	const window = new BrowserWindow({
@@ -47,6 +48,7 @@ ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
 app.on("ready", () => {
 	connectClipboard();
 	connectFiles();
+	connectMedia();
 	listenAgent(agentServer(ipcPage(), null));
 	createWindow();
 });

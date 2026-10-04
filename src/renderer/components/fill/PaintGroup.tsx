@@ -6,31 +6,37 @@ import { addPaintVariable } from "./libraryActions";
 import { PaintCard } from "./PaintCard";
 import type { CardProps } from "./PaintCard";
 
-function paintChoices(props: CardProps): readonly AddChoice[] {
+type GroupProps = CardProps & { onAdded: (id: string) => void };
+
+function paintChoices(props: GroupProps): readonly AddChoice[] {
 	return [
 		{
 			name: "Color",
 			icon: "ellipse",
-			add: () => addPaintVariable(props.doc, "solid"),
+			pick: () => {
+				props.onAdded(addPaintVariable(props.doc, "solid"));
+			},
 		},
 		{
 			name: "Gradient",
 			icon: "gradient",
-			add: () => addPaintVariable(props.doc, "gradient"),
+			pick: () => {
+				props.onAdded(addPaintVariable(props.doc, "gradient"));
+			},
 		},
 	];
 }
 
-export function PaintGroup(props: CardProps & { onAdded: (id: string) => void }): ReactElement {
+export function PaintGroup(props: GroupProps): ReactElement {
 	const swatches = colorSwatches({ view: props.view, source: props.doc.tree.resolver() });
 	return (
 		<div className="fill-group">
 			<div className="fill-group-head">
-				<span className="layout-sub">Colors and gradients</span>
-				<AddMenu choices={paintChoices(props)} label="Add color" onAdded={props.onAdded} />
+				<span className="layout-sub">Fills</span>
+				<AddMenu choices={paintChoices(props)} compact label="Add document fill" />
 			</div>
 			{swatches.length === 0 ? (
-				<p className="component-note">No colors.</p>
+				<p className="fill-group-note">No fills.</p>
 			) : (
 				<ul className="fill-cards">
 					{swatches.map((swatch) => (

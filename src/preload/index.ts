@@ -6,6 +6,8 @@ import { EDIT_COMMAND, SET_EDIT_MENU } from "../shared/editMenu";
 import type { EditMenuItem } from "../shared/editMenu";
 import { OPEN_FILE, RENAME_FILE, SAVE_FILE } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
+import { FETCH_MEDIA } from "../shared/media";
+import type { FetchedMedia } from "../shared/media";
 
 async function invoke(channel: string, ...args: readonly unknown[]): Promise<unknown> {
 	const value: unknown = await ipcRenderer.invoke(channel, ...args);
@@ -27,6 +29,18 @@ function openedFile(value: unknown): OpenedFile | null {
 	const file = savedFile(value);
 	const bytes = fieldsOf(value)?.bytes;
 	return file !== null && bytes instanceof Uint8Array ? { ...file, bytes } : null;
+}
+
+function isBytes(value: unknown): value is Uint8Array<ArrayBuffer> {
+	return value instanceof Uint8Array && value.buffer instanceof ArrayBuffer;
+}
+
+function fetchedMedia(value: unknown): FetchedMedia | null {
+	const media: Partial<Record<keyof FetchedMedia, unknown>> | null =
+		typeof value === "object" && value !== null ? value : null;
+	return typeof media?.type === "string" && isBytes(media.bytes)
+		? { type: media.type, bytes: media.bytes }
+		: null;
 }
 
 async function answer(run: (call: unknown) => Promise<unknown>, call: unknown): Promise<void> {
@@ -68,6 +82,9 @@ contextBridge.exposeInMainWorld("botframe", {
 	},
 	async renameFile(token: string, name: string): Promise<SavedFile | null> {
 		return savedFile(await invoke(RENAME_FILE, token, name));
+	},
+	async fetchMedia(url: string): Promise<FetchedMedia | null> {
+		return fetchedMedia(await invoke(FETCH_MEDIA, url));
 	},
 	serveAgent(run: (call: unknown) => Promise<unknown>): void {
 		ipcRenderer.on(AGENT_CALL, (_event, ...args: unknown[]) => {
