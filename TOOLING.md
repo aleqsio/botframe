@@ -57,9 +57,9 @@ An MCP server lets an agent read and change each open document. The server uses 
 | Shell | Server | Page |
 | --- | --- | --- |
 | Desktop | The application starts the server. | The window connects through IPC. |
-| Website | Run `bun run agent`. | Press the Agent button in the tab bar. The page polls the server. |
+| Website | Run `bun run agent`. | Open the Agent button in the tab bar and press Connect. The page polls the server. |
 
-Add the server to Claude Code:
+The Agent button in the tab bar gives these steps and copies each command. Add the server to Claude Code:
 
 ```bash
 claude mcp add --transport http botframe http://127.0.0.1:7341/mcp

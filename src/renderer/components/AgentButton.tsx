@@ -1,29 +1,25 @@
+import { Popover } from "@base-ui-components/react/popover";
 import type { ReactElement } from "react";
-import type { AgentLink, LinkState } from "../agent/webLink";
-import { useSlot } from "../state/useSlot";
-import { Icon } from "./Icon";
+import type { AgentLink } from "../agent/webLink";
+import { AgentPanel } from "./AgentPanel";
+import { AgentMark } from "./AgentMark";
 
-const TITLES: Readonly<Record<LinkState, string>> = {
-	off: "Connect an agent. Run bun run agent first.",
-	searching: "Waiting for the agent server at 127.0.0.1. Run bun run agent.",
-	linked: "An agent can edit the open documents.",
-};
+const LABEL = "Agent";
+const POPUP_GAP = 6;
 
-export function AgentButton({ link }: { link: AgentLink }): ReactElement {
-	const state = useSlot(link.state);
-
+export function AgentButton({ link }: { link: AgentLink | null }): ReactElement {
 	return (
-		<button
-			aria-label="Agent"
-			aria-pressed={state !== "off"}
-			className="pill-button"
-			onClick={() => {
-				link.toggle();
-			}}
-			title={TITLES[state]}
-			type="button"
-		>
-			<Icon name="agent" />
-		</button>
+		<Popover.Root>
+			<Popover.Trigger aria-label={LABEL} className="pill-button" title={LABEL}>
+				<AgentMark link={link} />
+			</Popover.Trigger>
+			<Popover.Portal>
+				<Popover.Positioner align="end" side="bottom" sideOffset={POPUP_GAP}>
+					<Popover.Popup className="agent-popup">
+						<AgentPanel link={link} />
+					</Popover.Popup>
+				</Popover.Positioner>
+			</Popover.Portal>
+		</Popover.Root>
 	);
 }

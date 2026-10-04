@@ -2,6 +2,9 @@ export const AGENT_PORT = 7341;
 export const AGENT_HOST = "127.0.0.1";
 export const AGENT_PAGE_PATH = "/page";
 export const AGENT_MCP_PATH = "/mcp";
+export const AGENT_MCP_URL = `http://${AGENT_HOST}:${AGENT_PORT}${AGENT_MCP_PATH}`;
+export const AGENT_ADD_COMMAND = `claude mcp add --transport http botframe ${AGENT_MCP_URL}`;
+export const AGENT_RELAY_COMMAND = "bun run agent";
 
 export const AGENT_CALL = "agent:call";
 export const AGENT_REPLY = "agent:reply";

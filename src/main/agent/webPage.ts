@@ -6,7 +6,7 @@ const HOLD_MS = 20_000;
 const SEEN_MS = HOLD_MS + 10_000;
 
 const NO_PAGE =
-	"No botframe page is connected. Open botframe in the browser and press the Agent button in the file bar.";
+	"No botframe page is connected. In botframe, open the Agent button in the tab bar and press Connect.";
 
 function sendCall(response: ServerResponse, call: AgentCall | null): void {
 	response.end(JSON.stringify(call));

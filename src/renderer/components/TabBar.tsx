@@ -74,7 +74,7 @@ export function TabBar({ workspace, agent }: TabBarProps): ReactElement {
 			>
 				<Icon name="plus" />
 			</button>
-			{agent === null ? null : <AgentButton link={agent} />}
+			<AgentButton link={agent} />
 		</div>
 	);
 }
