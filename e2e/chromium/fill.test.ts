@@ -125,6 +125,24 @@ test("a document color shows as one card and never as a variable row", async ({ 
 	await expect(page.getByRole("region", { name: "Fill styles" })).toHaveCount(0);
 });
 
+test("the color tab shows the preset swatches only in the swatch mode", async ({ page }) => {
+	await openRenderer(page);
+	const section = page.getByRole("region", { name: "Document" });
+	await section.getByRole("button", { name: "Add document fill" }).click();
+	await page.getByRole("menuitem", { name: "Color" }).click();
+	await page.keyboard.press("Enter");
+	await expect(page.getByRole("group", { name: "Preset colors" })).toHaveCount(0);
+
+	await page.getByRole("button", { name: "Swatches" }).click();
+	await page.getByRole("button", { name: "#ff3b30" }).click();
+
+	await expect(page.getByLabel("Hex", { exact: true })).toHaveValue("#ff3b30");
+	await expect(page.getByRole("button", { name: "#ff3b30" })).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+});
+
 test("the web build disables the media URL and points to the desktop app", async ({ page }) => {
 	await openRenderer(page);
 	await page
