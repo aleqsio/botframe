@@ -30,3 +30,10 @@ export function useAssetUrl(store: AssetStore, id: AssetId | null): AssetUrl | n
 		useCallback(() => (id === null ? null : assetUrl(store, id)), [store, id]),
 	);
 }
+
+export function useAssetIds(store: AssetStore): readonly AssetId[] {
+	return useSyncExternalStore(
+		useCallback((listener: () => void) => store.subscribe(listener), [store]),
+		useCallback(() => store.ids(), [store]),
+	);
+}

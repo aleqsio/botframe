@@ -12,16 +12,19 @@ export function LayerPaint({
 	layer: Layer;
 	media: AssetUrl | null;
 }): ReactElement {
-	const fit = layer.media?.fit ?? null;
 	const paint = pathPaintStyle(layer);
 
 	if (paint === null) {
-		return <LayerVideo fit={fit} media={media} />;
+		return <LayerVideo fill={layer.media} media={media} paint={layer.fill} />;
 	}
 
 	return (
-		<span className="layer-paint" data-layer-id={layer.id} style={paintedStyle(paint, fit, media)}>
-			<LayerVideo fit={fit} media={media} />
+		<span
+			className="layer-paint"
+			data-layer-id={layer.id}
+			style={paintedStyle(paint, layer.media, media)}
+		>
+			<LayerVideo fill={layer.media} media={media} paint={layer.fill} />
 		</span>
 	);
 }

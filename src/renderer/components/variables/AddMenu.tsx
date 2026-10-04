@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { VariableType } from "../../../document/variable";
 import { Icon } from "../Icon";
+import type { IconName } from "../Icon";
 import { addVariable, typeIcon, typeName } from "./scopeEdit";
 
 interface TypeChoice {
@@ -20,15 +21,29 @@ const TYPES: readonly TypeChoice[] = [
 	{ type: "number", hint: "a number" },
 ];
 
+export interface AddChoice {
+	name: string;
+	hint: string;
+	icon: IconName;
+	add: () => string;
+}
+
+export function variableChoices(doc: DesignDocument, owner: string): readonly AddChoice[] {
+	return TYPES.map(({ hint, type }) => ({
+		name: typeName(type),
+		hint,
+		icon: typeIcon(type),
+		add: () => addVariable(doc, owner, type),
+	}));
+}
+
 export function AddMenu({
-	doc,
+	choices,
 	label,
 	note,
 	onAdded,
-	owner,
 }: {
-	doc: DesignDocument;
-	owner: string;
+	choices: readonly AddChoice[];
 	label: string;
 	note: string;
 	onAdded: (id: string) => void;
@@ -53,20 +68,20 @@ export function AddMenu({
 						}}
 					>
 						<span className="add-menu-note">{note}</span>
-						{TYPES.map(({ hint, type }) => (
+						{choices.map(({ add, hint, icon, name }) => (
 							<Menu.Item
 								className="layer-menu-item add-menu-item"
-								key={type}
-								label={typeName(type)}
+								key={name}
+								label={name}
 								onClick={() => {
 									added.current = true;
-									onAdded(addVariable(doc, owner, type));
+									onAdded(add());
 								}}
 							>
 								<span className="add-menu-glyph">
-									<Icon name={typeIcon(type)} />
+									<Icon name={icon} />
 								</span>
-								<span className="layer-menu-label">{typeName(type)}</span>
+								<span className="layer-menu-label">{name}</span>
 								<span className="add-menu-hint">{hint}</span>
 							</Menu.Item>
 						))}

@@ -83,10 +83,12 @@ function storedAsset(id: AssetId, value: unknown): Asset | null {
 export class AssetStore {
 	readonly #map: LoroMap;
 	readonly #listeners = new Set<() => void>();
+	#ids: readonly AssetId[] | null = null;
 
 	constructor(doc: LoroDoc) {
 		this.#map = doc.getMap(ASSETS);
 		this.#map.subscribe(() => {
+			this.#ids = null;
 			notify(this.#listeners);
 		});
 	}
@@ -99,6 +101,14 @@ export class AssetStore {
 		if (!this.has(asset.id)) {
 			this.#map.set(asset.id, { type: asset.type, bytes: asset.bytes });
 		}
+	}
+
+	ids(): readonly AssetId[] {
+		if (this.#ids === null) {
+			const keys: readonly unknown[] = this.#map.keys();
+			this.#ids = keys.filter((key) => typeof key === "string" && isAssetId(key));
+		}
+		return this.#ids;
 	}
 
 	get(id: AssetId): Asset | null {

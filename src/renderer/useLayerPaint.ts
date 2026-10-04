@@ -59,6 +59,6 @@ export function useLayerPaint(
 	if (layer === null) {
 		return { style: null, media };
 	}
-	const painted = paintedStyle(layerStyle(layer, parentDisplay), layer.media?.fit ?? null, media);
+	const painted = paintedStyle(layerStyle(layer, parentDisplay), layer.media, media);
 	return { style: withLayerClip(painted, shape, source), media };
 }

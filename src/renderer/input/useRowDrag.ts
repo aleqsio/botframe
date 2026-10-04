@@ -1,60 +1,34 @@
-import { useRef } from "react";
-import type {
-	MouseEvent as ReactMouseEvent,
-	PointerEvent as ReactPointerEvent,
-	RefObject,
-} from "react";
+import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
-import { GestureRecognizer, sampleOf } from "./gesture";
 import { COMMIT_MESSAGES } from "./layerCommand";
 import { extendsSelection, modifiersOf } from "./modifiers";
 import { scrollStepOf } from "./panelScroll";
 import { carriedMove, carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop";
 import type { RowTarget, RowTree } from "./rowDrop";
 import { rowHitAt } from "./rowHit";
+import { usePointerDrag } from "./usePointerDrag";
+import type { DragHandlers, DragRules } from "./usePointerDrag";
 import { selectIds, toggleSelected } from "./selection";
 
-type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
 
-export interface RowHandlers {
+export interface RowHandlers extends Pick<
+	DragHandlers<LayerId>,
+	"onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"
+> {
 	onClick: (event: RowMouseEvent, id: LayerId) => void;
 	onContextMenu: (event: RowMouseEvent, id: LayerId) => void;
-	onPointerCancel: (event: RowPointerEvent) => void;
-	onPointerDown: (event: RowPointerEvent, id: LayerId) => void;
-	onPointerMove: (event: RowPointerEvent) => void;
-	onPointerUp: (event: RowPointerEvent) => void;
-}
-
-interface RowInput {
-	recognizer: GestureRecognizer;
-	row: LayerId | null;
-	pointer: Point;
-	frame: number;
-	dropped: boolean;
 }
 
 interface RowSession {
-	input: RowInput;
 	doc: DesignDocument;
 	user: UserState;
 	panel: RefObject<HTMLElement | null>;
+	pointer: Point;
 }
-
-function createRowInput(): RowInput {
-	return {
-		recognizer: new GestureRecognizer(),
-		row: null,
-		pointer: { x: 0, y: 0 },
-		frame: 0,
-		dropped: false,
-	};
-}
-
-const PRIMARY_BUTTON = 0;
 
 function treeOf(doc: DesignDocument): RowTree {
 	return {
@@ -72,7 +46,7 @@ function sameTarget(one: RowTarget | null, other: RowTarget | null): boolean {
 
 function targetUnder(session: RowSession, dragged: LayerId): RowTarget | null {
 	const tree = treeOf(session.doc);
-	const hit = rowHitAt(session.input.pointer);
+	const hit = rowHitAt(session.pointer);
 	if (hit === null) {
 		return null;
 	}
@@ -87,153 +61,81 @@ function scrollPanel(session: RowSession): void {
 	}
 	const box = panel.getBoundingClientRect();
 	panel.scrollTop += scrollStepOf({
-		pointer: session.input.pointer.y - box.top,
+		pointer: session.pointer.y - box.top,
 		height: panel.clientHeight,
 		scrollTop: panel.scrollTop,
 		scrollHeight: panel.scrollHeight,
 	});
 }
 
-function scheduleDrag(session: RowSession): void {
-	if (session.input.frame !== 0) {
-		return;
-	}
-	session.input.frame = requestAnimationFrame(() => {
-		stepDrag(session);
-	});
-}
-
-function stepDrag(session: RowSession): void {
-	session.input.frame = 0;
+function stepDrag(session: RowSession): boolean {
 	const drag = session.user.rowDrag.get();
 	if (drag === null) {
-		return;
+		return false;
 	}
 	if (session.doc.layer(drag.id) === null) {
 		session.user.rowDrag.set(null);
-		return;
+		return false;
 	}
 	scrollPanel(session);
 	const target = targetUnder(session, drag.id);
 	if (!sameTarget(drag.target, target)) {
 		session.user.rowDrag.set({ id: drag.id, target });
 	}
-	scheduleDrag(session);
-}
-
-function stopDrag(session: RowSession): void {
-	if (session.input.frame !== 0) {
-		cancelAnimationFrame(session.input.frame);
-		session.input.frame = 0;
-	}
-	session.user.rowDrag.set(null);
-}
-
-function applyDrop(session: RowSession): void {
-	const drag = session.user.rowDrag.get();
-	stopDrag(session);
-	if (drag === null || drag.target === null) {
-		return;
-	}
-	const move = rowMoveOf(drag.id, drag.target, treeOf(session.doc));
-	if (move === null) {
-		return;
-	}
-	const carried = carriedMove((id) => session.doc.layer(id), drag.id, move.parent);
-	if (session.doc.move(drag.id, move.parent, move.index)) {
-		if (carried !== null) {
-			session.doc.update(
-				drag.id,
-				carriedPlacement(carried, session.doc.layer(drag.id) ?? carried.layer),
-			);
-		}
-		session.doc.commit(COMMIT_MESSAGES.move);
-	}
-}
-
-function trackPointer(session: RowSession, event: RowPointerEvent): boolean {
-	if (!session.input.recognizer.tracks(event.pointerId)) {
-		return false;
-	}
-	session.input.pointer = { x: event.clientX, y: event.clientY };
 	return true;
 }
 
-function beginDrag(session: RowSession): void {
-	const id = session.input.row;
-	if (id === null) {
+function applyDrop(doc: DesignDocument, user: UserState): void {
+	const drag = user.rowDrag.get();
+	if (drag === null || drag.target === null) {
 		return;
 	}
-	session.user.rowDrag.set({ id, target: null });
-	scheduleDrag(session);
-}
-
-function pointerDown(session: RowSession, event: RowPointerEvent, id: LayerId): void {
-	if (event.button !== PRIMARY_BUTTON) {
+	const move = rowMoveOf(drag.id, drag.target, treeOf(doc));
+	if (move === null) {
 		return;
 	}
-	session.input.dropped = false;
-	session.input.row = id;
-	session.input.pointer = { x: event.clientX, y: event.clientY };
-	if (session.input.recognizer.down(sampleOf(event)).taken) {
-		event.currentTarget.setPointerCapture(event.pointerId);
+	const carried = carriedMove((id) => doc.layer(id), drag.id, move.parent);
+	if (doc.move(drag.id, move.parent, move.index)) {
+		if (carried !== null) {
+			doc.update(drag.id, carriedPlacement(carried, doc.layer(drag.id) ?? carried.layer));
+		}
+		doc.commit(COMMIT_MESSAGES.move);
 	}
 }
 
-function pointerMove(session: RowSession, event: RowPointerEvent): void {
-	if (!trackPointer(session, event)) {
-		return;
-	}
-	if (session.input.recognizer.move(sampleOf(event))?.kind === "dragStart") {
-		beginDrag(session);
-	}
-}
-
-function pointerUp(session: RowSession, event: RowPointerEvent): void {
-	if (!trackPointer(session, event)) {
-		return;
-	}
-	if (session.input.recognizer.up(sampleOf(event))?.kind === "dragEnd") {
-		session.input.dropped = true;
-		applyDrop(session);
-	}
-}
-
-function pointerCancel(session: RowSession, event: RowPointerEvent): void {
-	if (!trackPointer(session, event)) {
-		return;
-	}
-	if (session.input.recognizer.cancel(sampleOf(event)) !== null) {
-		session.input.dropped = true;
-		stopDrag(session);
-	}
-}
-
-function selectForMenu(session: RowSession, id: LayerId): void {
-	if (!session.user.selection.get().includes(id)) {
-		selectIds(session.user.selection, [id]);
-	}
-}
-
-function openRowMenu(session: RowSession, event: RowMouseEvent, id: LayerId): void {
+function openRowMenu(user: UserState, event: RowMouseEvent, id: LayerId): void {
 	event.preventDefault();
-	if (session.input.recognizer.active()) {
-		return;
+	if (!user.selection.get().includes(id)) {
+		selectIds(user.selection, [id]);
 	}
-	selectForMenu(session, id);
-	session.user.menu.set({ client: { x: event.clientX, y: event.clientY }, layerIds: [] });
+	user.menu.set({ client: { x: event.clientX, y: event.clientY }, layerIds: [] });
 }
 
-function rowClick(session: RowSession, event: RowMouseEvent, id: LayerId): void {
-	if (session.input.dropped) {
-		session.input.dropped = false;
-		return;
-	}
+function rowClick(doc: DesignDocument, user: UserState, event: RowMouseEvent, id: LayerId): void {
 	if (extendsSelection(modifiersOf(event))) {
-		toggleSelected((layerId) => session.doc.layer(layerId), session.user.selection, id);
+		toggleSelected((layerId) => doc.layer(layerId), user.selection, id);
 		return;
 	}
-	selectIds(session.user.selection, [id]);
+	selectIds(user.selection, [id]);
+}
+
+function rowRules(
+	doc: DesignDocument,
+	user: UserState,
+	panel: RefObject<HTMLElement | null>,
+): DragRules<LayerId> {
+	return {
+		begin: (id) => {
+			user.rowDrag.set({ id, target: null });
+		},
+		step: (_, pointer) => stepDrag({ doc, user, panel, pointer }),
+		drop: () => {
+			applyDrop(doc, user);
+		},
+		stop: () => {
+			user.rowDrag.set(null);
+		},
+	};
 }
 
 export function useRowDrag(
@@ -241,30 +143,24 @@ export function useRowDrag(
 	user: UserState,
 	panel: RefObject<HTMLElement | null>,
 ): RowHandlers {
-	const input = useRef<RowInput | null>(null);
-
-	function session(): RowSession {
-		return { input: (input.current ??= createRowInput()), doc, user, panel };
-	}
+	const drag = usePointerDrag(rowRules(doc, user, panel));
 
 	return {
 		onClick: (event, id) => {
-			rowClick(session(), event, id);
+			if (!drag.dropped()) {
+				rowClick(doc, user, event, id);
+			}
 		},
 		onContextMenu: (event, id) => {
-			openRowMenu(session(), event, id);
+			if (drag.active()) {
+				event.preventDefault();
+				return;
+			}
+			openRowMenu(user, event, id);
 		},
-		onPointerCancel: (event) => {
-			pointerCancel(session(), event);
-		},
-		onPointerDown: (event, id) => {
-			pointerDown(session(), event, id);
-		},
-		onPointerMove: (event) => {
-			pointerMove(session(), event);
-		},
-		onPointerUp: (event) => {
-			pointerUp(session(), event);
-		},
+		onPointerCancel: drag.onPointerCancel,
+		onPointerDown: drag.onPointerDown,
+		onPointerMove: drag.onPointerMove,
+		onPointerUp: drag.onPointerUp,
 	};
 }

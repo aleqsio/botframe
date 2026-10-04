@@ -34,16 +34,36 @@ describe("the media fill of a layer", () => {
 		const asset = await pictureId();
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset, fit: "tile" } });
+		doc.update(id, { media: { asset, fit: "tile", stack: "under" } });
 		doc.commit("set media");
 
-		expect(DesignDocument.open(doc.snapshot()).layer(id)?.media).toEqual({ asset, fit: "tile" });
+		expect(DesignDocument.open(doc.snapshot()).layer(id)?.media).toEqual({
+			asset,
+			fit: "tile",
+			stack: "under",
+		});
+	});
+
+	it("reads a media value with no stack as media over the paint", async () => {
+		const asset = await pictureId();
+		const doc = DesignDocument.create();
+		const id = doc.createLayer(DRAWN);
+		const loro = new LoroDoc();
+		loro.import(doc.snapshot());
+		loro.getTree("layers").getNodeByID(nodeOf(id))?.data.set("media", { asset, fit: "cover" });
+		loro.commit();
+
+		expect(DesignDocument.open(loro.export({ mode: "snapshot" })).layer(id)?.media).toEqual({
+			asset,
+			fit: "cover",
+			stack: "over",
+		});
 	});
 
 	it("removes the stored key when the media is removed", async () => {
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset: await pictureId(), fit: "cover" } });
+		doc.update(id, { media: { asset: await pictureId(), fit: "cover", stack: "over" } });
 		doc.commit("set media");
 
 		doc.update(id, { media: null });
@@ -79,14 +99,14 @@ describe("the media fill of a layer", () => {
 			}).replace('"layers":[]', `"layers":[{"media":{"asset":"${asset}","fit":"zoom"}}]`),
 		);
 
-		expect(envelope?.layers[0]?.media).toEqual({ asset, fit: "cover" });
+		expect(envelope?.layers[0]?.media).toEqual({ asset, fit: "cover", stack: "over" });
 	});
 
 	it("copies the media with the subtree of a layer", async () => {
 		const asset = await pictureId();
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset, fit: "contain" } });
+		doc.update(id, { media: { asset, fit: "contain", stack: "over" } });
 		doc.commit("set media");
 		const node = doc.readSubtree(id);
 		if (node === null) {
@@ -95,6 +115,6 @@ describe("the media fill of a layer", () => {
 
 		const copy = doc.createSubtree(node, null);
 
-		expect(doc.layer(copy)?.media).toEqual({ asset, fit: "contain" });
+		expect(doc.layer(copy)?.media).toEqual({ asset, fit: "contain", stack: "over" });
 	});
 });

@@ -90,6 +90,23 @@ describe("the asset store", () => {
 		expect(calls).toBe(1);
 	});
 
+	it("lists each asset and keeps one list until a commit changes the store", async () => {
+		const doc = DesignDocument.create();
+		const first = await pngOf(ABC);
+		doc.assets.put(first);
+		doc.commit("add asset");
+		const held = doc.assets.ids();
+
+		expect(held).toEqual([first.id]);
+		expect(doc.assets.ids()).toBe(held);
+
+		const second = await pngOf(new TextEncoder().encode("abcd"));
+		doc.assets.put(second);
+		doc.commit("add asset");
+
+		expect(doc.assets.ids().toSorted()).toEqual([first.id, second.id].toSorted());
+	});
+
 	it("reads a stored entry of the wrong shape as no asset", async () => {
 		const loro = new LoroDoc();
 		const asset = await pngOf(ABC);

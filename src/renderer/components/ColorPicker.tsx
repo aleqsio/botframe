@@ -1,24 +1,12 @@
 import { useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactElement } from "react";
-import { formatColor, heldRatio, hueText, parseColor, steppedHsva, toHsva, toRgba } from "./color";
+import { formatColor, heldRatio, hueText, steppedHsva, toHsva, toRgba } from "./color";
 import type { Hsva, Rgba } from "./color";
 
 const FULL_TURN = 360;
 const PERCENT = 100;
 const SMALL_STEP = 0.01;
 const LARGE_STEP = 0.1;
-
-const SWATCHES: readonly string[] = [
-	"#000000",
-	"#ffffff",
-	"#d9d9d9",
-	"#ff3b30",
-	"#ff9500",
-	"#ffcc00",
-	"#34c759",
-	"#0d99ff",
-	"#af52de",
-];
 
 export interface ColorPickerProps {
 	color: Rgba;
@@ -133,25 +121,6 @@ function ChannelSlider({
 	);
 }
 
-function SwatchRow({ onPick }: { onPick: (text: string) => void }): ReactElement {
-	return (
-		<div className="color-swatches">
-			{SWATCHES.map((text) => (
-				<button
-					aria-label={text}
-					className="color-preset"
-					key={text}
-					onClick={() => {
-						onPick(text);
-					}}
-					style={{ background: text }}
-					type="button"
-				/>
-			))}
-		</div>
-	);
-}
-
 function heldHsva(draft: Hsva | null, color: Rgba): Hsva {
 	if (draft !== null && formatColor(toRgba(draft)) === formatColor(color)) {
 		return draft;
@@ -193,16 +162,6 @@ export function ColorPicker({ color, onChange, onCommit }: ColorPickerProps): Re
 					value={Math.round(color.a * PERCENT)}
 				/>
 			</div>
-			<SwatchRow
-				onPick={(text) => {
-					const picked = parseColor(text);
-					if (picked === null) {
-						return;
-					}
-					onChange({ ...picked, a: color.a });
-					onCommit();
-				}}
-			/>
 		</div>
 	);
 }

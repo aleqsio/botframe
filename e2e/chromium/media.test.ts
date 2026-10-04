@@ -9,7 +9,13 @@ const RED_PIXEL = Buffer.from(
 );
 const SCHEMES = ["light", "dark"] as const;
 
+async function openMedia(page: Page): Promise<void> {
+	await page.getByRole("button", { name: "Add fill" }).click();
+	await expect(page.getByRole("group", { name: "Fill type" })).toBeVisible();
+}
+
 async function chooseRedPixel(page: Page): Promise<void> {
+	await openMedia(page);
 	await page.getByLabel("Media file").setInputFiles({
 		name: "red.png",
 		mimeType: "image/png",
@@ -37,6 +43,7 @@ test("a chosen image fills the layer, takes a fit, and goes away on remove", asy
 test("a chosen video plays in the layer, and the tile fit is off for it", async ({ page }) => {
 	const { layers, origin } = await openRenderer(page);
 	await page.mouse.click(origin.x + GRAB.x, origin.y + GRAB.y);
+	await openMedia(page);
 
 	await page.getByLabel("Media file").setInputFiles({
 		name: "clip.mp4",
@@ -63,7 +70,7 @@ for (const scheme of SCHEMES) {
 		const boxes = await Promise.all(
 			[
 				choose,
-				page.getByRole("button", { name: "Remove media" }),
+				inspector.locator(".fill-row", { has: page.getByRole("button", { name: "Remove media" }) }),
 				page.getByRole("group", { name: "Media fit" }),
 			].map((control) => rectOf(control)),
 		);
@@ -82,8 +89,7 @@ for (const scheme of SCHEMES) {
 					),
 				),
 		).toEqual([true, true, true, true]);
-		await page
-			.locator(".layout-section", { has: choose })
-			.screenshot({ path: `test-results/media-${scheme}.png` });
+		await page.locator(".fill-section").screenshot({ path: `test-results/fill-${scheme}.png` });
+		await page.locator(".fill-popup").screenshot({ path: `test-results/media-${scheme}.png` });
 	});
 }
