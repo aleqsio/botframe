@@ -14,6 +14,16 @@ describe("imageBackground", () => {
 	});
 });
 
+describe("imageBackground over a gradient", () => {
+	it("keeps the gradient as the last layer under the image", () => {
+		const gradient = "linear-gradient(90deg, #000000 0%, #ffffff 100%)";
+
+		expect(imageBackground(gradient, URL_TEXT, "contain")).toBe(
+			`url("${URL_TEXT}") center / contain no-repeat, ${gradient}`,
+		);
+	});
+});
+
 describe("paintedStyle", () => {
 	it("adds an image to the background of the layer", () => {
 		const style = paintedStyle({ background: "#ffffff" }, "cover", {

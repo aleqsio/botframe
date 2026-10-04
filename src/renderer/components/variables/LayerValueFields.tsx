@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
-import { ColorField } from "../ColorField";
 import { BindButton } from "./BindButton";
 import { BoundSummary } from "./BoundSummary";
 import { useLayerTarget } from "./layerTarget";
@@ -10,35 +9,6 @@ import { useLayerTarget } from "./layerTarget";
 interface FieldProps {
 	doc: DesignDocument;
 	layer: Layer;
-}
-
-export function FillField({ doc, layer }: FieldProps): ReactElement {
-	const target = useLayerTarget(doc, layer, {
-		key: "fill",
-		label: "Fill",
-		plain: (value) => (typeof value === "string" ? { fill: value } : null),
-	});
-	const bound = layer.bindings.fill;
-
-	return (
-		<ColorField
-			after={<BindButton target={target} />}
-			changed={isChanged(layer, "fill")}
-			replace={
-				bound === undefined ? undefined : (
-					<BoundSummary bound={bound} now={layer.fill} view={target.reach.view} />
-				)
-			}
-			label="Fill"
-			onChange={(text) => {
-				doc.update(layer.id, { fill: text });
-			}}
-			onCommit={() => {
-				doc.commit("set fill");
-			}}
-			value={layer.fill}
-		/>
-	);
 }
 
 export function ClipField({ doc, layer }: FieldProps): ReactElement {

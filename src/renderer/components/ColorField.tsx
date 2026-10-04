@@ -1,12 +1,12 @@
 import { Popover } from "@base-ui-components/react/popover";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { ColorPicker } from "./ColorPicker";
 import { DraftInput } from "./PropertyField";
 import { BLACK, formatColor, parseColor } from "./color";
-import type { Rgba } from "./color";
+import { colorOf } from "./cssColor";
+import { PresetGrid } from "./fill/SwatchGrid";
 
 const POPUP_GAP = 10;
-const PROBE = "#010203";
 
 export interface ColorInputProps {
 	label: string;
@@ -15,41 +15,25 @@ export interface ColorInputProps {
 	onCommit: () => void;
 }
 
-export interface ColorFieldProps extends ColorInputProps {
-	changed?: boolean | undefined;
-	after?: ReactNode | undefined;
-	replace?: ReactNode | undefined;
-}
-
-function cssColor(text: string): string {
-	const context = document.createElement("canvas").getContext("2d");
-	if (context === null) {
-		return "";
-	}
-	context.fillStyle = PROBE;
-	context.fillStyle = text;
-	const painted = typeof context.fillStyle === "string" ? context.fillStyle : "";
-	return painted === PROBE ? "" : painted;
-}
-
-function colorOf(text: string): Rgba | null {
-	if (!CSS.supports("color", text)) {
-		return null;
-	}
-	return parseColor(text) ?? parseColor(cssColor(text));
-}
-
 function ColorPopup({ onChange, onCommit, value }: ColorInputProps): ReactElement {
+	const color = parseColor(value) ?? BLACK;
 	return (
 		<Popover.Portal>
 			<Popover.Positioner align="end" side="left" sideOffset={POPUP_GAP}>
 				<Popover.Popup className="color-popup">
 					<ColorPicker
-						color={parseColor(value) ?? BLACK}
-						onChange={(color) => {
-							onChange(formatColor(color));
+						color={color}
+						onChange={(next) => {
+							onChange(formatColor(next));
 						}}
 						onCommit={onCommit}
+					/>
+					<PresetGrid
+						color={color}
+						onPick={(next) => {
+							onChange(formatColor(next));
+							onCommit();
+						}}
 					/>
 				</Popover.Popup>
 			</Popover.Positioner>
@@ -84,12 +68,11 @@ export function ColorInput(props: ColorInputProps): ReactElement {
 	);
 }
 
-export function ColorField({ after, changed, replace, ...input }: ColorFieldProps): ReactElement {
+export function ColorField(input: ColorInputProps): ReactElement {
 	return (
-		<div className="property-field color-field" data-changed={changed === true ? "" : undefined}>
+		<div className="property-field color-field">
 			<span className="property-label">{input.label}</span>
-			{replace ?? <ColorInput {...input} />}
-			{after}
+			<ColorInput {...input} />
 		</div>
 	);
 }
