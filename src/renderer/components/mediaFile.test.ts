@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { Asset, AssetId } from "../../document/assets";
 import { DesignDocument } from "../../document/document";
 import { firstId } from "../../document/documentFixtures";
 import type { Layer, LayerId } from "../../document/layer";
 import type { MediaFill } from "../../document/media";
-import { placeMediaFile } from "./mediaFile";
+import { placeAsset, placeMediaFile } from "./mediaFile";
 
 function mediaOf(doc: DesignDocument, id: LayerId): MediaFill {
 	const media = doc.layer(id)?.media;
@@ -19,6 +20,14 @@ function layerOf(doc: DesignDocument, id: LayerId): Layer {
 		throw new Error("the layer is missing");
 	}
 	return layer;
+}
+
+function assetOf(doc: DesignDocument, id: AssetId): Asset {
+	const asset = doc.assets.get(id);
+	if (asset === null) {
+		throw new Error("the asset is missing");
+	}
+	return asset;
 }
 
 function seeded(): { doc: DesignDocument; layer: Layer } {
@@ -75,5 +84,33 @@ describe("placeMediaFile", () => {
 		await placing;
 
 		expect(doc.changeCount()).toBe(changes);
+	});
+});
+
+describe("placeAsset", () => {
+	it("fills a second layer with an asset that the document holds, in one undo step", async () => {
+		const { doc, layer } = seeded();
+		await placeMediaFile(doc, layer, new File(["picture"], "a.png", { type: "image/png" }));
+		const { asset } = mediaOf(doc, layer.id);
+		const other = doc.createLayer(
+			{
+				x: 0,
+				y: 0,
+				width: 10,
+				height: 10,
+				fill: "#ffffff",
+				name: "Other",
+				clip: false,
+				geometry: { kind: "ellipse" },
+			},
+			null,
+		);
+		doc.commit("add layer");
+
+		placeAsset(doc, layerOf(doc, other), assetOf(doc, asset));
+
+		expect(mediaOf(doc, other)).toEqual({ asset, fit: "cover" });
+		doc.undo();
+		expect(doc.layer(other)?.media).toBeNull();
 	});
 });
