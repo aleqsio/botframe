@@ -4,6 +4,7 @@ import type { DisplayMode } from "../document/layout";
 import type { LayerNode } from "../document/subtree";
 import { layerStyle, pathPaintStyle } from "./layerStyle";
 import type { StyledLayer } from "./layerStyle";
+import { textPaintStyle } from "./textStyle";
 
 const UPPERCASE = /[A-Z]/gu;
 const IN_ATTRIBUTE = /["&<>]/gu;
@@ -36,11 +37,14 @@ function escaped(value: string): string {
 
 function declarations(style: CSSProperties): string[] {
 	const entries: readonly (readonly [string, unknown])[] = Object.entries(style);
-	return entries.flatMap(([key, value]) =>
-		typeof value === "string" || typeof value === "number"
-			? [`${propertyName(key)}: ${value}`]
-			: [],
-	);
+	return entries
+		.flatMap(([key, value]) =>
+			typeof value === "string" || typeof value === "number"
+				? [[propertyName(key), value] as const]
+				: [],
+		)
+		.toSorted(([one], [two]) => (one < two ? -1 : 1))
+		.map(([name, value]) => `${name}: ${value}`);
 }
 
 const PAINT_BOX: CSSProperties = { position: "absolute", inset: 0 };
@@ -53,10 +57,22 @@ function shadowOf(content: LayerContent, find: FindComponent): string {
 }
 
 function styleText(style: CSSProperties): string {
-	return escaped(declarations(style).toSorted().join("; "));
+	return escaped(declarations(style).join("; "));
+}
+
+function textOf(node: LayerNode): string {
+	const { fill, geometry } = node.fields;
+	if (geometry.kind !== "text") {
+		return "";
+	}
+	const paint = styleText(textPaintStyle({ background: fill }));
+	return `<span style="${paint}">${escaped(geometry.content)}</span>`;
 }
 
 function paintOf(node: LayerNode): string {
+	if (node.fields.geometry.kind === "text") {
+		return textOf(node);
+	}
 	const paint = pathPaintStyle(node.fields);
 	return paint === null ? "" : `<div style="${styleText({ ...PAINT_BOX, ...paint })}"></div>`;
 }

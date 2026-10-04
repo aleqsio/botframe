@@ -5,6 +5,7 @@ import type { LayerLayout } from "../document/layout";
 import { PLAIN_INSTANCE } from "../document/layer";
 import type { LayerFields } from "../document/layer";
 import type { LayerNode } from "../document/subtree";
+import { DEFAULT_TEXT_STYLE } from "../document/text";
 import { layerStyle } from "./layerStyle";
 import { layerMarkup } from "./layerMarkup";
 import { verticesOf } from "../document/vertices";
@@ -140,5 +141,25 @@ describe("layerMarkup of a component instance", () => {
 			/^<div style="[^"]*"><template shadowrootmode="open"><b>Hot<\/b><slot><\/slot><\/template><div style=/u,
 		);
 		expect(layerMarkup(node, NO_COMPONENTS)).not.toContain("<template");
+	});
+});
+
+describe("the markup of a text layer", () => {
+	const text = nodeOf({
+		fill: "#ff0000",
+		geometry: { kind: "text", content: "A < B & C", ...DEFAULT_TEXT_STYLE },
+	});
+
+	it("paints the glyphs with the fill and not the box", () => {
+		const markup = layerMarkup(text, NO_COMPONENTS);
+
+		expect(markup).toContain(
+			'<span style="background: #ff0000; background-clip: text; color: transparent">',
+		);
+		expect(markup).not.toContain('<div style="background');
+	});
+
+	it("escapes the content", () => {
+		expect(layerMarkup(text, NO_COMPONENTS)).toContain(">A &lt; B &amp; C</span>");
 	});
 });
