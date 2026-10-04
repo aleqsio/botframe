@@ -9,37 +9,57 @@ import { addVariable, typeIcon, typeName } from "./scopeEdit";
 
 const TYPES: readonly VariableType[] = ["choice", "boolean", "text", "color", "length", "number"];
 
+export const VALUE_TYPES = TYPES.filter((type) => type !== "color");
+
 export interface AddChoice {
 	name: string;
 	icon: IconName;
-	add: () => string;
+	pick: () => void;
+	unavailable?: string;
 }
 
-export function variableChoices(doc: DesignDocument, owner: string): readonly AddChoice[] {
-	return TYPES.map((type) => ({
+export function variableChoices(
+	doc: DesignDocument,
+	owner: string,
+	onAdded: (id: string) => void,
+	types: readonly VariableType[] = TYPES,
+): readonly AddChoice[] {
+	return types.map((type) => ({
 		name: typeName(type),
 		icon: typeIcon(type),
-		add: () => addVariable(doc, owner, type),
+		pick: () => {
+			onAdded(addVariable(doc, owner, type));
+		},
 	}));
+}
+
+function Trigger({ compact, label }: { compact: boolean; label: string }): ReactElement {
+	return compact ? (
+		<Menu.Trigger aria-label={label} className="icon-button" title={label}>
+			<Icon name="plus" />
+		</Menu.Trigger>
+	) : (
+		<Menu.Trigger className="add-button">
+			<Icon name="plus" />
+			{label}
+			<Icon name="chevron" />
+		</Menu.Trigger>
+	);
 }
 
 export function AddMenu({
 	choices,
+	compact = false,
 	label,
-	onAdded,
 }: {
 	choices: readonly AddChoice[];
+	compact?: boolean;
 	label: string;
-	onAdded: (id: string) => void;
 }): ReactElement {
 	const added = useRef(false);
 	return (
 		<Menu.Root modal={false}>
-			<Menu.Trigger className="add-button">
-				<Icon name="plus" />
-				{label}
-				<Icon name="chevron" />
-			</Menu.Trigger>
+			<Trigger compact={compact} label={label} />
 			<Menu.Portal>
 				<Menu.Positioner align="end" side="bottom">
 					<Menu.Popup
@@ -51,15 +71,17 @@ export function AddMenu({
 							return back;
 						}}
 					>
-						{choices.map(({ add, icon, name }) => (
+						{choices.map(({ icon, name, pick, unavailable }) => (
 							<Menu.Item
 								className="layer-menu-item add-menu-item"
+								disabled={unavailable !== undefined}
 								key={name}
 								label={name}
 								onClick={() => {
 									added.current = true;
-									onAdded(add());
+									pick();
 								}}
+								title={unavailable}
 							>
 								<span className="add-menu-glyph">
 									<Icon name={icon} />

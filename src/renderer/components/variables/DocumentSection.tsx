@@ -7,36 +7,47 @@ import { DOCUMENT_SCOPE } from "../../../document/variable";
 import { useComponentsView } from "../../useDocument";
 import { MediaCards } from "../fill/MediaCards";
 import { PaintGroup } from "../fill/PaintGroup";
-import { AddMenu, variableChoices } from "./AddMenu";
+import { AddMenu, VALUE_TYPES, variableChoices } from "./AddMenu";
 import { DefaultRow } from "./PropRows";
 
-function VariableRows({
+function VariableGroup({
 	fresh,
+	onAdded,
 	onSettled,
 	...props
 }: {
 	doc: DesignDocument;
 	view: ComponentsView;
 	fresh: string | null;
+	onAdded: (id: string) => void;
 	onSettled: () => void;
 }): ReactElement {
+	const variables = props.view
+		.variables(DOCUMENT_SCOPE)
+		.filter((variable) => variable.type !== "color");
 	return (
-		<>
-			{props.view
-				.variables(DOCUMENT_SCOPE)
-				.filter((variable) => variable.type !== "color")
-				.map((variable) => (
-					<DefaultRow
-						{...props}
-						fresh={fresh === variable.id}
-						key={variable.id}
-						locked={false}
-						onSettled={onSettled}
-						owner={DOCUMENT_SCOPE}
-						variable={variable}
-					/>
-				))}
-		</>
+		<div className="fill-group">
+			<div className="fill-group-head">
+				<span className="layout-sub">Variables</span>
+				<AddMenu
+					choices={variableChoices(props.doc, DOCUMENT_SCOPE, onAdded, VALUE_TYPES)}
+					compact
+					label="Add variable"
+				/>
+			</div>
+			{variables.length === 0 ? <p className="fill-group-note">No variables.</p> : null}
+			{variables.map((variable) => (
+				<DefaultRow
+					{...props}
+					fresh={fresh === variable.id}
+					key={variable.id}
+					locked={false}
+					onSettled={onSettled}
+					owner={DOCUMENT_SCOPE}
+					variable={variable}
+				/>
+			))}
+		</div>
 	);
 }
 
@@ -68,11 +79,6 @@ export function DocumentSection({
 		<section aria-label="Document" className="field-group layout-section">
 			<header className="layout-head">
 				<span className="group-label">Document</span>
-				<AddMenu
-					choices={variableChoices(doc, DOCUMENT_SCOPE)}
-					label="Add variable"
-					onAdded={onAdded}
-				/>
 			</header>
 			<PaintGroup
 				doc={doc}
@@ -84,7 +90,7 @@ export function DocumentSection({
 				selection={selection}
 				view={view}
 			/>
-			<VariableRows doc={doc} fresh={fresh} onSettled={settle} view={view} />
+			<VariableGroup doc={doc} fresh={fresh} onAdded={onAdded} onSettled={settle} view={view} />
 			<MediaCards doc={doc} selection={selection} />
 		</section>
 	);

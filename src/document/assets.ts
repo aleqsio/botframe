@@ -1,4 +1,5 @@
 import type { LoroDoc, LoroMap } from "loro-crdt";
+import { MAX_MEDIA_BYTES } from "../shared/media";
 import { bagOf } from "./bag";
 import { notify, subscribeTo } from "./listeners";
 import type { Unsubscribe } from "./listeners";
@@ -30,7 +31,6 @@ export interface Asset {
 }
 
 const ASSETS = "assets";
-const MAX_BYTES = 256 * 1024 * 1024;
 const ASSET_ID_TEXT = /^[0-9a-f]{64}$/u;
 const HEX = 16;
 const BYTE_DIGITS = 2;
@@ -57,7 +57,7 @@ async function contentAddress(bytes: Uint8Array<ArrayBuffer>): Promise<AssetId> 
 }
 
 export function isAcceptedMedia(type: string, size: number): boolean {
-	return isMediaType(type) && size > 0 && size <= MAX_BYTES;
+	return isMediaType(type) && size > 0 && size <= MAX_MEDIA_BYTES;
 }
 
 export async function assetOf(bytes: Uint8Array<ArrayBuffer>, type: string): Promise<Asset | null> {

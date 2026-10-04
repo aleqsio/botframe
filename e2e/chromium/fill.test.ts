@@ -89,7 +89,7 @@ test("a drag of the media row under the paint row draws the paint over the media
 test("a document color card binds the fill of the selected layer", async ({ page }) => {
 	const { layers, origin } = await openRenderer(page);
 	const section = page.getByRole("region", { name: "Document" });
-	await section.getByRole("button", { name: "Add color" }).click();
+	await section.getByRole("button", { name: "Add document fill" }).click();
 	await page.getByRole("menuitem", { name: "Color" }).click();
 	await page.keyboard.press("Enter");
 	const hex = page.getByLabel("Hex", { exact: true });
@@ -111,6 +111,9 @@ test("a document color shows as one card and never as a variable row", async ({ 
 	await openRenderer(page);
 	const section = page.getByRole("region", { name: "Document" });
 	await section.getByRole("button", { name: "Add variable" }).click();
+	await expect(page.getByRole("menuitem", { name: "Color" })).toHaveCount(0);
+	await page.keyboard.press("Escape");
+	await section.getByRole("button", { name: "Add document fill" }).click();
 	await page.getByRole("menuitem", { name: "Color" }).click();
 	await page.keyboard.press("Escape");
 	await section.getByRole("button", { name: "Add variable" }).click();
@@ -120,4 +123,16 @@ test("a document color shows as one card and never as a variable row", async ({ 
 	await expect(section.locator(".fill-card")).toHaveCount(1);
 	await expect(section.locator(".prop-row")).toHaveCount(1);
 	await expect(page.getByRole("region", { name: "Fill styles" })).toHaveCount(0);
+});
+
+test("the web build disables the media URL and points to the desktop app", async ({ page }) => {
+	await openRenderer(page);
+	await page
+		.getByRole("region", { name: "Document" })
+		.getByRole("button", { name: "Add media" })
+		.click();
+
+	const url = page.getByRole("menuitem", { name: "URL" });
+	await expect(url).toHaveAttribute("aria-disabled", "true");
+	await expect(url).toHaveAttribute("title", "Use the desktop app to add media from a URL");
 });

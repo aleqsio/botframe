@@ -36,7 +36,7 @@ export function InspectorBody({
 		return (
 			<>
 				<PageProperties doc={doc} />
-				<DocumentSection doc={doc} selection={[]} />
+				<DocumentSection doc={doc} key="document" selection={[]} />
 			</>
 		);
 	}
@@ -50,7 +50,7 @@ export function InspectorBody({
 			) : (
 				<MixedProperties doc={doc} layers={layers} />
 			)}
-			<DocumentSection doc={doc} selection={layers.map((layer) => layer.id)} />
+			<DocumentSection doc={doc} key="document" selection={layers.map((layer) => layer.id)} />
 		</>
 	);
 }

@@ -287,6 +287,26 @@
 	height: var(--layout-inner);
 }
 
+.fill-group-note {
+	margin: 0;
+	padding: 0 var(--layout-space-1);
+	color: var(--panel-label);
+	font-size: var(--layout-text-label);
+}
+
+.media-url {
+	box-sizing: border-box;
+	height: var(--layout-inner);
+	padding: 0 var(--layout-space-3);
+	border-radius: var(--layout-radius-field);
+	background-color: var(--panel-hover);
+	font-size: var(--layout-text-field);
+}
+
+.media-url:focus {
+	box-shadow: 0 0 0 1.5px var(--panel-focus);
+}
+
 .fill-cards {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -316,7 +336,7 @@
 	cursor: default;
 }
 
-.fill-card-button:hover,
+.fill-card-button:hover:not(:disabled),
 .fill-card-button[data-popup-open] {
 	background-color: var(--panel-hover);
 }
@@ -327,11 +347,62 @@
 }
 
 .fill-card-preview {
+	position: relative;
 	display: block;
 	height: calc(2 * var(--layout-control));
 	overflow: hidden;
 	border-radius: var(--layout-radius-field);
 	box-shadow: inset 0 0 0 1px var(--panel-border);
+}
+
+.media-missing {
+	display: grid;
+	place-items: center;
+	background-color: var(--panel-hover);
+	color: var(--panel-label);
+}
+
+.media-badge {
+	position: absolute;
+	top: var(--layout-space-2);
+	right: var(--layout-space-2);
+	display: grid;
+	place-items: center;
+	padding: var(--layout-space-1);
+	border-radius: var(--layout-radius-inner);
+	background-color: var(--panel-background);
+	color: var(--panel-text);
+}
+
+.media-badge .icon {
+	width: var(--layout-icon-small);
+	height: var(--layout-icon-small);
+}
+
+.media-spinner {
+	width: var(--layout-icon);
+	height: var(--layout-icon);
+	border: var(--layout-space-1) solid var(--panel-selected);
+	border-top-color: var(--panel-label);
+	border-radius: 50%;
+	animation: media-spin 800ms linear infinite;
+}
+
+@keyframes media-spin {
+	to {
+		transform: rotate(1turn);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.media-spinner {
+		animation-duration: 2400ms;
+	}
+}
+
+.media-missing .icon {
+	width: var(--layout-icon);
+	height: var(--layout-icon);
 }
 
 .fill-card-name {

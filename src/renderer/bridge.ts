@@ -3,6 +3,7 @@ import type { ClipboardWrite } from "../shared/clipboard";
 import type { EditMenuItem } from "../shared/editMenu";
 import { FILE_COMMANDS } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
+import type { FetchedMedia } from "../shared/media";
 import { heldWithAccelerator } from "./input/command";
 import { readClipboardLayers, writesLayers, writeClipboard } from "./webClipboard";
 import { openFile, renameFile, saveFile } from "./webFiles";
@@ -21,6 +22,7 @@ export interface Bridge {
 		saveAs: boolean,
 	) => Promise<SavedFile | null>;
 	renameFile: (token: string, name: string) => Promise<SavedFile | null>;
+	fetchMedia: (url: string) => Promise<FetchedMedia | null>;
 	serveAgent: (run: (call: unknown) => Promise<AgentReply>) => void;
 }
 
@@ -63,6 +65,7 @@ const WEB: Bridge = {
 	openFile,
 	saveFile,
 	renameFile,
+	fetchMedia: () => Promise.resolve(null),
 	serveAgent: () => {},
 };
 
