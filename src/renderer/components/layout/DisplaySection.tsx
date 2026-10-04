@@ -11,7 +11,6 @@ import type { SegmentOption } from "./Segmented";
 import { resetChildren } from "./resetChildren";
 import { isFlex } from "./selfText";
 
-const BLOCK_NOTE = "Block. Children position with X and Y.";
 const WRAP_TIP = "Wrap: let the children flow onto more lines";
 const LABEL: Readonly<Record<DisplayMode, string>> = {
 	block: "Block",
@@ -80,11 +79,7 @@ export function DisplaySection({
 				/>
 				<WrapToggle doc={doc} layer={layer} />
 			</div>
-			{display === "block" ? (
-				<p className="layout-note">{BLOCK_NOTE}</p>
-			) : (
-				<DisplayRows doc={doc} layer={layer} />
-			)}
+			{display === "block" ? null : <DisplayRows doc={doc} layer={layer} />}
 		</section>
 	);
 }

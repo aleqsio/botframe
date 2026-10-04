@@ -594,7 +594,7 @@
 
 .add-menu-item {
 	display: grid;
-	grid-template-columns: var(--layout-inner) auto 1fr;
+	grid-template-columns: var(--layout-inner) 1fr;
 	align-items: center;
 	gap: var(--layout-space-4);
 }

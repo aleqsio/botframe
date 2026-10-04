@@ -47,7 +47,7 @@ export function MediaCards({ doc, selection }: MediaProps): ReactElement {
 				<span className="layout-sub">Media</span>
 			</div>
 			{ids.length === 0 ? (
-				<p className="component-note">No media. Choose a file in the fill picker.</p>
+				<p className="component-note">No media.</p>
 			) : (
 				<ul className="fill-cards">
 					{ids.map((id) => (

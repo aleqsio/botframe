@@ -13,12 +13,9 @@ interface PaintProps {
 	target: EditTarget | null;
 }
 
-const CUSTOM_NOTE =
-	"This fill is CSS that the picker cannot change. Pick Solid or Gradient to replace it.";
-
 export function PaintBody({ edit, paint, target }: PaintProps & { paint: Paint }): ReactElement {
 	if (paint.kind === "custom") {
-		return <p className="layout-note">{CUSTOM_NOTE}</p>;
+		return <code className="layout-note">{paint.text}</code>;
 	}
 	if (paint.kind === "solid") {
 		return <SolidTab color={paint.color} edit={edit} target={target} />;

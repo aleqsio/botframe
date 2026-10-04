@@ -28,12 +28,7 @@ function CopySection(props: PanelProps & { component: string }): ReactElement {
 			<div className="props-head">
 				<span className="property-label">Props</span>
 				{locked ? null : (
-					<AddMenu
-						choices={variableChoices(doc, component)}
-						label="Add prop"
-						note="A prop each instance can set"
-						onAdded={setFresh}
-					/>
+					<AddMenu choices={variableChoices(doc, component)} label="Add prop" onAdded={setFresh} />
 				)}
 			</div>
 			{view.variables(component).map((variable) => (

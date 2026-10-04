@@ -11,8 +11,8 @@ import { placementText } from "./selfText";
 import { ChangedMark } from "../ChangedMark";
 
 const CELL_MODES: readonly SegmentOption<Placement["mode"]>[] = [
-	{ value: "auto", label: "Auto", title: "The grid puts the layer in the next free cell." },
-	{ value: "place", label: "Place", title: "Write the column and the row of the layer." },
+	{ value: "auto", label: "Auto" },
+	{ value: "place", label: "Place" },
 ];
 
 export function CellSection({
