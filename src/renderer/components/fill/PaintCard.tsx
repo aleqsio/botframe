@@ -4,7 +4,7 @@ import type { ComponentsView } from "../../../document/components";
 import type { DesignDocument } from "../../../document/document";
 import type { LayerId } from "../../../document/layer";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
-import { bindFill } from "./libraryActions";
+import { bindFill, editablePaint } from "./libraryActions";
 import type { Swatch } from "./SwatchGrid";
 import { VariableEditor } from "./VariableEditor";
 
@@ -30,6 +30,12 @@ export function PaintCard({
 }: CardProps & { swatch: Swatch }): ReactElement {
 	const anchor = useRef<HTMLButtonElement>(null);
 	const variable = view.variables(DOCUMENT_SCOPE).find((held) => held.id === swatch.key);
+	const paint = variable === undefined ? null : editablePaint(variable);
+	const edit = (): void => {
+		if (paint !== null) {
+			onEdit(swatch.key);
+		}
+	};
 	return (
 		<li className="fill-card">
 			<button
@@ -37,26 +43,23 @@ export function PaintCard({
 				className="fill-card-button"
 				onClick={() => {
 					if (selection.length === 0) {
-						onEdit(swatch.key);
+						edit();
 					} else {
 						bindFill(doc, selection, swatch.key);
 					}
 				}}
 				onContextMenu={(event) => {
 					event.preventDefault();
-					onEdit(swatch.key);
-				}}
-				onDoubleClick={() => {
-					onEdit(swatch.key);
+					edit();
 				}}
 				ref={anchor}
-				title={swatch.label}
+				title={paint === null ? `${swatch.label}: edit it in Document variables` : swatch.label}
 				type="button"
 			>
 				<span className="fill-card-preview" style={{ background: swatch.paint }} />
 				<span className="fill-card-name">{swatch.label}</span>
 			</button>
-			{editing === swatch.key && variable !== undefined ? (
+			{editing === swatch.key && variable !== undefined && paint !== null ? (
 				<VariableEditor
 					anchor={anchor}
 					doc={doc}
@@ -65,7 +68,7 @@ export function PaintCard({
 						onEdit(null);
 					}}
 					onSettled={onSettled}
-					paint={swatch.paint}
+					paint={paint}
 					variable={variable}
 					view={view}
 				/>

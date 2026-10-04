@@ -8,9 +8,7 @@ import { MEDIA_MESSAGE } from "../mediaFile";
 import type { RowDrag } from "./fillOrder";
 import { IconButton } from "./IconButton";
 import { FIT_LABELS } from "./MediaTab";
-import { MediaThumb } from "./MediaThumb";
-
-const KIND_LABELS = { image: "Image", video: "Video" } as const;
+import { KIND_LABELS, MediaThumb } from "./MediaThumb";
 
 interface RowProps {
 	doc: DesignDocument;
@@ -33,10 +31,16 @@ export function MediaRow({
 			className="property-field fill-row"
 			data-changed={isChanged(layer, "media") ? "" : undefined}
 		>
-			<button aria-label="Media picker" className="color-swatch" onClick={onOpen} type="button">
+			<button
+				aria-label="Media picker"
+				className="color-swatch"
+				data-opens=""
+				onClick={onOpen}
+				type="button"
+			>
 				<MediaThumb asset={media.asset} store={doc.assets} />
 			</button>
-			<button className="fill-name" onClick={onOpen} type="button">
+			<button className="fill-name" data-opens="" onClick={onOpen} type="button">
 				{`${KIND_LABELS[kind]} · ${FIT_LABELS[media.fit]}`}
 			</button>
 			<IconButton

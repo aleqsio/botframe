@@ -23,7 +23,13 @@ export function PaintRow({
 			className="property-field color-field fill-row"
 			data-changed={isChanged(layer, "fill") ? "" : undefined}
 		>
-			<button aria-label="Fill picker" className="color-swatch" onClick={onOpen} type="button">
+			<button
+				aria-label="Fill picker"
+				className="color-swatch"
+				data-opens=""
+				onClick={onOpen}
+				type="button"
+			>
 				<span className="color-swatch-fill" style={{ background: layer.fill }} />
 			</button>
 			{bound === undefined ? (

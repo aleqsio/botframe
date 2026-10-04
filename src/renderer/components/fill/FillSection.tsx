@@ -34,16 +34,7 @@ export function FillSection({ doc, layer }: { doc: DesignDocument; layer: Layer 
 					}}
 				/>
 			</div>
-			<FillRows
-				{...props}
-				onOpen={(next) => {
-					if (!order.dropped()) {
-						setView(next);
-					}
-				}}
-				order={order}
-				painted={painted}
-			/>
+			<FillRows {...props} onOpen={setView} order={order} painted={painted} />
 			{painted || layer.media !== null ? null : <span className="layout-sub">No fill</span>}
 			<FillPicker {...props} anchor={anchor} onView={setView} view={view} />
 		</div>

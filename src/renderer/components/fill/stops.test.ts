@@ -68,6 +68,24 @@ describe("stopRemoved", () => {
 	});
 });
 
+describe("paintTextAs from custom CSS", () => {
+	it("seeds a solid and a gradient from the first color that it can read", () => {
+		const custom = {
+			kind: "custom",
+			text: "radial-gradient(circle, red 0%, #0d99ff 40%, #000000)",
+		} as const;
+
+		expect(paintTextAs(custom, "solid")).toBe("#0d99ff");
+		expect(paintTextAs(custom, "gradient")).toBe(
+			"linear-gradient(180deg, #0d99ff 0%, #0d99ff00 100%)",
+		);
+	});
+
+	it("starts from black when it reads no color", () => {
+		expect(paintTextAs({ kind: "custom", text: "url(a.png)" }, "solid")).toBe("#000000");
+	});
+});
+
 describe("paintTextAs", () => {
 	it("seeds a gradient from a solid color", () => {
 		expect(paintTextAs({ kind: "solid", color: "#ff0000" }, "gradient")).toBe(

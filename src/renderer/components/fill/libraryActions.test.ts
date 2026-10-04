@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../../../document/document";
 import { firstId } from "../../../document/documentFixtures";
 import { DOCUMENT_SCOPE } from "../../../document/variable";
-import { addPaintVariable, bindFill } from "./libraryActions";
+import type { Variable } from "../../../document/variable";
+import { addPaintVariable, bindFill, editablePaint } from "./libraryActions";
 
 function valueOf(doc: DesignDocument, id: string): unknown {
 	return doc.components
@@ -39,5 +40,18 @@ describe("bindFill", () => {
 		expect(doc.layer(layer)?.fill).toBe("linear-gradient(180deg, #0d99ff 0%, #8b5cf6 100%)");
 		doc.undo();
 		expect(doc.layer(layer)?.bindings.fill).toBeUndefined();
+	});
+});
+
+describe("editablePaint", () => {
+	const color: Variable = { id: "a", name: "red", type: "color", initial: "#ff0000", options: [] };
+
+	it("gives the literal paint of a color", () => {
+		expect(editablePaint(color)).toBe("#ff0000");
+	});
+
+	it("gives no paint for a reference or a condition, so that an edit cannot replace it", () => {
+		expect(editablePaint({ ...color, initial: { var: "b" } })).toBeNull();
+		expect(editablePaint({ ...color, initial: { when: [], else: "#000000" } })).toBeNull();
 	});
 });

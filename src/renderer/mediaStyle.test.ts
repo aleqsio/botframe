@@ -42,6 +42,17 @@ describe("imageBackground under the paint", () => {
 	});
 });
 
+describe("imageBackground under a paint that is not one color layer", () => {
+	it.each(["none", "url(b.png)", "red", "linear-gradient(#000 0%, #fff 100%), url(c.png)"])(
+		"keeps the image when the paint is %s",
+		(paint) => {
+			expect(imageBackground(paint, URL_TEXT, "cover", "under")).toBe(
+				`url("${URL_TEXT}") center / cover no-repeat, ${paint}`,
+			);
+		},
+	);
+});
+
 describe("imageBackground over a gradient", () => {
 	it("keeps the gradient as the last layer under the image", () => {
 		const gradient = "linear-gradient(90deg, #000000 0%, #ffffff 100%)";
@@ -69,6 +80,19 @@ describe("paintedStyle", () => {
 		});
 
 		expect(style.background).toBe("#ffffff");
+	});
+
+	it("takes the paint off the layer when a video draws under the paint", () => {
+		const style = paintedStyle(
+			{ background: "#ff000080" },
+			{ ...COVER, stack: "under" },
+			{
+				kind: "video",
+				url: URL_TEXT,
+			},
+		);
+
+		expect(style.background).toBe("none");
 	});
 
 	it("keeps the fill color while the asset is not in the document", () => {

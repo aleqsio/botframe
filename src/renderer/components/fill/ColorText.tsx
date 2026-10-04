@@ -80,6 +80,7 @@ export function PaintText({
 	return (
 		<button
 			className="fill-name"
+			data-opens=""
 			onClick={onOpen}
 			title={paint.kind === "custom" ? paint.text : undefined}
 			type="button"

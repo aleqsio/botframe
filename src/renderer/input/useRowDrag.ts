@@ -1,8 +1,4 @@
-import type {
-	MouseEvent as ReactMouseEvent,
-	PointerEvent as ReactPointerEvent,
-	RefObject,
-} from "react";
+import type { MouseEvent as ReactMouseEvent, RefObject } from "react";
 import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import type { Point } from "../state/camera";
@@ -14,19 +10,17 @@ import { carriedMove, carriedPlacement, rowMoveOf, rowTargetOf } from "./rowDrop
 import type { RowTarget, RowTree } from "./rowDrop";
 import { rowHitAt } from "./rowHit";
 import { usePointerDrag } from "./usePointerDrag";
-import type { DragRules } from "./usePointerDrag";
+import type { DragHandlers, DragRules } from "./usePointerDrag";
 import { selectIds, toggleSelected } from "./selection";
 
-type RowPointerEvent = ReactPointerEvent<HTMLElement>;
 type RowMouseEvent = ReactMouseEvent<HTMLElement>;
 
-export interface RowHandlers {
+export interface RowHandlers extends Pick<
+	DragHandlers<LayerId>,
+	"onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp"
+> {
 	onClick: (event: RowMouseEvent, id: LayerId) => void;
 	onContextMenu: (event: RowMouseEvent, id: LayerId) => void;
-	onPointerCancel: (event: RowPointerEvent) => void;
-	onPointerDown: (event: RowPointerEvent, id: LayerId) => void;
-	onPointerMove: (event: RowPointerEvent) => void;
-	onPointerUp: (event: RowPointerEvent) => void;
 }
 
 interface RowSession {

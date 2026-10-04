@@ -1,55 +1,58 @@
 import { useState } from "react";
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type {
+	MouseEvent as ReactMouseEvent,
+	PointerEvent as ReactPointerEvent,
+	RefObject,
+} from "react";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer } from "../../../document/layer";
 import type { MediaStack } from "../../../document/media";
 import { usePointerDrag } from "../../input/usePointerDrag";
+import type { PointerHandlers } from "../../input/usePointerDrag";
+import type { Point } from "../../state/camera";
 import { MEDIA_MESSAGE } from "../mediaFile";
 
 export type FillRow = "media" | "paint";
-
-type RowPointer = (event: ReactPointerEvent<HTMLElement>) => void;
 
 export interface RowDrag {
 	"data-row": FillRow;
 	"data-dragged": "" | undefined;
 }
 
-interface SectionDrag {
-	onPointerDown: RowPointer;
-	onPointerMove: RowPointer;
-	onPointerUp: RowPointer;
-	onPointerCancel: RowPointer;
+interface SectionDrag extends PointerHandlers {
+	onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
+	onClickCapture: (event: ReactMouseEvent<HTMLElement>) => void;
 }
 
 export interface FillOrder {
 	rows: readonly FillRow[];
 	dragOf: (row: FillRow) => RowDrag;
 	section: SectionDrag;
-	dropped: () => boolean;
 }
 
 function rowUnder(target: EventTarget): FillRow | null {
 	if (!(target instanceof HTMLElement) || target instanceof HTMLInputElement) {
 		return null;
 	}
+	const button = target.closest("button");
+	if (button !== null && !Object.hasOwn(button.dataset, "opens")) {
+		return null;
+	}
 	const row = target.closest<HTMLElement>("[data-row]")?.dataset["row"];
 	return row === "media" || row === "paint" ? row : null;
 }
-
-const OTHER: Readonly<Record<FillRow, FillRow>> = { media: "paint", paint: "media" };
 
 export function stackAt(row: FillRow, above: boolean): MediaStack {
 	return (row === "media") === above ? "over" : "under";
 }
 
-function isAbove(section: HTMLElement | null, row: FillRow, y: number): boolean | null {
-	const other = section?.querySelector(`[data-row="${OTHER[row]}"]`);
+function stackUnder(section: HTMLElement | null, row: FillRow, pointer: Point): MediaStack | null {
+	const other = section?.querySelector(`[data-row]:not([data-row="${row}"])`);
 	if (other === null || other === undefined) {
 		return null;
 	}
 	const box = other.getBoundingClientRect();
-	return y < box.top + box.height / 2;
+	return stackAt(row, pointer.y < box.top + box.height / 2);
 }
 
 export function useFillOrder(
@@ -63,13 +66,11 @@ export function useFillOrder(
 	const drag = usePointerDrag<FillRow>({
 		begin: setDragged,
 		step: (row, pointer) => {
-			const above = isAbove(section.current, row, pointer.y);
-			setPreview(above === null ? null : stackAt(row, above));
+			setPreview(stackUnder(section.current, row, pointer));
 			return true;
 		},
 		drop: (row, pointer) => {
-			const above = isAbove(section.current, row, pointer.y);
-			const next = above === null ? null : stackAt(row, above);
+			const next = stackUnder(section.current, row, pointer);
 			if (media !== null && next !== null && next !== media.stack) {
 				doc.update(layer.id, { media: { ...media, stack: next } });
 				doc.commit(MEDIA_MESSAGE);
@@ -87,14 +88,21 @@ export function useFillOrder(
 		section: {
 			onPointerDown: (event) => {
 				const row = rowUnder(event.target);
-				if (row !== null) {
+				if (row === null) {
+					drag.dropped();
+				} else {
 					drag.onPointerDown(event, row);
 				}
 			},
 			onPointerMove: drag.onPointerMove,
 			onPointerUp: drag.onPointerUp,
 			onPointerCancel: drag.onPointerCancel,
+			onClickCapture: (event) => {
+				if (drag.dropped()) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
+			},
 		},
-		dropped: drag.dropped,
 	};
 }

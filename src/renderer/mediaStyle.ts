@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { MediaFill, MediaFit, MediaStack } from "../document/media";
 import type { AssetUrl } from "./assetUrl";
+import { parseColor } from "./components/color";
 
 const IMAGE_PLACE: Readonly<Record<MediaFit, string>> = {
 	cover: "center / cover no-repeat",
@@ -16,8 +17,24 @@ const VIDEO_FIT: Readonly<Record<MediaFit, CSSProperties["objectFit"]>> = {
 	tile: "none",
 };
 
-function paintImage(fill: string): string {
-	return fill.includes("gradient(") ? fill : `linear-gradient(${fill}, ${fill})`;
+const ONE_GRADIENT = /^(?:repeating-)?(?:linear|radial|conic)-gradient\(/u;
+
+function closesAtEnd(text: string): boolean {
+	const body = text.slice(text.indexOf("("));
+	let depth = 0;
+	return Array.from(body).every((character, index) => {
+		depth += character === "(" ? 1 : 0;
+		depth -= character === ")" ? 1 : 0;
+		return depth > 0 || index === body.length - 1;
+	});
+}
+
+function paintLayer(fill: string): string | null {
+	const text = fill.trim();
+	if (ONE_GRADIENT.test(text) && closesAtEnd(text)) {
+		return text;
+	}
+	return parseColor(text) === null ? null : `linear-gradient(${text}, ${text})`;
 }
 
 export function imageBackground(
@@ -27,7 +44,8 @@ export function imageBackground(
 	stack: MediaStack,
 ): string {
 	const image = `url("${url}") ${IMAGE_PLACE[fit]}`;
-	return stack === "over" ? `${image}, ${fill}` : `${paintImage(fill)}, ${image}`;
+	const layer = stack === "under" ? paintLayer(fill) : null;
+	return layer === null ? `${image}, ${fill}` : `${layer}, ${image}`;
 }
 
 export function paintedStyle(
@@ -35,8 +53,11 @@ export function paintedStyle(
 	fill: MediaFill | null,
 	media: AssetUrl | null,
 ): CSSProperties {
-	if (fill === null || media?.kind !== "image" || typeof style.background !== "string") {
+	if (fill === null || media === null || typeof style.background !== "string") {
 		return style;
+	}
+	if (media.kind === "video") {
+		return fill.stack === "under" ? { ...style, background: "none" } : style;
 	}
 	return {
 		...style,

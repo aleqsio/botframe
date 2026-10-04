@@ -96,11 +96,24 @@ export function stopRecolored(gradient: Gradient, index: number, color: string):
 	};
 }
 
+const COLOR_TEXT = /#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/giu;
+
+function firstReadColor(text: string): string | undefined {
+	for (const [match] of text.matchAll(COLOR_TEXT)) {
+		const color = parseColor(match);
+		if (color !== null) {
+			return formatColor(color);
+		}
+	}
+	return undefined;
+}
+
 function firstColor(paint: Paint): string {
 	if (paint.kind === "solid") {
 		return paint.color;
 	}
-	const first = paint.kind === "gradient" ? paint.gradient.stops[0]?.color : undefined;
+	const first =
+		paint.kind === "gradient" ? paint.gradient.stops[0]?.color : firstReadColor(paint.text);
 	return first ?? formatColor(BLACK);
 }
 

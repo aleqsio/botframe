@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 import type { Point } from "../state/camera";
 import { GestureRecognizer, sampleOf } from "./gesture";
 
@@ -21,6 +21,11 @@ export interface DragHandlers<Id> {
 	active: () => boolean;
 }
 
+export type PointerHandlers = Pick<
+	DragHandlers<unknown>,
+	"onPointerMove" | "onPointerUp" | "onPointerCancel"
+>;
+
 interface DragInput<Id> {
 	recognizer: GestureRecognizer;
 	id: Id | null;
@@ -29,10 +34,7 @@ interface DragInput<Id> {
 	dropped: boolean;
 }
 
-interface DragSession<Id> {
-	input: DragInput<Id>;
-	rules: DragRules<Id>;
-}
+type Rules<Id> = RefObject<DragRules<Id>>;
 
 const PRIMARY_BUTTON = 0;
 
@@ -46,107 +48,92 @@ function createInput<Id>(): DragInput<Id> {
 	};
 }
 
-function schedule<Id>(session: DragSession<Id>): void {
-	const { input, rules } = session;
+function schedule<Id>(input: DragInput<Id>, rules: Rules<Id>): void {
 	if (input.frame !== 0) {
 		return;
 	}
 	input.frame = requestAnimationFrame(() => {
 		input.frame = 0;
-		if (input.id !== null && rules.step(input.id, input.pointer)) {
-			schedule(session);
+		if (input.id !== null && rules.current.step(input.id, input.pointer)) {
+			schedule(input, rules);
 		}
 	});
 }
 
-function cancelFrame<Id>(input: DragInput<Id>): void {
+function tracked<Id>(input: DragInput<Id>, event: DragPointerEvent): boolean {
+	if (!input.recognizer.tracks(event.pointerId)) {
+		return false;
+	}
+	input.pointer = { x: event.clientX, y: event.clientY };
+	return true;
+}
+
+function pointerDown<Id>(input: DragInput<Id>, event: DragPointerEvent, id: Id): void {
+	if (event.button !== PRIMARY_BUTTON || !input.recognizer.down(sampleOf(event)).taken) {
+		return;
+	}
+	input.dropped = false;
+	input.id = id;
+	input.pointer = { x: event.clientX, y: event.clientY };
+}
+
+function pointerMove<Id>(input: DragInput<Id>, rules: Rules<Id>, event: DragPointerEvent): void {
+	const { id } = input;
+	if (!tracked(input, event) || id === null) {
+		return;
+	}
+	if (input.recognizer.move(sampleOf(event))?.kind === "dragStart") {
+		event.currentTarget.setPointerCapture(event.pointerId);
+		rules.current.begin(id);
+		schedule(input, rules);
+	}
+}
+
+function end<Id>(input: DragInput<Id>, rules: Rules<Id>, drop: boolean): void {
 	if (input.frame !== 0) {
 		cancelAnimationFrame(input.frame);
 		input.frame = 0;
 	}
-}
-
-function tracked<Id>(session: DragSession<Id>, event: DragPointerEvent): boolean {
-	if (!session.input.recognizer.tracks(event.pointerId)) {
-		return false;
-	}
-	session.input.pointer = { x: event.clientX, y: event.clientY };
-	return true;
-}
-
-function pointerDown<Id>(session: DragSession<Id>, event: DragPointerEvent, id: Id): void {
-	if (event.button !== PRIMARY_BUTTON) {
-		return;
-	}
-	const { input } = session;
-	input.dropped = false;
-	input.id = id;
-	input.pointer = { x: event.clientX, y: event.clientY };
-	input.recognizer.down(sampleOf(event));
-}
-
-function pointerMove<Id>(session: DragSession<Id>, event: DragPointerEvent): void {
-	const id = session.input.id;
-	if (!tracked(session, event) || id === null) {
-		return;
-	}
-	if (session.input.recognizer.move(sampleOf(event))?.kind === "dragStart") {
-		event.currentTarget.setPointerCapture(event.pointerId);
-		session.rules.begin(id);
-		schedule(session);
-	}
-}
-
-function pointerUp<Id>(session: DragSession<Id>, event: DragPointerEvent): void {
-	const { input, rules } = session;
-	if (!tracked(session, event) || input.recognizer.up(sampleOf(event))?.kind !== "dragEnd") {
-		return;
-	}
-	cancelFrame(input);
 	input.dropped = true;
-	if (input.id !== null) {
-		rules.drop(input.id, input.pointer);
+	if (drop && input.id !== null) {
+		rules.current.drop(input.id, input.pointer);
 	}
-	rules.stop();
-}
-
-function pointerCancel<Id>(session: DragSession<Id>, event: DragPointerEvent): void {
-	const { input, rules } = session;
-	if (!tracked(session, event) || input.recognizer.cancel(sampleOf(event)) === null) {
-		return;
-	}
-	cancelFrame(input);
-	input.dropped = true;
-	rules.stop();
+	rules.current.stop();
 }
 
 export function usePointerDrag<Id>(rules: DragRules<Id>): DragHandlers<Id> {
-	const input = useRef<DragInput<Id> | null>(null);
-
-	function session(): DragSession<Id> {
-		input.current ??= createInput<Id>();
-		return { input: input.current, rules };
-	}
+	const held = useRef<DragInput<Id> | null>(null);
+	const latest = useRef(rules);
+	useLayoutEffect(() => {
+		latest.current = rules;
+	});
+	const input = (): DragInput<Id> => (held.current ??= createInput<Id>());
 
 	return {
 		onPointerDown: (event, id) => {
-			pointerDown(session(), event, id);
+			pointerDown(input(), event, id);
 		},
 		onPointerMove: (event) => {
-			pointerMove(session(), event);
+			pointerMove(input(), latest, event);
 		},
 		onPointerUp: (event) => {
-			pointerUp(session(), event);
+			const now = input();
+			if (tracked(now, event) && now.recognizer.up(sampleOf(event))?.kind === "dragEnd") {
+				end(now, latest, true);
+			}
 		},
 		onPointerCancel: (event) => {
-			pointerCancel(session(), event);
+			const now = input();
+			if (tracked(now, event) && now.recognizer.cancel(sampleOf(event)) !== null) {
+				end(now, latest, false);
+			}
 		},
 		dropped: () => {
-			const held = session().input;
-			const was = held.dropped;
-			held.dropped = false;
+			const now = input();
+			const was = now.dropped;
+			now.dropped = false;
 			return was;
 		},
-		active: () => session().input.recognizer.active(),
+		active: () => input().recognizer.active(),
 	};
 }
