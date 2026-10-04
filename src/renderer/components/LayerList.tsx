@@ -9,7 +9,14 @@ import { useSelected } from "../state/useSelected";
 import { usePicked } from "../state/useSlot";
 import { toggleCollapsed } from "../state/userState";
 import type { UserState } from "../state/userState";
-import { useChildIds, useComponentsView, useLayer, useRootIds } from "../useDocument";
+import {
+	useChildIds,
+	useClipTargets,
+	useComponentsView,
+	useLayer,
+	useLayers,
+	useRootIds,
+} from "../useDocument";
 import { glyphOf, isCode, layerEntry } from "./layerEntry";
 
 function LayerChevron({
@@ -62,6 +69,9 @@ function LayerRow({
 	const collapsed = usePicked(user.collapsed, (ids) => ids.has(id));
 	const mark = usePicked(user.rowDrag, (drag) => rowMarkOf(drag, id));
 	const entry = layerEntry(layer);
+	const clips = useLayers(doc, useClipTargets(doc, id))
+		.map((target) => layerEntry(target).label)
+		.join(", ");
 	const branch = childIds.length > 0;
 
 	return (
@@ -81,6 +91,7 @@ function LayerRow({
 				<button
 					aria-pressed={selected}
 					className="layer-row"
+					data-source={clips === "" ? undefined : ""}
 					onClick={(event) => {
 						rows.onClick(event, id);
 					}}
@@ -97,6 +108,7 @@ function LayerRow({
 				>
 					<span className={`layer-glyph layer-glyph-${glyphOf(layer, code)}`} />
 					{entry.label}
+					{clips === "" ? null : <span className="layer-meta">clips {clips}</span>}
 				</button>
 			</div>
 			{branch && !collapsed ? (

@@ -73,7 +73,7 @@ describe("layerEntry", () => {
 
 		expect(layerEntry(layer).label).toBe("Rectangle");
 		expect(layerEntry({ ...layer, geometry: { kind: "ellipse" } }).label).toBe("Ellipse");
-		expect(layerEntry({ ...layer, geometry: { kind: "path", d: "M0 0" } }).label).toBe("Path");
+		expect(layerEntry({ ...layer, geometry: { kind: "path", vertices: [] } }).label).toBe("Path");
 	});
 
 	it("names a rectangle that holds the frame flag a frame", () => {
@@ -129,7 +129,9 @@ describe("glyphOf", () => {
 	it("draws a path, an unsupported layer, and a lost layer with the rectangle glyph", () => {
 		const layer = rectangle("1@1", "#000000");
 
-		expect(glyphOf({ ...layer, geometry: { kind: "path", d: "M0 0" } }, false)).toBe("rectangle");
+		expect(glyphOf({ ...layer, geometry: { kind: "path", vertices: [] } }, false)).toBe(
+			"rectangle",
+		);
 		expect(glyphOf({ ...layer, geometry: { kind: "unsupported" } }, false)).toBe("rectangle");
 		expect(glyphOf(null, false)).toBe("rectangle");
 	});

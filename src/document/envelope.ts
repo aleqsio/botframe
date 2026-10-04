@@ -4,12 +4,14 @@ import { bindingsOf } from "./bindings";
 import { packedOf } from "./componentPack";
 import type { PackedComponent } from "./componentPack";
 import { CENTER_ORIGIN, NO_CONTENT, heldSkew } from "./layer";
-import type { LayerContent, LayerFields, Origin, WritableGeometry } from "./layer";
+import type { LayerContent, LayerFields, LayerId, Origin, WritableGeometry } from "./layer";
+import { isLayerId } from "./path";
 import { assignmentsOf, instanceFrom } from "./layerLinks";
 import { guidesOf } from "./guides";
 import { layoutOf } from "./layout";
 import { PIXELS, isUnit } from "./length";
 import { mediaOf } from "./media";
+import { verticesOf } from "./vertices";
 import type { LayerLengths, Length } from "./length";
 import { PLAIN_RECTANGLE } from "./subtree";
 import type { LayerNode } from "./subtree";
@@ -51,7 +53,7 @@ const SHAPES: Readonly<Record<WritableGeometry["kind"], (bag: Bag) => WritableGe
 		frame: flag(bag, "frame"),
 	}),
 	ellipse: () => ({ kind: "ellipse" }),
-	path: (bag) => ({ kind: "path", d: words(bag, "d", "") }),
+	path: (bag) => ({ kind: "path", vertices: verticesOf(bag["vertices"]) }),
 };
 
 function shapeOf(value: unknown): WritableGeometry {
@@ -119,6 +121,10 @@ function componentsOf(value: unknown): Readonly<Record<string, PackedComponent>>
 	);
 }
 
+function layerIdOf(value: unknown): LayerId | null {
+	return typeof value === "string" && isLayerId(value) ? value : null;
+}
+
 function nodeOf(value: unknown): LayerNode {
 	const bag = bagOf(value);
 	const fields = fieldsOf(bagOf(bag["fields"]));
@@ -135,6 +141,8 @@ function nodeOf(value: unknown): LayerNode {
 		media: mediaOf(bag["media"]),
 		content: contentOf(bag["content"]),
 		bindings: bindingsOf(bag["bindings"]),
+		key: layerIdOf(bag["key"]) ?? undefined,
+		clipLayer: layerIdOf(bag["clipLayer"]) ?? undefined,
 		children: listOf(bag["children"]).map((child) => nodeOf(child)),
 	};
 }

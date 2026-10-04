@@ -6,6 +6,7 @@ import type { Layer, LayerFields, LayerId } from "./layer";
 import { PLAIN_RECTANGLE, componentIdsOf } from "./subtree";
 import type { LayerNode } from "./subtree";
 import { nodeOf } from "./path";
+import { verticesOf } from "./vertices";
 
 const CHILD: LayerFields = {
 	x: 5,
@@ -26,7 +27,14 @@ const GRANDCHILD: LayerFields = {
 	fill: "#00ff00",
 	name: "Grandchild",
 	clip: false,
-	geometry: { kind: "path", d: "M0 0 L10 10 Z" },
+	geometry: {
+		kind: "path",
+		vertices: verticesOf([
+			{ x: 0, y: 0 },
+			{ x: 1, y: 1 },
+			{ x: 0, y: 1 },
+		]),
+	},
 };
 
 function subtreeOf(doc: DesignDocument, id: LayerId): LayerNode {

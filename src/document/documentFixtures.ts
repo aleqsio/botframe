@@ -61,6 +61,8 @@ export function nodeBox(rect: Rect): PixelBox {
 	};
 }
 
-export function pixelBox(rect: Rect): PixelBox & { changed: readonly string[] } {
-	return { ...nodeBox(rect), changed: [] };
+export function pixelBox(
+	rect: Rect,
+): PixelBox & { changed: readonly string[]; clipLayer: LayerId | null } {
+	return { ...nodeBox(rect), changed: [], clipLayer: null };
 }

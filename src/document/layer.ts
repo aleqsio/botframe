@@ -7,13 +7,14 @@ import type { InstanceState } from "./instanceState";
 import type { LayerId } from "./path";
 import type { Literal, VariableValue } from "./value";
 import type { Assignments } from "./variable";
+import type { Vertex } from "./vertices";
 
 export type { LayerId } from "./path";
 
 export type Geometry =
 	| { kind: "rectangle"; cornerRadius: number; cornerSmoothing: number; frame: boolean }
 	| { kind: "ellipse" }
-	| { kind: "path"; d: string }
+	| { kind: "path"; vertices: readonly Vertex[] }
 	| { kind: "unsupported" };
 
 export type RectangleGeometry = Extract<Geometry, { kind: "rectangle" }>;
@@ -74,6 +75,7 @@ export interface Layer extends Rect, Pose {
 	geometry: Geometry;
 	name: string;
 	clip: boolean;
+	clipLayer: LayerId | null;
 	parent: LayerId | null;
 	lengths: LayerLengths;
 	layout: LayerLayout;
@@ -104,6 +106,7 @@ export type LayerPatch = Partial<LayerFields> & {
 	layout?: LayoutPatch;
 	guides?: readonly Guide[];
 	media?: MediaFill | null;
+	clipLayer?: LayerId | null;
 	content?: ComponentLink | null;
 	props?: Readonly<Record<string, VariableValue | null>>;
 	bindings?: BindingsPatch;

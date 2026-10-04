@@ -57,7 +57,7 @@ function MixedClip({ doc, layers }: PanelProps): ReactElement {
 			<input
 				checked={shared?.kind === "same" && shared.value}
 				onChange={(event) => {
-					writeAll(doc, layers, { clip: event.target.checked }, CLIP_MESSAGE);
+					writeAll(doc, layers, { clip: event.target.checked, clipLayer: null }, CLIP_MESSAGE);
 				}}
 				type="checkbox"
 			/>

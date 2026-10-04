@@ -5,6 +5,7 @@ import type { Layer, LayerFields, LayerId } from "../../document/layer";
 import type { LayoutPatch } from "../../document/layout";
 import { flipLayer } from "./flip";
 import type { FlipScope } from "./flip";
+import { verticesOf } from "../../document/vertices";
 
 const FRAME: LayerFields = {
 	x: 0,
@@ -17,7 +18,14 @@ const FRAME: LayerFields = {
 	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
 };
 
-const PATH = { kind: "path", d: "M0 0 L40 0 L0 20 Z" } as const;
+const PATH = {
+	kind: "path",
+	vertices: verticesOf([
+		{ x: 0, y: 0 },
+		{ x: 1, y: 0 },
+		{ x: 0, y: 1 },
+	]),
+} as const;
 
 interface Scene {
 	scope: FlipScope;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GestureRecognizer } from "./gesture";
-import type { PointerSample } from "./gesture";
+import type { Gesture, PointerSample } from "./gesture";
 
 const PRIMARY = 1;
 const SECOND = 2;
@@ -9,12 +9,17 @@ const THIRD = 3;
 const TAKEN = { taken: true, ended: null };
 const REFUSED = { taken: false, ended: null };
 
-function at(pointerId: number, x: number, y: number): PointerSample {
-	return { pointerId, x, y, touch: false };
+function at(pointerId: number, x: number, y: number, time = 0): PointerSample {
+	return { pointerId, x, y, touch: false, time };
 }
 
 function finger(pointerId: number, x: number, y: number): PointerSample {
-	return { pointerId, x, y, touch: true };
+	return { pointerId, x, y, touch: true, time: 0 };
+}
+
+function tapAt(recognizer: GestureRecognizer, x: number, time: number): Gesture | null {
+	recognizer.down(at(PRIMARY, x, 10, time));
+	return recognizer.up(at(PRIMARY, x, 10, time));
 }
 
 function draggingRecognizer(): GestureRecognizer {
@@ -281,5 +286,33 @@ describe("GestureRecognizer with two fingers", () => {
 		recognizer.down(finger(PRIMARY, 100, 100));
 
 		expect(recognizer.down(at(SECOND, 300, 100))).toEqual(REFUSED);
+	});
+});
+
+describe("GestureRecognizer double tap", () => {
+	it("reports a double tap when a second tap lands soon and near the first", () => {
+		const recognizer = new GestureRecognizer();
+
+		expect(tapAt(recognizer, 10, 1000)).toMatchObject({ kind: "tap" });
+		expect(tapAt(recognizer, 12, 1300)).toEqual({ kind: "doubleTap", point: { x: 12, y: 10 } });
+		expect(tapAt(recognizer, 12, 1400)).toMatchObject({ kind: "tap" });
+	});
+
+	it("reports two taps when the second tap is late or far", () => {
+		const recognizer = new GestureRecognizer();
+
+		tapAt(recognizer, 10, 1000);
+		expect(tapAt(recognizer, 10, 1600)).toMatchObject({ kind: "tap" });
+		expect(tapAt(recognizer, 40, 1700)).toMatchObject({ kind: "tap" });
+	});
+
+	it("reports a tap after a drag that came between two taps", () => {
+		const recognizer = new GestureRecognizer();
+		tapAt(recognizer, 10, 1000);
+		recognizer.down(at(PRIMARY, 10, 10, 1100));
+		recognizer.move(at(PRIMARY, 40, 30, 1150));
+		recognizer.up(at(PRIMARY, 40, 30, 1200));
+
+		expect(tapAt(recognizer, 10, 1300)).toMatchObject({ kind: "tap" });
 	});
 });

@@ -1,4 +1,5 @@
 import type { BindingKey } from "./bindings";
+import { chosenClip } from "./clips";
 import type { LayerTraits } from "./layer";
 import { PIXELS } from "./length";
 import type { BoxKey } from "./length";
@@ -31,7 +32,7 @@ function numeric(apply: (traits: LayerTraits, value: number) => LayerTraits): Ap
 
 const APPLY: Readonly<Record<BindingKey, Apply>> = {
 	fill: (traits, value) => (typeof value === "string" ? { ...traits, fill: value } : traits),
-	clip: (traits, value) => (typeof value === "boolean" ? { ...traits, clip: value } : traits),
+	clip: (traits, value) => ({ ...traits, ...chosenClip(traits, value) }),
 	x: numeric((traits, value) => boxTraits(traits, "x", value)),
 	y: numeric((traits, value) => boxTraits(traits, "y", value)),
 	width: numeric((traits, value) => boxTraits(traits, "width", value)),

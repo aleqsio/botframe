@@ -5,16 +5,14 @@ import type { DisplayMode } from "../document/layout";
 import { canvasLabelStyle } from "./canvasLabel";
 import { useShadowWriter } from "./componentShadow";
 import { isRootFrame, layerEntry } from "./components/layerEntry";
-import { useAssetUrl } from "./assetUrl";
 import { GuideLines } from "./GuideLines";
-import { LayerVideo } from "./LayerVideo";
-import { layerStyle } from "./layerStyle";
-import { paintedStyle } from "./mediaStyle";
+import { LayerPaint } from "./LayerPaint";
 import type { Slot } from "./state/slot";
 import { useLift, NOT_LIFTED } from "./state/useLift";
 import type { LiftSlot } from "./state/useLift";
 import { useSelected } from "./state/useSelected";
 import { useChildIds, useLayer } from "./useDocument";
+import { useLayerPaint } from "./useLayerPaint";
 
 function liftedStyle(style: CSSProperties, lift: string): CSSProperties {
 	return lift === NOT_LIFTED
@@ -39,11 +37,10 @@ export function LayerView({
 	const childIds = useChildIds(doc, id);
 	const selected = useSelected(selection, id);
 	const lifted = useLift(lift, id);
-	const fill = layer?.media ?? null;
-	const media = useAssetUrl(doc.assets, layer?.media?.asset ?? null);
 	const writeShadow = useShadowWriter(doc, layer?.content ?? null);
+	const paint = useLayerPaint(doc, layer, parentDisplay);
 
-	if (layer === null) {
+	if (layer === null || paint.style === null) {
 		return null;
 	}
 
@@ -52,11 +49,12 @@ export function LayerView({
 			className="layer"
 			data-dragging={lifted === NOT_LIFTED ? undefined : ""}
 			data-layer-id={id}
+			data-paint={layer.geometry.kind === "path" ? "path" : undefined}
 			data-selected={selected ? "" : undefined}
 			ref={writeShadow}
-			style={liftedStyle(paintedStyle(layerStyle(layer, parentDisplay), fill, media), lifted)}
+			style={liftedStyle(paint.style, lifted)}
 		>
-			<LayerVideo fill={fill} media={media} paint={layer.fill} />
+			<LayerPaint layer={layer} media={paint.media} />
 			{childIds.map((childId) => (
 				<LayerView
 					doc={doc}

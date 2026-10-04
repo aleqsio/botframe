@@ -4,6 +4,7 @@ import type { LayerId } from "../document/layer";
 import { SnapLines } from "./CanvasMarks";
 import { LayerOutline, SelectionOutline, boxStyle } from "./SelectionOutline";
 import { droppedInto } from "./input/dropHighlight";
+import { PathEditor } from "./PathEditor";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
@@ -48,6 +49,7 @@ export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState })
 			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
 			<SelectionOutline doc={doc} user={user} />
+			<PathEditor doc={doc} user={user} />
 			<Marquee user={user} />
 			<SnapLines doc={doc} user={user} />
 		</>

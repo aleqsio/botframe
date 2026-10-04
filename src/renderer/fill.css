@@ -72,8 +72,7 @@
 	width: var(--layout-inner);
 }
 
-.fill-row,
-.bind-row {
+.fill-row {
 	padding-right: var(--layout-space-1);
 	padding-left: var(--layout-space-2);
 }

@@ -26,6 +26,9 @@ export function composeBehaviors(behaviors: readonly ToolBehavior[]): ToolBehavi
 		tap(target, point, modifiers) {
 			return behaviors.some((behavior) => behavior.tap?.(target, point, modifiers) === true);
 		},
+		doubleTap(target, point, modifiers) {
+			return behaviors.some((behavior) => behavior.doubleTap?.(target, point, modifiers) === true);
+		},
 		dragStart(target, origin, point, modifiers) {
 			owner =
 				behaviors.find(

@@ -31,12 +31,15 @@ export interface LayerNode {
 	media: MediaFill | null;
 	content: LayerContent;
 	bindings: Bindings;
+	key?: LayerId | undefined;
+	clipLayer?: LayerId | null | undefined;
 	children: readonly LayerNode[];
 }
 
 interface LayerReader {
 	layer: (id: LayerId) => Layer | null;
 	childIds: (parent: LayerId) => readonly LayerId[];
+	clipTargetsOf?: (id: LayerId) => readonly LayerId[];
 }
 
 interface LayerWriter {
@@ -78,6 +81,14 @@ export function ownChildIds(source: LayerReader, id: LayerId): readonly LayerId[
 	return source.childIds(id).filter((child) => copiesOf(child).length === depth);
 }
 
+function clipLinksOf(source: LayerReader, layer: Layer): Pick<LayerNode, "key" | "clipLayer"> {
+	const used = (source.clipTargetsOf?.(layer.id).length ?? 0) > 0;
+	return {
+		...(used ? { key: layer.id } : {}),
+		...(layer.clipLayer === null ? {} : { clipLayer: layer.clipLayer }),
+	};
+}
+
 export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null {
 	const layer = source.layer(id);
 	if (layer === null) {
@@ -97,6 +108,7 @@ export function readSubtree(source: LayerReader, id: LayerId): LayerNode | null 
 		media: layer.media,
 		content: layer.content,
 		bindings: layer.bindings,
+		...clipLinksOf(source, layer),
 		children,
 	};
 }
@@ -136,12 +148,40 @@ export function nodePatch(node: LayerNode): LayerPatch {
 	return { ...node.fields, ...copyPatch(node) };
 }
 
-export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerId | null): LayerId {
+function createNodes(
+	sink: LayerWriter,
+	node: LayerNode,
+	parent: LayerId | null,
+	made: Map<LayerNode, LayerId>,
+): LayerId {
 	const id = sink.createLayer(node.fields, parent);
 	sink.update(id, copyPatch(node));
+	made.set(node, id);
 	for (const child of node.children) {
-		createSubtree(sink, child, id);
+		createNodes(sink, child, id, made);
 	}
+	return id;
+}
+
+function linkClips(sink: LayerWriter, made: ReadonlyMap<LayerNode, LayerId>): void {
+	const renamed = new Map<LayerId, LayerId>();
+	for (const [node, id] of made) {
+		if (node.key !== undefined) {
+			renamed.set(node.key, id);
+		}
+	}
+	for (const [node, id] of made) {
+		const clip = node.clipLayer ?? null;
+		if (clip !== null) {
+			sink.update(id, { clipLayer: renamed.get(clip) ?? clip });
+		}
+	}
+}
+
+export function createSubtree(sink: LayerWriter, node: LayerNode, parent: LayerId | null): LayerId {
+	const made = new Map<LayerNode, LayerId>();
+	const id = createNodes(sink, node, parent, made);
+	linkClips(sink, made);
 	return id;
 }
 

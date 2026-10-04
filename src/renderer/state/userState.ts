@@ -96,6 +96,15 @@ export class UserState {
 	readonly rowDrag = new Slot<RowDrag | null>(null);
 	readonly panel = new Slot<SidePanel>("layers");
 	readonly groupPivot = new Slot<GroupPivot | null>(null);
+	readonly pathEdit = new Slot<LayerId | null>(null);
+
+	constructor() {
+		const endPathEdit = (): void => {
+			this.pathEdit.set(null);
+		};
+		this.selection.subscribe(endPathEdit);
+		this.tool.subscribe(endPathEdit);
+	}
 }
 
 export function toggleCollapsed(collapsed: Slot<ReadonlySet<LayerId>>, id: LayerId): void {

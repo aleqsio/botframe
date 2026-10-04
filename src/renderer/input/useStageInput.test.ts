@@ -23,6 +23,7 @@ function pointerEventAt(stage: FakeStage, client: Point): StagePointerEvent {
 		button: PRIMARY,
 		clientX: client.x,
 		clientY: client.y,
+		timeStamp: 0,
 		altKey: false,
 		shiftKey: false,
 		ctrlKey: false,
@@ -55,6 +56,7 @@ function mountStage(): FakeStage {
 		onDragMove: vi.fn<() => void>(),
 		onDragEnd: vi.fn<() => void>(),
 		onTap: vi.fn<() => void>(),
+		onDoubleTap: vi.fn<() => void>(),
 		onHover: vi.fn<() => void>(),
 		onLeave: vi.fn<() => void>(),
 		onContextMenu: vi.fn<() => void>(),
@@ -82,6 +84,11 @@ function runFrame(stage: FakeStage): void {
 	frame(0);
 }
 
+function tapAt(stage: FakeStage, client: Point): void {
+	stage.handlers.onPointerDown(pointerEventAt(stage, client));
+	stage.handlers.onPointerUp(pointerEventAt(stage, client));
+}
+
 function moveTo(stage: FakeStage, client: Point): void {
 	stage.handlers.onPointerMove(pointerEventAt(stage, client));
 	runFrame(stage);
@@ -103,6 +110,19 @@ describe("useStageInput", () => {
 
 		expect(stage.drag.onDragMove).toHaveBeenLastCalledWith(
 			{ client: { x: 120, y: 100 }, stage: { x: 70, y: 80 }, canvas: { x: 70, y: 80 } },
+			{ shift: false, alt: false, control: false },
+		);
+	});
+
+	it("sends the second of two quick taps as a double tap", () => {
+		const stage = mountStage();
+		tapAt(stage, { x: 100, y: 100 });
+		tapAt(stage, { x: 101, y: 100 });
+
+		expect(stage.drag.onTap).toHaveBeenCalledOnce();
+		expect(stage.drag.onDoubleTap).toHaveBeenCalledWith(
+			[],
+			{ client: { x: 101, y: 100 }, stage: { x: 101, y: 100 }, canvas: { x: 101, y: 100 } },
 			{ shift: false, alt: false, control: false },
 		);
 	});
