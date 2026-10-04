@@ -1,8 +1,8 @@
 import type { Rect } from "../../document/layer";
 import type { Size } from "../../document/length";
 import type { Point } from "../state/camera";
-import { applyLinear, determinantOf, invertLinear } from "./linear";
-import type { Linear } from "./linear";
+import { applyLinear, determinantOf, invertLinear } from "../../document/linear";
+import type { Linear } from "../../document/linear";
 
 export interface Affine extends Linear {
 	e: number;

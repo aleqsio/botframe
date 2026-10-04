@@ -3,7 +3,7 @@ import type { Layer, Pose } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { ROTATE_REACH } from "./handles";
 import { anchoredPlace, fromParentPoint, rotatePoint } from "./layerSpace";
-import { degreesOf, radiansOf } from "./linear";
+import { degreesOf, radiansOf } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { ANGLE_SNAP, stepOf } from "./step";
 

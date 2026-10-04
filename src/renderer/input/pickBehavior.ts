@@ -5,6 +5,7 @@ import { insideSubtree } from "./dropTarget";
 import { applyGroupMove, beginGroupMove, finishGroupMove } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
+import { deeperId, heldAncestorOf, pickedId } from "./pickTarget";
 import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
 import { selectIds, toggleSelected } from "./selection";
@@ -21,8 +22,14 @@ function topHit(target: PointerTarget): LayerId | null {
 	return target.layerIds[0] ?? null;
 }
 
-function isHeld(target: PointerTarget, layerId: LayerId): boolean {
-	return target.user.selection.get().includes(layerId);
+function pickedHit(target: PointerTarget): LayerId | null {
+	const hit = topHit(target);
+	return hit === null ? null : pickedId(readerOf(target), target.user.selection.get(), hit);
+}
+
+function heldHit(target: PointerTarget): LayerId | null {
+	const hit = topHit(target);
+	return hit === null ? null : heldAncestorOf(readerOf(target), target.user.selection.get(), hit);
 }
 
 function holdsLayer(target: PointerTarget, layerId: LayerId, inside: LayerId | null): boolean {
@@ -43,7 +50,7 @@ function coversPress(target: PointerTarget, layer: Layer, canvas: Point): boolea
 
 function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 	const under = topHit(target);
-	if (under !== null && isHeld(target, under)) {
+	if (heldHit(target) !== null) {
 		return null;
 	}
 	return (
@@ -54,7 +61,7 @@ function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = topHit(target);
+	const layerId = pickedHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);
@@ -71,20 +78,23 @@ function pressWith(target: PointerTarget, canvas: Point, modifiers: Modifiers): 
 		layerOfPress(target, canvas);
 		return;
 	}
-	const layerId = topHit(target);
+	const layerId = pickedHit(target);
 	if (layerId !== null) {
 		toggleSelected(readerOf(target), target.user.selection, layerId);
 	}
 }
 
 function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
+	const held = heldHit(target);
+	if (held !== null) {
+		return target.doc.layer(held);
+	}
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
 }
 
 function dragsGroup(target: PointerTarget, canvas: Point): boolean {
-	const under = topHit(target);
-	if (under !== null) {
-		return isHeld(target, under);
+	if (topHit(target) !== null) {
+		return heldHit(target) !== null;
 	}
 	return heldSelection(target, canvas) !== null;
 }
@@ -98,12 +108,23 @@ function holdsPress(target: PointerTarget, under: LayerId): boolean {
 function selectForMenu(target: PointerTarget): void {
 	const under = topHit(target);
 	if (under !== null && !holdsPress(target, under)) {
-		select(target.user, under);
+		select(target.user, pickedHit(target));
 	}
 }
 
 function layerIdUnder(target: PointerTarget, point: StagePoint): LayerId | null {
-	return target.layerIdsAt(point)[0] ?? null;
+	const hit = target.layerIdsAt(point)[0];
+	return hit === undefined ? null : pickedId(readerOf(target), target.user.selection.get(), hit);
+}
+
+function selectDeeper(target: PointerTarget): boolean {
+	const hit = topHit(target);
+	const deeper = hit === null ? null : deeperId(readerOf(target), target.user.selection.get(), hit);
+	if (deeper === null) {
+		return false;
+	}
+	select(target.user, deeper);
+	return true;
 }
 
 export function createPickBehavior(): ToolBehavior {
@@ -133,6 +154,9 @@ export function createPickBehavior(): ToolBehavior {
 		dragEnd(target, point, modifiers) {
 			finishGroupMove(target, point.canvas);
 			finishMove(target, point, modifiers);
+		},
+		doubleTap(target) {
+			return selectDeeper(target);
 		},
 		context(target, client) {
 			selectForMenu(target);

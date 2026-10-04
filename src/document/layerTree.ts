@@ -123,6 +123,12 @@ export class LayerTree {
 		return next === undefined ? all.length : all.indexOf(nodeOf(next));
 	}
 
+	allNodes(): readonly LayerId[] {
+		return this.tree()
+			.getNodes()
+			.map((node) => node.id);
+	}
+
 	canvasNodes(): readonly LayerId[] {
 		return this.tree()
 			.getNodes()

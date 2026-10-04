@@ -13,7 +13,7 @@ import {
 	visualCenterOf,
 } from "./layerSpace";
 import type { ReadLayer } from "./layerSpace";
-import { HALF_TURN, linearOf, multiplyLinear } from "./linear";
+import { HALF_TURN, linearOf, multiplyLinear } from "../../document/linear";
 import { SIZE_ALONG } from "./layoutGeometry";
 import {
 	TRACKS_ALONG,

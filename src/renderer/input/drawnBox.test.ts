@@ -3,8 +3,8 @@ import type { Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
 import { IDENTITY, layoutBox } from "./drawnBox";
 import type { Affine, BoxRead, ClientBox } from "./drawnBox";
-import { multiplyLinear } from "./linear";
-import type { Linear } from "./linear";
+import { multiplyLinear } from "../../document/linear";
+import type { Linear } from "../../document/linear";
 
 const PARENT_SIZE = { width: 100, height: 60 };
 const THIRD = 100 / 3;

@@ -7,8 +7,9 @@ import { intoLayer } from "./layerSpace";
 import { PART_REACH, movedPart, partAt, toggledVertex } from "./pathEdit";
 import type { PathPart } from "./pathEdit";
 import { fittedPatch } from "./pathFit";
+import { pickedId } from "./pickTarget";
 import { selectIds } from "./selection";
-import { drawnReaderOf, parentDisplayOf, parentPointOf } from "./targetSpace";
+import { drawnReaderOf, parentDisplayOf, parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
 const PATH_MESSAGE = "edit path";
@@ -69,6 +70,9 @@ function startEdit(target: PointerTarget): boolean {
 	const [id] = target.layerIds;
 	const layer = id === undefined ? null : target.doc.layer(id);
 	if (layer === null || editableVertices(layer.geometry, layer) === null) {
+		return false;
+	}
+	if (pickedId(readerOf(target), target.user.selection.get(), layer.id) !== layer.id) {
 		return false;
 	}
 	selectIds(target.user.selection, [layer.id]);

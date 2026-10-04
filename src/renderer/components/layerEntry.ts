@@ -5,6 +5,7 @@ const GEOMETRY_LABELS: Readonly<Record<Geometry["kind"], string>> = {
 	rectangle: "Rectangle",
 	ellipse: "Ellipse",
 	path: "Path",
+	group: "Group",
 	unsupported: "Layer",
 };
 
@@ -12,10 +13,10 @@ const FRAME_LABEL = "Frame";
 const COMPONENT_LABEL = "Component";
 const CODE_LABEL = "Code component";
 
-export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component" | "code";
+export type LayerGlyph = "frame" | "ellipse" | "rectangle" | "component" | "code" | "group";
 
 export interface InspectorHeading {
-	glyph: LayerGlyph | "page" | "group";
+	glyph: LayerGlyph | "page";
 	name: string;
 	kind: string;
 }
@@ -67,7 +68,8 @@ export function glyphOf(layer: Layer | null, code: boolean): LayerGlyph {
 	if (isFrame(layer)) {
 		return "frame";
 	}
-	return layer?.geometry.kind === "ellipse" ? "ellipse" : "rectangle";
+	const kind = layer?.geometry.kind;
+	return kind === "ellipse" || kind === "group" ? kind : "rectangle";
 }
 
 export function inspectorHeading(layer: Layer | null, code: boolean): InspectorHeading {

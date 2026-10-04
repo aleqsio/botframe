@@ -6,7 +6,7 @@ import type { LayerMove } from "../state/userState";
 import { drawnFrom } from "./drawn";
 import type { DrawnBox } from "./drawn";
 import { anchoredPlace } from "./layerSpace";
-import { NO_POSE } from "./linear";
+import { NO_POSE } from "../../document/linear";
 import type { Modifiers } from "./modifiers";
 import { freeAxesOf, placedOn } from "./snapAxes";
 import { publishPull, pulledTo } from "./snapPull";

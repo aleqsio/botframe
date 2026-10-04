@@ -163,11 +163,12 @@ describe("ungroupSelection", () => {
 		expect(layerOf(doc, a)).toMatchObject({ width: 10, layout: { width: "fixed" } });
 	});
 
-	it("refuses a frame with a fill", () => {
-		const { doc, user, group } = grouped();
-		doc.update(group, { fill: "#ffffff" });
-		doc.commit("paint group");
-		user.selection.set([group]);
+	it("refuses a frame that holds children", () => {
+		const { doc, user } = threeSquares();
+		const frame = doc.createLayer(DRAWN);
+		doc.createLayer(SQUARE, frame);
+		doc.commit("create frame");
+		user.selection.set([frame]);
 
 		expect(canUngroup(doc, user)).toBe(false);
 	});

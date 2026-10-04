@@ -99,6 +99,7 @@ describe("the points of snapShapeOf", () => {
 	it("has a reporter for each geometry kind", () => {
 		expect(Object.keys(SNAP_REPORTERS).toSorted()).toEqual([
 			"ellipse",
+			"group",
 			"path",
 			"rectangle",
 			"unsupported",

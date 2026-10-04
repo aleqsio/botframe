@@ -4,7 +4,7 @@ import { DEFAULT_TOOL } from "../components/tools";
 import type { ToolId } from "../components/tools";
 import type { CursorKey } from "../input/cursor";
 import type { RowDrag } from "../input/rowDrop";
-import type { Linear } from "../input/linear";
+import type { Linear } from "../../document/linear";
 import type { SnapField, SnapSegment } from "../input/snap";
 import { IDENTITY_CAMERA } from "./camera";
 import type { Camera, Point } from "./camera";

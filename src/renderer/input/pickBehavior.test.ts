@@ -130,7 +130,7 @@ describe("the select tool", () => {
 		expect(target.user.selection.get()).toEqual([id]);
 	});
 
-	it("moves the layer under the press, not the parent that holds the selection", () => {
+	it("moves the selected parent, not the child under the press", () => {
 		const { target, child } = nestedTarget(0);
 		const parent = firstId(target.doc);
 		target.user.selection.set([parent]);
@@ -140,9 +140,9 @@ describe("the select tool", () => {
 			release: { x: 470, y: 310 },
 		});
 
-		expect(target.user.selection.get()).toEqual([child]);
-		expect(target.doc.layer(child)).toMatchObject({ x: 40, y: 40 });
-		expect(target.doc.layer(parent)).toMatchObject({ x: 420, y: 260 });
+		expect(target.user.selection.get()).toEqual([parent]);
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
+		expect(target.doc.layer(parent)).toMatchObject({ x: 440, y: 280 });
 	});
 
 	it("carries the whole selection when the press lands on a layer it holds", () => {

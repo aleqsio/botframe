@@ -5,8 +5,8 @@ import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
 import { IDENTITY, layoutBox } from "./drawnBox";
 import type { Affine, BoxRead, ClientBox } from "./drawnBox";
-import { multiplyLinear } from "./linear";
-import type { Linear } from "./linear";
+import { multiplyLinear } from "../../document/linear";
+import type { Linear } from "../../document/linear";
 import { LAYER_ATTRIBUTE, isLayerId } from "./hitTest";
 import type { ReadLayer } from "./layerSpace";
 

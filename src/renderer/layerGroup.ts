@@ -1,4 +1,5 @@
 import type { DesignDocument } from "../document/document";
+import { GROUP_GEOMETRY, isGroup } from "../document/layer";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "../document/layer";
 import { isNodeId } from "../document/path";
 import { DOM_DRAWN, drawnRead } from "./input/drawn";
@@ -17,7 +18,7 @@ const GROUP_FIELDS: Omit<LayerFields, "x" | "y" | "width" | "height"> = {
 	fill: CLEAR,
 	name: "Group",
 	clip: false,
-	geometry: { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: true },
+	geometry: GROUP_GEOMETRY,
 };
 
 interface GroupPlan {
@@ -86,34 +87,26 @@ export function groupSelection(doc: DesignDocument, user: UserState): boolean {
 	return true;
 }
 
-function isGroup(doc: DesignDocument, layer: Layer): boolean {
-	return (
-		isNodeId(layer.id) &&
-		layer.fill === CLEAR &&
-		layer.media === null &&
-		!layer.clip &&
-		layer.content.kind === "none" &&
-		layer.layout.display === "block" &&
-		doc.childIds(layer.id).length > 0 &&
-		holdsFree(doc, layer.parent)
-	);
+function canLift(doc: DesignDocument, layer: Layer): boolean {
+	return isNodeId(layer.id) && isGroup(layer) && holdsFree(doc, layer.parent);
 }
 
 export function canUngroup(doc: DesignDocument, user: UserState): boolean {
-	return selectedLayers(doc, user).some((layer) => isGroup(doc, layer));
+	return selectedLayers(doc, user).some((layer) => canLift(doc, layer));
 }
 
-function liftChild(doc: DesignDocument, group: Layer, child: Layer, index: number): void {
+function liftChild(doc: DesignDocument, group: Layer, child: Layer, index: number): boolean {
 	const read = readerOf(doc);
 	const seen = seenLinear([...parentChain(read, group.id), group], child);
 	const pivot = pivotOf(child);
 	const landed = outOfLayer(group, { x: child.x + pivot.x, y: child.y + pivot.y });
 	const sized = fixedSize(read, child);
 	if (!doc.move(child.id, group.parent, index)) {
-		return;
+		return false;
 	}
 	const pose = poseInside(parentChain(read, child.id), seen, child);
 	doc.update(child.id, { ...sized, ...pose, x: landed.x - pivot.x, y: landed.y - pivot.y });
+	return true;
 }
 
 function ungroup(doc: DesignDocument, groupId: LayerId): readonly LayerId[] {
@@ -123,16 +116,16 @@ function ungroup(doc: DesignDocument, groupId: LayerId): readonly LayerId[] {
 	}
 	const at = doc.siblingIds(group.parent).indexOf(group.id);
 	const children = doc.childIds(group.id).flatMap((id) => doc.layer(id) ?? []);
-	for (const [offset, child] of children.entries()) {
-		liftChild(doc, group, child, at + offset);
+	const lifted = children.filter((child, offset) => liftChild(doc, group, child, at + offset));
+	if (lifted.length === children.length) {
+		doc.deleteLayer(group.id);
 	}
-	doc.deleteLayer(group.id);
-	return children.map((child) => child.id);
+	return lifted.map((child) => child.id);
 }
 
 export function ungroupSelection(doc: DesignDocument, user: UserState): boolean {
 	const layers = selectedLayers(doc, user);
-	const groups = new Set(layers.filter((layer) => isGroup(doc, layer)));
+	const groups = new Set(layers.filter((layer) => canLift(doc, layer)));
 	if (groups.size === 0) {
 		return false;
 	}

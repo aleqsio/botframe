@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { roundNumber } from "../document/length";
 import { normalizeDegrees, outOfLayer, posePoint } from "./input/layerSpace";
-import { degreesOf } from "./input/linear";
+import { degreesOf } from "../document/linear";
 import type { Placed } from "./input/layerSpace";
 
 const QUARTER_TURN = 90;
