@@ -61,7 +61,7 @@ function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = pickedHit(target);
+	const layerId = heldHit(target) ?? pickedHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);

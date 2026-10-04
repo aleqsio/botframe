@@ -130,21 +130,6 @@ describe("the select tool", () => {
 		expect(target.user.selection.get()).toEqual([id]);
 	});
 
-	it("moves the selected parent, not the child under the press", () => {
-		const { target, child } = nestedTarget(0);
-		const parent = firstId(target.doc);
-		target.user.selection.set([parent]);
-
-		dragOver(behaviorFor("select"), target, {
-			press: { x: 450, y: 290 },
-			release: { x: 470, y: 310 },
-		});
-
-		expect(target.user.selection.get()).toEqual([parent]);
-		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
-		expect(target.doc.layer(parent)).toMatchObject({ x: 440, y: 280 });
-	});
-
 	it("carries the whole selection when the press lands on a layer it holds", () => {
 		const { target, above, below } = coveredTarget();
 		target.user.selection.set([below, above]);
@@ -183,6 +168,33 @@ describe("the select tool", () => {
 
 		expect(target.user.menu.get()).toEqual({ client: CLIENT, layerIds: [] });
 		expect(target.user.selection.get()).toEqual([id]);
+	});
+});
+
+describe("the select tool on a selected frame", () => {
+	it("keeps the selected parent on a click on its child", () => {
+		const { target } = nestedTarget(0);
+		const parent = firstId(target.doc);
+		target.user.selection.set([parent]);
+
+		tapAt(behaviorFor("select"), target, { x: 450, y: 290 });
+
+		expect(target.user.selection.get()).toEqual([parent]);
+	});
+
+	it("moves the selected parent, not the child under the press", () => {
+		const { target, child } = nestedTarget(0);
+		const parent = firstId(target.doc);
+		target.user.selection.set([parent]);
+
+		dragOver(behaviorFor("select"), target, {
+			press: { x: 450, y: 290 },
+			release: { x: 470, y: 310 },
+		});
+
+		expect(target.user.selection.get()).toEqual([parent]);
+		expect(target.doc.layer(child)).toMatchObject({ x: 20, y: 20 });
+		expect(target.doc.layer(parent)).toMatchObject({ x: 440, y: 280 });
 	});
 });
 
