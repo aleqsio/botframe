@@ -55,6 +55,24 @@ function doubleClick(target: PointerTarget): boolean {
 	return behavior.doubleTap?.(target, point, NO_MODIFIERS) ?? false;
 }
 
+function groupedMaskedText(): MaskedText {
+	const scene = maskedText({ kind: "ellipse" });
+	const { doc } = scene.target;
+	const group = doc.createLayer({
+		...SQUARE,
+		x: 0,
+		y: 0,
+		width: 200,
+		height: 200,
+		geometry: { kind: "group" },
+	});
+	doc.move(scene.mask, group);
+	doc.move(scene.text, group);
+	doc.commit("group");
+	scene.target.user.selection.set([group]);
+	return { ...scene, target: { ...scene.target, layerIds: [scene.text, group] } };
+}
+
 describe("the edit that a clipped layer starts", () => {
 	it("is the path edit of its mask when the mask has vertices", () => {
 		const scene = maskedText({ kind: "ellipse" });
@@ -94,5 +112,19 @@ describe("the edit that a clipped layer starts", () => {
 		expect(handleStroke(scene.target.doc, scene.target.user, ENTER)).toBe(true);
 		expect(scene.target.user.pathEdit.get()).toBe(scene.mask);
 		expect(scene.target.user.textEdit.get()).toBeNull();
+	});
+
+	it("selects the clipped text in a selected group on a click, then edits the mask and the text", () => {
+		const scene = groupedMaskedText();
+		const point = pointAt(IDENTITY_CAMERA, SPOT);
+
+		behaviorFor("select").tap?.(scene.target, point, NO_MODIFIERS);
+		expect(scene.target.user.selection.get()).toEqual([scene.text]);
+
+		expect(doubleClick(scene.target)).toBe(true);
+		expect(scene.target.user.pathEdit.get()).toBe(scene.mask);
+
+		expect(doubleClick(scene.target)).toBe(true);
+		expect(scene.target.user.textEdit.get()).toEqual({ id: scene.text, message: "edit text" });
 	});
 });

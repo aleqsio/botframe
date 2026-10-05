@@ -5,7 +5,7 @@ import { insideSubtree } from "./dropTarget";
 import { applyGroupMove, beginGroupMove, finishGroupMove } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
-import { deeperId, heldAncestorOf, pickedId } from "./pickTarget";
+import { deeperId, heldAncestorOf, pickedId, pickedInside } from "./pickTarget";
 import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
 import { selectIds, toggleSelected } from "./selection";
@@ -27,9 +27,9 @@ function pickedHit(target: PointerTarget): LayerId | null {
 	return hit === null ? null : pickedId(readerOf(target), target.user.selection.get(), hit);
 }
 
-function deeperHit(target: PointerTarget): LayerId | null {
+function hitInside(target: PointerTarget): LayerId | null {
 	const hit = topHit(target);
-	return hit === null ? null : deeperId(readerOf(target), target.user.selection.get(), hit);
+	return hit === null ? null : pickedInside(readerOf(target), target.user.selection.get(), hit);
 }
 
 function heldHit(target: PointerTarget): LayerId | null {
@@ -66,7 +66,7 @@ function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = deeperHit(target) ?? pickedHit(target);
+	const layerId = hitInside(target) ?? pickedHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);
@@ -123,7 +123,8 @@ function layerIdUnder(target: PointerTarget, point: StagePoint): LayerId | null 
 }
 
 function selectDeeper(target: PointerTarget): boolean {
-	const deeper = deeperHit(target);
+	const hit = topHit(target);
+	const deeper = hit === null ? null : deeperId(readerOf(target), target.user.selection.get(), hit);
 	if (deeper === null) {
 		return false;
 	}

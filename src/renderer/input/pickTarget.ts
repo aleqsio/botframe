@@ -25,6 +25,19 @@ export function deeperId(
 	return held === -1 ? null : (chain[held + 1]?.id ?? null);
 }
 
+export function pickedInside(
+	read: ReadLayer,
+	selection: readonly LayerId[],
+	hit: LayerId,
+): LayerId | null {
+	const chain = layerChain(read, hit);
+	const inner = chain.slice(chain.findLastIndex((layer) => selection.includes(layer.id)) + 1);
+	if (inner.length === chain.length) {
+		return null;
+	}
+	return (inner.find((layer) => isGroup(layer)) ?? inner.at(-1))?.id ?? null;
+}
+
 export function heldAncestorOf(
 	read: ReadLayer,
 	selection: readonly LayerId[],
