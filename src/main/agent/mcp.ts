@@ -15,7 +15,7 @@ const NO_METHOD = -32_601;
 const INVALID_PARAMS = -32_602;
 
 const INSTRUCTIONS =
-	"botframe is a design tool. These tools edit the documents that are open in botframe, and the editor shows each change at once. Start with list_documents and get_outline. Use get_layer to read a layer and update_layer to change it. Use read_data and write_data for each part of the document that the other tools do not give. Each call is one undo step. Build a design as nested frames (geometry.frame: true) with layout.display row or column, gap, padding, and hug or fill sizes, as in HTML with flexbox, not as rectangles at absolute x and y.";
+	"botframe is a design tool. These tools edit the documents that are open in botframe, and the editor shows each change at once. Start with list_documents and get_outline. Use get_layer to read a layer and update_layer to change it. Use render to see a layer as the user sees it. Use read_data and write_data for each part of the document that the other tools do not give. Each call is one undo step. Build a design as nested frames (geometry.frame: true) with layout.display row or column, gap, padding, and hug or fill sizes, as in HTML with flexbox, not as rectangles at absolute x and y.";
 
 class RpcError extends Error {
 	readonly code: number;
@@ -48,14 +48,32 @@ function textResult(text: string, isError: boolean): unknown {
 	return { content: [{ type: "text", text }], isError };
 }
 
+function isImage(value: unknown): boolean {
+	const { type, data, mimeType } = fieldsOf(value);
+	return type === "image" && typeof data === "string" && mimeType === "image/png";
+}
+
+function isResource(value: unknown): boolean {
+	const { type, resource } = fieldsOf(value);
+	const { uri, mimeType, text, blob } = fieldsOf(resource);
+	const body = typeof text === "string" || typeof blob === "string";
+	return type === "resource" && typeof uri === "string" && typeof mimeType === "string" && body;
+}
+
+function toolResult(result: unknown): unknown {
+	if (isImage(result) || isResource(result)) {
+		return { content: [result], isError: false };
+	}
+	return textResult(JSON.stringify(result ?? null), false);
+}
+
 async function callTool(params: Fields, call: CallPage): Promise<unknown> {
 	const name = params["name"];
 	if (typeof name !== "string" || !TOOL_NAMES.has(name)) {
 		throw new RpcError(INVALID_PARAMS, `Unknown tool: ${String(name)}`);
 	}
 	try {
-		const result = await call(name, fieldsOf(params["arguments"]));
-		return textResult(JSON.stringify(result ?? null), false);
+		return toolResult(await call(name, fieldsOf(params["arguments"])));
 	} catch (error) {
 		return textResult(error instanceof Error ? error.message : String(error), true);
 	}

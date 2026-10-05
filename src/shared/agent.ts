@@ -6,6 +6,8 @@ export const AGENT_MCP_URL = `http://${AGENT_HOST}:${AGENT_PORT}${AGENT_MCP_PATH
 export const AGENT_ADD_COMMAND = `claude mcp add --transport http botframe ${AGENT_MCP_URL}`;
 export const AGENT_RELAY_COMMAND = "bun run agent";
 
+export const RENDER_LONG_SIDE = 2048;
+
 export const AGENT_CALL = "agent:call";
 export const AGENT_REPLY = "agent:reply";
 
@@ -18,6 +20,19 @@ export interface AgentCall {
 export type AgentReply =
 	| { id: number; ok: true; result: unknown }
 	| { id: number; ok: false; error: string };
+
+export interface AgentImage {
+	type: "image";
+	data: string;
+	mimeType: "image/png";
+}
+
+export interface AgentResource {
+	type: "resource";
+	resource:
+		| { uri: string; mimeType: string; text: string }
+		| { uri: string; mimeType: string; blob: string };
+}
 
 export interface AgentTool {
 	name: string;
@@ -93,6 +108,37 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 		"Gives the components (layer and HTML) and the variables of the document and of each component.",
 		{},
 		[],
+	),
+	tool(
+		"render",
+		`Gives a PNG picture of one layer as the browser draws it, or of the visible canvas when no id is given. Use it to check a change. The long side of the picture is ${RENDER_LONG_SIDE} px or less. botframe draws it in a hidden window, so the editor does not change. Needs the desktop app.`,
+		{
+			id: LAYER_ID,
+			scale: {
+				type: "number",
+				description:
+					"Pixels in the picture for each pixel of the layer, from 0.1 to 4. The default is 1. With no id, the scale applies to the canvas as it shows.",
+			},
+		},
+		[],
+	),
+	tool(
+		"export_layer",
+		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, or html. For html, give html: embedded for one page with the CSS, fonts, and media inside, or separate for a zip of index.html, styles.css, and an assets folder. Gives one html page and svg as text, and the other files as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. Needs the desktop app.`,
+		{
+			id: LAYER_ID,
+			format: { enum: ["png", "jpg", "svg", "pdf", "html"] },
+			html: {
+				enum: ["embedded", "separate"],
+				description: "For html: one file, or separate files in a zip. The default is embedded.",
+			},
+			scale: {
+				type: "number",
+				description:
+					"For png and jpg: pixels for each pixel of the layer, from 0.1 to 4. The default is 1.",
+			},
+		},
+		["format"],
 	),
 	tool(
 		"read_data",

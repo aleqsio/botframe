@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import type { UserState } from "../state/userState";
 import { useLayerCount } from "../useDocument";
+import { ExportSection } from "./ExportSection";
 import { LayerProperties } from "./LayerProperties";
 import { LayoutActions } from "./LayoutActions";
 import { MixedProperties } from "./MixedProperties";
@@ -50,6 +51,7 @@ export function InspectorBody({
 			) : (
 				<MixedProperties doc={doc} layers={layers} />
 			)}
+			<ExportSection doc={doc} layers={layers} user={user} />
 		</>
 	);
 }
