@@ -3,6 +3,7 @@ import type { StoredSession, StoredTab } from "./sessionStore";
 import { readSession, writeSession } from "./sessionStore";
 import { Tab } from "./state/tab";
 import type { Workspace } from "./state/workspace";
+import { welcomeTab } from "./welcome";
 
 const WRITE_DELAY_MS = 400;
 
@@ -63,6 +64,13 @@ function restore(workspace: Workspace, session: StoredSession): void {
 	workspace.replace(tabs, tabs[session.active] ?? first);
 }
 
+async function welcome(workspace: Workspace): Promise<void> {
+	const tab = await welcomeTab().catch(() => null);
+	if (tab !== null && isUntouched(workspace)) {
+		workspace.replace([tab], tab);
+	}
+}
+
 function sessionOf(workspace: Workspace): StoredSession {
 	const tabs = workspace.tabs.get();
 	return { tabs: tabs.map((tab) => storedOf(tab)), active: tabs.indexOf(workspace.active.get()) };
@@ -111,7 +119,9 @@ function watchTabs(workspace: Workspace, schedule: () => void): void {
 
 export async function keepSession(workspace: Workspace): Promise<void> {
 	const session = await readSession();
-	if (session !== null) {
+	if (session === null) {
+		await welcome(workspace);
+	} else {
 		restore(workspace, session);
 	}
 	watchTabs(workspace, writer(workspace));

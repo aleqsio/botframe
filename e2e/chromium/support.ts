@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 import { join } from "node:path";
-import { at, dragOn, drawWith, stageOrigin } from "../support";
+import { at, closeWelcome, dragOn, drawWith, stageOrigin } from "../support";
 import type { Drag, Point } from "../support";
 
 const SITE = "https://botframe.test";
@@ -18,9 +18,14 @@ function fileOf(url: string): string {
 	return join(RENDERER, pathname === "/" ? "index.html" : pathname);
 }
 
-export async function openRenderer(page: Page): Promise<Scene> {
+export async function loadRenderer(page: Page): Promise<void> {
 	await page.route(`${SITE}/**`, (route) => route.fulfill({ path: fileOf(route.request().url()) }));
 	await page.goto(`${SITE}/`);
+}
+
+export async function openRenderer(page: Page): Promise<Scene> {
+	await loadRenderer(page);
+	await closeWelcome(page);
 	const layers = page.locator(".layer");
 	await expect(layers).toHaveCount(1);
 	return { layers, origin: await stageOrigin(page) };

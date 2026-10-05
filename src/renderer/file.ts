@@ -5,6 +5,7 @@ import { bridge, inBrowser } from "./bridge";
 import type { Bridge } from "./bridge";
 import { Tab } from "./state/tab";
 import type { Workspace } from "./state/workspace";
+import { openWelcome } from "./welcome";
 
 const NOT_A_FILE = "The file is not a botframe document.";
 
@@ -78,6 +79,16 @@ export function closeTab(workspace: Workspace, tab: Tab): void {
 	workspace.close(tab);
 }
 
+const NO_WELCOME = "The welcome document did not open.";
+
+async function showWelcome(workspace: Workspace): Promise<void> {
+	try {
+		await openWelcome(workspace);
+	} catch {
+		window.alert(NO_WELCOME);
+	}
+}
+
 function runOnShell(command: FileCommand, workspace: Workspace): void {
 	const shell = bridge();
 	if (command.id === "open") {
@@ -93,6 +104,10 @@ export function runFileCommand(command: FileCommand, workspace: Workspace): void
 	}
 	if (command.id === "newTab") {
 		workspace.add(Tab.untitled());
+		return;
+	}
+	if (command.id === "welcome") {
+		void showWelcome(workspace);
 		return;
 	}
 	if (command.id === "closeTab") {

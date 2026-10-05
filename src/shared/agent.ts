@@ -92,6 +92,12 @@ function tool(
 export const AGENT_TOOLS: readonly AgentTool[] = [
 	tool("list_documents", "Lists the open documents (tabs) and marks the active one.", {}, []),
 	tool(
+		"open_welcome",
+		"Opens the welcome document, which explains botframe, in a new tab, and gives its document id. It is the same as File > Open Welcome Project.",
+		{},
+		[],
+	),
+	tool(
 		"get_outline",
 		"Gives the layer tree of the canvas: id, name, kind, component, and children of each layer. A copy of a layer component shows its layers with path ids (copy~node).",
 		{},

@@ -6,6 +6,7 @@ import type { UserConfig } from "vite";
 
 export const renderer = {
 	root: "src/renderer",
+	assetsInclude: ["**/*.botframe"],
 	plugins: [
 		// electron-vite deep-clones the config and throws on the plugin object unless it is awaited.
 		// https://github.com/alex8088/electron-vite/issues/902

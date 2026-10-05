@@ -18,7 +18,13 @@ export async function launchApp(): Promise<{ app: ElectronApplication; window: P
 	const profile = await mkdtemp(join(tmpdir(), "botframe-profile-"));
 	const app = await electron.launch({ args: ["out/main/index.js", `--user-data-dir=${profile}`] });
 	const window = await app.firstWindow();
+	await closeWelcome(window);
 	return { app, window };
+}
+
+export async function closeWelcome(page: Page): Promise<void> {
+	await page.getByRole("button", { name: "Close Welcome" }).click();
+	await expect(page.getByRole("tab")).toHaveText(["Untitled"]);
 }
 
 export function stageOrigin(window: Page): Promise<Point> {
