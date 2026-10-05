@@ -1,7 +1,6 @@
 import { CENTER_ORIGIN } from "../../document/layer";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { Point } from "../state/camera";
-import { SMALLEST_GROUP } from "./groupMove";
 import { CORNERS, zoneAt } from "./handles";
 import type { Corner, Handle, HandleZone } from "./handles";
 import {
@@ -35,6 +34,8 @@ export interface GroupGrip {
 	handle: Handle;
 	parts: readonly GroupPart[];
 }
+
+const SMALLEST_GROUP = 2;
 
 function flatBox(box: Rect): Placed {
 	return { ...box, ...NO_POSE, origin: CENTER_ORIGIN };

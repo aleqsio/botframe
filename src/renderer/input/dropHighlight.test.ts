@@ -69,6 +69,7 @@ function moveInto(parent: LayerId | null, from: LayerId | null = null): LayerMov
 		anchor: { x: 0, y: 0 },
 		seen: { a: 1, b: 0, c: 0, d: 1 },
 		field: snapFieldOf({ points: [], curves: [], container: null }),
+		followers: [],
 	};
 }
 

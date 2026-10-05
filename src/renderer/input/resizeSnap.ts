@@ -18,7 +18,7 @@ export interface ResizeGrip {
 }
 
 export function resizeGripOf(target: PointerTarget, start: Layer, handle: Handle): ResizeGrip {
-	return { start, handle, field: snapFieldAround(target, start.id) };
+	return { start, handle, field: snapFieldAround(target, [start.id]) };
 }
 
 function pullFor(grip: ResizeGrip, rect: Rect): SnapPull {

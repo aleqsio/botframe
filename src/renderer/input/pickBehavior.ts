@@ -2,10 +2,9 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { insideSubtree } from "./dropTarget";
-import { applyGroupMove, beginGroupMove, finishGroupMove } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
-import { deeperId, heldAncestorOf, pickedId } from "./pickTarget";
+import { deeperId, heldAncestorOf, pickedId, pickedInside } from "./pickTarget";
 import type { Modifiers } from "./modifiers";
 import { applyMove, beginMove, finishMove } from "./moveDrag";
 import { selectIds, toggleSelected } from "./selection";
@@ -25,6 +24,11 @@ function topHit(target: PointerTarget): LayerId | null {
 function pickedHit(target: PointerTarget): LayerId | null {
 	const hit = topHit(target);
 	return hit === null ? null : pickedId(readerOf(target), target.user.selection.get(), hit);
+}
+
+function hitInside(target: PointerTarget): LayerId | null {
+	const hit = topHit(target);
+	return hit === null ? null : pickedInside(readerOf(target), target.user.selection.get(), hit);
 }
 
 function heldHit(target: PointerTarget): LayerId | null {
@@ -61,7 +65,7 @@ function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = heldHit(target) ?? pickedHit(target);
+	const layerId = hitInside(target) ?? pickedHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);
@@ -90,13 +94,6 @@ function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
 		return target.doc.layer(held);
 	}
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
-}
-
-function dragsGroup(target: PointerTarget, canvas: Point): boolean {
-	if (topHit(target) !== null) {
-		return heldHit(target) !== null;
-	}
-	return heldSelection(target, canvas) !== null;
 }
 
 function holdsPress(target: PointerTarget, under: LayerId): boolean {
@@ -135,10 +132,6 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {
-			if (dragsGroup(target, origin.canvas) && beginGroupMove(target, origin.canvas)) {
-				applyGroupMove(target, point.canvas);
-				return true;
-			}
 			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
@@ -148,11 +141,9 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		drag(target, point, modifiers) {
-			applyGroupMove(target, point.canvas);
 			return applyMove(target, point, modifiers);
 		},
 		dragEnd(target, point, modifiers) {
-			finishGroupMove(target, point.canvas);
 			finishMove(target, point, modifiers);
 		},
 		doubleTap(target) {

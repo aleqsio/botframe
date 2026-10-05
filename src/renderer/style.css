@@ -176,6 +176,7 @@ body {
 .selection-box,
 .selection-peer,
 .path-edit,
+.shape-line,
 .marquee,
 .highlight,
 .drop-outline {
@@ -320,6 +321,15 @@ body {
 
 .path-lines path {
 	stroke-width: 1.5px;
+}
+
+.shape-line-hover .path-lines {
+	stroke: var(--highlight);
+}
+
+.shape-line-mask .path-lines {
+	stroke: var(--highlight);
+	stroke-dasharray: var(--layout-space-2) var(--layout-space-1);
 }
 
 .path-lines * {

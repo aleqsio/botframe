@@ -29,14 +29,22 @@ interface MoveStart extends Pick<
 	index: number;
 }
 
-export interface LayerMove {
+export interface MovedLayer {
 	id: LayerId;
 	from: LayerId | null;
-	parent: LayerId | null;
 	start: MoveStart;
 	anchor: Point;
 	seen: Linear;
+}
+
+export interface LayerMove extends MovedLayer {
+	parent: LayerId | null;
 	field: SnapField;
+	followers: readonly MovedLayer[];
+}
+
+export function movedIds(move: LayerMove): LayerId[] {
+	return [move.id, ...move.followers.map((follower) => follower.id)];
 }
 
 export interface Lifted {
@@ -47,17 +55,6 @@ export interface Lifted {
 export interface Marquee {
 	origin: Point;
 	box: Rect;
-}
-
-export interface GroupStart {
-	id: LayerId;
-	x: number;
-	y: number;
-}
-
-export interface GroupMove {
-	origin: Point;
-	starts: readonly GroupStart[];
 }
 
 export interface SnapGuides {
@@ -93,7 +90,6 @@ export class UserState {
 	readonly draw = new Slot<Draw | null>(null);
 	readonly pasteReady = new Slot<boolean>(false);
 	readonly move = new Slot<LayerMove | null>(null);
-	readonly group = new Slot<GroupMove | null>(null);
 	readonly marquee = new Slot<Marquee | null>(null);
 	readonly snap = new Slot<SnapGuides | null>(null);
 	readonly lift = new Slot<Lifted | null>(null);

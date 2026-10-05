@@ -67,13 +67,13 @@ describe("the select tool on a group", () => {
 		expect(scene.user.selection.get()).toEqual([scene.group]);
 	});
 
-	it("keeps the group selected on a click on a child", () => {
+	it("selects the child on a click on it when the group is selected", () => {
 		const scene = groupScene();
 		scene.user.selection.set([scene.group]);
 
 		tapAt(select, pressOn(scene, scene.a), ON_A);
 
-		expect(scene.user.selection.get()).toEqual([scene.group]);
+		expect(scene.user.selection.get()).toEqual([scene.a]);
 	});
 
 	it("selects the child under the pointer on a double click", () => {

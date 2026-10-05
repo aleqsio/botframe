@@ -50,7 +50,7 @@ function read(id: LayerId): Layer | null {
 }
 
 function parentOf(ids: readonly LayerId[]): LayerId | null {
-	return dropParentOf(ids, read, DRAGGED.id);
+	return dropParentOf(ids, read, [DRAGGED.id]);
 }
 
 describe("dropParentOf", () => {

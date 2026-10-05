@@ -25,10 +25,10 @@ export function insideSubtree(read: ReadLayer, id: LayerId, root: LayerId): bool
 export function dropParentOf(
 	ids: readonly LayerId[],
 	read: ReadLayer,
-	dragged: LayerId,
+	dragged: readonly LayerId[],
 ): LayerId | null {
 	for (const id of ids) {
-		if (!insideSubtree(read, id, dragged) && isFrame(read(id))) {
+		if (!dragged.some((moved) => insideSubtree(read, id, moved)) && isFrame(read(id))) {
 			return id;
 		}
 	}

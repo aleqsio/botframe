@@ -17,7 +17,11 @@ export interface LayerPaintStyle {
 
 const NO_SUBSCRIPTION = (): void => {};
 
-function subscribeLinks(doc: DesignDocument, layer: Layer, listener: () => void): () => void {
+export function subscribeLinks(
+	doc: DesignDocument,
+	layer: Layer,
+	listener: () => void,
+): () => void {
 	if (layer.clipLayer === null) {
 		return NO_SUBSCRIPTION;
 	}

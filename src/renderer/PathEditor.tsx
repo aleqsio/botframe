@@ -3,8 +3,8 @@ import type { DesignDocument } from "../document/document";
 import type { LayerId } from "../document/layer";
 import { editableVertices } from "../document/vertices";
 import type { Offset, Vertex } from "../document/vertices";
-import { pathData } from "./pathShape";
 import { LayerOutline } from "./SelectionOutline";
+import { PathLine } from "./ShapeOutlines";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
 import { useDrawnOutline, useLayer } from "./useDocument";
@@ -66,9 +66,7 @@ function EditedPath({ doc, id }: { doc: DesignDocument; id: LayerId }): ReactNod
 
 	return (
 		<LayerOutline className="path-edit" doc={doc} id={id}>
-			<svg className="path-lines" preserveAspectRatio="none" viewBox="0 0 1 1">
-				<path d={pathData(vertices)} />
-			</svg>
+			<PathLine vertices={vertices} />
 			{marksOf(vertices).map(({ key, vertex }) => (
 				<VertexMarks key={key} vertex={vertex} />
 			))}
