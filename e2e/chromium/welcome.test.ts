@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { closeWelcome } from "../support";
-import { loadRenderer } from "./support";
-
-const WRITE_WAIT_MS = 1000;
+import { WRITE_WAIT_MS, loadRenderer } from "./support";
 
 test("the first launch opens the welcome document, and the File menu opens it again", async ({
 	page,

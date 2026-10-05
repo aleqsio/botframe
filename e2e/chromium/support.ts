@@ -7,6 +7,7 @@ import type { Drag, Point } from "../support";
 const SITE = "https://botframe.test";
 const RENDERER = "out/web";
 const NEAR = 0.05;
+export const WRITE_WAIT_MS = 1000;
 
 interface Scene {
 	layers: Locator;

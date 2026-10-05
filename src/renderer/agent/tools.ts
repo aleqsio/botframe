@@ -1,7 +1,7 @@
 import type { AgentReply } from "../../shared/agent";
 import type { Tab } from "../state/tab";
 import type { Workspace } from "../state/workspace";
-import { openWelcome } from "../welcome";
+import { welcomeTab } from "../welcome";
 import { argsOf, optionalText } from "./args";
 import type { Args } from "./args";
 import { COMPONENT_TOOLS } from "./componentTools";
@@ -34,14 +34,15 @@ function listDocuments(workspace: Workspace): unknown {
 	}));
 }
 
-async function openWelcomeTool(workspace: Workspace): Promise<unknown> {
-	const tab = await openWelcome(workspace);
+async function openWelcome(workspace: Workspace): Promise<unknown> {
+	const tab = await welcomeTab();
+	workspace.add(tab);
 	return { document: tab.id, name: tab.name.get() };
 }
 
 const WORKSPACE_TOOLS: Readonly<Record<string, (workspace: Workspace) => unknown>> = {
 	list_documents: listDocuments,
-	open_welcome: openWelcomeTool,
+	open_welcome: openWelcome,
 };
 
 function tabOf(workspace: Workspace, args: Args): Tab {

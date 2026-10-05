@@ -5,7 +5,7 @@ import { bridge, inBrowser } from "./bridge";
 import type { Bridge } from "./bridge";
 import { Tab } from "./state/tab";
 import type { Workspace } from "./state/workspace";
-import { openWelcome } from "./welcome";
+import { welcomeOrAlert } from "./welcome";
 
 const NOT_A_FILE = "The file is not a botframe document.";
 
@@ -79,13 +79,10 @@ export function closeTab(workspace: Workspace, tab: Tab): void {
 	workspace.close(tab);
 }
 
-const NO_WELCOME = "The welcome document did not open.";
-
 async function showWelcome(workspace: Workspace): Promise<void> {
-	try {
-		await openWelcome(workspace);
-	} catch {
-		window.alert(NO_WELCOME);
+	const tab = await welcomeOrAlert();
+	if (tab !== null) {
+		workspace.add(tab);
 	}
 }
 

@@ -38,10 +38,10 @@ describe("welcomeTab", () => {
 		vi.stubGlobal("fetch", () => Promise.reject(new Error("no network")));
 		const tab = await welcomeTab();
 		const { doc } = tab;
-		const fonts = doc.layerIds().flatMap((id) => {
-			const geometry = doc.layer(id)?.geometry;
-			return geometry?.kind === "text" ? [geometry] : [];
-		});
+		const fonts = doc
+			.layerIds()
+			.map((id) => doc.layer(id)?.geometry)
+			.filter((geometry) => geometry?.kind === "text");
 		const loaded = await Promise.all(
 			fonts.map(({ fontFamily: family, italic, fontWeight: weight }) =>
 				ensureFont(doc, { family, italic, weight }),

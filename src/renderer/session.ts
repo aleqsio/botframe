@@ -3,7 +3,7 @@ import type { StoredSession, StoredTab } from "./sessionStore";
 import { readSession, writeSession } from "./sessionStore";
 import { Tab } from "./state/tab";
 import type { Workspace } from "./state/workspace";
-import { welcomeTab } from "./welcome";
+import { welcomeOrAlert } from "./welcome";
 
 const WRITE_DELAY_MS = 400;
 
@@ -65,7 +65,7 @@ function restore(workspace: Workspace, session: StoredSession): void {
 }
 
 async function welcome(workspace: Workspace): Promise<void> {
-	const tab = await welcomeTab().catch(() => null);
+	const tab = await welcomeOrAlert();
 	if (tab !== null && isUntouched(workspace)) {
 		workspace.replace([tab], tab);
 	}

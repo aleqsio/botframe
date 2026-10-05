@@ -23,6 +23,9 @@ export async function launchApp(): Promise<{ app: ElectronApplication; window: P
 }
 
 export async function closeWelcome(page: Page): Promise<void> {
+	await expect(page.getByRole("tab"), "the first launch opens the welcome document").toHaveText([
+		"Welcome",
+	]);
 	await page.getByRole("button", { name: "Close Welcome" }).click();
 	await expect(page.getByRole("tab")).toHaveText(["Untitled"]);
 }

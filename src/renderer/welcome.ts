@@ -3,7 +3,8 @@ import { readFile } from "../document/file";
 import { WELCOME } from "../shared/file";
 import { dataUrlBytes } from "./dataUrl";
 import { Tab } from "./state/tab";
-import type { Workspace } from "./state/workspace";
+
+const NO_WELCOME = "The welcome document did not open.";
 
 export async function welcomeTab(): Promise<Tab> {
 	const { default: url } = await import("../../assets/welcome.botframe?inline");
@@ -16,8 +17,11 @@ export async function welcomeTab(): Promise<Tab> {
 	return tab;
 }
 
-export async function openWelcome(workspace: Workspace): Promise<Tab> {
-	const tab = await welcomeTab();
-	workspace.add(tab);
-	return tab;
+export async function welcomeOrAlert(): Promise<Tab | null> {
+	try {
+		return await welcomeTab();
+	} catch (error) {
+		window.alert(`${NO_WELCOME} ${String(error)}`);
+		return null;
+	}
 }
