@@ -172,14 +172,13 @@ describe("the select tool", () => {
 });
 
 describe("the select tool on a selected frame", () => {
-	it("keeps the selected parent on a click on its child", () => {
-		const { target } = nestedTarget(0);
-		const parent = firstId(target.doc);
-		target.user.selection.set([parent]);
+	it("selects the child on a click on it", () => {
+		const { target, child } = nestedTarget(0);
+		target.user.selection.set([firstId(target.doc)]);
 
 		tapAt(behaviorFor("select"), target, { x: 450, y: 290 });
 
-		expect(target.user.selection.get()).toEqual([parent]);
+		expect(target.user.selection.get()).toEqual([child]);
 	});
 
 	it("moves the selected parent, not the child under the press", () => {

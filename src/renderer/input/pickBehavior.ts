@@ -27,6 +27,11 @@ function pickedHit(target: PointerTarget): LayerId | null {
 	return hit === null ? null : pickedId(readerOf(target), target.user.selection.get(), hit);
 }
 
+function deeperHit(target: PointerTarget): LayerId | null {
+	const hit = topHit(target);
+	return hit === null ? null : deeperId(readerOf(target), target.user.selection.get(), hit);
+}
+
 function heldHit(target: PointerTarget): LayerId | null {
 	const hit = topHit(target);
 	return hit === null ? null : heldAncestorOf(readerOf(target), target.user.selection.get(), hit);
@@ -61,7 +66,7 @@ function heldSelection(target: PointerTarget, canvas: Point): Layer | null {
 }
 
 function layerOfPress(target: PointerTarget, canvas: Point): Layer | null {
-	const layerId = heldHit(target) ?? pickedHit(target);
+	const layerId = deeperHit(target) ?? pickedHit(target);
 	if (layerId !== null) {
 		select(target.user, layerId);
 		return target.doc.layer(layerId);
@@ -118,8 +123,7 @@ function layerIdUnder(target: PointerTarget, point: StagePoint): LayerId | null 
 }
 
 function selectDeeper(target: PointerTarget): boolean {
-	const hit = topHit(target);
-	const deeper = hit === null ? null : deeperId(readerOf(target), target.user.selection.get(), hit);
+	const deeper = deeperHit(target);
 	if (deeper === null) {
 		return false;
 	}
