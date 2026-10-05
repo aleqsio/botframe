@@ -6,7 +6,7 @@ import type { Placed } from "./layerSpace";
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
 export const EDGE_GRACE = 7;
-export const ROTATE_REACH = 34;
+export const ROTATE_REACH = 22;
 
 type Vertical = "n" | "s";
 type Horizontal = "w" | "e";

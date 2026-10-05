@@ -7,7 +7,7 @@ import { firstId, nestedTarget, pointAt, targetOf } from "./toolFixtures";
 const CENTER = { x: 540, y: 340 };
 const EMPTY = { x: 300, y: 200 };
 const SE_CORNER = { x: 660, y: 420 };
-const SE_REACH = { x: 678, y: 438 };
+const SE_REACH = { x: 670, y: 430 };
 
 function hitsOf(target: PointerTarget, ids: readonly LayerId[]): PointerTarget {
 	return { ...target, layerIdsAt: () => ids };
