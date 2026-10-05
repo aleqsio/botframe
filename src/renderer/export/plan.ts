@@ -12,6 +12,7 @@ export interface Tile {
 	camera: Camera;
 	source: CaptureRect;
 	at: Point;
+	size: { width: number; height: number };
 }
 
 export interface ExportPlan {
@@ -35,16 +36,23 @@ export function planExport(bounds: Rect, scale: number, screen: Screen): ExportP
 	const height = Math.max(1, Math.round(bounds.height * scale));
 	const step = { x: Math.floor(screen.width * ratio), y: Math.floor(screen.height * ratio) };
 	const tiles = starts(height, step.y).flatMap((top) =>
-		starts(width, step.x).map((left) => ({
-			camera: { x: -bounds.x * zoom - left / ratio, y: -bounds.y * zoom - top / ratio, zoom },
-			source: {
+		starts(width, step.x).map((left) => {
+			const source = {
 				x: 0,
 				y: 0,
 				width: Math.ceil(Math.min(step.x, width - left) / ratio),
 				height: Math.ceil(Math.min(step.y, height - top) / ratio),
-			},
-			at: { x: left, y: top },
-		})),
+			};
+			return {
+				camera: { x: -bounds.x * zoom - left / ratio, y: -bounds.y * zoom - top / ratio, zoom },
+				source,
+				at: { x: left, y: top },
+				size: {
+					width: Math.round(source.width * ratio),
+					height: Math.round(source.height * ratio),
+				},
+			};
+		}),
 	);
 	return { width, height, tiles };
 }
