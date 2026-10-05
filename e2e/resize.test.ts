@@ -8,8 +8,8 @@ const WEST_SIDE = { x: 420, y: 360 };
 const WIDE_WEST = { x: 350, y: 360 };
 const WIDE_SE = { x: 700, y: 485 };
 const CENTERED_SE = { x: 730, y: 485 };
-const TURN_FROM = { x: 302, y: 217 };
-const TURN_TO = { x: 748, y: 503 };
+const TURN_FROM = { x: 308, y: 223 };
+const TURN_TO = { x: 742, y: 497 };
 
 test("the selected layer takes a resize from each handle and a turn from the corner reach", async () => {
 	const { app, window } = await launchApp();
@@ -57,7 +57,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /height: 250px/u);
 
 	await window.mouse.move(at(origin, TURN_FROM).x, at(origin, TURN_FROM).y);
-	await expect(stage).toHaveAttribute("data-zone", "rotate");
+	await expect(stage).toHaveAttribute("data-zone", "rotate-nw");
 
 	await dragTo(TURN_FROM, TURN_TO);
 	await expect(layer).toHaveAttribute(

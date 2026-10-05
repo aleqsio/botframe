@@ -6,19 +6,15 @@ import type { Placed } from "./layerSpace";
 export const HANDLE_SIZE = 8;
 export const CORNER_GRACE = 11;
 export const EDGE_GRACE = 7;
-export const ROTATE_REACH = 34;
+export const ROTATE_REACH = 22;
 
 type Vertical = "n" | "s";
 type Horizontal = "w" | "e";
-type ZoneMode = "resize" | "rotate";
 
 export type Corner = `${Vertical}${Horizontal}`;
 export type Handle = Corner | Vertical | Horizontal;
 
-export interface HandleZone {
-	mode: ZoneMode;
-	handle: Handle;
-}
+export type HandleZone = { mode: "resize"; handle: Handle } | { mode: "rotate"; handle: Corner };
 
 export interface Axis {
 	x: number;

@@ -3,6 +3,7 @@ import { cursorKeyOf } from "./cursor";
 import { gripDrag } from "./gripDrag";
 import { groupGripOf, groupResized, groupZoneAt, partOf } from "./groupResize";
 import type { BoxZone, GroupGrip, GroupPart } from "./groupResize";
+import type { Corner, HandleZone } from "./handles";
 import { groupTurned } from "./groupRotate";
 import type { GroupTurn } from "./groupRotate";
 import { COMMIT_MESSAGES } from "./layerCommand";
@@ -14,7 +15,7 @@ import { resizePatch } from "./transform";
 
 type GroupHold =
 	| ({ kind: "resize" } & GroupGrip)
-	| ({ kind: "rotate"; handle: GroupGrip["handle"] } & GroupTurn);
+	| ({ kind: "rotate"; handle: Corner } & GroupTurn);
 
 function allLoose(target: PointerTarget, parts: readonly GroupPart[]): boolean {
 	return parts.every((part) => isLoose(target, part.start));
@@ -25,14 +26,17 @@ function resizeHold(target: PointerTarget, found: BoxZone): GroupHold | null {
 	return grip !== null && allLoose(target, grip.parts) ? { kind: "resize", ...grip } : null;
 }
 
-function rotateHold(target: PointerTarget, canvas: Point, found: BoxZone): GroupHold | null {
+function rotateHold(
+	target: PointerTarget,
+	canvas: Point,
+	box: BoxZone["box"],
+	handle: Corner,
+): GroupHold | null {
 	const read = drawnReaderOf(target);
 	const ids = target.user.selection.get();
 	const parts = ids.flatMap((id) => partOf(read, id));
-	const pivot = groupPivotOf(target.user.groupPivot.get(), ids, found.box);
-	return allLoose(target, parts)
-		? { kind: "rotate", handle: found.zone.handle, pivot, from: canvas, parts }
-		: null;
+	const pivot = groupPivotOf(target.user.groupPivot.get(), ids, box);
+	return allLoose(target, parts) ? { kind: "rotate", handle, pivot, from: canvas, parts } : null;
 }
 
 function holdAt(target: PointerTarget, canvas: Point): GroupHold | null {
@@ -47,7 +51,7 @@ function holdAt(target: PointerTarget, canvas: Point): GroupHold | null {
 		return null;
 	}
 	return found.zone.mode === "rotate"
-		? rotateHold(target, canvas, found)
+		? rotateHold(target, canvas, found.box, found.zone.handle)
 		: resizeHold(target, found);
 }
 
@@ -81,11 +85,17 @@ function applyHold(
 	}
 }
 
+function zoneOf(hold: GroupHold): HandleZone {
+	return hold.kind === "rotate"
+		? { mode: "rotate", handle: hold.handle }
+		: { mode: "resize", handle: hold.handle };
+}
+
 export function createGroupHandleBehavior(): ToolBehavior {
 	return {
 		hover(target, point) {
 			const hold = holdAt(target, point.canvas);
-			return hold === null ? null : cursorKeyOf({ mode: hold.kind, handle: hold.handle }, []);
+			return hold === null ? null : cursorKeyOf(zoneOf(hold), []);
 		},
 		highlight(target, point) {
 			return holdAt(target, point.canvas)?.parts[0]?.start.id ?? null;

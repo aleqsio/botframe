@@ -62,11 +62,11 @@ describe("skewZoneAt", () => {
 	});
 
 	it("shows no mark on an edge too short to hold one outside the rotate zone", () => {
-		const small = { ...LAYER, width: 60, height: 40 };
+		const small = { ...LAYER, width: 40, height: 30 };
 
 		expect(skewMarksOf([small], 1)).toEqual([]);
 		expect(skewMarksOf([small], 2)).toHaveLength(4);
-		expect(skewZoneAt([small], { x: 130, y: 100 - SKEW_OFFSET }, 1)).toBeNull();
+		expect(skewZoneAt([small], { x: 120, y: 100 - SKEW_OFFSET }, 1)).toBeNull();
 	});
 
 	it("does not take the edge itself or the middle of the layer", () => {

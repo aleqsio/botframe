@@ -59,7 +59,8 @@ describe("zoneAt", () => {
 	});
 
 	it("rotates outside the corner, and gives up when the pointer goes too far", () => {
-		expect(zoneAt(FLAT, { x: 80, y: 80 }, 1)).toEqual({ mode: "rotate", handle: "nw" });
+		expect(zoneAt(FLAT, { x: 86, y: 86 }, 1)).toEqual({ mode: "rotate", handle: "nw" });
+		expect(zoneAt(FLAT, { x: 82, y: 82 }, 1)).toBeNull();
 		expect(zoneAt(FLAT, { x: 100 - ROTATE_REACH - 1, y: 100 }, 1)).toBeNull();
 	});
 

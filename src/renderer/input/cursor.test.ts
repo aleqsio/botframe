@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LayerId } from "../../document/layer";
-import { cursorAxisOf, cursorKeyOf, skewCursorKeyOf } from "./cursor";
+import { cursorAxisOf, cursorKeyOf, skewCursorKeyOf, turnSideOf } from "./cursor";
 import type { CursorKey } from "./cursor";
 import { HANDLE_AXIS } from "./handles";
 import type { Handle } from "./handles";
@@ -37,12 +37,27 @@ describe("cursorAxisOf", () => {
 	});
 });
 
+describe("turnSideOf", () => {
+	it("points the turn arrow out from the corner of a layer with no pose", () => {
+		expect(turnSideOf("nw", NO_POSE)).toBe("nw");
+		expect(turnSideOf("ne", NO_POSE)).toBe("ne");
+		expect(turnSideOf("se", NO_POSE)).toBe("se");
+		expect(turnSideOf("sw", NO_POSE)).toBe("sw");
+	});
+
+	it("turns the arrow with the layer and mirrors it with the layer", () => {
+		expect(turnSideOf("se", QUARTER_TURN)).toBe("sw");
+		expect(turnSideOf("ne", { ...NO_POSE, rotation: 45, mirrored: false })).toBe("e");
+		expect(turnSideOf("nw", MIRRORED)).toBe("ne");
+	});
+});
+
 describe("cursorKeyOf", () => {
-	it("names the screen axis of the whole chain for a resize, and one key for a turn", () => {
+	it("names the screen side of the whole chain for a resize and for a turn", () => {
 		expect(cursorKeyOf({ mode: "resize", handle: "n" }, [MIRRORED, QUARTER_TURN])).toBe(
 			"resize-ew",
 		);
-		expect(cursorKeyOf({ mode: "rotate", handle: "se" }, [QUARTER_TURN])).toBe("rotate");
+		expect(cursorKeyOf({ mode: "rotate", handle: "se" }, [QUARTER_TURN])).toBe("rotate-sw");
 	});
 });
 
