@@ -57,7 +57,7 @@ test("the selected layer takes a resize from each handle and a turn from the cor
 	await expect(layer).toHaveAttribute("style", /height: 250px/u);
 
 	await window.mouse.move(at(origin, TURN_FROM).x, at(origin, TURN_FROM).y);
-	await expect(stage).toHaveAttribute("data-zone", "rotate");
+	await expect(stage).toHaveAttribute("data-zone", "rotate-nw");
 
 	await dragTo(TURN_FROM, TURN_TO);
 	await expect(layer).toHaveAttribute(

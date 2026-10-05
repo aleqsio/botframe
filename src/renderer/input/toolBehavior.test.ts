@@ -161,7 +161,7 @@ describe("the resize and turn handles", () => {
 
 		expect(behavior.hover?.(target, pointAt(camera, SE_CORNER))).toBe("resize-nwse");
 		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toBe("resize-ew");
-		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate");
+		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate-se");
 		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBe("origin");
 	});
 });
@@ -196,7 +196,7 @@ describe("the handles under a draw tool", () => {
 		const camera = target.user.camera.get();
 
 		expect(behavior.hover?.(target, pointAt(camera, E_SIDE))).toBe("resize-ew");
-		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate");
+		expect(behavior.hover?.(target, pointAt(camera, SE_REACH))).toBe("rotate-se");
 		expect(behavior.hover?.(target, pointAt(camera, CENTER))).toBe("origin");
 	});
 

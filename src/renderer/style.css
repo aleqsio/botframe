@@ -40,10 +40,6 @@
 	--padding-tint: rgb(13 153 255 / 0.14);
 	--handle-fill: #ffffff;
 	--handle-ring: light-dark(rgb(0 0 0 / 0.25), rgb(0 0 0 / 0.5));
-	--rotate-cursor:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/svg%3E")
-			12 12,
-		crosshair;
 }
 
 * {
@@ -368,8 +364,60 @@ body {
 	cursor: move;
 }
 
-#stage[data-zone="rotate"] {
-	cursor: var(--rotate-cursor);
+#stage[data-zone="rotate-n"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(0 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-ne"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(45 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-e"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(90 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-se"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(135 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-s"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(180 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-sw"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(225 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-w"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(270 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
+}
+
+#stage[data-zone="rotate-nw"] {
+	cursor:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cg transform='rotate(315 12 12)'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.4 12.5A20 20 0 0 1 19.6 12.5'/%3E%3Cpath d='M17.9 8.4 19.6 12.5 15.5 14.2'/%3E%3Cpath d='M6.1 8.4 4.4 12.5 8.5 14.2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+			12 12,
+		crosshair;
 }
 
 #stage[data-zone] .layer {

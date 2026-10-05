@@ -10,15 +10,11 @@ export const ROTATE_REACH = 22;
 
 type Vertical = "n" | "s";
 type Horizontal = "w" | "e";
-type ZoneMode = "resize" | "rotate";
 
 export type Corner = `${Vertical}${Horizontal}`;
 export type Handle = Corner | Vertical | Horizontal;
 
-export interface HandleZone {
-	mode: ZoneMode;
-	handle: Handle;
-}
+export type HandleZone = { mode: "resize"; handle: Handle } | { mode: "rotate"; handle: Corner };
 
 export interface Axis {
 	x: number;
