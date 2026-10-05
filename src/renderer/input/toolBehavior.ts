@@ -9,17 +9,10 @@ import { createPanBehavior } from "./panBehavior";
 import { createPathBehavior } from "./pathBehavior";
 import { createPickBehavior } from "./pickBehavior";
 import { createTextBehavior } from "./textBehavior";
-import { createTextEditBehavior } from "./textEdit";
 import type { ToolBehavior } from "./tool";
 
 const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
-	select: [
-		createTextEditBehavior,
-		createPathBehavior,
-		...HANDLES,
-		createPickBehavior,
-		createMarqueeBehavior,
-	],
+	select: [createPathBehavior, ...HANDLES, createPickBehavior, createMarqueeBehavior],
 	frame: [...HANDLES, createDrawBehavior(FRAME_DEFAULTS)],
 	rectangle: [...HANDLES, createDrawBehavior(RECTANGLE_DEFAULTS)],
 	ellipse: [...HANDLES, createDrawBehavior(ELLIPSE_DEFAULTS)],

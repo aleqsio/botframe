@@ -3,12 +3,12 @@ import { editableVertices } from "../../document/vertices";
 import type { Vertex } from "../../document/vertices";
 import type { Point } from "../state/camera";
 import { gripDrag } from "./gripDrag";
+import { layerEditOf, masksHit, startLayerEdit } from "./layerEdit";
 import { intoLayer } from "./layerSpace";
 import { PART_REACH, movedPart, partAt, toggledVertex } from "./pathEdit";
 import type { PathPart } from "./pathEdit";
 import { fittedPatch } from "./pathFit";
 import { pickedId } from "./pickTarget";
-import { selectIds } from "./selection";
 import { drawnReaderOf, parentDisplayOf, parentPointOf, readerOf } from "./targetSpace";
 import type { PointerTarget, ToolBehavior } from "./tool";
 
@@ -69,21 +69,22 @@ function toggleVertex(target: PointerTarget, canvas: Point): boolean {
 function startEdit(target: PointerTarget): boolean {
 	const [id] = target.layerIds;
 	const layer = id === undefined ? null : target.doc.layer(id);
-	if (layer === null || editableVertices(layer.geometry, layer) === null) {
+	const read = readerOf(target);
+	const edit = layer === null ? null : layerEditOf(read, layer, target.user.pathEdit.get());
+	if (layer === null || edit === null) {
 		return false;
 	}
-	if (pickedId(readerOf(target), target.user.selection.get(), layer.id) !== layer.id) {
+	if (edit.mode === "path" && pickedId(read, target.user.selection.get(), layer.id) !== layer.id) {
 		return false;
 	}
-	selectIds(target.user.selection, [layer.id]);
-	target.user.pathEdit.set(layer.id);
+	startLayerEdit(target.user, edit);
 	return true;
 }
 
 export function createPathBehavior(): ToolBehavior {
 	return {
 		tap(target, point) {
-			return gripAt(target, point.canvas) !== null;
+			return gripAt(target, point.canvas) !== null || masksHit(target);
 		},
 		doubleTap(target, point) {
 			return toggleVertex(target, point.canvas) || startEdit(target);

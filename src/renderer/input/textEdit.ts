@@ -2,7 +2,6 @@ import type { DesignDocument } from "../../document/document";
 import type { LayerId } from "../../document/layer";
 import { NOTHING_SELECTED } from "../state/userState";
 import type { UserState } from "../state/userState";
-import type { ToolBehavior } from "./tool";
 
 export type TextEditSlots = Pick<UserState, "selection" | "textEdit">;
 
@@ -18,22 +17,9 @@ export function editedText(shown: string): string {
 	return shown.endsWith(LINE_BREAK) ? shown.slice(0, -LINE_BREAK.length) : shown;
 }
 
-function isTextLayer(doc: DesignDocument, id: LayerId | undefined): id is LayerId {
-	return id !== undefined && doc.layer(id)?.geometry.kind === "text";
-}
-
 export function startTextEdit(slots: TextEditSlots, id: LayerId, message = EDIT_TEXT): void {
 	slots.selection.set([id]);
 	slots.textEdit.set({ id, message });
-}
-
-export function editSelectedText(doc: DesignDocument, slots: TextEditSlots): boolean {
-	const [id, ...others] = slots.selection.get();
-	if (others.length > 0 || !isTextLayer(doc, id)) {
-		return false;
-	}
-	startTextEdit(slots, id);
-	return true;
 }
 
 export function typeText(doc: DesignDocument, id: LayerId, content: string): void {
@@ -56,17 +42,4 @@ export function endTextEdit(doc: DesignDocument, slots: TextEditSlots): void {
 		slots.selection.set(NOTHING_SELECTED);
 	}
 	doc.commit(edit.message);
-}
-
-export function createTextEditBehavior(): ToolBehavior {
-	return {
-		doubleTap(target) {
-			const [id] = target.layerIds;
-			if (!isTextLayer(target.doc, id)) {
-				return false;
-			}
-			startTextEdit(target.user, id);
-			return true;
-		},
-	};
 }

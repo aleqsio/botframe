@@ -4,10 +4,10 @@ import type { UserState } from "../state/userState";
 import { cancelDraw } from "./drawBehavior";
 import { commandForStroke, runEditCommand } from "./editCommand";
 import { cancelGroupMove } from "./groupMove";
+import { editSelectedLayer } from "./layerEdit";
 import { COMMIT_MESSAGES, applyCommand, commandFor } from "./layerCommand";
 import { cancelMove } from "./moveDrag";
 import type { KeyStroke } from "./layerCommand";
-import { editSelectedText } from "./textEdit";
 import { isTextField, runTextEdit, textKeyFor } from "./textField";
 import { toolFor } from "./toolKey";
 
@@ -56,7 +56,7 @@ export function handleStroke(doc: DesignDocument, user: UserState, stroke: KeySt
 	if (user.dragging.get()) {
 		return false;
 	}
-	if (stroke.key === EDIT_KEY && editSelectedText(doc, user)) {
+	if (stroke.key === EDIT_KEY && editSelectedLayer(doc, user)) {
 		return true;
 	}
 	const tool = toolFor(stroke);

@@ -5,9 +5,12 @@ import { SnapLines } from "./CanvasMarks";
 import { LayerOutline, SelectionOutline, boxStyle } from "./SelectionOutline";
 import { droppedInto } from "./input/dropHighlight";
 import { PathEditor } from "./PathEditor";
+import { SelectedShapes, ShapeLineOf } from "./ShapeOutlines";
+import { ownLineShown } from "./shapeLines";
 import { useSelected } from "./state/useSelected";
 import { useSlot } from "./state/useSlot";
 import type { UserState } from "./state/userState";
+import { useLayer } from "./useDocument";
 
 function Marquee({ user }: { user: UserState }): ReactNode {
 	const marquee = useSlot(user.marquee);
@@ -24,8 +27,19 @@ function HighlightOutline({
 	id: LayerId;
 	user: UserState;
 }): ReactNode {
-	return useSelected(user.selection, id) ? null : (
-		<LayerOutline className="highlight" doc={doc} id={id} />
+	const layer = useLayer(doc, id);
+
+	if (useSelected(user.selection, id)) {
+		return null;
+	}
+
+	return (
+		<>
+			<LayerOutline className="highlight" doc={doc} id={id} />
+			{layer !== null && ownLineShown(layer) ? (
+				<ShapeLineOf className="shape-line shape-line-hover" doc={doc} id={id} />
+			) : null}
+		</>
 	);
 }
 
@@ -49,6 +63,7 @@ export function Overlay({ doc, user }: { doc: DesignDocument; user: UserState })
 			<Drop doc={doc} user={user} />
 			<Highlight doc={doc} user={user} />
 			<SelectionOutline doc={doc} user={user} />
+			<SelectedShapes doc={doc} user={user} />
 			<PathEditor doc={doc} user={user} />
 			<Marquee user={user} />
 			<SnapLines doc={doc} user={user} />
