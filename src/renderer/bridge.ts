@@ -8,6 +8,7 @@ import type { OpenedFile, SavedFile } from "../shared/file";
 import type { FetchedMedia } from "../shared/media";
 import { heldWithAccelerator } from "./input/command";
 import { readClipboardLayers, writesLayers, writeClipboard } from "./webClipboard";
+import { renderExport, saveExports, serveExport } from "./webExport";
 import { openFile, renameFile, saveFile } from "./webFiles";
 
 export interface Bridge {
@@ -38,8 +39,6 @@ declare global {
 		botframe?: Bridge;
 	}
 }
-
-const NEEDS_DESKTOP = "Export needs the desktop app. The website cannot capture the page.";
 
 const SHIFT = "Shift";
 
@@ -78,11 +77,11 @@ const WEB: Bridge = {
 	saveFile,
 	renameFile,
 	fetchMedia: () => Promise.resolve(null),
-	renderExport: () => Promise.reject(new Error(NEEDS_DESKTOP)),
-	serveExport: () => {},
+	renderExport,
+	serveExport,
 	capturePage: () => Promise.resolve(null),
 	printPage: () => Promise.resolve(null),
-	saveExports: () => Promise.resolve(0),
+	saveExports,
 	serveAgent: () => {},
 };
 

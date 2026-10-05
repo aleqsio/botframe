@@ -65,3 +65,20 @@ export interface ExportedFile {
 	format: ExportFormat;
 	bytes: Uint8Array;
 }
+
+export function uniqueNames(names: readonly string[]): readonly string[] {
+	const taken = new Set<string>();
+	return names.map((name) => {
+		let unique = name;
+		for (let count = 2; taken.has(unique.toLowerCase()); count += 1) {
+			unique = `${name} ${count}`;
+		}
+		taken.add(unique.toLowerCase());
+		return unique;
+	});
+}
+
+export function exportFileNames(files: readonly ExportedFile[]): readonly string[] {
+	const names = uniqueNames(files.map((file) => file.name));
+	return names.map((name, index) => `${name}.${files[index]?.format ?? ""}`);
+}

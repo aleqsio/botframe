@@ -4,7 +4,7 @@ import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
 import { EXPORT_FORMATS } from "../../shared/exportFile";
 import type { ExportFormat, ExportedFile } from "../../shared/exportFile";
-import { bridge, inBrowser } from "../bridge";
+import { bridge } from "../bridge";
 import { exportFile } from "../export/capture";
 import type { UserState } from "../state/userState";
 import { Segmented } from "./layout/Segmented";
@@ -88,17 +88,13 @@ function OptionRow({
 	return <Segmented label="Scale" onPick={onScale} options={scales} value={scale} />;
 }
 
-export function ExportSection(props: ExportProps): ReactElement | null {
+export function ExportSection(props: ExportProps): ReactElement {
 	const [picked, setPicked] = useState<Picked>("png");
 	const [files, setFiles] = useState<HtmlFiles>("embedded");
 	const [scale, setScale] = useState<Scale>("1");
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<string | null>(null);
 	const format = formatOf(picked, files);
-
-	if (inBrowser()) {
-		return null;
-	}
 	return (
 		<section aria-label="Export" className="field-group layout-section">
 			<span className="group-label">Export</span>
