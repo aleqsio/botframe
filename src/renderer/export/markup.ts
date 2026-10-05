@@ -27,7 +27,15 @@ function outerHtml(element: Element): string {
 	return open.replace(/<\/\w+>$/u, (close) => `${inner}${close}`);
 }
 
+export function textClipStyle(style: string): string {
+	const declarations = style.trim().replace(/;$/u, "");
+	return `${declarations}${declarations === "" ? "" : "; "}background-clip: text;`;
+}
+
 function cleaned(probe: HTMLElement): void {
+	for (const text of probe.querySelectorAll(".layer-text")) {
+		text.setAttribute("style", textClipStyle(text.getAttribute("style") ?? ""));
+	}
 	for (const part of probe.querySelectorAll(EDITOR_PARTS)) {
 		part.remove();
 	}
