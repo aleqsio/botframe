@@ -9,20 +9,6 @@ import { htmlFile, svgFile, zipFile } from "./markupFiles";
 import { browserPdf, browserPicture } from "./pictureScene";
 import { printScene } from "./printScene";
 
-type Paint = (doc: DesignDocument, view: SceneView, scene: ExportScene) => Promise<Uint8Array>;
-
-interface Painter {
-	picture: Paint;
-	pdf: Paint;
-}
-
-const DESKTOP: Painter = {
-	picture: (_doc, view, scene) => drawScene(view, scene),
-	pdf: (_doc, view, scene) => printScene(view, scene),
-};
-
-const BROWSER: Painter = { picture: browserPicture, pdf: browserPdf };
-
 function titleOf(doc: DesignDocument, target: string | null): string {
 	const layer = target !== null && isLayerId(target) ? doc.layer(target) : null;
 	return layer === null || layer.name === "" ? "botframe" : layer.name;
@@ -33,12 +19,12 @@ export function fileOf(
 	view: SceneView,
 	scene: ExportScene,
 ): Promise<Uint8Array> {
-	const painter = inBrowser() ? BROWSER : DESKTOP;
+	const browser = inBrowser();
 	if (scene.format === "png" || scene.format === "jpg") {
-		return painter.picture(doc, view, scene);
+		return browser ? browserPicture(doc, view, scene) : drawScene(view, scene);
 	}
 	if (scene.format === "pdf") {
-		return painter.pdf(doc, view, scene);
+		return browser ? browserPdf(doc, view, scene) : printScene(view, scene);
 	}
 	const markup = layerMarkup(doc, targetOf(view, scene).element);
 	const title = titleOf(doc, scene.target);
