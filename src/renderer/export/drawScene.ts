@@ -1,6 +1,6 @@
 import type { Rect } from "../../document/layer";
-import { IMAGE_TYPE } from "../../shared/exportImage";
-import type { ExportScene } from "../../shared/exportImage";
+import { EXPORT_FORMATS } from "../../shared/exportFile";
+import type { ExportScene } from "../../shared/exportFile";
 import { bridge } from "../bridge";
 import { toCanvasPoint } from "../state/camera";
 import type { Camera } from "../state/camera";
@@ -31,7 +31,7 @@ function unionOf(boxes: readonly DOMRect[]): DOMRect {
 	return new DOMRect(left, top, right - left, bottom - top);
 }
 
-function paintedBox(element: HTMLElement): DOMRect {
+export function paintedBox(element: HTMLElement): DOMRect {
 	const own = element.getBoundingClientRect();
 	if (getComputedStyle(element).overflow !== "visible") {
 		return own;
@@ -65,14 +65,20 @@ async function captureTile(view: SceneView, tile: Tile): Promise<ImageBitmap> {
 	if (bytes === null) {
 		throw new Error("botframe did not capture the picture.");
 	}
-	return createImageBitmap(new Blob([bytes.slice()], { type: IMAGE_TYPE }));
+	return createImageBitmap(new Blob([bytes.slice()], { type: "image/png" }));
 }
 
-async function drawTiles(view: SceneView, plan: ExportPlan): Promise<Uint8Array> {
+const JPEG_QUALITY = 0.92;
+
+async function drawTiles(view: SceneView, plan: ExportPlan, type: string): Promise<Uint8Array> {
 	const canvas = new OffscreenCanvas(plan.width, plan.height);
 	const context = canvas.getContext("2d");
 	if (context === null) {
 		throw new Error("botframe cannot draw the picture.");
+	}
+	if (type === "image/jpeg") {
+		context.fillStyle = "#ffffff";
+		context.fillRect(0, 0, plan.width, plan.height);
 	}
 	const drawTile = async (tile: Tile): Promise<void> => {
 		const bitmap = await captureTile(view, tile);
@@ -83,23 +89,37 @@ async function drawTiles(view: SceneView, plan: ExportPlan): Promise<Uint8Array>
 		(drawn: Promise<void>, tile) => drawn.then(() => drawTile(tile)),
 		Promise.resolve(),
 	);
-	const blob = await canvas.convertToBlob({ type: IMAGE_TYPE });
+	const blob = await canvas.convertToBlob({ type, quality: JPEG_QUALITY });
 	return new Uint8Array(await blob.arrayBuffer());
 }
 
-export async function drawScene(view: SceneView, scene: ExportScene): Promise<Uint8Array> {
+export interface Target {
+	element: HTMLElement;
+	bounds: Rect;
+}
+
+export function targetOf(view: SceneView, scene: ExportScene): Target {
 	const element = elementOf(view.stage, scene.target);
-	const bounds = scene.area ?? layerBounds(view, element);
+	return { element, bounds: scene.area ?? layerBounds(view, element) };
+}
+
+export async function withTarget<T>(target: Target, run: () => Promise<T>): Promise<T> {
+	target.element.dataset["exportTarget"] = "";
+	try {
+		return await run();
+	} finally {
+		delete target.element.dataset["exportTarget"];
+	}
+}
+
+export function drawScene(view: SceneView, scene: ExportScene): Promise<Uint8Array> {
+	const target = targetOf(view, scene);
 	const screen = {
 		width: view.stage.clientWidth,
 		height: view.stage.clientHeight,
 		ratio: window.devicePixelRatio,
 	};
-	element.dataset["exportTarget"] = "";
-	try {
-		const scale = fittedScale(bounds, scene.scale, scene.longSide);
-		return await drawTiles(view, planExport(bounds, scale, screen));
-	} finally {
-		delete element.dataset["exportTarget"];
-	}
+	const type = EXPORT_FORMATS.find((format) => format.id === scene.format)?.type ?? "image/png";
+	const scale = fittedScale(target.bounds, scene.scale, scene.longSide);
+	return withTarget(target, () => drawTiles(view, planExport(target.bounds, scale, screen), type));
 }

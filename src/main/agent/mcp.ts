@@ -53,8 +53,15 @@ function isImage(value: unknown): boolean {
 	return type === "image" && typeof data === "string" && mimeType === "image/png";
 }
 
+function isResource(value: unknown): boolean {
+	const { type, resource } = fieldsOf(value);
+	const { uri, mimeType, text, blob } = fieldsOf(resource);
+	const body = typeof text === "string" || typeof blob === "string";
+	return type === "resource" && typeof uri === "string" && typeof mimeType === "string" && body;
+}
+
 function toolResult(result: unknown): unknown {
-	if (isImage(result)) {
+	if (isImage(result) || isResource(result)) {
 		return { content: [result], isError: false };
 	}
 	return textResult(JSON.stringify(result ?? null), false);

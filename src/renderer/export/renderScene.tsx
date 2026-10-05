@@ -3,7 +3,8 @@ import type { Root } from "react-dom/client";
 import { readFile } from "../../document/file";
 import { UserState } from "../state/userState";
 import { ExportView } from "./ExportView";
-import { drawScene, painted } from "./drawScene";
+import { painted } from "./drawScene";
+import { fileOf } from "./fileOf";
 import { mediaLoaded } from "./media";
 import { sceneOf } from "./scene";
 
@@ -22,9 +23,10 @@ export async function renderScene(root: Root, value: unknown): Promise<Uint8Arra
 		throw new Error("botframe did not draw the document.");
 	}
 	try {
+		await painted();
 		await mediaLoaded(stage);
 		await painted();
-		return await drawScene({ stage, camera: user.camera }, scene);
+		return await fileOf(doc, { stage, camera: user.camera }, scene);
 	} finally {
 		flushSync(() => {
 			root.render(null);

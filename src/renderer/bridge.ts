@@ -1,7 +1,7 @@
 import type { AgentReply } from "../shared/agent";
 import type { ClipboardWrite } from "../shared/clipboard";
-import { EXPORT_PAGE_HASH } from "../shared/exportImage";
-import type { CaptureRect, ExportScene, ImageFile } from "../shared/exportImage";
+import { EXPORT_PAGE_HASH } from "../shared/exportFile";
+import type { CaptureRect, ExportScene, ExportedFile, PageSize } from "../shared/exportFile";
 import type { EditMenuItem } from "../shared/editMenu";
 import { FILE_COMMANDS } from "../shared/file";
 import type { OpenedFile, SavedFile } from "../shared/file";
@@ -25,10 +25,11 @@ export interface Bridge {
 	) => Promise<SavedFile | null>;
 	renameFile: (token: string, name: string) => Promise<SavedFile | null>;
 	fetchMedia: (url: string) => Promise<FetchedMedia | null>;
-	renderImage: (scene: ExportScene) => Promise<Uint8Array>;
+	renderExport: (scene: ExportScene) => Promise<Uint8Array>;
 	serveExport: (run: (call: unknown) => Promise<AgentReply>) => void;
 	capturePage: (rect: CaptureRect) => Promise<Uint8Array | null>;
-	saveImages: (files: readonly ImageFile[]) => Promise<number>;
+	printPage: (size: PageSize) => Promise<Uint8Array | null>;
+	saveExports: (files: readonly ExportedFile[]) => Promise<number>;
 	serveAgent: (run: (call: unknown) => Promise<AgentReply>) => void;
 }
 
@@ -38,8 +39,7 @@ declare global {
 	}
 }
 
-export const NEEDS_DESKTOP =
-	"PNG export needs the desktop app. The website cannot capture the page.";
+const NEEDS_DESKTOP = "Export needs the desktop app. The website cannot capture the page.";
 
 const SHIFT = "Shift";
 
@@ -75,10 +75,11 @@ const WEB: Bridge = {
 	saveFile,
 	renameFile,
 	fetchMedia: () => Promise.resolve(null),
-	renderImage: () => Promise.reject(new Error(NEEDS_DESKTOP)),
+	renderExport: () => Promise.reject(new Error(NEEDS_DESKTOP)),
 	serveExport: () => {},
 	capturePage: () => Promise.resolve(null),
-	saveImages: () => Promise.resolve(0),
+	printPage: () => Promise.resolve(null),
+	saveExports: () => Promise.resolve(0),
 	serveAgent: () => {},
 };
 

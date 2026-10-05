@@ -7,7 +7,7 @@ import { COMPONENT_TOOLS } from "./componentTools";
 import { DATA_TOOLS } from "./dataTools";
 import { LAYER_TOOLS } from "./layerTools";
 import type { Handler } from "./layerTools";
-import { render } from "./renderTool";
+import { exportLayer, render } from "./exportTools";
 
 const TOOLS: Readonly<Record<string, Handler>> = {
 	...LAYER_TOOLS,
@@ -51,6 +51,9 @@ async function run(workspace: Workspace, tool: string, args: Args): Promise<unkn
 	}
 	if (tool === "render") {
 		return render(tabOf(workspace, args), args);
+	}
+	if (tool === "export_layer") {
+		return exportLayer(tabOf(workspace, args), args);
 	}
 	const handler = TOOLS[tool];
 	if (handler === undefined) {

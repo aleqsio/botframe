@@ -7,10 +7,11 @@ import {
 	EXPORT_DONE,
 	EXPORT_READY,
 	EXPORT_SCENE,
-	RENDER_IMAGE,
-	SAVE_IMAGES,
-} from "../shared/exportImage";
-import type { CaptureRect, ExportScene, ImageFile } from "../shared/exportImage";
+	PRINT_PAGE,
+	RENDER_EXPORT,
+	SAVE_EXPORTS,
+} from "../shared/exportFile";
+import type { CaptureRect, ExportScene, ExportedFile, PageSize } from "../shared/exportFile";
 import { EDIT_COMMAND, SET_EDIT_MENU } from "../shared/editMenu";
 import type { EditMenuItem } from "../shared/editMenu";
 import { OPEN_FILE, RENAME_FILE, SAVE_FILE } from "../shared/file";
@@ -102,12 +103,12 @@ contextBridge.exposeInMainWorld("botframe", {
 	async fetchMedia(url: string): Promise<FetchedMedia | null> {
 		return fetchedMedia(await invoke(FETCH_MEDIA, url));
 	},
-	async renderImage(scene: ExportScene): Promise<Uint8Array> {
-		const result = await invoke(RENDER_IMAGE, scene);
+	async renderExport(scene: ExportScene): Promise<Uint8Array> {
+		const result = await invoke(RENDER_EXPORT, scene);
 		if (result instanceof Uint8Array) {
 			return result;
 		}
-		throw new Error(typeof result === "string" ? result : "botframe did not draw the picture.");
+		throw new Error(typeof result === "string" ? result : "botframe did not make the file.");
 	},
 	serveExport(run: (call: unknown) => Promise<unknown>): void {
 		ipcRenderer.on(EXPORT_SCENE, (_event, ...args: unknown[]) => {
@@ -119,8 +120,12 @@ contextBridge.exposeInMainWorld("botframe", {
 		const bytes = await invoke(CAPTURE_PAGE, rect);
 		return bytes instanceof Uint8Array ? bytes : null;
 	},
-	async saveImages(files: readonly ImageFile[]): Promise<number> {
-		const saved = await invoke(SAVE_IMAGES, files);
+	async printPage(size: PageSize): Promise<Uint8Array | null> {
+		const bytes = await invoke(PRINT_PAGE, size);
+		return bytes instanceof Uint8Array ? bytes : null;
+	},
+	async saveExports(files: readonly ExportedFile[]): Promise<number> {
+		const saved = await invoke(SAVE_EXPORTS, files);
 		return typeof saved === "number" ? saved : 0;
 	},
 	serveAgent(run: (call: unknown) => Promise<unknown>): void {

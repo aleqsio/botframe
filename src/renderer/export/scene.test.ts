@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { sceneOf } from "./scene";
 
-const SCENE = { file: new Uint8Array([1]), target: "1@1", area: null, scale: 2, longSide: 2048 };
+const SCENE = {
+	file: new Uint8Array([1]),
+	format: "png",
+	target: "1@1",
+	area: null,
+	scale: 2,
+	longSide: 2048,
+};
 
 describe("sceneOf", () => {
 	it("accepts a valid request", () => {
@@ -13,5 +20,6 @@ describe("sceneOf", () => {
 		expect(() => sceneOf({ ...SCENE, scale: 0 })).toThrow(/not valid/u);
 		expect(() => sceneOf({ ...SCENE, area: { x: 0 } })).toThrow(/area/u);
 		expect(() => sceneOf({ ...SCENE, target: 4 })).toThrow(/target/u);
+		expect(() => sceneOf({ ...SCENE, format: "gif" })).toThrow(/format/u);
 	});
 });

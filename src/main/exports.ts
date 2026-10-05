@@ -1,24 +1,19 @@
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { BrowserWindow, app, dialog, ipcMain } from "electron";
+import { app, ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import { FILE_NAME } from "../shared/file";
-import { ExportWindow } from "./exportWindow";
-import { uniqueNames } from "./imageNames";
-import { editorWindows } from "./rendererPage";
 import {
 	CAPTURE_PAGE,
 	EXPORT_DONE,
 	EXPORT_READY,
-	IMAGE_EXTENSION,
-	RENDER_IMAGE,
-	SAVE_IMAGES,
-} from "../shared/exportImage";
-import type { CaptureRect, ImageFile } from "../shared/exportImage";
+	PRINT_PAGE,
+	RENDER_EXPORT,
+	SAVE_EXPORTS,
+} from "../shared/exportFile";
+import type { CaptureRect, PageSize } from "../shared/exportFile";
+import { saveExports } from "./exportSave";
+import { ExportWindow } from "./exportWindow";
+import { editorWindows } from "./rendererPage";
 
-const FILTERS = [{ name: "PNG", extensions: [IMAGE_EXTENSION] }];
-const SAVE_FAILED = "The image was not saved";
-const FALLBACK_NAME = "Layer";
+const CSS_PIXELS_PER_INCH = 96;
 
 function fieldsOf(value: unknown): Readonly<Record<string, unknown>> {
 	return typeof value === "object" && value !== null ? { ...value } : {};
@@ -35,14 +30,9 @@ function captureRect(value: unknown): CaptureRect | null {
 		: null;
 }
 
-function imageFiles(value: unknown): readonly ImageFile[] {
-	const files = Array.isArray(value) ? value : [];
-	return files.flatMap((file: unknown) => {
-		const { name, bytes } = fieldsOf(file);
-		return bytes instanceof Uint8Array
-			? [{ name: typeof name === "string" && FILE_NAME.test(name) ? name : FALLBACK_NAME, bytes }]
-			: [];
-	});
+function pageSize(value: unknown): PageSize | null {
+	const { width, height } = fieldsOf(value);
+	return isLength(width) && isLength(height) && width > 0 && height > 0 ? { width, height } : null;
 }
 
 async function capture(event: IpcMainInvokeEvent, value: unknown): Promise<Uint8Array | null> {
@@ -54,42 +44,26 @@ async function capture(event: IpcMainInvokeEvent, value: unknown): Promise<Uint8
 	return new Uint8Array(image.toPNG());
 }
 
-async function choosePaths(
-	window: BrowserWindow,
-	files: readonly ImageFile[],
-): Promise<readonly string[]> {
-	const names = uniqueNames(files.map((file) => file.name)).map(
-		(name) => `${name}.${IMAGE_EXTENSION}`,
-	);
-	const [only, ...others] = names;
-	if (only !== undefined && others.length === 0) {
-		const result = await dialog.showSaveDialog(window, { filters: FILTERS, defaultPath: only });
-		return result.canceled || result.filePath === "" ? [] : [result.filePath];
+async function print(event: IpcMainInvokeEvent, value: unknown): Promise<Uint8Array | null> {
+	const size = pageSize(value);
+	if (size === null) {
+		return null;
 	}
-	const result = await dialog.showOpenDialog(window, {
-		properties: ["openDirectory", "createDirectory"],
+	const pdf = await event.sender.printToPDF({
+		pageSize: {
+			width: size.width / CSS_PIXELS_PER_INCH,
+			height: size.height / CSS_PIXELS_PER_INCH,
+		},
+		margins: { top: 0, bottom: 0, left: 0, right: 0 },
+		printBackground: true,
 	});
-	const [folder] = result.filePaths;
-	return result.canceled || folder === undefined ? [] : names.map((name) => join(folder, name));
+	return new Uint8Array(pdf);
 }
 
-async function saveImages(event: IpcMainInvokeEvent, value: unknown): Promise<number> {
-	const window = BrowserWindow.fromWebContents(event.sender);
-	const files = imageFiles(value);
-	const paths = window === null || files.length === 0 ? [] : await choosePaths(window, files);
-	try {
-		await Promise.all(paths.map((path, index) => writeFile(path, files[index]?.bytes ?? [])));
-		return paths.length;
-	} catch (error) {
-		dialog.showErrorBox(SAVE_FAILED, String(error));
-		return 0;
-	}
-}
-
-async function renderImage(exporter: ExportWindow, scene: unknown): Promise<Uint8Array | string> {
+async function renderExport(exporter: ExportWindow, scene: unknown): Promise<Uint8Array | string> {
 	try {
 		const bytes = await exporter.render(scene);
-		return bytes instanceof Uint8Array ? bytes : "The export window gave no picture.";
+		return bytes instanceof Uint8Array ? bytes : "The export window gave no file.";
 	} catch (error) {
 		return error instanceof Error ? error.message : String(error);
 	}
@@ -104,8 +78,8 @@ export function connectExports(): void {
 			}
 		});
 	});
-	ipcMain.handle(RENDER_IMAGE, (event, ...args: unknown[]) =>
-		exporter.owns(event.sender) ? null : renderImage(exporter, args[0]),
+	ipcMain.handle(RENDER_EXPORT, (event, ...args: unknown[]) =>
+		exporter.owns(event.sender) ? null : renderExport(exporter, args[0]),
 	);
 	ipcMain.on(EXPORT_READY, (event) => {
 		exporter.markReady(event.sender);
@@ -116,5 +90,8 @@ export function connectExports(): void {
 	ipcMain.handle(CAPTURE_PAGE, (event, ...args: unknown[]) =>
 		exporter.owns(event.sender) ? capture(event, args[0]) : null,
 	);
-	ipcMain.handle(SAVE_IMAGES, (event, ...args: unknown[]) => saveImages(event, args[0]));
+	ipcMain.handle(PRINT_PAGE, (event, ...args: unknown[]) =>
+		exporter.owns(event.sender) ? print(event, args[0]) : null,
+	);
+	ipcMain.handle(SAVE_EXPORTS, (event, ...args: unknown[]) => saveExports(event, args[0]));
 }

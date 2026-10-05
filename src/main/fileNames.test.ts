@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { uniqueNames } from "./imageNames";
+import { uniqueNames } from "./fileNames";
 
 describe("uniqueNames", () => {
 	it("gives each file a different name, with no regard to case", () => {

@@ -27,6 +27,13 @@ export interface AgentImage {
 	mimeType: "image/png";
 }
 
+export interface AgentResource {
+	type: "resource";
+	resource:
+		| { uri: string; mimeType: string; text: string }
+		| { uri: string; mimeType: string; blob: string };
+}
+
 export interface AgentTool {
 	name: string;
 	description: string;
@@ -114,6 +121,20 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 			},
 		},
 		[],
+	),
+	tool(
+		"export_layer",
+		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, html (one page, with fonts and media inline), or zip (index.html, styles.css, and an assets folder). Gives html and svg as text, and the other formats as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. Needs the desktop app.`,
+		{
+			id: LAYER_ID,
+			format: { enum: ["png", "jpg", "svg", "pdf", "html", "zip"] },
+			scale: {
+				type: "number",
+				description:
+					"For png and jpg: pixels for each pixel of the layer, from 0.1 to 4. The default is 1.",
+			},
+		},
+		["format"],
 	),
 	tool(
 		"read_data",

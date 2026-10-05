@@ -1,6 +1,6 @@
 import { BrowserWindow } from "electron";
 import type { WebContents } from "electron";
-import { EXPORT_PAGE_HASH, EXPORT_SCENE } from "../shared/exportImage";
+import { EXPORT_PAGE_HASH, EXPORT_SCENE } from "../shared/exportFile";
 import { Pending } from "./agent/pending";
 import { PAGE_PREFERENCES, loadRenderer } from "./rendererPage";
 

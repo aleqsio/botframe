@@ -1,10 +1,12 @@
 import { ipcMain } from "electron";
 import { AGENT_CALL, AGENT_REPLY } from "../../shared/agent";
 import { editorWindows } from "../rendererPage";
+import { listenAgent } from "./listen";
 import { Pending } from "./pending";
+import { agentServer } from "./server";
 import type { CallPage } from "./pending";
 
-export function ipcPage(): CallPage {
+function ipcPage(): CallPage {
 	const pending = new Pending((call) => {
 		const [window] = editorWindows();
 		if (window === undefined) {
@@ -16,4 +18,8 @@ export function ipcPage(): CallPage {
 		pending.settle(args[0]);
 	});
 	return (tool, args) => pending.call(tool, args);
+}
+
+export function serveAgents(): void {
+	listenAgent(agentServer(ipcPage(), null));
 }

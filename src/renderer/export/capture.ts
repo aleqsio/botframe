@@ -1,13 +1,14 @@
 import type { DesignDocument } from "../../document/document";
 import { fileBytes } from "../../document/file";
 import type { LayerId } from "../../document/layer";
-import type { ExportScene } from "../../shared/exportImage";
+import type { ExportFormat, ExportScene } from "../../shared/exportFile";
 import { bridge } from "../bridge";
 import { toCanvasPoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 
 export interface ExportRequest {
 	target: LayerId | null;
+	format: ExportFormat;
 	scale: number;
 	longSide: number;
 }
@@ -29,15 +30,16 @@ function visibleCanvas(user: UserState, request: ExportRequest): ExportScene["ar
 	};
 }
 
-export function exportPng(
+export function exportFile(
 	doc: DesignDocument,
 	user: UserState,
 	request: ExportRequest,
 ): Promise<Uint8Array> {
 	const area = visibleCanvas(user, request);
 	const zoom = area === null ? 1 : user.camera.get().zoom;
-	return bridge().renderImage({
+	return bridge().renderExport({
 		file: fileBytes(doc),
+		format: request.format,
 		target: request.target,
 		area,
 		scale: request.scale * zoom,

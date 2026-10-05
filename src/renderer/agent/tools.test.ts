@@ -246,12 +246,26 @@ describe("runTool", () => {
 		});
 		expect(await runTool(workspace, "junk")).toMatchObject({ id: -1, ok: false });
 	});
+});
 
+describe("export tools", () => {
 	it("refuses to render on the website, and a bad scale", async () => {
 		vi.stubGlobal("window", {});
 		const workspace = new Workspace(Tab.untitled());
 		const id = firstLayer(workspace);
 		await expect(call(workspace, "render", { id })).rejects.toThrow(/needs the desktop app/u);
 		await expect(call(workspace, "render", { id, scale: 9 })).rejects.toThrow(/scale/u);
+	});
+
+	it("refuses an export in an unknown format, and on the website", async () => {
+		vi.stubGlobal("window", {});
+		const workspace = new Workspace(Tab.untitled());
+		const id = firstLayer(workspace);
+		await expect(call(workspace, "export_layer", { id, format: "gif" })).rejects.toThrow(
+			/png, jpg, svg, pdf, html, zip/u,
+		);
+		await expect(call(workspace, "export_layer", { id, format: "pdf" })).rejects.toThrow(
+			/needs the desktop app/u,
+		);
 	});
 });

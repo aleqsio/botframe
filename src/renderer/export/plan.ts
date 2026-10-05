@@ -1,5 +1,5 @@
 import type { Rect } from "../../document/layer";
-import type { CaptureRect } from "../../shared/exportImage";
+import type { CaptureRect } from "../../shared/exportFile";
 import type { Camera, Point } from "../state/camera";
 
 export interface Screen {
