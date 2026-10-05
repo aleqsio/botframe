@@ -49,8 +49,15 @@ export async function openReader(app: ElectronApplication, folder: string): Prom
 	return { app, ...ids };
 }
 
-function inPage(reader: Reader, script: string): Promise<unknown> {
-	return reader.app.evaluate(
+function failureOf(value: unknown): string | null {
+	const failed: unknown =
+		typeof value === "object" && value !== null && "failed" in value ? value.failed : null;
+	return typeof failed === "string" ? failed : null;
+}
+
+async function inPage(reader: Reader, expression: string): Promise<unknown> {
+	const script = `(async () => { try { return await (${expression}); } catch (error) { return { failed: String(error?.stack ?? error) }; } })()`;
+	const value = await reader.app.evaluate(
 		({ BrowserWindow }, { id, code }) => {
 			const window = BrowserWindow.fromId(id);
 			if (window === null) {
@@ -60,6 +67,11 @@ function inPage(reader: Reader, script: string): Promise<unknown> {
 		},
 		{ id: reader.page, code: script },
 	);
+	const failure = failureOf(value);
+	if (failure !== null) {
+		throw new Error(failure);
+	}
+	return value;
 }
 
 function pictureOf(value: unknown): Picture {
@@ -86,7 +98,7 @@ export async function drawnPdf(reader: Reader, path: string, width: number): Pro
 		base64: (await readFile(path)).toString("base64"),
 		width,
 	};
-	const script = `const isPdfjs = ${isPdfjs.toString()}; (${pdfInPage.toString()})(${JSON.stringify(request)})`;
+	const script = `(() => { const isPdfjs = ${isPdfjs.toString()}; return (${pdfInPage.toString()})(${JSON.stringify(request)}); })()`;
 	const url = await inPage(reader, script);
 	if (typeof url !== "string") {
 		throw new TypeError("pdf.js gave no picture.");
@@ -129,10 +141,20 @@ export async function capturedPage(reader: Reader, path: string, width: number):
 			const [left = 0, top = 0, boxWidth = 1, boxHeight = 1] = Array.isArray(box)
 				? box.map(Number)
 				: [];
-			const zoom = wide / boxWidth;
+			const [roomWidth = 1, roomHeight = 1] = window.getContentSize();
+			const zoom = Math.min(
+				wide / boxWidth,
+				roomWidth / (left + boxWidth),
+				roomHeight / (top + boxHeight),
+			);
 			contents.setZoomFactor(zoom);
 			await contents.executeJavaScript(code);
-			const rect = { x: left * zoom, y: top * zoom, width: wide, height: boxHeight * zoom };
+			const rect = {
+				x: left * zoom,
+				y: top * zoom,
+				width: boxWidth * zoom,
+				height: boxHeight * zoom,
+			};
 			const image = await contents.capturePage({
 				x: Math.round(rect.x),
 				y: Math.round(rect.y),
