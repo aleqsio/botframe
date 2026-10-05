@@ -2,7 +2,7 @@ name: export
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, "claude/youthful-ride-izxofk-*"]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
