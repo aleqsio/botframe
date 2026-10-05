@@ -1,21 +1,37 @@
 import type { TreeID } from "loro-crdt";
 import type { DesignDocument } from "./document";
+import { holdsChildren } from "./layer";
 import type { Layer, LayerId, LayerTraits } from "./layer";
 import { copiesOf, layerPath, nodeOf } from "./path";
 import type { Literal } from "./value";
 
 type ReadLayer = (id: LayerId) => Layer | null;
 type ClipTraits = Pick<LayerTraits, "clip" | "clipLayer">;
+type ContentTraits = Pick<LayerTraits, "geometry" | "content">;
 
 export const CLIP_CHOICES = { none: "None", shape: "Own shape", layer: "Layer" } as const;
 
 export const CLIP_OPTIONS: readonly string[] = Object.values(CLIP_CHOICES);
 
-export function clipChoiceOf(traits: ClipTraits): string {
+const SHAPELESS_OPTIONS: readonly string[] = [CLIP_CHOICES.none, CLIP_CHOICES.layer];
+
+export function clipsContent(layer: ContentTraits): boolean {
+	return (
+		holdsChildren(layer.geometry) ||
+		layer.geometry.kind === "text" ||
+		layer.content.kind === "component"
+	);
+}
+
+export function clipOptionsOf(layer: ContentTraits): readonly string[] {
+	return clipsContent(layer) ? CLIP_OPTIONS : SHAPELESS_OPTIONS;
+}
+
+export function clipChoiceOf(traits: ClipTraits & ContentTraits): string {
 	if (traits.clipLayer !== null) {
 		return CLIP_CHOICES.layer;
 	}
-	return traits.clip ? CLIP_CHOICES.shape : CLIP_CHOICES.none;
+	return traits.clip && clipsContent(traits) ? CLIP_CHOICES.shape : CLIP_CHOICES.none;
 }
 
 export function chosenClip(traits: ClipTraits, value: Literal): ClipTraits | null {
