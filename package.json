@@ -22,6 +22,7 @@
 		"build:web": "vite build",
 		"start:web": "vite build && vite preview",
 		"test:e2e": "electron-vite build && playwright test --project electron",
+		"test:e2e:export": "electron-vite build && playwright test --project electron e2e/export",
 		"test:e2e:chromium": "vite build && playwright test --project chromium"
 	},
 	"dependencies": {
@@ -48,6 +49,7 @@
 		"oxlint": "1.82.0",
 		"oxlint-plugin-complexity": "2.1.8",
 		"oxlint-tsgolint": "7.0.2001",
+		"pdfjs-dist": "6.4.299",
 		"typescript": "7.0.2",
 		"vite": "8.2.2",
 		"vitest": "5.0.0"
