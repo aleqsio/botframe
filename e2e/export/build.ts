@@ -48,25 +48,27 @@ async function run(step: Step, ids: Map<string, string>): Promise<void> {
 	}
 }
 
-async function buildExample(example: Example, given: Ids): Promise<string> {
+export async function builtExample(example: Example, given: Ids): Promise<string> {
 	const ids = new Map(given);
 	await example.steps.reduce(
 		(done: Promise<void>, step) => done.then(() => run(step, ids)),
 		Promise.resolve(),
 	);
-	return idOf({ id: ids.get("root") });
+	const root = ids.get("root");
+	if (root === undefined) {
+		throw new Error(`The example ${example.name} has no root.`);
+	}
+	return root;
 }
 
 async function storedFonts(): Promise<string> {
 	return JSON.stringify(await toolJson("read_data", { path: ["fonts"] }));
 }
 
-export async function builtExample(example: Example, given: Ids): Promise<string> {
-	const root = await buildExample(example, given);
+export async function fontsLoaded(families: readonly string[]): Promise<void> {
 	await Promise.all(
-		example.fonts.map((family) => expect.poll(storedFonts, { timeout: 30_000 }).toContain(family)),
+		families.map((family) => expect.poll(storedFonts, { timeout: 30_000 }).toContain(family)),
 	);
-	return root;
 }
 
 export interface Session {

@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Example } from "../fixtures/export/example";
 import { toolBytes, toolJson } from "./agent";
-import { builtExample } from "./build";
+import { builtExample, fontsLoaded } from "./build";
 import type { Ids } from "./build";
 import { OPTIONS, problemsOf } from "./limits";
 import type { ExportOption, Reader as ReaderKind } from "./limits";
@@ -84,10 +84,19 @@ export async function checkedExample(
 	ids: Ids,
 ): Promise<Row> {
 	const root = await builtExample(example, ids);
-	await mkdir(join(folder, example.name), { recursive: true });
-	const rendered = await toolBytes("render", { id: root, scale: REFERENCE_SCALE });
+	try {
+		await fontsLoaded(example.fonts);
+		return await checkedRoot({ reader, folder, example: example.name, root });
+	} finally {
+		await toolJson("delete_layers", { ids: [root] });
+	}
+}
+
+async function checkedRoot(check: Check): Promise<Row> {
+	const { reader, folder, example } = check;
+	await mkdir(join(folder, example), { recursive: true });
+	const rendered = await toolBytes("render", { id: check.root, scale: REFERENCE_SCALE });
 	const reference = onWhite(await decodedBytes(reader, rendered, "image/png"));
-	const check = { reader, folder, example: example.name, root };
 	const cells = await CHECKED.reduce(
 		async (done: Promise<Cell[]>, option) => [
 			...(await done),
@@ -95,7 +104,6 @@ export async function checkedExample(
 		],
 		Promise.resolve([]),
 	);
-	await toolJson("delete_layers", { ids: [root] });
-	const saved = await savedPicture(folder, `${example.name}/reference.png`, reference);
-	return { example: example.name, reference: saved, cells };
+	const saved = await savedPicture(folder, `${example}/reference.png`, reference);
+	return { example, reference: saved, cells };
 }
