@@ -78,6 +78,24 @@ export function resized(picture: Picture, width: number, height: number): Pictur
 	return out;
 }
 
+const SLACK = 4;
+
+function cropped(picture: Picture, width: number, height: number): Picture {
+	const out = blankPicture(width, height);
+	const row = Math.min(width, picture.width) * CHANNELS;
+	for (let y = 0; y < Math.min(height, picture.height); y += 1) {
+		const start = y * picture.width * CHANNELS;
+		out.data.set(picture.data.subarray(start, start + row), y * width * CHANNELS);
+	}
+	return out;
+}
+
+export function fitted(picture: Picture, width: number, height: number): Picture {
+	const close =
+		Math.abs(picture.width - width) <= SLACK && Math.abs(picture.height - height) <= SLACK;
+	return close ? cropped(picture, width, height) : resized(picture, width, height);
+}
+
 function pixelDistance(first: Picture, second: Picture, pixel: number): number {
 	let largest = 0;
 	for (let channel = 0; channel < CHANNELS; channel += 1) {

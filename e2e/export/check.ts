@@ -6,7 +6,7 @@ import { builtExample } from "./build";
 import type { Ids } from "./build";
 import { OPTIONS, problemsOf } from "./limits";
 import type { ExportOption, Reader as ReaderKind } from "./limits";
-import { difference, differencePicture, onWhite, resized } from "./picture";
+import { difference, differencePicture, fitted, onWhite } from "./picture";
 import type { Picture } from "./picture";
 import { capturedPage, decodedBytes, drawnPdf, quartzPdf, unzipped } from "./reader";
 import type { Reader } from "./reader";
@@ -48,7 +48,7 @@ async function checked(check: Check, option: ExportOption, reference: Picture): 
 	const path = join(folder, example, `${option.id}.${option.extension}`);
 	await writeFile(path, await toolBytes("export_layer", { id: root, ...option.args }));
 	const read = await READERS[option.reader](reader, path, reference);
-	const picture = resized(onWhite(read), reference.width, reference.height);
+	const picture = fitted(onWhite(read), reference.width, reference.height);
 	const found = difference(reference, picture, option.threshold);
 	const shown = differencePicture(reference, found);
 	return {

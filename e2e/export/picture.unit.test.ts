@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blankPicture, difference, largestBlob, onWhite, resized } from "./picture";
+import { blankPicture, difference, fitted, largestBlob, onWhite, resized } from "./picture";
 import type { Picture } from "./picture";
 
 function gray(width: number, height: number, values: readonly number[]): Picture {
@@ -52,6 +52,19 @@ describe("resized", () => {
 		expect(double.width).toBe(4);
 		expect(double.height).toBe(2);
 		expect([double.data[0], double.data[12], double.data[16]]).toEqual([0, 200, 0]);
+	});
+});
+
+describe("fitted", () => {
+	it("crops a picture that is a few pixels larger, so that it does not move", () => {
+		const picture = fitted(gray(3, 2, [10, 20, 30, 40, 50, 60]), 2, 1);
+		expect([picture.width, picture.height, picture.data[0], picture.data[4]]).toEqual([
+			2, 1, 10, 20,
+		]);
+	});
+
+	it("resizes a picture at a different scale", () => {
+		expect(fitted(filled(40, 20, 9), 20, 10).width).toBe(20);
 	});
 });
 
