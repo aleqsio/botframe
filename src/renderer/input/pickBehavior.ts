@@ -2,7 +2,6 @@ import type { Layer, LayerId } from "../../document/layer";
 import type { Point, StagePoint } from "../state/camera";
 import type { UserState } from "../state/userState";
 import { insideSubtree } from "./dropTarget";
-import { applyGroupMove, beginGroupMove, finishGroupMove } from "./groupMove";
 import { containsPoint } from "./layerSpace";
 import { extendsSelection } from "./modifiers";
 import { deeperId, heldAncestorOf, pickedId, pickedInside } from "./pickTarget";
@@ -97,13 +96,6 @@ function layerOfDrag(target: PointerTarget, canvas: Point): Layer | null {
 	return heldSelection(target, canvas) ?? layerOfPress(target, canvas);
 }
 
-function dragsGroup(target: PointerTarget, canvas: Point): boolean {
-	if (topHit(target) !== null) {
-		return heldHit(target) !== null;
-	}
-	return heldSelection(target, canvas) !== null;
-}
-
 function holdsPress(target: PointerTarget, under: LayerId): boolean {
 	return target.user.selection
 		.get()
@@ -140,10 +132,6 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		dragStart(target, origin, point, modifiers) {
-			if (dragsGroup(target, origin.canvas) && beginGroupMove(target, origin.canvas)) {
-				applyGroupMove(target, point.canvas);
-				return true;
-			}
 			const layer = layerOfDrag(target, origin.canvas);
 			if (layer === null) {
 				return false;
@@ -153,11 +141,9 @@ export function createPickBehavior(): ToolBehavior {
 			return true;
 		},
 		drag(target, point, modifiers) {
-			applyGroupMove(target, point.canvas);
 			return applyMove(target, point, modifiers);
 		},
 		dragEnd(target, point, modifiers) {
-			finishGroupMove(target, point.canvas);
 			finishMove(target, point, modifiers);
 		},
 		doubleTap(target) {

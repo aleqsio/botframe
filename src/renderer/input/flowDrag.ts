@@ -1,7 +1,8 @@
-import type { Layer, Rect } from "../../document/layer";
+import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { DisplayMode } from "../../document/layout";
 import { outOfFlow } from "../layerStyle";
 import type { Point } from "../state/camera";
+import { movedIds } from "../state/userState";
 import type { LayerMove } from "../state/userState";
 import { recellInGrid } from "./gridDrag";
 import type { Carry } from "./moveCarry";
@@ -9,6 +10,11 @@ import { drawnReaderOf, parentPointOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
 type Axis = "x" | "y";
+
+interface FlowPlace {
+	display: "row" | "column";
+	point: Point;
+}
 
 const MAIN_AXIS: Readonly<Record<"row" | "column", Axis>> = { row: "x", column: "y" };
 const SIZE_OF: Readonly<Record<Axis, "width" | "height">> = { x: "width", y: "height" };
@@ -39,23 +45,38 @@ function laysOutInFlow(display: DisplayMode | null, layer: Layer): boolean {
 	return display !== null && display !== "block" && !outOfFlow(display, layer.layout.position);
 }
 
-function otherBoxes(target: PointerTarget, layer: Layer): Rect[] {
+function boxesOf(target: PointerTarget, ids: readonly LayerId[]): Rect[] {
 	const read = drawnReaderOf(target);
-	return target.doc.siblingIds(layer.parent).flatMap((id) => {
-		const sibling = id === layer.id ? null : read(id);
-		return sibling === null ? [] : [sibling];
-	});
+	return ids.flatMap((id) => read(id) ?? []);
+}
+
+function arranged(
+	target: PointerTarget,
+	parent: LayerId | null,
+	order: readonly LayerId[],
+): boolean {
+	let changed = false;
+	for (const [index, id] of order.entries()) {
+		if (target.doc.siblingIds(parent)[index] !== id) {
+			changed = target.doc.move(id, parent, index) || changed;
+		}
+	}
+	return changed;
 }
 
 function reorderInFlow(
 	target: PointerTarget,
+	move: LayerMove,
 	layer: Layer,
-	display: "row" | "column",
-	point: Point,
+	place: FlowPlace,
 ): boolean {
-	const wanted = flowIndexOf(otherBoxes(target, layer), display, point);
-	const held = target.doc.siblingIds(layer.parent).indexOf(layer.id);
-	return wanted !== held && target.doc.move(layer.id, layer.parent, wanted);
+	const moved = new Set(movedIds(move));
+	const siblings = target.doc.siblingIds(layer.parent);
+	const others = siblings.filter((id) => !moved.has(id));
+	const block = siblings.filter((id) => moved.has(id));
+	const wanted = flowIndexOf(boxesOf(target, others), place.display, place.point);
+	const order = [...others.slice(0, wanted), ...block, ...others.slice(wanted)];
+	return arranged(target, layer.parent, order);
 }
 
 function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): DisplayMode | null {
@@ -66,15 +87,15 @@ function flowDisplayOf(target: PointerTarget, move: LayerMove, layer: Layer): Di
 
 function replaceInFlow(
 	target: PointerTarget,
+	move: LayerMove,
 	layer: Layer,
-	display: DisplayMode,
-	origin: Point,
+	{ display, point }: { display: DisplayMode; point: Point },
 ): boolean {
 	if (display === "row" || display === "column") {
-		return reorderInFlow(target, layer, display, origin);
+		return reorderInFlow(target, move, layer, { display, point });
 	}
 	return (
-		display === "grid" && layer.parent !== null && recellInGrid(target, layer, layer.parent, origin)
+		display === "grid" && layer.parent !== null && recellInGrid(target, layer, layer.parent, point)
 	);
 }
 
@@ -92,6 +113,6 @@ export function settleInFlow(
 	}
 	const origin = parentPointOf(target, move.id, canvas);
 	target.user.lift.set({ id: move.id, at: carry.lift });
-	const replaced = replaceInFlow(target, layer, display, origin);
+	const replaced = replaceInFlow(target, move, layer, { display, point: origin });
 	return replaced || !carry.placed;
 }

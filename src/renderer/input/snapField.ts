@@ -5,12 +5,13 @@ import { snapShapeOf } from "./snapShape";
 import { drawnReaderOf } from "./targetSpace";
 import type { PointerTarget } from "./tool";
 
-export function snapFieldAround(target: PointerTarget, dragged: LayerId): SnapField {
+export function snapFieldAround(target: PointerTarget, dragged: readonly LayerId[]): SnapField {
 	const read = drawnReaderOf(target);
-	const parent = read(dragged)?.parent ?? null;
+	const [lead] = dragged;
+	const parent = lead === undefined ? null : (read(lead)?.parent ?? null);
 	const container = parent === null ? null : read(parent);
 	const shapes = target.doc.siblingIds(parent).flatMap((id) => {
-		const sibling = id === dragged ? null : read(id);
+		const sibling = dragged.includes(id) ? null : read(id);
 		return sibling === null ? [] : [snapShapeOf(sibling)];
 	});
 	return snapFieldOf({
