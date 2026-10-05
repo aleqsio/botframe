@@ -1,7 +1,7 @@
 import { RENDER_LONG_SIDE } from "../../shared/agent";
 import type { AgentImage, AgentResource } from "../../shared/agent";
 import { EXPORT_FORMATS } from "../../shared/exportFile";
-import type { FormatInfo } from "../../shared/exportFile";
+import type { ExportFormat, FormatInfo } from "../../shared/exportFile";
 import { layerEntry } from "../components/layerEntry";
 import { base64Of } from "../export/base64";
 import { exportFile } from "../export/capture";
@@ -24,14 +24,25 @@ function scaleArg(args: Args): number {
 	return scale;
 }
 
+const PICKED_FORMATS = EXPORT_FORMATS.filter((held) => held.id !== "zip");
+
+function htmlFormat(args: Args): ExportFormat {
+	const files = args["html"] ?? "embedded";
+	if (files !== "embedded" && files !== "separate") {
+		throw new TypeError("Give html as embedded or separate.");
+	}
+	return files === "separate" ? "zip" : "html";
+}
+
 function formatArg(args: Args): FormatInfo {
 	const id = textArg(args, "format");
-	const format = EXPORT_FORMATS.find((held) => held.id === id);
-	if (format === undefined) {
-		const ids = EXPORT_FORMATS.map((held) => held.id).join(", ");
+	const picked = PICKED_FORMATS.find((held) => held.id === id);
+	if (picked === undefined) {
+		const ids = PICKED_FORMATS.map((held) => held.id).join(", ");
 		throw new TypeError(`Give format as one of ${ids}.`);
 	}
-	return format;
+	const wanted = picked.id === "html" ? htmlFormat(args) : picked.id;
+	return EXPORT_FORMATS.find((held) => held.id === wanted) ?? picked;
 }
 
 function targetArg(tab: Tab, args: Args): ReturnType<typeof layerArg> | null {

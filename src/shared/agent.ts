@@ -124,10 +124,14 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"export_layer",
-		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, html (one page, with fonts and media inline), or zip (index.html, styles.css, and an assets folder). Gives html and svg as text, and the other formats as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. Needs the desktop app.`,
+		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, or html. For html, give html: embedded for one page with the CSS, fonts, and media inside, or separate for a zip of index.html, styles.css, and an assets folder. Gives one html page and svg as text, and the other files as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. Needs the desktop app.`,
 		{
 			id: LAYER_ID,
-			format: { enum: ["png", "jpg", "svg", "pdf", "html", "zip"] },
+			format: { enum: ["png", "jpg", "svg", "pdf", "html"] },
+			html: {
+				enum: ["embedded", "separate"],
+				description: "For html: one file, or separate files in a zip. The default is embedded.",
+			},
 			scale: {
 				type: "number",
 				description:

@@ -11,6 +11,8 @@ import { Segmented } from "./layout/Segmented";
 import { layerEntry } from "./layerEntry";
 
 type Scale = "1" | "2" | "3";
+type HtmlFiles = "embedded" | "separate";
+type Picked = Exclude<ExportFormat, "zip">;
 
 interface ExportProps {
 	doc: DesignDocument;
@@ -23,7 +25,17 @@ interface Choice {
 	scale: Scale;
 }
 
-const FORMATS = EXPORT_FORMATS.map(({ id, label, title }) => ({ value: id, label, title }));
+const FORMATS = EXPORT_FORMATS.flatMap(({ id, label, title }) =>
+	id === "zip" ? [] : [{ value: id, label, title }],
+);
+const HTML_FILES = [
+	{
+		value: "embedded",
+		label: "Embedded",
+		title: "One HTML file with the CSS, fonts, and media inside",
+	},
+	{ value: "separate", label: "Separate", title: "HTML, CSS, and asset files in a ZIP" },
+] as const;
 const SCALE_VALUES = ["1", "2", "3"] as const;
 const EXPORT_LONG_SIDE = 16_384;
 
@@ -51,13 +63,38 @@ function errorText(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
 }
 
+function formatOf(picked: Picked, files: HtmlFiles): ExportFormat {
+	return picked === "html" && files === "separate" ? "zip" : picked;
+}
+
+function OptionRow({
+	picked,
+	files,
+	scale,
+	onFiles,
+	onScale,
+}: {
+	picked: Picked;
+	files: HtmlFiles;
+	scale: Scale;
+	onFiles: (files: HtmlFiles) => void;
+	onScale: (scale: Scale) => void;
+}): ReactElement {
+	if (picked === "html") {
+		return <Segmented label="HTML files" onPick={onFiles} options={HTML_FILES} value={files} />;
+	}
+	const disabled = !isRaster(picked);
+	const scales = SCALE_VALUES.map((value) => ({ value, label: `${value}x`, disabled }));
+	return <Segmented label="Scale" onPick={onScale} options={scales} value={scale} />;
+}
+
 export function ExportSection(props: ExportProps): ReactElement | null {
-	const [format, setFormat] = useState<ExportFormat>("png");
+	const [picked, setPicked] = useState<Picked>("png");
+	const [files, setFiles] = useState<HtmlFiles>("embedded");
 	const [scale, setScale] = useState<Scale>("1");
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState<string | null>(null);
-	const raster = isRaster(format);
-	const scales = SCALE_VALUES.map((value) => ({ value, label: `${value}x`, disabled: !raster }));
+	const format = formatOf(picked, files);
 
 	if (inBrowser()) {
 		return null;
@@ -65,9 +102,15 @@ export function ExportSection(props: ExportProps): ReactElement | null {
 	return (
 		<section aria-label="Export" className="field-group layout-section">
 			<span className="group-label">Export</span>
-			<Segmented label="Format" onPick={setFormat} options={FORMATS} value={format} />
+			<Segmented label="Format" onPick={setPicked} options={FORMATS} value={picked} />
 			<div className="export-row">
-				<Segmented label="Scale" onPick={setScale} options={scales} value={scale} />
+				<OptionRow
+					files={files}
+					onFiles={setFiles}
+					onScale={setScale}
+					picked={picked}
+					scale={scale}
+				/>
 				<button
 					aria-disabled={busy}
 					className="pill-button component-action export-button"

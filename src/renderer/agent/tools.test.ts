@@ -262,8 +262,11 @@ describe("export tools", () => {
 		const workspace = new Workspace(Tab.untitled());
 		const id = firstLayer(workspace);
 		await expect(call(workspace, "export_layer", { id, format: "gif" })).rejects.toThrow(
-			/png, jpg, svg, pdf, html, zip/u,
+			/png, jpg, svg, pdf, html\./u,
 		);
+		await expect(
+			call(workspace, "export_layer", { id, format: "html", html: "zip" }),
+		).rejects.toThrow(/embedded or separate/u);
 		await expect(call(workspace, "export_layer", { id, format: "pdf" })).rejects.toThrow(
 			/needs the desktop app/u,
 		);
