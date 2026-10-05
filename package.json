@@ -22,7 +22,7 @@
 		"build:web": "vite build",
 		"start:web": "vite build && vite preview",
 		"test:e2e": "electron-vite build && playwright test --project electron",
-		"test:e2e:export": "electron-vite build && playwright test --project electron e2e/export",
+		"test:e2e:export": "electron-vite build && playwright test e2e/export --project electron",
 		"test:e2e:chromium": "vite build && playwright test --project chromium"
 	},
 	"dependencies": {

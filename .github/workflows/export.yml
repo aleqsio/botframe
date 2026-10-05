@@ -32,7 +32,7 @@ jobs:
       - if: runner.os != 'Linux'
         run: bun run test:e2e:export
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: export-check-${{ matrix.os }}
           path: test-results/export-check
