@@ -905,3 +905,17 @@
 	color: var(--panel-label);
 	font-size: var(--layout-text-chip);
 }
+
+.export-row {
+	display: flex;
+	gap: var(--layout-space-2);
+}
+
+.export-button {
+	flex: none;
+	width: var(--layout-value);
+}
+
+.export-button[aria-disabled="true"] {
+	opacity: 0.35;
+}

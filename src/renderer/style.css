@@ -76,6 +76,20 @@ body {
 	touch-action: none;
 }
 
+:root[data-export] body {
+	background: transparent;
+}
+
+:root[data-export] body > *,
+:root[data-export] .frame-label,
+:root[data-export] .guide-space {
+	visibility: hidden;
+}
+
+:root[data-export] [data-export-target] {
+	visibility: visible;
+}
+
 #dot-grid {
 	position: absolute;
 	inset: 0;

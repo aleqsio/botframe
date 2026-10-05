@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
 import { SET_EDIT_MENU } from "../shared/editMenu";
 import { ipcPage } from "./agent/ipcPage";
@@ -6,8 +5,10 @@ import { listenAgent } from "./agent/listen";
 import { agentServer } from "./agent/server";
 import { connectClipboard } from "./clipboard";
 import { setEditMenu } from "./editMenu";
+import { connectExports } from "./exports";
 import { connectFiles } from "./files";
 import { connectMedia } from "./media";
+import { PAGE_PREFERENCES, editorWindows, loadRenderer } from "./rendererPage";
 
 function createWindow(): void {
 	const window = new BrowserWindow({
@@ -19,23 +20,12 @@ function createWindow(): void {
 		backgroundColor: "#00000000",
 		vibrancy: "under-window",
 		visualEffectState: "active",
-		webPreferences: {
-			preload: join(import.meta.dirname, "../preload/index.cjs"),
-			contextIsolation: true,
-			nodeIntegration: false,
-			sandbox: true,
-			backgroundThrottling: false,
-		},
+		webPreferences: PAGE_PREFERENCES,
 	});
 	window.once("ready-to-show", () => {
 		window.show();
 	});
-	const devServerUrl = process.env["ELECTRON_RENDERER_URL"];
-	if (devServerUrl === undefined) {
-		void window.loadFile(join(import.meta.dirname, "../renderer/index.html"));
-		return;
-	}
-	void window.loadURL(devServerUrl);
+	loadRenderer(window, "");
 }
 
 ipcMain.on(SET_EDIT_MENU, (event, ...args: unknown[]) => {
@@ -49,12 +39,13 @@ app.on("ready", () => {
 	connectClipboard();
 	connectFiles();
 	connectMedia();
+	connectExports();
 	listenAgent(agentServer(ipcPage(), null));
 	createWindow();
 });
 
 app.on("activate", () => {
-	if (BrowserWindow.getAllWindows().length === 0) {
+	if (editorWindows().length === 0) {
 		createWindow();
 	}
 });

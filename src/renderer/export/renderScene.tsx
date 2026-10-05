@@ -1,0 +1,33 @@
+import { flushSync } from "react-dom";
+import type { Root } from "react-dom/client";
+import { readFile } from "../../document/file";
+import { UserState } from "../state/userState";
+import { ExportView } from "./ExportView";
+import { drawScene, painted } from "./drawScene";
+import { mediaLoaded } from "./media";
+import { sceneOf } from "./scene";
+
+export async function renderScene(root: Root, value: unknown): Promise<Uint8Array> {
+	const scene = sceneOf(value);
+	const doc = readFile(scene.file);
+	if (doc === null) {
+		throw new Error("The document is not valid.");
+	}
+	const user = new UserState();
+	flushSync(() => {
+		root.render(<ExportView doc={doc} user={user} />);
+	});
+	const stage = document.querySelector<HTMLElement>("#stage");
+	if (stage === null) {
+		throw new Error("botframe did not draw the document.");
+	}
+	try {
+		await mediaLoaded(stage);
+		await painted();
+		return await drawScene({ stage, camera: user.camera }, scene);
+	} finally {
+		flushSync(() => {
+			root.render(null);
+		});
+	}
+}

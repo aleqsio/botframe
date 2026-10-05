@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LayerId } from "../../document/layer";
 import { AGENT_TOOLS } from "../../shared/agent";
 import type { AgentReply } from "../../shared/agent";
@@ -24,6 +24,10 @@ function firstLayer(workspace: Workspace): LayerId {
 	}
 	return id;
 }
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
 
 describe("runTool", () => {
 	it("has a handler for each tool that the server lists", async () => {
@@ -241,5 +245,13 @@ describe("runTool", () => {
 			error: 'No layer has the id "nope".',
 		});
 		expect(await runTool(workspace, "junk")).toMatchObject({ id: -1, ok: false });
+	});
+
+	it("refuses to render on the website, and a bad scale", async () => {
+		vi.stubGlobal("window", {});
+		const workspace = new Workspace(Tab.untitled());
+		const id = firstLayer(workspace);
+		await expect(call(workspace, "render", { id })).rejects.toThrow(/needs the desktop app/u);
+		await expect(call(workspace, "render", { id, scale: 9 })).rejects.toThrow(/scale/u);
 	});
 });

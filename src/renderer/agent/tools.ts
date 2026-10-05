@@ -7,6 +7,7 @@ import { COMPONENT_TOOLS } from "./componentTools";
 import { DATA_TOOLS } from "./dataTools";
 import { LAYER_TOOLS } from "./layerTools";
 import type { Handler } from "./layerTools";
+import { render } from "./renderTool";
 
 const TOOLS: Readonly<Record<string, Handler>> = {
 	...LAYER_TOOLS,
@@ -47,6 +48,9 @@ function tabOf(workspace: Workspace, args: Args): Tab {
 async function run(workspace: Workspace, tool: string, args: Args): Promise<unknown> {
 	if (tool === "list_documents") {
 		return listDocuments(workspace);
+	}
+	if (tool === "render") {
+		return render(tabOf(workspace, args), args);
 	}
 	const handler = TOOLS[tool];
 	if (handler === undefined) {

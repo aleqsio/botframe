@@ -86,6 +86,13 @@ describe("agent server", () => {
 		});
 	});
 
+	it("gives a picture from the page as an image item", async () => {
+		const image = { type: "image", data: "iVBORw0KGgo=", mimeType: "image/png" };
+		const base = await started(agentServer(() => Promise.resolve(image), null));
+		const answer = await json(await fetch(`${base}/mcp`, rpc("tools/call", { name: "render" })));
+		expect(answer).toMatchObject({ result: { isError: false, content: [image] } });
+	});
+
 	it("gives a tool error as a result, and an unknown tool as an error", async () => {
 		const base = await started(agentServer(() => Promise.reject(new Error("refused")), null));
 		const failed = await json(await fetch(`${base}/mcp`, rpc("tools/call", { name: "undo" })));

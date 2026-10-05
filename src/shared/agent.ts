@@ -6,6 +6,8 @@ export const AGENT_MCP_URL = `http://${AGENT_HOST}:${AGENT_PORT}${AGENT_MCP_PATH
 export const AGENT_ADD_COMMAND = `claude mcp add --transport http botframe ${AGENT_MCP_URL}`;
 export const AGENT_RELAY_COMMAND = "bun run agent";
 
+export const RENDER_LONG_SIDE = 2048;
+
 export const AGENT_CALL = "agent:call";
 export const AGENT_REPLY = "agent:reply";
 
@@ -18,6 +20,12 @@ export interface AgentCall {
 export type AgentReply =
 	| { id: number; ok: true; result: unknown }
 	| { id: number; ok: false; error: string };
+
+export interface AgentImage {
+	type: "image";
+	data: string;
+	mimeType: "image/png";
+}
 
 export interface AgentTool {
 	name: string;
@@ -92,6 +100,19 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 		"list_components",
 		"Gives the components (layer and HTML) and the variables of the document and of each component.",
 		{},
+		[],
+	),
+	tool(
+		"render",
+		`Gives a PNG picture of one layer as the browser draws it, or of the visible canvas when no id is given. Use it to check a change. The long side of the picture is ${RENDER_LONG_SIDE} px or less. botframe draws it in a hidden window, so the editor does not change. Needs the desktop app.`,
+		{
+			id: LAYER_ID,
+			scale: {
+				type: "number",
+				description:
+					"Pixels in the picture for each pixel of the layer, from 0.1 to 4. The default is 1. With no id, the scale applies to the canvas as it shows.",
+			},
+		},
 		[],
 	),
 	tool(

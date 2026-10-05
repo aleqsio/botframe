@@ -1,11 +1,12 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { ipcMain } from "electron";
 import { AGENT_CALL, AGENT_REPLY } from "../../shared/agent";
+import { editorWindows } from "../rendererPage";
 import { Pending } from "./pending";
 import type { CallPage } from "./pending";
 
 export function ipcPage(): CallPage {
 	const pending = new Pending((call) => {
-		const [window] = BrowserWindow.getAllWindows();
+		const [window] = editorWindows();
 		if (window === undefined) {
 			throw new Error("No botframe window is open.");
 		}
