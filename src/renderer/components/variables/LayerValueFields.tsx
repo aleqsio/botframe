@@ -2,11 +2,11 @@ import type { ReactElement } from "react";
 import type { DesignDocument } from "../../../document/document";
 import { isChanged } from "../../../document/layer";
 import type { Layer } from "../../../document/layer";
+import { clipChoiceOf } from "../../../document/clips";
 import { ClipLayerPicker } from "../ClipLayerPicker";
 import {
 	CLIP_MESSAGE,
 	clipCandidates,
-	clipLabelOf,
 	clipLayerTitle,
 	clipModeOf,
 	clipModeOfValue,
@@ -57,9 +57,9 @@ export function ClipField({ doc, layer }: FieldProps): ReactElement {
 			<span className="group-label">Clip</span>
 			<div className="property-switch-row" data-changed={isChanged(layer, "clip") ? "" : undefined}>
 				{bound === undefined ? (
-					<Segmented label="Clip" onPick={pick} options={clipOptions(title)} value={mode} />
+					<Segmented label="Clip" onPick={pick} options={clipOptions(layer, title)} value={mode} />
 				) : (
-					<BoundSummary bound={bound} now={clipLabelOf(layer)} view={target.reach.view} />
+					<BoundSummary bound={bound} now={clipChoiceOf(layer)} view={target.reach.view} />
 				)}
 				<BindButton target={target} />
 			</div>

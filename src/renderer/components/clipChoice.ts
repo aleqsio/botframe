@@ -1,6 +1,6 @@
 import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, LayerPatch } from "../../document/layer";
-import { CLIP_CHOICES, clipReaches } from "../../document/clips";
+import { CLIP_CHOICES, clipChoiceOf, clipReaches, clipsContent } from "../../document/clips";
 import type { Literal } from "../../document/value";
 import { copiesOf } from "../../document/path";
 import { outOfFlow } from "../layerStyle";
@@ -14,12 +14,10 @@ const IN_FLOW = "A layout places this layer. Set its position to absolute to cli
 export type ClipMode = "none" | "shape" | "layer";
 
 type LayerSource = Pick<DesignDocument, "layer" | "layerIds" | "siblingIds">;
+type ClipState = Pick<Layer, "clip" | "clipLayer" | "geometry" | "content">;
 
-export function clipModeOf(layer: Pick<Layer, "clip" | "clipLayer">): ClipMode {
-	if (layer.clipLayer !== null) {
-		return "layer";
-	}
-	return layer.clip ? "shape" : "none";
+export function clipModeOf(layer: ClipState): ClipMode {
+	return clipModeOfValue(clipChoiceOf(layer)) ?? "none";
 }
 
 function ancestorIds(doc: LayerSource, layer: Layer): Set<LayerId> {
@@ -80,8 +78,11 @@ export function clipLayerTitle(
 	return candidates.length === 0 ? NO_SOURCE : undefined;
 }
 
-export function clipOptions(layerTitle: string | undefined): readonly SegmentOption<ClipMode>[] {
-	return [
+export function clipOptions(
+	layer: Pick<Layer, "geometry" | "content">,
+	layerTitle: string | undefined,
+): readonly SegmentOption<ClipMode>[] {
+	const options: readonly SegmentOption<ClipMode>[] = [
 		{ value: "none", label: CLIP_CHOICES.none },
 		{ value: "shape", label: CLIP_CHOICES.shape },
 		{
@@ -91,10 +92,7 @@ export function clipOptions(layerTitle: string | undefined): readonly SegmentOpt
 			title: layerTitle,
 		},
 	];
-}
-
-export function clipLabelOf(layer: Pick<Layer, "clip" | "clipLayer">): string {
-	return CLIP_CHOICES[clipModeOf(layer)];
+	return clipsContent(layer) ? options : options.filter((option) => option.value !== "shape");
 }
 
 export function clipModeOfValue(value: Literal): ClipMode | null {
