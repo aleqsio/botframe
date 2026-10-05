@@ -3,6 +3,7 @@ import type { DesignDocument } from "../../document/document";
 import { usePicked } from "../state/useSlot";
 import type { UserState } from "../state/userState";
 import { FrameOptions } from "./FrameOptions";
+import { ImageOptions } from "./ImageOptions";
 import { ShapeOptions } from "./ShapeOptions";
 import { ToolBar } from "./ToolBar";
 import { toolOptionsOf } from "./tools";
@@ -22,6 +23,7 @@ export function ToolDock({
 		<div id="dock">
 			{options === "frame" ? <FrameOptions doc={doc} stage={stage} user={user} /> : null}
 			{options === "shape" ? <ShapeOptions tool={user.tool} /> : null}
+			{options === "image" ? <ImageOptions user={user} /> : null}
 			<ToolBar tool={user.tool} />
 		</div>
 	);

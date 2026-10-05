@@ -1,3 +1,4 @@
+import { DEFAULT_PLAYBACK } from "../document/media";
 import { describe, expect, it } from "vitest";
 import { isAssetId } from "../document/assets";
 import type { AssetId } from "../document/assets";
@@ -13,7 +14,7 @@ function assetId(text: string): AssetId {
 }
 
 const ASSET = assetId("a".repeat(64));
-const COVER: MediaFill = { asset: ASSET, fit: "cover", stack: "over" };
+const COVER: MediaFill = { asset: ASSET, fit: "cover", stack: "over", ...DEFAULT_PLAYBACK };
 
 describe("imageBackground", () => {
 	it.each([
@@ -85,7 +86,7 @@ describe("paintedStyle", () => {
 	it("takes the paint off the layer when a video draws under the paint", () => {
 		const style = paintedStyle(
 			{ background: "#ff000080" },
-			{ ...COVER, stack: "under" },
+			{ ...COVER, stack: "under", ...DEFAULT_PLAYBACK },
 			{
 				kind: "video",
 				url: URL_TEXT,

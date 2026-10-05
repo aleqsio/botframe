@@ -107,6 +107,12 @@ describe("nextLayerName", () => {
 		expect(nextLayerName("Frame", layers)).toBe("Frame 2");
 	});
 
+	it("counts a layer that has the label in its name", () => {
+		const layers = [{ ...rectangle("1@1", "#000000"), name: "Image 1" }];
+
+		expect(nextLayerName("Image", layers)).toBe("Image 2");
+	});
+
 	it("counts a layer that a person renamed by its kind", () => {
 		const layers = [{ ...rectangle("1@1", "#000000"), name: "Header" }];
 

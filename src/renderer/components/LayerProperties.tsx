@@ -13,6 +13,7 @@ import { MirrorToggle } from "./layout/MirrorToggle";
 import { TurnToggle } from "./layout/TurnToggle";
 import { ClipField } from "./variables/LayerValueFields";
 import { FillSection } from "./fill/FillSection";
+import { VideoSection } from "./fill/VideoSection";
 import { TextSection } from "./text/TextSection";
 
 const TURN_GROUP = "Rotation";
@@ -69,6 +70,7 @@ export function LayerProperties({
 				<TextSection doc={doc} geometry={layer.geometry} layer={layer} />
 			) : null}
 			<FillSection doc={doc} key={layer.id} layer={layer} />
+			<VideoSection doc={doc} layer={layer} />
 			<ClipField doc={doc} layer={layer} />
 			{isFrame(layer) ? <GuideList doc={doc} layer={layer} /> : null}
 			{isFrame(layer) ? <FrameFooter doc={doc} layer={layer} /> : null}

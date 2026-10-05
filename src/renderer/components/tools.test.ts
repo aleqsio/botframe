@@ -42,7 +42,7 @@ describe("groupTool", () => {
 });
 
 describe("toolOptionsOf", () => {
-	it("gives the frame options, the shape options, or no options for each tool", () => {
+	it("gives the frame, shape, or image options, or no options, for each tool", () => {
 		const options = Object.fromEntries(TOOLS.map((tool) => [tool.id, toolOptionsOf(tool.id)]));
 
 		expect(options).toEqual({
@@ -52,7 +52,7 @@ describe("toolOptionsOf", () => {
 			ellipse: "shape",
 			hand: "none",
 			text: "none",
-			image: "none",
+			image: "image",
 		});
 	});
 });

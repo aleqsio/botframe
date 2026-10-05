@@ -56,7 +56,7 @@ function deleteVariable(doc: DesignDocument, args: Args): unknown {
 	return { deleted: id };
 }
 
-function bytesOf(base64: string): Uint8Array<ArrayBuffer> {
+export function bytesOf(base64: string): Uint8Array<ArrayBuffer> {
 	try {
 		return Uint8Array.from(atob(base64), (char) => char.codePointAt(0) ?? 0);
 	} catch {

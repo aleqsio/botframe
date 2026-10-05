@@ -2,6 +2,7 @@ import { assetOf, isAcceptedMedia, assetKind } from "../../document/assets";
 import type { Asset } from "../../document/assets";
 import type { DesignDocument } from "../../document/document";
 import type { Layer } from "../../document/layer";
+import { DEFAULT_PLAYBACK } from "../../document/media";
 import type { MediaFit } from "../../document/media";
 import { bridge } from "../bridge";
 
@@ -16,13 +17,19 @@ function keptFit(layer: Layer, asset: Asset): MediaFit {
 export function placeAsset(doc: DesignDocument, layers: readonly Layer[], asset: Asset): void {
 	for (const layer of layers) {
 		doc.update(layer.id, {
-			media: { asset: asset.id, fit: keptFit(layer, asset), stack: layer.media?.stack ?? "over" },
+			media: {
+				...DEFAULT_PLAYBACK,
+				stack: "over",
+				...layer.media,
+				asset: asset.id,
+				fit: keptFit(layer, asset),
+			},
 		});
 	}
 	doc.commit(MEDIA_MESSAGE);
 }
 
-async function fileAsset(file: File): Promise<Asset | null> {
+export async function fileAsset(file: File): Promise<Asset | null> {
 	return isAcceptedMedia(file.type, file.size)
 		? assetOf(new Uint8Array(await file.arrayBuffer()), file.type)
 		: null;
@@ -50,7 +57,11 @@ export async function addMediaFile(doc: DesignDocument, file: File): Promise<boo
 	return addAsset(doc, await fileAsset(file));
 }
 
-export async function addMediaUrl(doc: DesignDocument, url: string): Promise<boolean> {
+export async function urlAsset(url: string): Promise<Asset | null> {
 	const media = await bridge().fetchMedia(url);
-	return media !== null && addAsset(doc, await assetOf(media.bytes, media.type));
+	return media === null ? null : assetOf(media.bytes, media.type);
+}
+
+export async function addMediaUrl(doc: DesignDocument, url: string): Promise<boolean> {
+	return addAsset(doc, await urlAsset(url));
 }

@@ -1,3 +1,4 @@
+import { DEFAULT_PLAYBACK } from "../../document/media";
 import { describe, expect, it } from "vitest";
 import { NO_CONTENT, PLAIN_INSTANCE } from "../../document/layer";
 import type { LayerId } from "../../document/layer";
@@ -59,7 +60,7 @@ describe("visibleLayerIds", () => {
 	it("keeps a layer with a transparent fill and a media fill", () => {
 		const ids = visibleLayerIds([TOP], () => ({
 			fill: "transparent",
-			media: { asset: PICTURE, fit: "cover", stack: "over" },
+			media: { asset: PICTURE, fit: "cover", stack: "over", ...DEFAULT_PLAYBACK },
 			content: NO_CONTENT,
 		}));
 

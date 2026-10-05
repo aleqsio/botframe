@@ -71,7 +71,7 @@ const PROPS_GUIDE =
 	"content.props sets the props of a component copy: {propName: value}. Use the prop name or the variable id from list_components. botframe refuses a name that the component does not have.";
 
 const LAYER_SHAPE =
-	"Layer fields: x, y, width, height (pixels), fill (CSS color), name, clip (boolean), geometry ({kind: rectangle, cornerRadius, cornerSmoothing, frame} | {kind: ellipse} | {kind: path, vertices} | {kind: group} | {kind: text, content, fontFamily (a Google Fonts family; the editor downloads it into the file), fontWeight, italic, fontSize (px), lineHeight (a factor), letterSpacing (px), textAlign: left|center|right|justify, verticalAlign: top|middle|bottom, decoration: none|underline|line-through, textCase: none|uppercase|lowercase|capitalize}; only a frame or a group holds children; the fill of a text layer paints its glyphs, and layout width and height hug make a text layer fit its text), rotation, skewX, skewY, mirrored, origin {x, y} (0 to 1), lengths {x|y|width|height: {value, unit: px|rem|%|vw|vh}}, layout (width|height: fixed|hug|fill, position: default|offset|absolute, display: block|row|column|grid, wrap, distribute, align, gap, padding, margin, tracks, cell, turnedBox), guides [{axis, at}], media {asset, fit: cover|contain|stretch|tile} | null, content {kind: component, component, props} | {kind: none}, bindings {field: {var: variableId} | condition | null; a text layer can also bind content and fontSize}, clipLayer (layer id) | null.";
+	"Layer fields: x, y, width, height (pixels), fill (CSS color), name, clip (boolean), geometry ({kind: rectangle, cornerRadius, cornerSmoothing, frame} | {kind: ellipse} | {kind: path, vertices} | {kind: group} | {kind: text, content, fontFamily (a Google Fonts family; the editor downloads it into the file), fontWeight, italic, fontSize (px), lineHeight (a factor), letterSpacing (px), textAlign: left|center|right|justify, verticalAlign: top|middle|bottom, decoration: none|underline|line-through, textCase: none|uppercase|lowercase|capitalize}; only a frame or a group holds children; the fill of a text layer paints its glyphs, and layout width and height hug make a text layer fit its text), rotation, skewX, skewY, mirrored, origin {x, y} (0 to 1), lengths {x|y|width|height: {value, unit: px|rem|%|vw|vh}}, layout (width|height: fixed|hug|fill, position: default|offset|absolute, display: block|row|column|grid, wrap, distribute, align, gap, padding, margin, tracks, cell, turnedBox), guides [{axis, at}], media {asset, fit: cover|contain|stretch|tile, stack: over|under, autoplay, loop, muted, controls (booleans that apply to a video; the defaults are true, true, true, false)} | null, content {kind: component, component, props} | {kind: none}, bindings {field: {var: variableId} | condition | null; a text layer can also bind content and fontSize}, clipLayer (layer id) | null.";
 
 const HTML_GUIDE =
 	"An HTML component is a template, a stylesheet, and props. The html uses {{prop}} for the text of a prop, {{#prop}}...{{/prop}} for a part that shows when the prop is true or not empty, and {{^prop}}...{{/prop}} for a part that shows when it is false or empty. The css applies inside the component only. Each prop is {name, kind: text, initial: string} | {name, kind: boolean, initial: true|false} | {name, kind: choice, initial, options: [string]}. A prop name starts with a letter or _ and has only letters, digits, _ and -.";
@@ -244,6 +244,25 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 			type: { type: "string", description: "The media type, for example image/png." },
 		},
 		["base64", "type"],
+	),
+	tool(
+		"place_media",
+		"Adds an image or a video and puts it on the canvas as a new layer at its natural size, as the Image tool does. Give url, or base64 and type. The layer is a rectangle with a media fill. Gives the layer id, the asset id, and the size.",
+		{
+			parent: PARENT,
+			url: { type: "string", description: "An http or https URL. The website cannot load a URL." },
+			base64: { type: "string" },
+			type: { type: "string", description: "The media type of base64, for example image/png." },
+			x: {
+				type: "number",
+				description: "The left edge in the parent, in pixels. The default is 0.",
+			},
+			y: {
+				type: "number",
+				description: "The top edge in the parent, in pixels. The default is 0.",
+			},
+		},
+		["parent"],
 	),
 	tool("undo", "Undoes the last change of this editor.", {}, []),
 	tool("redo", "Redoes the last undone change.", {}, []),

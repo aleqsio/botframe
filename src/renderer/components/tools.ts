@@ -23,7 +23,7 @@ export type ToolId = Tool["id"];
 
 export type ToolGroup = readonly [Tool, ...Tool[]];
 
-export type ToolOptions = "frame" | "shape" | "none";
+export type ToolOptions = "frame" | "shape" | "image" | "none";
 
 export const DEFAULT_TOOL: ToolId = "select";
 
@@ -47,6 +47,9 @@ export function groupTool(group: ToolGroup, active: ToolId): Tool {
 export function toolOptionsOf(tool: ToolId): ToolOptions {
 	if (tool === FRAME.id) {
 		return "frame";
+	}
+	if (tool === IMAGE.id) {
+		return "image";
 	}
 	return SHAPE_TOOLS.some((shape) => shape.id === tool) ? "shape" : "none";
 }

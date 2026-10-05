@@ -92,7 +92,7 @@ export function UrlCard({
 	);
 }
 
-const DESKTOP_ONLY = "Use the desktop app to add media from a URL";
+export const DESKTOP_ONLY = "Use the desktop app to add media from a URL";
 
 export function mediaChoices(onUrl: () => void, onFile: () => void): readonly AddChoice[] {
 	return [

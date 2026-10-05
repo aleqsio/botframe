@@ -65,7 +65,7 @@ function parentOf(chain: readonly Layer[]): LayerId | null {
 	return chain.at(-1)?.id ?? null;
 }
 
-function startLayer(
+export function startLayer(
 	target: PointerTarget,
 	defaults: DrawDefaults,
 	rect: DrawnRect,

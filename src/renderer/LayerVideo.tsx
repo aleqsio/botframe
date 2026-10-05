@@ -19,14 +19,23 @@ export function LayerVideo({
 	return (
 		<>
 			<video
-				autoPlay
+				autoPlay={fill.autoplay}
 				className="layer-media"
-				loop
-				muted
+				controls={fill.controls}
+				loop={fill.loop}
+				muted={fill.muted}
 				playsInline
+				key={String(fill.autoplay)}
+				ref={(video) => {
+					if (video !== null) {
+						video.defaultMuted = fill.muted;
+					}
+				}}
 				src={media.url}
 				style={videoStyle(fill.fit)}
-			/>
+			>
+				<track kind="captions" />
+			</video>
 			{fill.stack === "under" ? (
 				<span className="layer-media" style={{ background: paint }} />
 			) : null}

@@ -1,3 +1,4 @@
+import { DEFAULT_PLAYBACK } from "./media";
 import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
 import { assetOf } from "./assets";
@@ -22,6 +23,8 @@ function layerData(doc: DesignDocument, id: LayerId): unknown {
 	return loro.getTree("layers").getNodeByID(nodeOf(id))?.data.get("media");
 }
 
+const STILL = { autoplay: false, loop: false, muted: false, controls: true };
+
 describe("the media fill of a layer", () => {
 	it("reads no media for a layer that has none", () => {
 		const doc = DesignDocument.create();
@@ -30,18 +33,15 @@ describe("the media fill of a layer", () => {
 		expect(doc.layer(id)?.media).toBeNull();
 	});
 
-	it("keeps the asset and the fit through a save and a load", async () => {
+	it("keeps the asset, the fit, and the playback through a save and a load", async () => {
 		const asset = await pictureId();
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset, fit: "tile", stack: "under" } });
+		const media = { asset, fit: "tile", stack: "under", ...STILL } as const;
+		doc.update(id, { media });
 		doc.commit("set media");
 
-		expect(DesignDocument.open(doc.snapshot()).layer(id)?.media).toEqual({
-			asset,
-			fit: "tile",
-			stack: "under",
-		});
+		expect(DesignDocument.open(doc.snapshot()).layer(id)?.media).toEqual(media);
 	});
 
 	it("reads a media value with no stack as media over the paint", async () => {
@@ -57,13 +57,16 @@ describe("the media fill of a layer", () => {
 			asset,
 			fit: "cover",
 			stack: "over",
+			...DEFAULT_PLAYBACK,
 		});
 	});
 
 	it("removes the stored key when the media is removed", async () => {
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset: await pictureId(), fit: "cover", stack: "over" } });
+		doc.update(id, {
+			media: { asset: await pictureId(), fit: "cover", stack: "over", ...DEFAULT_PLAYBACK },
+		});
 		doc.commit("set media");
 
 		doc.update(id, { media: null });
@@ -99,14 +102,19 @@ describe("the media fill of a layer", () => {
 			}).replace('"layers":[]', `"layers":[{"media":{"asset":"${asset}","fit":"zoom"}}]`),
 		);
 
-		expect(envelope?.layers[0]?.media).toEqual({ asset, fit: "cover", stack: "over" });
+		expect(envelope?.layers[0]?.media).toEqual({
+			asset,
+			fit: "cover",
+			stack: "over",
+			...DEFAULT_PLAYBACK,
+		});
 	});
 
 	it("copies the media with the subtree of a layer", async () => {
 		const asset = await pictureId();
 		const doc = DesignDocument.create();
 		const id = doc.createLayer(DRAWN);
-		doc.update(id, { media: { asset, fit: "contain", stack: "over" } });
+		doc.update(id, { media: { asset, fit: "contain", stack: "over", ...DEFAULT_PLAYBACK } });
 		doc.commit("set media");
 		const node = doc.readSubtree(id);
 		if (node === null) {
@@ -115,6 +123,11 @@ describe("the media fill of a layer", () => {
 
 		const copy = doc.createSubtree(node, null);
 
-		expect(doc.layer(copy)?.media).toEqual({ asset, fit: "contain", stack: "over" });
+		expect(doc.layer(copy)?.media).toEqual({
+			asset,
+			fit: "contain",
+			stack: "over",
+			...DEFAULT_PLAYBACK,
+		});
 	});
 });
