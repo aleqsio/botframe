@@ -2,12 +2,10 @@ import type { ExportScene } from "../../shared/exportFile";
 import { bridge } from "../bridge";
 import { painted, targetOf, withTarget } from "./drawScene";
 import type { SceneView } from "./drawScene";
-import { printableText } from "./printText";
 
-export async function printScene(view: SceneView, scene: ExportScene): Promise<Uint8Array> {
+export function printScene(view: SceneView, scene: ExportScene): Promise<Uint8Array> {
 	const target = targetOf(view, scene);
 	const { bounds } = target;
-	await printableText(target.element);
 	return withTarget(target, async () => {
 		view.camera.set({ x: -bounds.x, y: -bounds.y, zoom: 1 });
 		await painted();
