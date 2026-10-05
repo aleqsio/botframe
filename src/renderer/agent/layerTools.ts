@@ -42,7 +42,7 @@ function outlineOf(doc: DesignDocument, id: LayerId): readonly OutlineNode[] {
 
 const HOLDERS = "Only a frame or a group can hold layers, as in the editor.";
 
-function containerArg(doc: DesignDocument, args: Args): LayerId | null {
+export function containerArg(doc: DesignDocument, args: Args): LayerId | null {
 	const parent = parentArg(doc, args);
 	const layer = parent === null ? null : doc.layer(parent);
 	if (layer !== null && !holdsChildren(layer.geometry)) {

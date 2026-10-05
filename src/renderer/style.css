@@ -541,6 +541,30 @@ body {
 	font-size: 12px;
 }
 
+.option-note {
+	display: flex;
+	flex: none;
+	gap: 6px;
+	align-items: center;
+	padding: 0 8px;
+	color: var(--bar-icon);
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.floating-bar .media-url {
+	width: 220px;
+	border: 0;
+	background-color: var(--bar-hover);
+	color: var(--bar-icon-selected);
+}
+
+.floating-bar .media-spinner {
+	margin: 0 8px;
+	border-color: var(--bar-selected);
+	border-top-color: var(--bar-icon-selected);
+}
+
 .preset-row {
 	display: flex;
 	align-items: center;

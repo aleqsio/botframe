@@ -1,3 +1,4 @@
+import { DEFAULT_PLAYBACK } from "../../document/media";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Asset, AssetId } from "../../document/assets";
 import { DesignDocument } from "../../document/document";
@@ -115,8 +116,13 @@ describe("placeAsset", () => {
 
 		placeAsset(doc, [layerOf(doc, one), layerOf(doc, other)], assetOf(doc, asset));
 
-		expect(mediaOf(doc, one)).toEqual({ asset, fit: "cover", stack: "over" });
-		expect(mediaOf(doc, other)).toEqual({ asset, fit: "cover", stack: "over" });
+		expect(mediaOf(doc, one)).toEqual({ asset, fit: "cover", stack: "over", ...DEFAULT_PLAYBACK });
+		expect(mediaOf(doc, other)).toEqual({
+			asset,
+			fit: "cover",
+			stack: "over",
+			...DEFAULT_PLAYBACK,
+		});
 		doc.undo();
 		expect(doc.layer(one)?.media).toBeNull();
 		expect(doc.layer(other)?.media).toBeNull();

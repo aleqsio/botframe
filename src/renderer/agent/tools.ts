@@ -7,6 +7,7 @@ import type { Args } from "./args";
 import { COMPONENT_TOOLS } from "./componentTools";
 import { DATA_TOOLS } from "./dataTools";
 import { LAYER_TOOLS } from "./layerTools";
+import { placeMedia } from "./mediaTools";
 import type { Handler } from "./layerTools";
 import { exportLayer, render } from "./exportTools";
 
@@ -14,6 +15,7 @@ const TOOLS: Readonly<Record<string, Handler>> = {
 	...LAYER_TOOLS,
 	...DATA_TOOLS,
 	...COMPONENT_TOOLS,
+	place_media: placeMedia,
 };
 
 const NO_CALL = -1;

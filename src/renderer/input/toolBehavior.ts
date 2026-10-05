@@ -4,6 +4,7 @@ import { composeBehaviors } from "./composeBehaviors";
 import { createDrawBehavior } from "./drawBehavior";
 import { HANDLES } from "./handleBehaviors";
 import type { BehaviorFactory } from "./handleBehaviors";
+import { createImageBehavior } from "./imageBehavior";
 import { createMarqueeBehavior } from "./marqueeBehavior";
 import { createPanBehavior } from "./panBehavior";
 import { createPathBehavior } from "./pathBehavior";
@@ -17,7 +18,7 @@ const TOOL_BEHAVIORS: Readonly<Record<ToolId, readonly BehaviorFactory[]>> = {
 	rectangle: [...HANDLES, createDrawBehavior(RECTANGLE_DEFAULTS)],
 	ellipse: [...HANDLES, createDrawBehavior(ELLIPSE_DEFAULTS)],
 	text: [...HANDLES, createTextBehavior],
-	image: HANDLES,
+	image: [...HANDLES, createImageBehavior],
 	hand: [createPanBehavior],
 };
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LayerId } from "../../document/layer";
 import { AGENT_TOOLS } from "../../shared/agent";
 import type { AgentReply } from "../../shared/agent";
@@ -273,5 +273,30 @@ describe("export tools", () => {
 		await expect(
 			call(workspace, "export_layer", { id, format: "html", html: "zip" }),
 		).rejects.toThrow(/embedded or separate/u);
+	});
+});
+
+describe("place_media", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it("places media at its natural size and sets the video playback", async () => {
+		vi.stubGlobal("createImageBitmap", () =>
+			Promise.resolve({ width: 320, height: 180, close: () => null }),
+		);
+		const workspace = new Workspace(Tab.untitled());
+		const args = { parent: null, base64: btoa("png"), type: "image/png", x: 10 };
+		expect(await call(workspace, "place_media", args)).toMatchObject({ width: 320, height: 180 });
+		const id = workspace.active.get().doc.rootIds().at(-1);
+		await call(workspace, "update_layer", { id, change: { media: { controls: true } } });
+		expect(await call(workspace, "get_layer", { id })).toMatchObject({
+			name: "Image 1",
+			x: 10,
+			y: 0,
+			width: 320,
+			height: 180,
+			media: { fit: "cover", autoplay: true, controls: true },
+		});
 	});
 });

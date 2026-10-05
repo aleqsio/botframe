@@ -111,7 +111,7 @@ export function groupHeading(count: number): InspectorHeading {
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {
 	let count = 0;
 	for (const layer of layers) {
-		if (kindLabel(layer, false) === label) {
+		if (kindLabel(layer, false) === label || layer?.name.startsWith(`${label} `) === true) {
 			count += 1;
 		}
 	}
