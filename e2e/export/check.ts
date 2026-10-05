@@ -51,6 +51,9 @@ async function checked(check: Check, option: ExportOption, reference: Picture): 
 	const picture = fitted(onWhite(read), reference.width, reference.height);
 	const found = difference(reference, picture, option.threshold);
 	const shown = differencePicture(reference, found);
+	if (problemsOf(option, found).length > 0) {
+		process.stdout.write(debugMaps(`${example} ${option.id} read ${read.width}x${read.height} ref ${reference.width}x${reference.height}`, reference, picture));
+	}
 	return {
 		option: option.id,
 		result: await savedPicture(folder, `${example}/${option.id}.result.png`, picture),
@@ -98,4 +101,31 @@ export async function checkedExample(
 	await toolJson("delete_layers", { ids: [root] });
 	const saved = await savedPicture(folder, `${example.name}/reference.png`, reference);
 	return { example: example.name, reference: saved, cells };
+}
+
+function debugMap(picture: Picture): string[] {
+	const columns = 60;
+	const cell = picture.width / columns;
+	const rows = Math.max(1, Math.round(picture.height / cell / 2));
+	return Array.from({ length: rows }, (_, row) =>
+		Array.from({ length: columns }, (_, column) => {
+			let sum = 0;
+			let count = 0;
+			for (let y = Math.floor(row * cell * 2); y < Math.floor((row + 1) * cell * 2) && y < picture.height; y += 2) {
+				for (let x = Math.floor(column * cell); x < Math.floor((column + 1) * cell); x += 2) {
+					const at = (y * picture.width + x) * 4;
+					sum += ((picture.data[at] ?? 0) + (picture.data[at + 1] ?? 0) + (picture.data[at + 2] ?? 0)) / 3;
+					count += 1;
+				}
+			}
+			const mean = sum / Math.max(1, count);
+			return " .:-=+*#%@"[Math.min(9, Math.floor((255 - mean) / 25.6))] ?? "?";
+		}).join(""),
+	);
+}
+
+function debugMaps(title: string, reference: Picture, picture: Picture): string {
+	const left = debugMap(reference);
+	const right = debugMap(picture);
+	return `${title}\n${left.map((line, index) => `${line} | ${right[index] ?? ""}`).join("\n")}\n`;
 }
