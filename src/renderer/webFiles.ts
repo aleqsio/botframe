@@ -28,11 +28,11 @@ function chooseFile(): Promise<File | null> {
 	});
 }
 
-function download(bytes: Uint8Array, name: string): void {
+export function download(bytes: Uint8Array, fileName: string): void {
 	const url = URL.createObjectURL(new Blob([bytes.slice()]));
 	const link = document.createElement("a");
 	link.href = url;
-	link.download = `${name}${DOT_EXTENSION}`;
+	link.download = fileName;
 	link.click();
 	// Firefox and Safari stop a download when its blob URL is revoked too soon.
 	// https://github.com/eligrey/FileSaver.js/blob/master/src/FileSaver.js
@@ -66,14 +66,14 @@ function saveTo(
 	{ token, name: current, saveAs }: SaveRequest,
 ): SavedFile | null {
 	if (token !== null && !saveAs) {
-		download(bytes, current);
+		download(bytes, `${current}${DOT_EXTENSION}`);
 		return { token, name: current };
 	}
 	const name = chooseName(current);
 	if (name === null) {
 		return null;
 	}
-	download(bytes, name);
+	download(bytes, `${name}${DOT_EXTENSION}`);
 	return savedFile(name);
 }
 

@@ -111,7 +111,7 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"render",
-		`Gives a PNG picture of one layer as the browser draws it, or of the visible canvas when no id is given. Use it to check a change. The long side of the picture is ${RENDER_LONG_SIDE} px or less. botframe draws it in a hidden window, so the editor does not change. Needs the desktop app.`,
+		`Gives a PNG picture of one layer as the browser draws it, or of the visible canvas when no id is given. Use it to check a change. The long side of the picture is ${RENDER_LONG_SIDE} px or less. botframe draws it in a hidden window, so the editor does not change.`,
 		{
 			id: LAYER_ID,
 			scale: {
@@ -124,7 +124,7 @@ export const AGENT_TOOLS: readonly AgentTool[] = [
 	),
 	tool(
 		"export_layer",
-		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, or html. For html, give html: embedded for one page with the CSS, fonts, and media inside, or separate for a zip of index.html, styles.css, and an assets folder. Gives one html page and svg as text, and the other files as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. Needs the desktop app.`,
+		`Exports one layer, or the visible canvas when no id is given, as a file: png, jpg, svg (the HTML inside a foreignObject), pdf, or html. For html, give html: embedded for one page with the CSS, fonts, and media inside, or separate for a zip of index.html, styles.css, and an assets folder. Gives one html page and svg as text, and the other files as base64. The scale applies to png and jpg only, and the long side of a picture is ${RENDER_LONG_SIDE} px or less. On the website, a pdf holds a picture of the layer at scale 2.`,
 		{
 			id: LAYER_ID,
 			format: { enum: ["png", "jpg", "svg", "pdf", "html"] },

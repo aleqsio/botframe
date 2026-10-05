@@ -40,7 +40,7 @@ export function paintedBox(element: HTMLElement): DOMRect {
 	return unionOf([own, ...Array.from(children, (child) => child.getBoundingClientRect())]);
 }
 
-function layerBounds(view: SceneView, element: HTMLElement): Rect {
+export function layerBounds(view: SceneView, element: HTMLElement): Rect {
 	const camera = view.camera.get();
 	const stage = view.stage.getBoundingClientRect();
 	const box = paintedBox(element);
@@ -70,16 +70,46 @@ async function captureTile(view: SceneView, tile: Tile): Promise<ImageBitmap> {
 
 const JPEG_QUALITY = 0.92;
 
-async function drawTiles(view: SceneView, plan: ExportPlan, type: string): Promise<Uint8Array> {
-	const canvas = new OffscreenCanvas(plan.width, plan.height);
-	const context = canvas.getContext("2d");
+const UNREADABLE =
+	"This browser does not let botframe read the picture. Use Chromium or the desktop app.";
+
+export function pictureType(scene: ExportScene): string {
+	return EXPORT_FORMATS.find((format) => format.id === scene.format)?.type ?? "image/png";
+}
+
+export function blankCanvas(
+	width: number,
+	height: number,
+	type: string,
+): OffscreenCanvasRenderingContext2D {
+	const context = new OffscreenCanvas(width, height).getContext("2d");
 	if (context === null) {
 		throw new Error("botframe cannot draw the picture.");
 	}
 	if (type === "image/jpeg") {
 		context.fillStyle = "#ffffff";
-		context.fillRect(0, 0, plan.width, plan.height);
+		context.fillRect(0, 0, width, height);
 	}
+	return context;
+}
+
+export async function readable<T>(read: () => Promise<T> | T): Promise<T> {
+	try {
+		return await read();
+	} catch (error) {
+		throw error instanceof DOMException && error.name === "SecurityError"
+			? new Error(UNREADABLE)
+			: error;
+	}
+}
+
+export async function encoded(canvas: OffscreenCanvas, type: string): Promise<Uint8Array> {
+	const blob = await readable(() => canvas.convertToBlob({ type, quality: JPEG_QUALITY }));
+	return new Uint8Array(await blob.arrayBuffer());
+}
+
+async function drawTiles(view: SceneView, plan: ExportPlan, type: string): Promise<Uint8Array> {
+	const context = blankCanvas(plan.width, plan.height, type);
 	const drawTile = async (tile: Tile): Promise<void> => {
 		const bitmap = await captureTile(view, tile);
 		context.drawImage(bitmap, tile.at.x, tile.at.y, tile.size.width, tile.size.height);
@@ -89,8 +119,7 @@ async function drawTiles(view: SceneView, plan: ExportPlan, type: string): Promi
 		(drawn: Promise<void>, tile) => drawn.then(() => drawTile(tile)),
 		Promise.resolve(),
 	);
-	const blob = await canvas.convertToBlob({ type, quality: JPEG_QUALITY });
-	return new Uint8Array(await blob.arrayBuffer());
+	return encoded(context.canvas, type);
 }
 
 export interface Target {
@@ -119,7 +148,7 @@ export function drawScene(view: SceneView, scene: ExportScene): Promise<Uint8Arr
 		height: view.stage.clientHeight,
 		ratio: window.devicePixelRatio,
 	};
-	const type = EXPORT_FORMATS.find((format) => format.id === scene.format)?.type ?? "image/png";
+	const type = pictureType(scene);
 	const scale = fittedScale(target.bounds, scene.scale, scene.longSide);
 	return withTarget(target, () => drawTiles(view, planExport(target.bounds, scale, screen), type));
 }

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { LayerId } from "../../document/layer";
 import { AGENT_TOOLS } from "../../shared/agent";
 import type { AgentReply } from "../../shared/agent";
@@ -24,10 +24,6 @@ function firstLayer(workspace: Workspace): LayerId {
 	}
 	return id;
 }
-
-afterEach(() => {
-	vi.unstubAllGlobals();
-});
 
 describe("runTool", () => {
 	it("has a handler for each tool that the server lists", async () => {
@@ -249,16 +245,13 @@ describe("runTool", () => {
 });
 
 describe("export tools", () => {
-	it("refuses to render on the website, and a bad scale", async () => {
-		vi.stubGlobal("window", {});
+	it("refuses a bad scale", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		const id = firstLayer(workspace);
-		await expect(call(workspace, "render", { id })).rejects.toThrow(/needs the desktop app/u);
 		await expect(call(workspace, "render", { id, scale: 9 })).rejects.toThrow(/scale/u);
 	});
 
-	it("refuses an export in an unknown format, and on the website", async () => {
-		vi.stubGlobal("window", {});
+	it("refuses an export in an unknown format", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		const id = firstLayer(workspace);
 		await expect(call(workspace, "export_layer", { id, format: "gif" })).rejects.toThrow(
@@ -267,8 +260,5 @@ describe("export tools", () => {
 		await expect(
 			call(workspace, "export_layer", { id, format: "html", html: "zip" }),
 		).rejects.toThrow(/embedded or separate/u);
-		await expect(call(workspace, "export_layer", { id, format: "pdf" })).rejects.toThrow(
-			/needs the desktop app/u,
-		);
 	});
 });

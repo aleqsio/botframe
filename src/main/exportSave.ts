@@ -2,10 +2,9 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BrowserWindow, dialog } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import { EXPORT_FORMATS } from "../shared/exportFile";
+import { EXPORT_FORMATS, exportFileNames } from "../shared/exportFile";
 import type { ExportFormat, ExportedFile } from "../shared/exportFile";
 import { FILE_NAME } from "../shared/file";
-import { uniqueNames } from "./fileNames";
 
 const SAVE_FAILED = "The export was not saved";
 const FALLBACK_NAME = "Layer";
@@ -31,16 +30,11 @@ function exportedFiles(value: unknown): readonly ExportedFile[] {
 	});
 }
 
-function fileNames(files: readonly ExportedFile[]): readonly string[] {
-	const names = uniqueNames(files.map((file) => file.name));
-	return names.map((name, index) => `${name}.${files[index]?.format ?? ""}`);
-}
-
 async function choosePaths(
 	window: BrowserWindow,
 	files: readonly ExportedFile[],
 ): Promise<readonly string[]> {
-	const names = fileNames(files);
+	const names = exportFileNames(files);
 	const [only, ...others] = names;
 	const [first] = files;
 	if (only !== undefined && first !== undefined && others.length === 0) {
