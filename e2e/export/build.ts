@@ -76,10 +76,8 @@ export interface Session {
 }
 
 export async function startSession(folder: string): Promise<Session> {
-	const { app } = await launchApp(["--force-device-scale-factor=2"]);
-	await expect(async () => {
-		await toolJson("list_documents", {});
-	}).toPass({ timeout: 30_000 });
+	const { app, window } = await launchApp(["--force-device-scale-factor=2"]);
+	await expect(window.locator(".layer")).toHaveCount(1);
 	const base64 = patternPng().toString("base64");
 	const image = fieldsOf(await toolJson("add_asset", { base64, type: "image/png" }));
 	const ids = new Map([["image", String(image["asset"])]]);
