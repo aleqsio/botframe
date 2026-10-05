@@ -6,7 +6,7 @@ export default defineConfig({
 	workers: 1,
 	reporter: [["list"]],
 	projects: [
-		{ name: "electron", testDir: "e2e", testIgnore: "**/chromium/**" },
+		{ name: "electron", testDir: "e2e", testIgnore: ["**/chromium/**", "**/*.unit.test.ts"] },
 		{
 			name: "chromium",
 			testDir: "e2e/chromium",

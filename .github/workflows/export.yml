@@ -1,0 +1,39 @@
+name: export
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  export:
+    name: test:e2e:export (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - if: runner.os == 'Linux'
+        # Ubuntu 24.04 blocks the user namespaces of the Chromium sandbox.
+        # https://github.com/electron/electron/issues/42510
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 2560x1600x24" bun run test:e2e:export
+      - if: runner.os != 'Linux'
+        run: bun run test:e2e:export
+      - if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: export-check-${{ matrix.os }}
+          path: test-results/export-check
+          if-no-files-found: ignore

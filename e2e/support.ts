@@ -14,9 +14,13 @@ export interface Drag {
 	to: Point;
 }
 
-export async function launchApp(): Promise<{ app: ElectronApplication; window: Page }> {
+export async function launchApp(
+	switches: readonly string[] = [],
+): Promise<{ app: ElectronApplication; window: Page }> {
 	const profile = await mkdtemp(join(tmpdir(), "botframe-profile-"));
-	const app = await electron.launch({ args: ["out/main/index.js", `--user-data-dir=${profile}`] });
+	const app = await electron.launch({
+		args: ["out/main/index.js", `--user-data-dir=${profile}`, ...switches],
+	});
 	const window = await app.firstWindow();
 	return { app, window };
 }

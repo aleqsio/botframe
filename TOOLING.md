@@ -22,12 +22,15 @@ Each gate is a separate CI job, and each job blocks a merge.
 | Dead code | knip | no unused file, export, or dependency |
 | Duplication | jscpd | no clone |
 | Layout | Playwright, headless Chromium | the drag invariants, see below |
+| Export | Playwright, Electron, on Linux and macOS | each export format agrees with the render, see below |
 
 Lint limits: cyclomatic complexity 10, cognitive complexity 15 (both from `oxlint-plugin-complexity`), depth 3, 4 parameters, 60 lines for each function, 400 lines for each file.
 
 The lint rules also hold the module boundaries from AGENTS.md. `src/document/` imports no React, no Electron, and no Node module.
 
 `bun run test:e2e:chromium` builds the website and opens `out/web` in headless Chromium. The Playwright project `chromium` in `e2e/chromium/` serves the build through `page.route`, so no server runs. It holds the invariants that need real layout: the center of the bounding client rect of a dragged layer moves by the mouse delta, through a turn, a corner origin, a change of parent, and a change of size. The Playwright project `electron` in `e2e/` keeps the menu, the clipboard, and the window. CI runs the `chromium` project and not the `electron` project.
+
+`bun run test:e2e:export` is the export check, in `e2e/export/`. It builds each example in `e2e/fixtures/export/` through the MCP tools, exports the example in each format and option, and turns each file into a picture: PNG and JPG are decoded, SVG, HTML, and ZIP are drawn in a hidden offscreen window, and PDF is drawn with pdf.js. On macOS, Quartz (`sips`) also draws the PDF, because Preview uses Quartz. The check compares each picture with the `render` picture at scale 2. `e2e/export/limits.ts` holds the limits for each format. A connected area of changed pixels larger than the limit fails at each format. CI uploads a contact sheet, `test-results/export-check/index.html`, as the `export-check-<os>` artifact. CI runs this check, not the local computer.
 
 lefthook runs the format, the lint, and the typecheck before each commit. CI is the gate that counts, because a user can skip a hook.
 
@@ -85,7 +88,7 @@ When a text layer uses a font that is not in the file, the renderer downloads th
 
 ## Open items
 
-- [ ] The Electron suite runs in no CI job. Add coverage in the Chromium project as features arrive.
+- [ ] Only the export check of the Electron suite runs in CI. Add coverage in the Chromium project as features arrive.
 - [ ] Add performance checks in CI for the STACK.md targets.
 - [ ] Make each CI job a required check in the GitHub settings.
 - [ ] Add Stryker mutation tests on the difference, as a report, not as a gate.
