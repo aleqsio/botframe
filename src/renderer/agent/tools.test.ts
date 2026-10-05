@@ -237,6 +237,19 @@ describe("runTool", () => {
 		expect(outline).toHaveLength(1);
 	});
 
+	it("opens the welcome document in a new active tab with no changes", async () => {
+		const workspace = new Workspace(Tab.untitled());
+		const opened = await call(workspace, "open_welcome");
+		const tab = workspace.active.get();
+		expect(opened).toEqual({ document: tab.id, name: "Welcome" });
+		expect(workspace.tabs.get()).toHaveLength(2);
+		expect(tab.hasChanges()).toBe(false);
+		expect(await call(workspace, "get_outline")).toMatchObject([
+			{ name: "Welcome tour", kind: "frame" },
+		]);
+		expect(await call(workspace, "undo")).toEqual({ done: false });
+	});
+
 	it("gives an error for a bad call", async () => {
 		const workspace = new Workspace(Tab.untitled());
 		expect(await runTool(workspace, { id: 3, tool: "get_layer", args: { id: "nope" } })).toEqual({

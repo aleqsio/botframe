@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { drawWith } from "../support";
-import { openRenderer } from "./support";
+import { WRITE_WAIT_MS, openRenderer } from "./support";
 
 const BOX = { from: { x: 280, y: 40 }, to: { x: 480, y: 180 } };
-const WRITE_WAIT_MS = 1000;
 
 test("a reload brings back each tab, its name, its changes, and the selected tab", async ({
 	page,

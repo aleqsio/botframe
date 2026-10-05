@@ -29,7 +29,7 @@ export function FileMenu({ workspace }: { workspace: Workspace }): ReactElement 
 								>
 									<span className="layer-menu-label">{command.label}</span>
 									<span className="layer-menu-accelerator">
-										{acceleratorText(command.accelerator)}
+										{acceleratorText(command.accelerator ?? "")}
 									</span>
 								</Menu.Item>
 							</Fragment>

@@ -2,6 +2,7 @@
 import { fontAssetOf } from "../../document/assets";
 import type { DesignDocument } from "../../document/document";
 import type { FontFile } from "../../document/fonts";
+import { dataUrlBytes } from "../dataUrl";
 import { faceSourcesOf } from "./fontFaceCss";
 import type { FaceSource } from "./fontFaceCss";
 import { cssUrl, googleFamilies, nearestWeight } from "./googleFonts";
@@ -31,8 +32,7 @@ async function bundledBytes(url: string): Promise<Uint8Array<ArrayBuffer>> {
 	if (file === undefined) {
 		throw new Error(`the application has no file ${url}`);
 	}
-	const [, base64 = ""] = (await file()).split(",");
-	return Uint8Array.from(atob(base64), (character) => character.codePointAt(0) ?? 0);
+	return dataUrlBytes(await file());
 }
 
 async function downloadedBytes(url: string): Promise<Uint8Array<ArrayBuffer>> {

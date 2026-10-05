@@ -1,6 +1,7 @@
 import type { AgentReply } from "../../shared/agent";
 import type { Tab } from "../state/tab";
 import type { Workspace } from "../state/workspace";
+import { welcomeTab } from "../welcome";
 import { argsOf, optionalText } from "./args";
 import type { Args } from "./args";
 import { COMPONENT_TOOLS } from "./componentTools";
@@ -33,6 +34,17 @@ function listDocuments(workspace: Workspace): unknown {
 	}));
 }
 
+async function openWelcome(workspace: Workspace): Promise<unknown> {
+	const tab = await welcomeTab();
+	workspace.add(tab);
+	return { document: tab.id, name: tab.name.get() };
+}
+
+const WORKSPACE_TOOLS: Readonly<Record<string, (workspace: Workspace) => unknown>> = {
+	list_documents: listDocuments,
+	open_welcome: openWelcome,
+};
+
 function tabOf(workspace: Workspace, args: Args): Tab {
 	const id = optionalText(args, "document");
 	if (id === null) {
@@ -46,8 +58,9 @@ function tabOf(workspace: Workspace, args: Args): Tab {
 }
 
 async function run(workspace: Workspace, tool: string, args: Args): Promise<unknown> {
-	if (tool === "list_documents") {
-		return listDocuments(workspace);
+	const workspaceTool = WORKSPACE_TOOLS[tool];
+	if (workspaceTool !== undefined) {
+		return workspaceTool(workspace);
 	}
 	if (tool === "render") {
 		return render(tabOf(workspace, args), args);

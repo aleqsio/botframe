@@ -43,7 +43,10 @@ const NEEDS_DESKTOP = "Export needs the desktop app. The website cannot capture 
 
 const SHIFT = "Shift";
 
-function matchesAccelerator(accelerator: string, event: KeyboardEvent): boolean {
+function matchesAccelerator(accelerator: string | undefined, event: KeyboardEvent): boolean {
+	if (accelerator === undefined) {
+		return false;
+	}
 	const parts = accelerator.split("+");
 	return (
 		heldWithAccelerator(event) &&

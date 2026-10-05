@@ -90,7 +90,7 @@ function windowMenu(): MenuItemConstructorOptions {
 function fileItem(command: FileCommand, window: BrowserWindow): MenuItemConstructorOptions[] {
 	const item: MenuItemConstructorOptions = {
 		label: command.label,
-		accelerator: command.accelerator,
+		...(command.accelerator === undefined ? {} : { accelerator: command.accelerator }),
 		click: () => {
 			sendCommand(window, command.id);
 		},
