@@ -82,7 +82,7 @@ async function drawTiles(view: SceneView, plan: ExportPlan, type: string): Promi
 	}
 	const drawTile = async (tile: Tile): Promise<void> => {
 		const bitmap = await captureTile(view, tile);
-		context.drawImage(bitmap, tile.at.x, tile.at.y, tile.size.width, tile.size.height);
+		context.drawImage(bitmap, tile.at.x, tile.at.y);
 		bitmap.close();
 	};
 	await plan.tiles.reduce(

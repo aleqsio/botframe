@@ -14,7 +14,6 @@ describe("planExport", () => {
 					camera: { x: -100, y: -50, zoom: 1 },
 					source: { x: 0, y: 0, width: 320, height: 160 },
 					at: { x: 0, y: 0 },
-					size: { width: 640, height: 320 },
 				},
 			],
 		});
@@ -41,11 +40,6 @@ describe("planExport", () => {
 		});
 		expect(plan.tiles.map((tile) => tile.at.x)).toEqual([0, 1201]);
 		expect(plan.tiles.every((tile) => Number.isInteger(tile.at.x))).toBe(true);
-	});
-
-	it("gives the size in device pixels of each tile on the picture", () => {
-		const plan = planExport({ x: 0, y: 0, width: 361, height: 300 }, 1, { ...SCREEN, ratio: 1 });
-		expect(plan.tiles.map((tile) => tile.size)).toEqual([{ width: 361, height: 300 }]);
 	});
 
 	it("limits the long side of the picture", () => {
