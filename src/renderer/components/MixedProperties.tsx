@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { DesignDocument } from "../../document/document";
+import { clipsContent } from "../../document/clips";
 import type { Layer } from "../../document/layer";
 import { ColorField } from "./ColorField";
 import { DraftInput } from "./PropertyField";
@@ -67,6 +68,8 @@ function MixedClip({ doc, layers }: PanelProps): ReactElement {
 }
 
 export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
+	const clipping = layers.filter((layer) => clipsContent(layer));
+
 	return (
 		<>
 			{sharedGroups(layers).map((group) => (
@@ -82,7 +85,7 @@ export function MixedProperties({ doc, layers }: PanelProps): ReactElement {
 				}}
 				value={mixedText(sharedOf(layers.map((layer) => layer.fill)), String)}
 			/>
-			<MixedClip doc={doc} layers={layers} />
+			{clipping.length === 0 ? null : <MixedClip doc={doc} layers={clipping} />}
 		</>
 	);
 }

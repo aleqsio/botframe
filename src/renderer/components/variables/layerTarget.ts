@@ -1,7 +1,7 @@
 import { BINDING_TYPES, isPlacementBinding } from "../../../document/bindings";
 import type { BindingKey } from "../../../document/bindings";
 import { geometryValue } from "../../../document/boundTraits";
-import { CLIP_OPTIONS, clipChoiceOf } from "../../../document/clips";
+import { clipChoiceOf, clipOptionsOf } from "../../../document/clips";
 import type { DesignDocument } from "../../../document/document";
 import type { Layer, LayerPatch } from "../../../document/layer";
 import { isLiteral } from "../../../document/value";
@@ -69,7 +69,7 @@ export function useLayerTarget(doc: DesignDocument, layer: Layer, spec: FieldSpe
 	};
 	const type = BINDING_TYPES[key];
 	const current = currentOf(layer, key);
-	const options = key === "clip" ? CLIP_OPTIONS : NO_OPTIONS;
+	const options = key === "clip" ? clipOptionsOf(layer) : NO_OPTIONS;
 	return {
 		reach,
 		label,

@@ -1,9 +1,18 @@
 import { LoroDoc } from "loro-crdt";
 import { describe, expect, it } from "vitest";
-import { CLIP_CHOICES, CLIP_OPTIONS, chosenClip, clipChoiceOf, clipSourceOf } from "./clips";
+import {
+	CLIP_CHOICES,
+	CLIP_OPTIONS,
+	chosenClip,
+	clipChoiceOf,
+	clipOptionsOf,
+	clipSourceOf,
+} from "./clips";
 import { makeComponent } from "./componentActions";
 import { DesignDocument } from "./document";
+import { NO_CONTENT, PLAIN_INSTANCE } from "./layer";
 import type { Layer, LayerFields, LayerId } from "./layer";
+import { DEFAULT_TEXT_STYLE } from "./text";
 import { parseEnvelope, serializeEnvelope } from "./envelope";
 import { nodeOf } from "./path";
 import { DOCUMENT_SCOPE } from "./variable";
@@ -217,6 +226,43 @@ describe("a clip bound to a choice variable", () => {
 
 		scope.put(cut(CLIP_CHOICES.none));
 		expect(layerOf(doc, photo)).toMatchObject({ clip: false, clipLayer: null });
+	});
+
+	it("offers the own shape only to a layer whose content it can clip", () => {
+		const plain = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false } as const;
+		const text = { ...DEFAULT_TEXT_STYLE, kind: "text", content: "Hi" } as const;
+		const copy = {
+			kind: "component",
+			component: "card",
+			props: {},
+			values: {},
+			instance: PLAIN_INSTANCE,
+		} as const;
+		const shapeless = [CLIP_CHOICES.none, CLIP_CHOICES.layer];
+
+		expect(clipOptionsOf({ geometry: { ...plain, frame: true }, content: NO_CONTENT })).toEqual(
+			CLIP_OPTIONS,
+		);
+		expect(clipOptionsOf({ geometry: { kind: "group" }, content: NO_CONTENT })).toEqual(
+			CLIP_OPTIONS,
+		);
+		expect(clipOptionsOf({ geometry: text, content: NO_CONTENT })).toEqual(CLIP_OPTIONS);
+		expect(clipOptionsOf({ geometry: plain, content: copy })).toEqual(CLIP_OPTIONS);
+		expect(clipOptionsOf({ geometry: plain, content: NO_CONTENT })).toEqual(shapeless);
+		expect(clipOptionsOf({ geometry: { kind: "ellipse" }, content: NO_CONTENT })).toEqual(
+			shapeless,
+		);
+		expect(
+			clipOptionsOf({ geometry: { kind: "path", vertices: [] }, content: NO_CONTENT }),
+		).toEqual(shapeless);
+	});
+
+	it("reads a legacy own-shape clip on a plain shape as no clip", () => {
+		const plain = { kind: "rectangle", cornerRadius: 0, cornerSmoothing: 0, frame: false } as const;
+		const clipped = { clip: true, clipLayer: null, content: NO_CONTENT };
+
+		expect(clipChoiceOf({ ...clipped, geometry: { kind: "group" } })).toBe(CLIP_CHOICES.shape);
+		expect(clipChoiceOf({ ...clipped, geometry: plain })).toBe(CLIP_CHOICES.none);
 	});
 
 	it("still reads a boolean variable as the own-shape clip", () => {
