@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { ReactElement } from "react";
-import { ACCEPTED_TYPES } from "../../../document/assets";
+import { MediaFileInput } from "./MediaFileInput";
 import type { AssetId } from "../../../document/assets";
 import type { DesignDocument } from "../../../document/document";
 import { isChanged } from "../../../document/layer";
@@ -56,19 +56,11 @@ function ChooseFile({ doc, layer }: TabProps): ReactElement {
 
 	return (
 		<div className="guide-row">
-			<input
-				accept={ACCEPTED_TYPES}
-				aria-label="Media file"
-				hidden
-				onChange={(event) => {
-					const [file] = event.target.files ?? [];
-					event.target.value = "";
-					if (file !== undefined) {
-						void placeMediaFile(doc, layer, file);
-					}
+			<MediaFileInput
+				onFile={(file) => {
+					void placeMediaFile(doc, layer, file);
 				}}
 				ref={input}
-				type="file"
 			/>
 			<button
 				className="guide-button guide-add"

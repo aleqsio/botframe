@@ -1,3 +1,4 @@
+import type { Asset } from "../../document/assets";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import type { LayerLayout, Placement, PositionMode } from "../../document/layout";
 import { DEFAULT_TOOL } from "../components/tools";
@@ -79,6 +80,12 @@ export interface TextEdit {
 	message: string;
 }
 
+export interface PendingMedia {
+	asset: Asset;
+	width: number;
+	height: number;
+}
+
 export class UserState {
 	readonly tool = new Slot<ToolId>(DEFAULT_TOOL);
 	readonly camera = new Slot<Camera>(IDENTITY_CAMERA);
@@ -99,6 +106,7 @@ export class UserState {
 	readonly groupPivot = new Slot<GroupPivot | null>(null);
 	readonly pathEdit = new Slot<LayerId | null>(null);
 	readonly textEdit = new Slot<TextEdit | null>(null);
+	readonly pendingMedia = new Slot<PendingMedia | null>(null);
 
 	constructor() {
 		const endPathEdit = (): void => {
@@ -106,6 +114,11 @@ export class UserState {
 		};
 		this.selection.subscribe(endPathEdit);
 		this.tool.subscribe(endPathEdit);
+		this.tool.subscribe(() => {
+			if (this.tool.get() !== "image") {
+				this.pendingMedia.set(null);
+			}
+		});
 	}
 }
 
