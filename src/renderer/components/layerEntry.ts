@@ -108,10 +108,15 @@ export function groupHeading(count: number): InspectorHeading {
 	return { glyph: "group", name: `${count} layers`, kind: GROUP_KIND };
 }
 
+function hasNumberedName(layer: Layer | null, label: string): boolean {
+	const [head, number = "", ...rest] = layer?.name.split(" ") ?? [];
+	return head === label && rest.length === 0 && /^\d+$/u.test(number);
+}
+
 export function nextLayerName(label: string, layers: Iterable<Layer | null>): string {
 	let count = 0;
 	for (const layer of layers) {
-		if (kindLabel(layer, false) === label || layer?.name.startsWith(`${label} `) === true) {
+		if (kindLabel(layer, false) === label || hasNumberedName(layer, label)) {
 			count += 1;
 		}
 	}

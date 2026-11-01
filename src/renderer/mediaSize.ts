@@ -2,6 +2,8 @@ import type { Asset } from "../document/assets";
 import { assetKind } from "../document/assets";
 import type { PendingMedia } from "./state/userState";
 
+const VIDEO_WAIT_MS = 10_000;
+
 interface Size {
 	width: number;
 	height: number;
@@ -22,6 +24,7 @@ function videoSize(blob: Blob): Promise<Size> {
 			resolve({ width: video.videoWidth, height: video.videoHeight });
 		});
 		video.addEventListener("error", reject);
+		setTimeout(reject, VIDEO_WAIT_MS);
 		video.preload = "metadata";
 		video.src = url;
 	}).finally(() => {

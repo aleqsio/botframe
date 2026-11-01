@@ -151,14 +151,20 @@ body {
 
 #stage[data-tool="frame"],
 #stage[data-tool="rectangle"],
-#stage[data-tool="ellipse"] {
+#stage[data-tool="ellipse"],
+#stage[data-tool="image"] {
 	cursor: crosshair;
 }
 
 #stage[data-tool="frame"] .layer,
 #stage[data-tool="rectangle"] .layer,
-#stage[data-tool="ellipse"] .layer {
+#stage[data-tool="ellipse"] .layer,
+#stage[data-tool="image"] .layer {
 	cursor: inherit;
+}
+
+#stage .layer-media {
+	pointer-events: none;
 }
 
 #stage[data-tool="hand"] {

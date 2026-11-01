@@ -25,6 +25,7 @@ export function LayerVideo({
 				loop={fill.loop}
 				muted={fill.muted}
 				playsInline
+				preload="auto"
 				key={String(fill.autoplay)}
 				ref={(video) => {
 					if (video !== null) {

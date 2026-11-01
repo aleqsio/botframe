@@ -1,5 +1,5 @@
 import { Toolbar } from "@base-ui-components/react/toolbar";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactElement } from "react";
 import type { Asset } from "../../document/assets";
 import { pendingMediaOf } from "../mediaSize";
@@ -13,9 +13,15 @@ import { fileAsset, urlAsset } from "./mediaFile";
 export function ImageOptions({ user }: { user: UserState }): ReactElement {
 	const media = useSlot(user.pendingMedia);
 	const [load, setLoad] = useState<LoadState>("idle");
+	const latest = useRef(0);
 	const start = async (asset: Promise<Asset | null>): Promise<void> => {
+		latest.current += 1;
+		const call = latest.current;
 		setLoad("loading");
 		const pending = await pendingMediaOf(await asset);
+		if (call !== latest.current) {
+			return;
+		}
 		setLoad(pending === null ? "failed" : "idle");
 		if (pending !== null && user.tool.get() === "image") {
 			user.pendingMedia.set(pending);

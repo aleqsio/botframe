@@ -107,8 +107,11 @@ describe("nextLayerName", () => {
 		expect(nextLayerName("Frame", layers)).toBe("Frame 2");
 	});
 
-	it("counts a layer that has the label in its name", () => {
-		const layers = [{ ...rectangle("1@1", "#000000"), name: "Image 1" }];
+	it("counts a layer that has the label and a number as its name", () => {
+		const layers = [
+			{ ...rectangle("1@1", "#000000"), name: "Image 1" },
+			{ ...frame("2@1"), name: "Image gallery" },
+		];
 
 		expect(nextLayerName("Image", layers)).toBe("Image 2");
 	});
