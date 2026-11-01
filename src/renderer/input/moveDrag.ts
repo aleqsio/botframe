@@ -62,7 +62,8 @@ function landedPatch(
 }
 
 function land(target: PointerTarget, moved: MovedLayer, parent: LayerId | null): boolean {
-	if (target.doc.layer(moved.id)?.parent === parent || !target.doc.move(moved.id, parent)) {
+	const index = parent === moved.from ? moved.start.index : undefined;
+	if (target.doc.layer(moved.id)?.parent === parent || !target.doc.move(moved.id, parent, index)) {
 		return false;
 	}
 	const pose = poseInside(parentChainOf(target, moved.id), moved.seen, moved.start);
@@ -76,14 +77,15 @@ function retarget(
 	point: StagePoint,
 	modifiers: Modifiers,
 ): LayerMove {
-	const parent = keepsParent(modifiers) ? move.parent : parentUnder(target, move, point);
-	if (parent === move.parent) {
+	const kept = keepsParent(modifiers);
+	const parent = kept ? move.from : parentUnder(target, move, point);
+	if (parent === move.parent && !kept) {
 		return move;
 	}
 	const order = target.doc.layerIds();
 	const landed = [move, ...move.followers]
 		.toSorted((one, other) => order.indexOf(one.id) - order.indexOf(other.id))
-		.filter((moved) => land(target, moved, parent));
+		.filter((moved) => land(target, moved, kept ? moved.from : parent));
 	if (!landed.some((moved) => moved.id === move.id)) {
 		return move;
 	}

@@ -164,7 +164,7 @@ describe("a drop into a new parent", () => {
 		behavior.dragEnd?.(scene.target, pointAt(camera, { x: 220, y: 180 }), NO_MODIFIERS);
 
 		expect(moved).toHaveBeenCalledTimes(1);
-		expect(moved).toHaveBeenCalledWith(scene.layer, scene.into);
+		expect(moved).toHaveBeenCalledWith(scene.layer, scene.into, undefined);
 		expect(scene.target.doc.layer(scene.layer)).toMatchObject({ x: 100, y: 60 });
 	});
 });

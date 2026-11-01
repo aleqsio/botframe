@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { LayerFields } from "../../document/layer";
 import { NO_MODIFIERS } from "./modifiers";
-import { dropOver, dropScene } from "./toolFixtures";
+import { behaviorFor } from "./toolBehavior";
+import { dropOver, dropScene, pointAt } from "./toolFixtures";
 
 const FRAME: LayerFields = {
 	x: 100,
@@ -47,5 +48,23 @@ describe("a move with Shift held", () => {
 		});
 
 		expect(doc.layer(scene.layer)).toMatchObject({ parent: scene.into });
+	});
+
+	it("takes the layer back to its parent from before the drag, in its old place", () => {
+		const scene = dropScene(FRAME);
+		const behavior = behaviorFor("select");
+		const camera = scene.target.user.camera.get();
+		const press = pointAt(camera, GRAB);
+		const over = pointAt(camera, OVER_THE_FRAME);
+		behavior.dragStart?.(scene.target, press, press, NO_MODIFIERS);
+		scene.setHits([scene.layer, scene.into]);
+		behavior.drag?.(scene.target, over, NO_MODIFIERS);
+		expect(scene.target.doc.layer(scene.layer)).toMatchObject({ parent: scene.into });
+
+		behavior.drag?.(scene.target, over, { ...NO_MODIFIERS, shift: true });
+		behavior.dragEnd?.(scene.target, over, { ...NO_MODIFIERS, shift: true });
+
+		expect(scene.target.doc.layer(scene.layer)).toMatchObject({ parent: null });
+		expect(scene.target.doc.rootIds()).toEqual([scene.layer, scene.into]);
 	});
 });
