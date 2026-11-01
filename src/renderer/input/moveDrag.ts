@@ -10,6 +10,7 @@ import { COMMIT_MESSAGES } from "./layerCommand";
 import { anchorOf, poseInside, seenLinear } from "./layerSpace";
 import { fixedFill } from "./layoutGeometry";
 import type { Linear } from "../../document/linear";
+import { keepsParent } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
 import { carryFollowers, carryLayer } from "./moveCarry";
@@ -61,7 +62,8 @@ function landedPatch(
 }
 
 function land(target: PointerTarget, moved: MovedLayer, parent: LayerId | null): boolean {
-	if (target.doc.layer(moved.id)?.parent === parent || !target.doc.move(moved.id, parent)) {
+	const index = parent === moved.from ? moved.start.index : undefined;
+	if (target.doc.layer(moved.id)?.parent === parent || !target.doc.move(moved.id, parent, index)) {
 		return false;
 	}
 	const pose = poseInside(parentChainOf(target, moved.id), moved.seen, moved.start);
@@ -69,15 +71,21 @@ function land(target: PointerTarget, moved: MovedLayer, parent: LayerId | null):
 	return true;
 }
 
-function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
-	const parent = parentUnder(target, move, point);
-	if (parent === move.parent) {
+function retarget(
+	target: PointerTarget,
+	move: LayerMove,
+	point: StagePoint,
+	modifiers: Modifiers,
+): LayerMove {
+	const kept = keepsParent(modifiers);
+	const parent = kept ? move.from : parentUnder(target, move, point);
+	if (parent === move.parent && !kept) {
 		return move;
 	}
 	const order = target.doc.layerIds();
 	const landed = [move, ...move.followers]
 		.toSorted((one, other) => order.indexOf(one.id) - order.indexOf(other.id))
-		.filter((moved) => land(target, moved, parent));
+		.filter((moved) => land(target, moved, kept ? moved.from : parent));
 	if (!landed.some((moved) => moved.id === move.id)) {
 		return move;
 	}
@@ -141,7 +149,7 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 	if (move === null) {
 		return false;
 	}
-	const landed = retarget(target, move, point);
+	const landed = retarget(target, move, point, modifiers);
 	const carry = carryLayer(target, landed, point, modifiers);
 	const shifted = { x: point.canvas.x + carry.shift.x, y: point.canvas.y + carry.shift.y };
 	carryFollowers(target, landed, shifted);

@@ -64,7 +64,7 @@ describe("componentSourceOf", () => {
 describe("componentMarkup", () => {
 	it("writes a reset of the inherited styles, the style, the filled template, and a slot for layers inside", () => {
 		expect(componentMarkup(checkbox(), { label: "Accept", checked: true, size: "lg" })).toBe(
-			'<style>:host { all: initial; cursor: inherit; }\n.box { gap: 4px; }</style><label class="box lg"><input type="checkbox" checked>Accept</label><slot></slot>',
+			'<style>:host { all: initial; cursor: inherit; visibility: inherit; }\n.box { gap: 4px; }</style><label class="box lg"><input type="checkbox" checked>Accept</label><slot></slot>',
 		);
 	});
 

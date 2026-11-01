@@ -4,7 +4,7 @@ import type { Layer, Rect } from "../../document/layer";
 import { swappedBox } from "../components/layerFields";
 import type { Point } from "../state/camera";
 import type { UserState } from "../state/userState";
-import { DOM_DRAWN, drawnRead } from "./drawn";
+import { DOM_DRAWN, domReaderOf } from "./drawn";
 import { childrenOf, flipKeeps, flipLayer } from "./flip";
 import {
 	anchoredPlace,
@@ -49,10 +49,6 @@ interface Aim {
 	reference: Rect;
 }
 
-function readerOf(doc: DesignDocument): ReadLayer {
-	return drawnRead(DOM_DRAWN, (id) => doc.layer(id));
-}
-
 function shownOf(read: ReadLayer, layer: Layer): Layer {
 	return read(layer.id) ?? layer;
 }
@@ -82,7 +78,7 @@ function sharedBoxOf(read: ReadLayer, layers: readonly Layer[], scope: AimScope)
 }
 
 function aimsOf(doc: DesignDocument, user: UserState, scope: AimScope): readonly Aim[] {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	const layers = selectedLayers(doc, user);
 	const shared = sharedBoxOf(read, layers, scope);
 	return layers.flatMap((layer) => {
@@ -112,7 +108,7 @@ function shiftLayer(doc: DesignDocument, read: ReadLayer, layer: Layer, shift: P
 }
 
 export function alignSelection(doc: DesignDocument, user: UserState, spec: AimSpec): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	for (const aim of aimsOf(doc, user, spec.scope)) {
 		const shift = shiftAlong(spec.axes, (axis) =>
 			alignOffset(aim.box, aim.reference, axis, spec.at),
@@ -129,7 +125,7 @@ function outermostAims(read: ReadLayer, aims: readonly Aim[]): readonly Aim[] {
 }
 
 export function flipSelection(doc: DesignDocument, user: UserState, spec: AimSpec): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	for (const aim of outermostAims(read, aimsOf(doc, user, spec.scope))) {
 		flipLayer({ doc, read }, aim.layer, spec.axes);
 		const turned = read(aim.layer.id);
@@ -147,7 +143,7 @@ export function flipSelection(doc: DesignDocument, user: UserState, spec: AimSpe
 }
 
 export function spreadSelection(doc: DesignDocument, user: UserState, spec: AxisSpec): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	const layers = selectedLayers(doc, user);
 	const offsets = spreadOffsets(
 		layers.map((layer) => canvasHullOf(read, shownOf(read, layer))),
@@ -170,7 +166,7 @@ export function fitToChildren(doc: DesignDocument, user: UserState, message: str
 	if (parent === undefined) {
 		return false;
 	}
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	const children = childrenOf(doc, parent);
 	const hull = hullOfRects(children.map((child) => localBoxOf(shownOf(read, child))));
 	if (hull === null) {
@@ -205,7 +201,7 @@ export function turnSelection(doc: DesignDocument, user: UserState, spec: TurnSp
 }
 
 export function swapSelection(doc: DesignDocument, user: UserState, message: string): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	for (const layer of selectedLayers(doc, user)) {
 		const size = swappedBox(shownOf(read, layer));
 		doc.update(layer.id, {
@@ -222,7 +218,7 @@ export function swapSelection(doc: DesignDocument, user: UserState, message: str
 }
 
 export function canAim(doc: DesignDocument, layers: readonly Layer[], spec: AimSpec): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	const shared = sharedBoxOf(read, layers, spec.scope) !== null;
 	return layers.some(
 		(layer) =>
@@ -235,12 +231,12 @@ export function canFlip(doc: DesignDocument, layers: readonly Layer[], spec: Aim
 	const [only, peer] = layers;
 	return (
 		only !== undefined &&
-		(peer !== undefined || !flipKeeps({ doc, read: readerOf(doc) }, only, spec.axes))
+		(peer !== undefined || !flipKeeps({ doc, read: domReaderOf(doc) }, only, spec.axes))
 	);
 }
 
 export function canSpread(doc: DesignDocument, layers: readonly Layer[], spec: AxisSpec): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	return (
 		layers.length >= SMALLEST_SPREAD &&
 		layers.some((layer) => freeAxesFor(read, layer).includes(spec.axis))

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DesignDocument } from "../document/document";
 import type { LayerFields, LayerId } from "../document/layer";
+import { NO_DRAWN, drawnRead } from "./input/drawn";
+import type { DrawnReader } from "./input/drawn";
 import { layerClipShape, withLayerClip } from "./layerClip";
 
 const RECTANGLE: LayerFields = {
@@ -66,6 +68,36 @@ describe("layerClipShape", () => {
 		const orphan = doc.createLayer({ ...RECTANGLE });
 		doc.update(orphan, { clipLayer: frame });
 		expect(clipOf(doc, orphan)).toBeUndefined();
+	});
+});
+
+const DRAWN_BOX = { x: 100, y: 100, width: 200, height: 100, placed: true };
+const FULL_CUT =
+	"shape(from 0% 0%, line to 100% 0%, line to 100% 100%, line to 0% 100%, line to 0% 0%, close)";
+
+function drawnClipOf(doc: DesignDocument, target: LayerId, hugging: LayerId): string | undefined {
+	doc.update(hugging, { height: 0, layout: { height: "hug" } });
+	const drawn: DrawnReader = {
+		...NO_DRAWN,
+		box: (layer) => (layer.id === hugging ? DRAWN_BOX : null),
+	};
+	const read = drawnRead(drawn, (id) => doc.layer(id));
+	const layer = doc.layer(target);
+	return layer === null ? undefined : layerClipShape(read, layer);
+}
+
+describe("layerClipShape with drawn sizes", () => {
+	it("cuts with the drawn box of a source that hugs its content", () => {
+		const { doc, target } = clippedBy({});
+		const source = doc.layer(target)?.clipLayer ?? target;
+
+		expect(drawnClipOf(doc, target, source)).toBe(FULL_CUT);
+	});
+
+	it("cuts in the drawn box of a target that hugs its content", () => {
+		const { doc, target } = clippedBy({});
+
+		expect(drawnClipOf(doc, target, target)).toBe(FULL_CUT);
 	});
 });
 

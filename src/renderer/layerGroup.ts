@@ -2,7 +2,7 @@ import type { DesignDocument } from "../document/document";
 import { GROUP_GEOMETRY, isGroup } from "../document/layer";
 import type { Layer, LayerFields, LayerId, LayerPatch } from "../document/layer";
 import { isNodeId } from "../document/path";
-import { DOM_DRAWN, drawnRead } from "./input/drawn";
+import { domReaderOf } from "./input/drawn";
 import { outOfLayer, parentChain, pivotOf, poseInside, seenLinear } from "./input/layerSpace";
 import type { ReadLayer } from "./input/layerSpace";
 import { fixedFill, localBoxOf } from "./input/layoutGeometry";
@@ -25,10 +25,6 @@ interface GroupPlan {
 	layers: readonly Layer[];
 	parent: LayerId | null;
 	index: number;
-}
-
-function readerOf(doc: DesignDocument): ReadLayer {
-	return drawnRead(DOM_DRAWN, (id) => doc.layer(id));
 }
 
 function holdsFree(doc: DesignDocument, parent: LayerId | null): boolean {
@@ -78,7 +74,7 @@ function wrap(doc: DesignDocument, plan: GroupPlan, read: ReadLayer): LayerId | 
 
 export function groupSelection(doc: DesignDocument, user: UserState): boolean {
 	const plan = groupPlan(doc, user);
-	const group = plan === null ? null : wrap(doc, plan, readerOf(doc));
+	const group = plan === null ? null : wrap(doc, plan, domReaderOf(doc));
 	if (group === null) {
 		return false;
 	}
@@ -96,7 +92,7 @@ export function canUngroup(doc: DesignDocument, user: UserState): boolean {
 }
 
 function liftChild(doc: DesignDocument, group: Layer, child: Layer, index: number): boolean {
-	const read = readerOf(doc);
+	const read = domReaderOf(doc);
 	const seen = seenLinear([...parentChain(read, group.id), group], child);
 	const pivot = pivotOf(child);
 	const landed = outOfLayer(group, { x: child.x + pivot.x, y: child.y + pivot.y });
@@ -110,7 +106,7 @@ function liftChild(doc: DesignDocument, group: Layer, child: Layer, index: numbe
 }
 
 function ungroup(doc: DesignDocument, groupId: LayerId): readonly LayerId[] {
-	const group = readerOf(doc)(groupId);
+	const group = domReaderOf(doc)(groupId);
 	if (group === null) {
 		return [];
 	}

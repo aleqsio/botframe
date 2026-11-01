@@ -5,9 +5,10 @@ import type { Layer } from "../document/layer";
 import type { DisplayMode } from "../document/layout";
 import { useAssetUrl } from "./assetUrl";
 import type { AssetUrl } from "./assetUrl";
+import { domReaderOf } from "./input/drawn";
 import { clipLinkIds, layerClipShape, withLayerClip } from "./layerClip";
 import { layerStyle } from "./layerStyle";
-import { useClipTargets } from "./useDocument";
+import { subscribeAfterCommit, useClipTargets } from "./useDocument";
 import { paintedStyle } from "./mediaStyle";
 
 export interface LayerPaintStyle {
@@ -42,11 +43,13 @@ function useClipShape(doc: DesignDocument, layer: Layer | null): string | undefi
 	return useSyncExternalStore(
 		useCallback(
 			(listener: () => void) =>
-				layer === null ? NO_SUBSCRIPTION : subscribeLinks(doc, layer, listener),
+				layer === null || layer.clipLayer === null
+					? NO_SUBSCRIPTION
+					: subscribeAfterCommit(doc, listener),
 			[doc, layer],
 		),
 		useCallback(
-			() => (layer === null ? undefined : layerClipShape((id) => doc.layer(id), layer)),
+			() => (layer === null ? undefined : layerClipShape(domReaderOf(doc), layer)),
 			[doc, layer],
 		),
 	);

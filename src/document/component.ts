@@ -22,7 +22,7 @@ export interface Component extends ComponentSource {
 
 const PROP_NAME = /^[A-Za-z_][\w-]*$/u;
 const STYLE_END = /<\/style/giu;
-const HOST_RESET = ":host { all: initial; cursor: inherit; }";
+const HOST_RESET = ":host { all: initial; cursor: inherit; visibility: inherit; }";
 
 function isText(value: unknown): value is string {
 	return typeof value === "string";
