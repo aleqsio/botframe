@@ -11,6 +11,7 @@ import { drawnReaderOf, parentChainOf } from "./targetSpace";
 import { NO_MODIFIERS } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import type { PointerTarget, ToolBehavior } from "./tool";
+import { behaviorFor } from "./toolBehavior";
 
 export { firstId };
 
@@ -112,6 +113,24 @@ export function dropScene(fields: LayerFields): DropScene {
 			hits = ids;
 		},
 	};
+}
+
+interface DropSpec {
+	press: Point;
+	release: Point;
+	hits: readonly LayerId[];
+	modifiers?: Modifiers;
+}
+
+export function dropOver(scene: DropScene, spec: DropSpec): void {
+	const behavior = behaviorFor("select");
+	const camera = scene.target.user.camera.get();
+	const press = pointAt(camera, spec.press);
+	const modifiers = spec.modifiers ?? NO_MODIFIERS;
+	behavior.dragStart?.(scene.target, press, press, modifiers);
+	scene.setHits(spec.hits);
+	behavior.drag?.(scene.target, pointAt(camera, spec.release), modifiers);
+	behavior.dragEnd?.(scene.target, pointAt(camera, spec.release), modifiers);
 }
 
 export function nestedTarget(rotation: number): { target: PointerTarget; child: LayerId } {

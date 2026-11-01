@@ -1,3 +1,4 @@
+import type { DesignDocument } from "../../document/document";
 import type { Layer, LayerId, Rect } from "../../document/layer";
 import { SIDES } from "../../document/layout";
 import type { DisplayMode, Side } from "../../document/layout";
@@ -193,4 +194,8 @@ export function drawnRead(drawn: DrawnReader, read: ReadLayer): ReadLayer {
 		const layer = read(id);
 		return layer === null ? null : drawnLayer(drawn, read, layer);
 	};
+}
+
+export function domReaderOf(doc: DesignDocument): ReadLayer {
+	return drawnRead(DOM_DRAWN, (id) => doc.layer(id));
 }

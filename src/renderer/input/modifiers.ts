@@ -18,3 +18,7 @@ export function modifiersOf(event: {
 export function extendsSelection(modifiers: Modifiers): boolean {
 	return modifiers.shift || modifiers.control;
 }
+
+export function keepsParent(modifiers: Modifiers): boolean {
+	return modifiers.shift;
+}

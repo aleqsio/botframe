@@ -11,6 +11,7 @@ import {
 	NO_HITS,
 	ROW_CHILD,
 	dragOver,
+	dropOver,
 	dropScene,
 	firstId,
 	laidOutRow,
@@ -19,7 +20,6 @@ import {
 	rowOfThree,
 	rowScene,
 } from "./toolFixtures";
-import type { DropScene } from "./toolFixtures";
 
 const FRAME: LayerFields = {
 	x: 100,
@@ -51,22 +51,6 @@ function canvasCenterOf(target: PointerTarget, id: LayerId): Point {
 		throw new Error("the document lost the layer");
 	}
 	return fromParentPoint(parentChainOf(target, id), centerOf(layer));
-}
-
-interface DropSpec {
-	press: Point;
-	release: Point;
-	hits: readonly LayerId[];
-}
-
-function dropOver(scene: DropScene, spec: DropSpec): void {
-	const behavior = behaviorFor("select");
-	const camera = scene.target.user.camera.get();
-	const press = pointAt(camera, spec.press);
-	behavior.dragStart?.(scene.target, press, press, NO_MODIFIERS);
-	scene.setHits(spec.hits);
-	behavior.drag?.(scene.target, pointAt(camera, spec.release), NO_MODIFIERS);
-	behavior.dragEnd?.(scene.target, pointAt(camera, spec.release), NO_MODIFIERS);
 }
 
 describe("a drop into a new parent", () => {

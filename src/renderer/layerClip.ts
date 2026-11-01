@@ -50,7 +50,7 @@ export function clipLinkIds(read: ReadLayer, target: Layer): LayerId[] {
 export function layerClipShape(read: ReadLayer, target: Layer): string | undefined {
 	const source = clipSourceOf(read, target);
 	const vertices = source === null ? null : outlineVertices(source.geometry, source);
-	const map = source === null ? null : sourceToTarget(read, source, target);
+	const map = source === null ? null : sourceToTarget(read, source, read(target.id) ?? target);
 	if (vertices === null || map === null) {
 		return undefined;
 	}

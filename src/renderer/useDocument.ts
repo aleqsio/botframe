@@ -2,7 +2,7 @@ import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { ComponentEntry, ComponentsView } from "../document/components";
 import type { DesignDocument, Unsubscribe } from "../document/document";
 import type { Layer, LayerId, Rect } from "../document/layer";
-import { DOM_DRAWN, drawnPadding, drawnRead } from "./input/drawn";
+import { domReaderOf, drawnPadding } from "./input/drawn";
 import { layerChain, uprightLinear } from "./input/layerSpace";
 import { boundsOf } from "./input/selectionBounds";
 import { spaceTransform } from "./layerStyle";
@@ -109,10 +109,7 @@ export function useComponentsView(doc: DesignDocument): ComponentsView {
 }
 
 export function drawnChain(doc: DesignDocument, id: LayerId | null): Layer[] {
-	return layerChain(
-		drawnRead(DOM_DRAWN, (layerId) => doc.layer(layerId)),
-		id,
-	);
+	return layerChain(domReaderOf(doc), id);
 }
 
 function spaceText(chain: readonly Layer[]): string {
@@ -235,10 +232,7 @@ export function useLayers(doc: DesignDocument, ids: readonly LayerId[]): readonl
 const BOX_PART = ",";
 
 function boxText(doc: DesignDocument, ids: readonly LayerId[]): string {
-	const box = boundsOf(
-		drawnRead(DOM_DRAWN, (id) => doc.layer(id)),
-		ids,
-	);
+	const box = boundsOf(domReaderOf(doc), ids);
 	return box === null ? NO_TEXT : [box.x, box.y, box.width, box.height].join(BOX_PART);
 }
 

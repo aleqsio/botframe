@@ -10,6 +10,7 @@ import { COMMIT_MESSAGES } from "./layerCommand";
 import { anchorOf, poseInside, seenLinear } from "./layerSpace";
 import { fixedFill } from "./layoutGeometry";
 import type { Linear } from "../../document/linear";
+import { keepsParent } from "./modifiers";
 import type { Modifiers } from "./modifiers";
 import { settleInFlow } from "./flowDrag";
 import { carryFollowers, carryLayer } from "./moveCarry";
@@ -69,8 +70,13 @@ function land(target: PointerTarget, moved: MovedLayer, parent: LayerId | null):
 	return true;
 }
 
-function retarget(target: PointerTarget, move: LayerMove, point: StagePoint): LayerMove {
-	const parent = parentUnder(target, move, point);
+function retarget(
+	target: PointerTarget,
+	move: LayerMove,
+	point: StagePoint,
+	modifiers: Modifiers,
+): LayerMove {
+	const parent = keepsParent(modifiers) ? move.parent : parentUnder(target, move, point);
 	if (parent === move.parent) {
 		return move;
 	}
@@ -141,7 +147,7 @@ export function applyMove(target: PointerTarget, point: StagePoint, modifiers: M
 	if (move === null) {
 		return false;
 	}
-	const landed = retarget(target, move, point);
+	const landed = retarget(target, move, point, modifiers);
 	const carry = carryLayer(target, landed, point, modifiers);
 	const shifted = { x: point.canvas.x + carry.shift.x, y: point.canvas.y + carry.shift.y };
 	carryFollowers(target, landed, shifted);
